@@ -1,7 +1,9 @@
-﻿namespace HRMS.Models
+﻿using HRMS.ViewModels;
+
+namespace HRMS.Models
 {
-    public class AttendanceRecord
-  
+    public class AttendanceRecord : AttendanceDashboardViewModel
+
 
     {
         public int Id { get; set; }

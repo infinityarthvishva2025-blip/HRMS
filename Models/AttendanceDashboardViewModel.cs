@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace HRMS.ViewModels
 {
-    public class AttendanceDashboardViewModel : AttendanceRecord
+    public class AttendanceDashboardViewModel
     {
         public IEnumerable<AttendanceRecord>? RecentRecords { get; set; }
     }
