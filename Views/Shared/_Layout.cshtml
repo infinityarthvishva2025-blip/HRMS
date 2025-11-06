@@ -160,7 +160,7 @@
         }
     </style>
 </head>
-<body>
+@* <body>
     <!-- Custom Dashboard Header -->
     <header class="dashboard-header">
         <div class="container">
@@ -219,7 +219,7 @@
                     </li>
                 </ul>
                 @* <partial name="_LoginPartial" /> *@
-            </div>
+@*             </div>
         </div>
     </nav>
 
@@ -291,10 +291,10 @@
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
-</body>
-</html>
 
-@* @{
+ *@
+
+ @{
     Layout = null;
 }
 
@@ -378,4 +378,4 @@
     </script>
 </body>
 </html>
- *@
+ 
