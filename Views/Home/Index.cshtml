@@ -1,13 +1,45 @@
-﻿@model HRMS.Models.DashboardViewModel
-@{
-    ViewData["Title"] = "HR Dashboard";
+﻿@{
+    ViewData["Title"] = "Dashboard";
 }
 
 <div class="row">
-    <!-- Dashboard Cards -->
-    <div class="col-12">
-        <partial name="_DashboardPartial" model="Model" />
+    <div class="col-md-3 mb-3">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body">
+                <i class="fa-solid fa-users fa-2x text-primary mb-2"></i>
+                <h4 class="fw-bold mb-0">47</h4>
+                <small>Total Employees</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body">
+                <i class="fa-solid fa-user-check fa-2x text-success mb-2"></i>
+                <h4 class="fw-bold mb-0">42</h4>
+                <small>Today's Present</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body">
+                <i class="fa-solid fa-location-dot fa-2x text-info mb-2"></i>
+                <h4 class="fw-bold mb-0">35</h4>
+                <small>Geo Tags Assigned</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body">
+                <i class="fa-solid fa-calendar-xmark fa-2x text-warning mb-2"></i>
+                <h4 class="fw-bold mb-0">8</h4>
+                <small>Pending Leaves</small>
+            </div>
+        </div>
     </div>
 </div>
-
-
