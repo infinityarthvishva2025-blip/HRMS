@@ -1,0 +1,10 @@
+﻿
+
+@model HRMS.Models.Employee
+
+<h3>Add New Employee</h3>
+
+<form method="post" class="mt-3">
+    @Html.Partial("_EmployeeForm", Model)
+    <button type="submit" class="btn btn-success">Save</button>
+</form>

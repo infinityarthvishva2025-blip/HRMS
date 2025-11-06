@@ -1,0 +1,35 @@
+﻿@model HRMS.Models.Leave
+
+<h2>Apply for Leave</h2>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label>Leave Type</label>
+        <select asp-for="LeaveType" class="form-control">
+            <option value="">-- Select Leave Type --</option>
+            <option value="Sick Leave">Sick Leave</option>
+            <option value="Casual Leave">Casual Leave</option>
+            <option value="Paid Leave">Paid Leave</option>
+            <option value="Maternity Leave">Maternity Leave</option>
+            <option value="Paternity Leave">Paternity Leave</option>
+            <option value="Unpaid Leave">Unpaid Leave</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Start Date</label>
+        <input asp-for="StartDate" class="form-control" type="date" />
+    </div>
+
+    <div class="form-group">
+        <label>End Date</label>
+        <input asp-for="EndDate" class="form-control" type="date" />
+    </div>
+
+    <div class="form-group">
+        <label>Reason</label>
+        <textarea asp-for="Reason" class="form-control"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-success mt-3">Submit</button>
+</form>

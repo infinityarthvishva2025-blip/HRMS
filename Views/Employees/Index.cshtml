@@ -1,0 +1,46 @@
+﻿@model IEnumerable<HRMS.Models.Employee>
+
+<div class="container mt-4">
+    <h2>Employee Management</h2>
+    <a href="/Employees/Create" class="btn btn-primary float-end mb-3">
+        <i class="bi bi-person-plus"></i> Add New Employee
+    </a>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Employee Code</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Position</th>
+                <th>Salary</th>
+                <th>Geo Tag</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var emp in Model)
+            {
+                <tr>
+                    <td>@emp.EmployeeCode</td>
+                    <td>@emp.Name</td>
+                    <td>@emp.Email</td>
+                    <td>@emp.Department</td>
+                    <td>@emp.Position</td>
+                    <td>@emp.Salary.ToString("C")</td>
+                    <td>@emp.JioTag</td>
+                    <td>
+                        <a href="/Employees/Edit/@emp.Id" class="btn btn-sm btn-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="/Employees/Delete/@emp.Id" class="btn btn-sm btn-danger">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
