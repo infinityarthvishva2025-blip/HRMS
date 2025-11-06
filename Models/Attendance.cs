@@ -2,7 +2,7 @@
 
 namespace HRMS.Models
 {
-    public class AttendanceRecord : AttendanceDashboardViewModel
+    public class Attendance : AttendanceDashboardViewModel
 
 
     {

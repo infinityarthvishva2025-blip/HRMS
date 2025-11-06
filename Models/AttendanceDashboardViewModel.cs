@@ -7,6 +7,6 @@ namespace HRMS.ViewModels
 {
     public class AttendanceDashboardViewModel
     {
-        public IEnumerable<AttendanceRecord>? RecentRecords { get; set; }
+        public IEnumerable<Attendance>? RecentRecords { get; set; }
     }
 }

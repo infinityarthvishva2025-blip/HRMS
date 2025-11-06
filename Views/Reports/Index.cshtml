@@ -1,0 +1,113 @@
+﻿@{
+    ViewData["Title"] = "Reports Dashboard";
+}
+
+<div class="container-fluid mt-3">
+    <h2 class="mb-4">HR Reports Dashboard</h2>
+
+    <div class="row">
+        <!-- Employee Report -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">Employees by Department</div>
+                <div class="card-body">
+                    <canvas id="employeeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Report -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">Leave Requests by Status</div>
+                <div class="card-body">
+                    <canvas id="leaveChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payroll Report -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">Payroll Summary by Month</div>
+                <div class="card-body">
+                    <canvas id="payrollChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Report -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">Attendance Overview</div>
+                <div class="card-body">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Parse data from backend
+        const employeeData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.EmployeeReport));
+        const leaveData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.LeaveReport));
+        const payrollData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.PayrollReport));
+        const attendanceData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.AttendanceReport));
+
+        // Employee Chart
+        new Chart(document.getElementById("employeeChart"), {
+            type: 'doughnut',
+            data: {
+                labels: employeeData.map(e => e.Department),
+                datasets: [{
+                    data: employeeData.map(e => e.Count),
+                    backgroundColor: ['#007bff', '#28a745', '#ffc107', '#17a2b8']
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // Leave Chart
+        new Chart(document.getElementById("leaveChart"), {
+            type: 'pie',
+            data: {
+                labels: leaveData.map(l => l.Status),
+                datasets: [{
+                    data: leaveData.map(l => l.Count),
+                    backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // Payroll Chart
+        new Chart(document.getElementById("payrollChart"), {
+            type: 'bar',
+            data: {
+                labels: payrollData.map(p => p.Month),
+                datasets: [{
+                    label: 'Total Salary',
+                    data: payrollData.map(p => p.Total),
+                    backgroundColor: '#17a2b8'
+                }]
+            },
+            options: { scales: { y: { beginAtZero: true } } }
+        });
+
+        // Attendance Chart
+        new Chart(document.getElementById("attendanceChart"), {
+            type: 'polarArea',
+            data: {
+                labels: attendanceData.map(a => a.Status),
+                datasets: [{
+                    data: attendanceData.map(a => a.Count),
+                    backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d']
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom' } } }
+        });
+    </script>
+}
