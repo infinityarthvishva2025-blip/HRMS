@@ -145,6 +145,13 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
         .custom-logo {
             display: flex;
             flex-direction: column;
@@ -298,12 +305,11 @@
     Layout = null;
 }
 
-<!DOCTYPE html>
-<html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"] - HR System</title>
+   @*  <title>@ViewData["Title"] - HR System</title> *@
 
     <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="~/css/site.css" rel="stylesheet" />
@@ -314,7 +320,9 @@
         <!-- Sidebar -->
         <div class="border-end bg-white" id="sidebar-wrapper">
             <div class="sidebar-heading border-bottom bg-light py-3 px-3">
-                <i class="fa-solid fa-users me-2"></i> HR System
+ <div class="custom-logo">
+                    <img src="~/css/images/logo.png" alt="Infinity Arthvishva" class="logo-image">
+                </div>
             </div>
             <div class="list-group list-group-flush">
                 <a asp-controller="Home" asp-action="Index" class="list-group-item list-group-item-action bg-light">
@@ -351,7 +359,7 @@
         </div>
 
         <!-- Page content -->
-        <div id="page-content-wrapper">
+        <div id="page-content">
             <!-- Top navbar -->
             <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
                 <div class="container-fluid">
