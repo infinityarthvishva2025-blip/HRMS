@@ -1,0 +1,71 @@
+﻿@model HRMS.Models.DashboardViewModel
+
+<div class="row">
+    <!-- Total Employees Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="dashboard-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="card-icon employees-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h2 class="card-value">@Model.TotalEmployees</h2>
+                        <p class="card-title">TOTAL EMPLOYEES</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Present Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="dashboard-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="card-icon present-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h2 class="card-value">@Model.TodaysPresent</h2>
+                        <p class="card-title">TODAY'S PRESENT</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Geo Tags Assigned Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="dashboard-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="card-icon geotags-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h2 class="card-value">@Model.GeoTagsAssigned</h2>
+                        <p class="card-title">GEO TAGS ASSIGNED</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Leaves Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="dashboard-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="card-icon leaves-icon">
+                        <i class="fas fa-calendar-times"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h2 class="card-value">@Model.PendingLeaves</h2>
+                        <p class="card-title">PENDING LEAVES</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

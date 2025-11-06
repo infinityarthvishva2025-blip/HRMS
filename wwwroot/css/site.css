@@ -1,3 +1,175 @@
+:root {
+    --primary-color: #3a7bd5;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --info-color: #17a2b8;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+}
+
+body {
+    background-color: #f5f7fb;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, var(--primary-color), #00d2ff);
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.brand-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.dashboard-title {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.last-updated {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+    border: none;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+.card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-right: 15px;
+}
+
+.employees-icon {
+    background-color: rgba(58, 123, 213, 0.1);
+    color: var(--primary-color);
+}
+
+.present-icon {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.geotags-icon {
+    background-color: rgba(23, 162, 184, 0.1);
+    color: var(--info-color);
+}
+
+.leaves-icon {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: var(--warning-color);
+}
+
+.card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0;
+    color: var(--dark-color);
+}
+
+.card-title {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    margin-bottom: 0;
+    font-weight: 500;
+}
+
+.hr-system-section {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.progress {
+    height: 10px;
+    border-radius: 5px;
+    margin-top: 5px;
+}
+
+.progress-bar {
+    background: linear-gradient(to right, var(--primary-color), #00d2ff);
+}
+
+.footer {
+    background-color: var(--dark-color);
+    color: white;
+    padding: 1rem 0;
+    margin-top: 2rem;
+    font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .brand-name {
+        font-size: 1.4rem;
+    }
+
+    .dashboard-title {
+        font-size: 1rem;
+    }
+
+    .card-value {
+        font-size: 1.5rem;
+    }
+
+    .card-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-header {
+        padding: 0.8rem 0;
+    }
+
+    .brand-name {
+        font-size: 1.2rem;
+    }
+
+    .last-updated {
+        font-size: 0.8rem;
+    }
+
+    .hr-system-section {
+        padding: 1rem;
+    }
+}
 html {
   font-size: 14px;
 }
@@ -128,7 +300,7 @@ input {
 
 
 
-/* Sidebar layout */
+ Sidebar layout 
 #wrapper {
     display: flex;
     width: 100%;
@@ -166,7 +338,7 @@ input {
     background-color: #f0f2f5;
 }
 
-/* Make sidebar sticky */
+ Make sidebar sticky 
 #sidebar-wrapper {
     position: fixed;
     top: 0;
