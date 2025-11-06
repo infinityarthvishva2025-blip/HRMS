@@ -5,8 +5,8 @@ namespace HRMS.Repositories
 {
     public interface IAttendanceRepository
     {
-        IEnumerable<AttendanceRecord> GetAll();   // ✅ NO BODY
-        void Add(AttendanceRecord record);        // ✅ NO BODY
+        IEnumerable<Attendance> GetAll();   // ✅ NO BODY
+        void Add(Attendance record);        // ✅ NO BODY
     }
 }
 

@@ -5,8 +5,8 @@ namespace HRMS.Services
     public interface IAttendanceService
     
     {
-        IEnumerable<AttendanceRecord> GetRecentAttendance();
+        IEnumerable<Attendance> GetRecentAttendance();
         bool IsJioTagWithinRange(double lat, double lng);
-        AttendanceRecord MarkAttendance(string jioTag, double lat, double lng);
+        Attendance MarkAttendance(string jioTag, double lat, double lng);
     }
 }

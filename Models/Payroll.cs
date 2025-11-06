@@ -6,6 +6,8 @@ namespace HRMS.Models
     {
         public int Id { get; set; }
         public string EmployeeName { get; set; }
+
+        public string Month { get; set; }
         public decimal BasicSalary { get; set; }
         public decimal HRA { get; set; }
         public decimal TA { get; set; }

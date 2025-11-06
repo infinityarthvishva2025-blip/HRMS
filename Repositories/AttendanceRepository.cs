@@ -5,14 +5,14 @@ namespace HRMS.Repositories
 {
     public class AttendanceRepository : IAttendanceRepository
     {
-        private readonly List<AttendanceRecord> _db = new();
+        private readonly List<Attendance> _db = new();
 
-        public IEnumerable<AttendanceRecord> GetAll()
+        public IEnumerable<Attendance> GetAll()
         {
             return _db;   // ✅ method body is allowed here
         }
 
-        public void Add(AttendanceRecord record)
+        public void Add(Attendance record)
         {
             record.Id = _db.Count + 1;
             _db.Add(record);
