@@ -1,0 +1,25 @@
+﻿@model HRMS.Models.AttendanceRecord
+
+<link rel="stylesheet" href="~/css/attendance.css" />
+
+<div class="container mt-4">
+
+    <h2>Attendance Management</h2>
+
+    <div class="row mt-3">
+        <div class="col-md-7">
+            @await Html.PartialAsync("_JioTagPanel")
+        </div>
+
+        <div class="col-md-5">
+            @await Html.PartialAsync("_SummaryChart")
+        </div>
+    </div>
+
+    <div class="mt-4">
+        @await Html.PartialAsync("_RecentRecords", Model.RecentRecords)
+    </div>
+
+</div>
+
+<script src="~/js/attendanceChart.js"></script>
