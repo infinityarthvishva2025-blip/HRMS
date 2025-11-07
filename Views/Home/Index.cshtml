@@ -1,4 +1,6 @@
-﻿@{
+﻿@model HRMS.Models.CelebrationViewModel
+@using System.Linq
+@{
     ViewData["Title"] = "Dashboard";
 }
 
@@ -46,63 +48,100 @@
 </div>
 
 <!-- Celebrations + Chart Row -->
+<!-- Celebrations + Chart Row -->
 <div class="row mt-4">
-    <!-- Celebrations Section -->
-    <div class="col-md-6 mb-4">
+    <!-- Celebrations Section (Left) -->
+    <div class="col-lg-6 col-md-12 mb-4">
         <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white fw-bold">
+            <div class="card-header bg-white fw-bold border-bottom">
                 🎉 Celebrations
             </div>
             <div class="card-body">
+                <div class="row">
+                    <!-- Today's Celebrations -->
+                    <div class="col-md-6 border-end">
+                        <h6 class="fw-bold text-primary mb-3">Today's Celebrations</h6>
 
-                <!-- Today's Celebrations -->
-                <h5>Today's Celebrations</h5>
-                @if ((Model?.TodaysBirthdays?.Any() ?? false) || (Model?.TodaysAnniversaries?.Any() ?? false))
-                {
-                    @foreach (var emp in Model.TodaysBirthdays ?? new List<HRMS.Models.Employee>())
-                    {
-                        <div><i class="fa fa-birthday-cake text-danger"></i> @emp.Name - Birthday Today 🎂</div>
-                    }
+                        @if ((Model?.TodaysBirthdays?.Any() ?? false) || (Model?.TodaysAnniversaries?.Any() ?? false))
+                        {
+                            @foreach (var emp in Model.TodaysBirthdays)
+                            {
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="icon bg-danger-subtle text-danger me-2">
+                                        <i class="fa-solid fa-cake-candles"></i>
+                                    </div>
+                                    <div>
+                                        <strong>@emp.Name</strong><br />
+                                        <small class="text-muted">Birthday Today 🎂</small>
+                                    </div>
+                                </div>
+                            }
 
-                    @foreach (var emp in Model.TodaysAnniversaries ?? new List<HRMS.Models.Employee>())
-                    {
-                        <div><i class="fa fa-briefcase text-info"></i> @emp.Name - Work Anniversary 🎉</div>
-                    }
-                }
-                else
-                {
-                    <div class="text-muted">No celebrations today 🎈</div>
-                }
+                            @foreach (var emp in Model.TodaysAnniversaries)
+                            {
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="icon bg-info-subtle text-info me-2">
+                                        <i class="fa-solid fa-briefcase"></i>
+                                    </div>
+                                    <div>
+                                        <strong>@emp.Name</strong><br />
+                                        <small class="text-muted">@emp.Position 🎉</small>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-muted">No celebrations today 🎈</div>
+                        }
+                    </div>
 
-                <hr />
+                    <!-- Tomorrow's Celebrations -->
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-success mb-3">Tomorrow's Celebrations</h6>
 
-                <!-- Tomorrow's Celebrations -->
-                <h5>Tomorrow's Celebrations</h5>
-                @if ((Model?.TomorrowsBirthdays?.Any() ?? false) || (Model?.TomorrowsAnniversaries?.Any() ?? false))
-                {
-                    @foreach (var emp in Model.TomorrowsBirthdays ?? new List<HRMS.Models.Employee>())
-                    {
-                        <div><i class="fa fa-birthday-cake text-danger"></i> @emp.Name - Birthday Tomorrow 🎈</div>
-                    }
+                        @if ((Model?.TomorrowsBirthdays?.Any() ?? false) || (Model?.TomorrowsAnniversaries?.Any() ?? false))
+                        {
+                            @foreach (var emp in Model.TomorrowsBirthdays)
+                            {
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="icon bg-danger-subtle text-danger me-2">
+                                        <i class="fa-solid fa-cake-candles"></i>
+                                    </div>
+                                    <div>
+                                        <strong>@emp.Name</strong><br />
+                                        <small class="text-muted">Birthday Tomorrow 🎂</small>
+                                    </div>
+                                </div>
+                            }
 
-                    @foreach (var emp in Model.TomorrowsAnniversaries ?? new List<HRMS.Models.Employee>())
-                    {
-                        <div><i class="fa fa-briefcase text-info"></i> @emp.Name - Work Anniversary 🎊</div>
-                    }
-                }
-                else
-                {
-                    <div class="text-muted">No celebrations tomorrow 🎉</div>
-                }
-
+                            @foreach (var emp in Model.TomorrowsAnniversaries)
+                            {
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="icon bg-info-subtle text-info me-2">
+                                        <i class="fa-solid fa-briefcase"></i>
+                                    </div>
+                                    <div>
+                                        <strong>@emp.Name</strong><br />
+                                        <small class="text-muted">@emp.Position 🎊</small>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-muted">No celebrations tomorrow 🎉</div>
+                        }
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Employee Distribution Chart -->
-    <div class="col-md-6 mb-4 d-flex">
-        <div class="card shadow-sm border-0 flex-fill h-100">
-            <div class="card-header bg-white fw-bold">
+    <!-- Employee Distribution Chart (Right) -->
+    <div class="col-lg-6 col-md-12 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white fw-bold border-bottom">
                 Employee Distribution by Department
             </div>
             <div class="card-body d-flex align-items-center justify-content-center">
@@ -112,25 +151,34 @@
     </div>
 </div>
 
+    
+
+   
+
+<!-- Chart.js Script -->
 <!-- Chart.js Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const ctx = document.getElementById('deptChart');
 
+    const departmentLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DepartmentLabels));
+    const departmentValues = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DepartmentValues));
+
     new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['IT', 'HR', 'Finance', 'Marketing', 'Operations', 'Sales'],
+            labels: departmentLabels,
             datasets: [{
                 label: 'Employees',
-                data: [25, 18, 12, 20, 15, 10],
+                data: departmentValues,
                 backgroundColor: [
-                    '#1976d2',  // IT
-                    '#009688',  // HR
-                    '#9c27b0',  // Finance
-                    '#f44336',  // Marketing
-                    '#ff9800',  // Operations
-                    '#00bfa5'   // Sales
+                    '#1976d2', // IT
+                    '#009688', // HR
+                    '#9c27b0', // Finance
+                    '#f44336', // Marketing
+                    '#ff9800', // Operations
+                    '#00bfa5', // Sales
+                    '#795548', // Others
                 ],
                 borderWidth: 2,
                 borderColor: '#fff',
@@ -153,6 +201,7 @@
         }
     });
 </script>
+
 
 <!-- Celebration Styling -->
 <style>
@@ -184,4 +233,35 @@
     .text-info {
         color: #00838f !important;
     }
+
+    .icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .bg-danger-subtle {
+        background-color: #ffe5e5 !important;
+    }
+
+    .bg-info-subtle {
+        background-color: #e0f7fa !important;
+    }
+
+    .text-danger {
+        color: #e53935 !important;
+    }
+
+    .text-info {
+        color: #00838f !important;
+    }
+
+    .text-muted {
+        font-size: 0.9rem;
+    }
+
 </style>

@@ -1,6 +1,9 @@
 using HRMS.Data;
 using HRMS.Models;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace HRMS.Controllers
 {
@@ -8,7 +11,6 @@ namespace HRMS.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        // Inject the context via constructor
         public HomeController(ApplicationDbContext context)
         {
             _context = context;
@@ -16,27 +18,56 @@ namespace HRMS.Controllers
 
         public IActionResult Index()
         {
-            var today = DateTime.Today;
+            var today = DateTime.Now.Date;
             var tomorrow = today.AddDays(1);
-
-            // Fetch employees from database
             var employees = _context.Employees.ToList();
 
-            // Today's birthdays
-            var todaysBirthdays = employees
-                .Where(e => e.DOB_Date.Day == today.Day && e.DOB_Date.Month == today.Month)
-                .ToList();
-
-            // Tomorrow's birthdays
-            var tomorrowsBirthdays = employees
-                .Where(e => e.DOB_Date.Day == tomorrow.Day && e.DOB_Date.Month == tomorrow.Month)
-                .ToList();
-
+            // ?? Birthdays and Work Anniversaries
             var model = new CelebrationViewModel
             {
-                TodaysBirthdays = todaysBirthdays,
-                TomorrowsBirthdays = tomorrowsBirthdays
+                TodaysBirthdays = employees
+                    .Where(e => e.DOB_Date.HasValue &&
+                                e.DOB_Date.Value.Month == today.Month &&
+                                e.DOB_Date.Value.Day == today.Day)
+                    .ToList(),
+
+                TomorrowsBirthdays = employees
+                    .Where(e => e.DOB_Date.HasValue &&
+                                e.DOB_Date.Value.Month == tomorrow.Month &&
+                                e.DOB_Date.Value.Day == tomorrow.Day)
+                    .ToList(),
+
+                TodaysAnniversaries = employees
+                    .Where(e => e.JoiningDate.HasValue &&
+                                e.JoiningDate.Value.Month == today.Month &&
+                                e.JoiningDate.Value.Day == today.Day)
+                    .Select(e => new Employee
+                    {
+                        Name = e.Name,
+                        Position = $"{Math.Max(1, today.Year - e.JoiningDate.Value.Year)} Year{(today.Year - e.JoiningDate.Value.Year > 1 ? "s" : "")} Work Anniversary"
+                    })
+                    .ToList(),
+
+                TomorrowsAnniversaries = employees
+                    .Where(e => e.JoiningDate.HasValue &&
+                                e.JoiningDate.Value.Month == tomorrow.Month &&
+                                e.JoiningDate.Value.Day == tomorrow.Day)
+                    .Select(e => new Employee
+                    {
+                        Name = e.Name,
+                        Position = $"{Math.Max(1, tomorrow.Year - e.JoiningDate.Value.Year)} Year{(tomorrow.Year - e.JoiningDate.Value.Year > 1 ? "s" : "")} Work Anniversary"
+                    })
+                    .ToList()
             };
+
+            // ?? Department Distribution Data
+            var departmentCounts = employees
+                .GroupBy(e => e.Department)
+                .Select(g => new { Department = g.Key, Count = g.Count() })
+                .ToList();
+
+            ViewBag.DepartmentLabels = departmentCounts.Select(d => d.Department).ToArray();
+            ViewBag.DepartmentValues = departmentCounts.Select(d => d.Count).ToArray();
 
             return View(model);
         }
