@@ -28,7 +28,7 @@ namespace HRMS.Controllers
             return View();
         }
 
-        // POST: Employees/Create
+        // POST: Employees/Create...
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Employee employee)
