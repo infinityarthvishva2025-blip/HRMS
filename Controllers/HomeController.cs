@@ -1,9 +1,8 @@
-using HRMS.Data;
+﻿using HRMS.Data;
 using HRMS.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
-using System.Collections.Generic;
 
 namespace HRMS.Controllers
 {
@@ -22,7 +21,7 @@ namespace HRMS.Controllers
             var tomorrow = today.AddDays(1);
             var employees = _context.Employees.ToList();
 
-            // ?? Birthdays and Work Anniversaries
+            // 🎉 Build celebrations model
             var model = new CelebrationViewModel
             {
                 TodaysBirthdays = employees
@@ -44,7 +43,7 @@ namespace HRMS.Controllers
                     .Select(e => new Employee
                     {
                         Name = e.Name,
-                        Position = $"{Math.Max(1, today.Year - e.JoiningDate.Value.Year)} Year{(today.Year - e.JoiningDate.Value.Year > 1 ? "s" : "")} Work Anniversary"
+                        Position = $"{today.Year - e.JoiningDate.Value.Year} Year Work Anniversary"
                     })
                     .ToList(),
 
@@ -55,12 +54,14 @@ namespace HRMS.Controllers
                     .Select(e => new Employee
                     {
                         Name = e.Name,
-                        Position = $"{Math.Max(1, tomorrow.Year - e.JoiningDate.Value.Year)} Year{(tomorrow.Year - e.JoiningDate.Value.Year > 1 ? "s" : "")} Work Anniversary"
+                        Position = $"{tomorrow.Year - e.JoiningDate.Value.Year} Year Work Anniversary"
                     })
-                    .ToList()
+                    .ToList(),
+
+                TotalEmployees = employees.Count
             };
 
-            // ?? Department Distribution Data
+            // 📊 Department Distribution
             var departmentCounts = employees
                 .GroupBy(e => e.Department)
                 .Select(g => new { Department = g.Key, Count = g.Count() })

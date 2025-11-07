@@ -1,19 +1,24 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using HRMS.Data;
 using HRMS.Models;
-using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 
 namespace HRMS.Controllers
 {
     public class LeaveController : Controller
     {
-        // Temporary static list instead of database
-        private static List<Leave> _leaves = new List<Leave>();
+        private readonly ApplicationDbContext _context;
+
+        public LeaveController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
 
         // GET: /Leave/
         public IActionResult Index()
         {
-            return View(_leaves);
+            var leaves = _context.Leaves.ToList();
+            return View(leaves);
         }
 
         // GET: /Leave/Create
@@ -24,58 +29,62 @@ namespace HRMS.Controllers
 
         // POST: /Leave/Create
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Create(Leave leave)
         {
             if (ModelState.IsValid)
             {
-                leave.Id = _leaves.Count + 1; // simulate auto ID
-                _leaves.Add(leave);
+                _context.Leaves.Add(leave);
+                _context.SaveChanges();
                 return RedirectToAction(nameof(Index));
             }
-            return View(leave);
-        }
-
-        // GET: /Leave/Details/5
-        public IActionResult Details(int id)
-        {
-            var leave = _leaves.FirstOrDefault(x => x.Id == id);
-            if (leave == null)
-                return NotFound();
             return View(leave);
         }
 
         // GET: /Leave/Edit/5
         public IActionResult Edit(int id)
         {
-            var leave = _leaves.FirstOrDefault(x => x.Id == id);
+            var leave = _context.Leaves.Find(id);
             if (leave == null)
                 return NotFound();
+
             return View(leave);
         }
 
-        // POST: /Leave/Edit
+        // POST: /Leave/Edit/5
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Edit(Leave leave)
         {
-            var existing = _leaves.FirstOrDefault(x => x.Id == leave.Id);
-            if (existing != null)
+            if (ModelState.IsValid)
             {
-                existing.LeaveType = leave.LeaveType;
-                existing.StartDate = leave.StartDate;
-                existing.EndDate = leave.EndDate;
-                existing.Reason = leave.Reason;
-                existing.Status = leave.Status;
+                _context.Leaves.Update(leave);
+                _context.SaveChanges();
+                return RedirectToAction(nameof(Index));
             }
+            return View(leave);
+        }
+
+        // GET: /Leave/Delete/5
+        public IActionResult Delete(int id)
+        {
+            var leave = _context.Leaves.Find(id);
+            if (leave == null)
+                return NotFound();
+
+            _context.Leaves.Remove(leave);
+            _context.SaveChanges();
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: /Leave/Delete/5
-        public IActionResult Delete(int id)
+        // GET: /Leave/Details/5
+        public IActionResult Details(int id)
         {
-            var leave = _leaves.FirstOrDefault(x => x.Id == id);
-            if (leave != null)
-                _leaves.Remove(leave);
-            return RedirectToAction(nameof(Index));
+            var leave = _context.Leaves.Find(id);
+            if (leave == null)
+                return NotFound();
+
+            return View(leave);
         }
     }
 }
