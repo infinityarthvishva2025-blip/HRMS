@@ -33,7 +33,8 @@ namespace HRMS.Models
 
         [Required]
         public DateTime DOB_Date { get; set; }
-
+        [Required]
+        public DateTime JoiningDate { get; set; }
         [Required]
         public string Gender { get; set; }
 
