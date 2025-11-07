@@ -1,12 +1,6 @@
-﻿const ctx = document.getElementById("attendanceChart");
+﻿
 
-new Chart(ctx, {
-    type: "bar",
-    data: {
-        labels: ["Present", "Absent", "On Leave", "Late"],
-        datasets: [{
-            label: "Today",
-            data: [41, 3, 2, 5]
-        }]
-    }
-});
+function simulateGeoTagAttendance() {
+    const result = document.getElementById("attendanceResult");
+    result.innerHTML = "<span class='text-success'>GEO Tag tap simulated successfully!</span>";
+}
