@@ -30,6 +30,48 @@
                         <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
                 </div>
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label asp-for="FatherName" class="form-label fw-semibold">Father’s Name</label>
+                    </div>
+                    <div class="col-md-3">
+                        <input asp-for="FatherName" class="form-control" placeholder="Enter Father’s Name" />
+                        <span asp-validation-for="FatherName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="MotherName" class="form-label fw-semibold">Mother’s Name</label>
+                    </div>
+                    <div class="col-md-3">
+                        <input asp-for="MotherName" class="form-control" placeholder="Enter Mother’s Name" />
+                        <span asp-validation-for="MotherName" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label asp-for="DOB_Date" class="form-label fw-semibold">Date of Birth (DD/MM/YYYY)</label>
+                    </div>
+                    <div class="col-md-3">
+                        <input asp-for="DOB_Date" type="date" class="form-control" placeholder="Enter Father’s Name" />
+                        <span asp-validation-for="DOB_Date" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="Gender" class="form-label fw-semibold">Gender</label>
+                    </div>
+                    <div class="col-md-3">
+
+                        <select asp-for="Gender" class="form-select">
+                            <option value="">-- Select Gender --</option>
+                            <option>Female</option>
+                            <option>Male</option>
+                            <option>Other</option>
+                        </select>
+                        <span asp-validation-for="Gender" class="text-danger"></span>
+
+                      
+                    </div>
+                </div>
 
                 <div class="row mb-3">
                     <div class="col-md-3">
