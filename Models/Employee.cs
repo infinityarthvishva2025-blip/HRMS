@@ -30,11 +30,9 @@ namespace HRMS.Models
         public string FatherName { get; set; }
         
         public string MotherName { get; set; }
-
-       
         public DateTime? DOB_Date { get; set; }
-        public DateTime? JoiningDate { get; set; }
 
+        public DateTime? JoiningDate { get; set; }
 
         [Required]
         public string Gender { get; set; }

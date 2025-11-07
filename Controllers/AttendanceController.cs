@@ -2,9 +2,6 @@
 
 namespace HRMS.Controllers
 {
-   
-
-
     public class AttendanceController : Controller
     {
         
@@ -17,5 +14,8 @@ namespace HRMS.Controllers
       
     }
 }
+
+
+
 
 
