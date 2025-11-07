@@ -26,15 +26,15 @@ namespace HRMS.Models
         public decimal Salary { get; set; }
 
         public string JioTag { get; set; }
-        [Required]
+        
         public string FatherName { get; set; }
-        [Required]
+        
         public string MotherName { get; set; }
 
-        [Required]
+       
         public DateTime DOB_Date { get; set; }
 
-        [Required]
+        
         public string Gender { get; set; }
 
     }
