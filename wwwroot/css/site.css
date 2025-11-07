@@ -508,5 +508,40 @@ body {
         margin: 20px auto;
     }
 }
+.celebration-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
 
+.bg-danger-subtle {
+    background-color: #ffe5e5 !important;
+}
+
+.bg-info-subtle {
+    background-color: #e0f7fa !important;
+}
+
+.text-danger {
+    color: #e53935 !important;
+}
+
+.text-info {
+    color: #00838f !important;
+}
+
+.card {
+    border-radius: 10px;
+}
+
+.card-header {
+    font-size: 1.1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
 

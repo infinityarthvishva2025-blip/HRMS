@@ -21,7 +21,7 @@
         .sidebar {
             width: 250px;
             height: 100vh;
-            background: linear-gradient(180deg, #0077c2, #009688);
+            background: linear-gradient(180deg, White,white);
             color: #fff;
             position: fixed;
             left: 0;
@@ -84,7 +84,7 @@
             display: flex;
             align-items: center;
             padding: 12px 18px;
-            color: #e0f2f1;
+            color: black;
             font-size: 15px;
             font-weight: 500;
             text-decoration: none;
@@ -93,10 +93,10 @@
         }
 
             .menu-item i {
-                font-size: 18px;
-                min-width: 25px;
+                font-size: 30px;
+                min-width: 30px;
                 text-align: center;
-                margin-right: 12px;
+                margin-right: 20px;
                 transition: all 0.25s ease;
             }
 
@@ -110,7 +110,7 @@
             .menu-item.active {
                 background: rgba(255,255,255,0.25);
                 border-left: 4px solid #ffffff;
-                color: #fff;
+                color: black;
                 font-weight: 600;
             }
 
@@ -132,7 +132,7 @@
         /* Logout */
         .logout {
             margin-top: auto;
-            color: #ffcccc;
+            color:red;
             border-top: 1px solid rgba(255,255,255,0.15);
         }
 
@@ -192,7 +192,7 @@
         <div id="sidebar-wrapper" class="sidebar">
             <div class="sidebar-header">
                 <img src="~/images/infinity-logo.png" alt="Infinity Arthvishva" class="sidebar-logo" />
-                <h4>HRMS Portal</h4>
+                <h4 class="text-black">HRMS Portal</h4>
             </div>
 
             <div class="sidebar-menu">
@@ -234,7 +234,7 @@
             <nav class="navbar navbar-expand-lg navbar-light border-bottom px-3 py-2">
                 <div class="container-fluid">
                     <button id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
-                    <span class="ms-auto fw-semibold">Welcome, @User.Identity?.Name</span>
+                    <span class="ms-auto fw-semibold">Welcome, Gaurav @User.Identity?.Name</span>
                 </div>
             </nav>
 
