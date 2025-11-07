@@ -1,41 +1,57 @@
-﻿
+﻿@model HRMS.Models.Employee
 
-
-@model HRMS.Models.Employee
-
-<div class="row">
-    <div class="col-md-6">
-        <label>Employee Code</label>
-        <input class="form-control" asp-for="EmployeeCode" />
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label asp-for="EmployeeCode" class="form-label">Employee Code:</label>
+        </div>
+        <div class="col-md-3">
+            <input asp-for="EmployeeCode" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Name" class="form-label">Name:</label>
+        </div>
+        <div class="col-md-3">
+            <input asp-for="Name" class="form-control" />
+        </div>
     </div>
 
-    <div class="col-md-6">
-        <label>Name</label>
-        <input class="form-control" asp-for="Name" />
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label asp-for="Email" class="form-label">Email:</label>
+        </div>
+        <div class="col-md-3">
+            <input asp-for="Email" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Department" class="form-label">Department:</label>
+        </div>
+        <div class="col-md-3">
+            <input asp-for="Department" class="form-control" />
+        </div>
     </div>
 
-    <div class="col-md-6 mt-2">
-        <label>Email</label>
-        <input class="form-control" asp-for="Email" />
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label asp-for="Position" class="form-label">Position:</label>
+        </div>
+        <div class="col-md-3">
+            <input asp-for="Position" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Salary" class="form-label">Salary:</label>
+        </div>
+        <div class="col-md-3">
+            <input asp-for="Salary" type="number" class="form-control" />
+        </div>
     </div>
 
-    <div class="col-md-6 mt-2">
-        <label>Department</label>
-        <input class="form-control" asp-for="Department" />
-    </div>
-
-    <div class="col-md-6 mt-2">
-        <label>Position</label>
-        <input class="form-control" asp-for="Position" />
-    </div>
-
-    <div class="col-md-6 mt-2">
-        <label>Salary</label>
-        <input class="form-control" asp-for="Salary" type="number" />
-    </div>
-
-    <div class="col-md-6 mt-2">
-        <label>Jio Tag</label>
-        <input class="form-control" asp-for="JioTag" />
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label asp-for="JioTag" class="form-label">Jio Tag:</label>
+        </div>
+        <div class="col-md-3">
+            <input asp-for="JioTag" class="form-control" />
+        </div>
     </div>
 </div>
