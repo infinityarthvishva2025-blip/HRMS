@@ -1,8 +1,8 @@
-﻿using HRMS.ViewModels;
+﻿using HRMS.Models;
 
 namespace HRMS.Models
 {
-    public class Attendance : AttendanceDashboardViewModel
+    public class Attendance 
 
 
     {

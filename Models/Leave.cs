@@ -6,26 +6,23 @@ namespace HRMS.Models
     public class Leave
     {
         [Key]
-        public int Id { get; set; }
+        public int Id { get; set; }   // EF will auto-detect this as an identity column
 
         [Required]
-        [Display(Name = "Leave Type")]
+        [StringLength(50)]
         public string LeaveType { get; set; }
 
         [Required]
-        [DataType(DataType.Date)]
-        [Display(Name = "Start Date")]
         public DateTime StartDate { get; set; }
 
         [Required]
-        [DataType(DataType.Date)]
-        [Display(Name = "End Date")]
         public DateTime EndDate { get; set; }
 
         [Required]
+        [StringLength(200)]
         public string Reason { get; set; }
 
-        [Display(Name = "Status")]
+        [StringLength(20)]
         public string Status { get; set; } = "Pending";
     }
 }
