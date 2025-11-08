@@ -57,7 +57,10 @@ namespace HRMS.Controllers
                         Name = e.Name,
                         Position = $"{Math.Max(1, tomorrow.Year - e.JoiningDate.Value.Year)} Year{(tomorrow.Year - e.JoiningDate.Value.Year > 1 ? "s" : "")} Work Anniversary"
                     })
-                    .ToList()
+                    .ToList(),
+
+
+                TotalEmployees = employees.Count
             };
 
             // ?? Department Distribution Data
