@@ -4,32 +4,42 @@
 
 <form asp-action="Create" method="post">
     <div class="form-group">
-        <label>Leave Type</label>
+        <label asp-for="LeaveType"></label>
         <select asp-for="LeaveType" class="form-control">
             <option value="">-- Select Leave Type --</option>
-            <option value="Sick Leave">Sick Leave</option>
-            <option value="Casual Leave">Casual Leave</option>
-            <option value="Paid Leave">Paid Leave</option>
-            <option value="Maternity Leave">Maternity Leave</option>
-            <option value="Paternity Leave">Paternity Leave</option>
-            <option value="Unpaid Leave">Unpaid Leave</option>
+            <option>Sick Leave</option>
+            <option>Casual Leave</option>
+            <option>Paid Leave</option>
+            <option>Maternity Leave</option>
+            <option>Paternity Leave</option>
+            <option>Unpaid Leave</option>
         </select>
+        <span asp-validation-for="LeaveType" class="text-danger"></span>
     </div>
 
     <div class="form-group">
-        <label>Start Date</label>
+        <label asp-for="StartDate"></label>
         <input asp-for="StartDate" class="form-control" type="date" />
+        <span asp-validation-for="StartDate" class="text-danger"></span>
     </div>
 
     <div class="form-group">
-        <label>End Date</label>
+        <label asp-for="EndDate"></label>
         <input asp-for="EndDate" class="form-control" type="date" />
+        <span asp-validation-for="EndDate" class="text-danger"></span>
     </div>
 
     <div class="form-group">
-        <label>Reason</label>
+        <label asp-for="Reason"></label>
         <textarea asp-for="Reason" class="form-control"></textarea>
+        <span asp-validation-for="Reason" class="text-danger"></span>
     </div>
 
     <button type="submit" class="btn btn-success mt-3">Submit</button>
 </form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
