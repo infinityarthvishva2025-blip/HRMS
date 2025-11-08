@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HRMS.Migrations
 {
     /// <inheritdoc />
-    public partial class AddEmployeeTable : Migration
+    public partial class NewDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -43,17 +43,11 @@ namespace HRMS.Migrations
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     InTime = table.Column<TimeSpan>(type: "time", nullable: true),
                     OutTime = table.Column<TimeSpan>(type: "time", nullable: true),
-                    Location = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    AttendanceId = table.Column<int>(type: "int", nullable: true)
+                    Location = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Attendances", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Attendances_Attendances_AttendanceId",
-                        column: x => x.AttendanceId,
-                        principalTable: "Attendances",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -62,13 +56,18 @@ namespace HRMS.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    EmployeeCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EmployeeCode = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Department = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Position = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Department = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Position = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Salary = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    JioTag = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    JioTag = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    FatherName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    MotherName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    DOB_Date = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    JoiningDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Gender = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -99,7 +98,6 @@ namespace HRMS.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    EmployeeId = table.Column<int>(type: "int", nullable: false),
                     LeaveType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -129,11 +127,6 @@ namespace HRMS.Migrations
                 {
                     table.PrimaryKey("PK_Payrolls", x => x.Id);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Attendances_AttendanceId",
-                table: "Attendances",
-                column: "AttendanceId");
         }
 
         /// <inheritdoc />

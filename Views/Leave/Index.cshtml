@@ -2,15 +2,17 @@
 
 <h2>Leave Requests</h2>
 
-<a asp-action="Create" class="btn btn-primary mb-3">Apply for Leave</a>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
 
-<table class="table table-striped">
-    <thead>
+<table class="table table-bordered table-striped mt-3">
+    <thead class="table-dark">
         <tr>
-            <th>ID</th>
-            <th>Type</th>
-            <th>Start</th>
-            <th>End</th>
+            <th>Leave Type</th>
+            <th>Start Date</th>
+            <th>End Date</th>
             <th>Reason</th>
             <th>Status</th>
             <th>Actions</th>
@@ -20,18 +22,18 @@
         @foreach (var item in Model)
         {
             <tr>
-                <td>@item.Id</td>
                 <td>@item.LeaveType</td>
                 <td>@item.StartDate.ToShortDateString()</td>
                 <td>@item.EndDate.ToShortDateString()</td>
                 <td>@item.Reason</td>
                 <td>@item.Status</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Delete</a>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+<a asp-action="Create" class="btn btn-primary mt-2">Apply New Leave</a>

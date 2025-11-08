@@ -102,9 +102,10 @@
 
             .menu-item:hover {
                 background: rgba(255,255,255,0.15);
-                color: #ffffff;
+                color: gray;
                 border-left: 4px solid #ffffff;
                 padding-left: 22px;
+                text-shadow: 0 0 8px currentColor;
             }
 
             .menu-item.active {
@@ -164,6 +165,59 @@
             padding: 6px 12px;
             border-radius: 5px;
         }
+        /* Base icon styling */
+        .sidebar-menu i {
+            font-size: 18px;
+            margin-right: 8px;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        /* Hover effect */
+        .menu-item:hover i {
+            transform: scale(1.2);
+        }
+
+        /* Colorful icons */
+        .icon-dashboard {
+            color: #4CAF50;
+        }
+        /* Green */
+        .icon-employee {
+            color: #2196F3;
+        }
+        /* Blue */
+        .icon-attendance {
+            color: #FF9800;
+        }
+        /* Orange */
+        .icon-leave {
+            color: #9C27B0;
+        }
+        /* Purple */
+        .icon-payroll {
+            color: #009688;
+        }
+        /* Teal */
+        .icon-geo {
+            color: #E91E63;
+        }
+        /* Pink */
+        .icon-assets {
+            color: #795548;
+        }
+        /* Brown */
+        .icon-expenses {
+            color: #FFC107;
+        }
+        /* Amber */
+        .icon-reports {
+            color: #3F51B5;
+        }
+        /* Indigo */
+        .icon-logout {
+            color: #F44336;
+        }
+        /* Red */
 
        
 
@@ -197,36 +251,37 @@
 
             <div class="sidebar-menu">
                 <a asp-controller="Home" asp-action="Index" class="menu-item active">
-                    <i class="fa-solid fa-gauge"></i><span>Dashboard</span>
+                    <i class="fa-solid fa-gauge icon-dashboard"></i><span>Dashboard</span>
                 </a>
                 <a asp-controller="Employees" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-user-tie"></i><span>Employee Management</span>
+                    <i class="fa-solid fa-user-tie icon-employee"></i><span>Employee Management</span>
                 </a>
                 <a asp-controller="Attendance" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-calendar-check"></i><span>Attendance</span>
+                    <i class="fa-solid fa-calendar-check icon-attendance"></i><span>Attendance</span>
                 </a>
                 <a asp-controller="Leave" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-plane-departure"></i><span>Leave Management</span>
+                    <i class="fa-solid fa-plane-departure icon-leave"></i><span>Leave Management</span>
                 </a>
                 <a asp-controller="Payroll" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-wallet"></i><span>Payroll</span>
+                    <i class="fa-solid fa-wallet icon-payroll"></i><span>Payroll</span>
                 </a>
                 <a asp-controller="GeoTag" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-tag"></i><span>Geo Tag</span>
+                    <i class="fa-solid fa-tag icon-geo"></i><span>Geo Tag</span>
                 </a>
                 <a asp-controller="Assets" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-wallet"></i><span>Assets</span>
+                    <i class="fa-solid fa-box icon-assets"></i><span>Assets</span>
                 </a>
                 <a asp-controller="Expences" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-laptop"></i><span>Expences</span>
+                    <i class="fa-solid fa-laptop icon-expenses"></i><span>Expenses</span>
                 </a>
                 <a asp-controller="Reports" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-file-alt"></i><span>Reports</span>
+                    <i class="fa-solid fa-file-alt icon-reports"></i><span>Reports</span>
                 </a>
                 <a asp-controller="Account" asp-action="Logout" class="menu-item logout">
-                    <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
+                    <i class="fa-solid fa-right-from-bracket icon-logout"></i><span>Logout</span>
                 </a>
             </div>
+
         </div>
 
         <!-- Page Content -->
