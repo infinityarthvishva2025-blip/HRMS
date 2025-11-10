@@ -4,52 +4,56 @@
     ViewData["Title"] = "Employee List";
 }
 
-<div class="container mt-5">
-    <div class="card shadow border-0">
-        <div class="card-header bg-gradient text-white fw-bold"
-             style="background: linear-gradient(90deg, #0077c2, #009688);">
-            <i class="fa-solid fa-users me-2"></i> Employee List
+<div class="container mt-4">
+    <div class="card shadow border-0 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="fw-bold text-primary">Employee List</h3>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fa-solid fa-user-plus me-1"></i> Add Employee
+            </a>
         </div>
-        <div class="card-body">
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-            }
 
-            <div class="text-end mb-3">
-                <a asp-action="Create" class="btn text-white"
-                   style="background: linear-gradient(90deg, #0077c2, #009688);">
-                    <i class="fa-solid fa-user-plus me-1"></i> Add Employee
-                </a>
-            </div>
-
-            <table class="table table-striped align-middle text-center">
-                <thead class="table-light">
+        <table class="table table-hover align-middle table-bordered">
+            <thead class="table-light text-center">
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Position</th>
+                    <th>Mobile</th>
+                    <th>Marital Status</th>
+                    <th>Blood Group</th>
+                    <th>Address</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody class="text-center">
+                @foreach (var e in Model)
+                {
                     <tr>
-                        <th>Employee Code</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Department</th>
-                        <th>Position</th>
-                        <th>Salary</th>
-                        <th>Geo Tag</th>
+                        <td>@e.EmployeeCode</td>
+                        <td>@e.Name</td>
+                        <td>@e.Department</td>
+                        <td>@e.Position</td>
+                        <td>@e.MobileNumber</td>
+                        <td>@e.MaritalStatus</td>
+                        <td>@e.BloodGroup</td>
+                        <td>@e.Address</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@e.Id" class="btn btn-sm btn-outline-success">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <form asp-action="Delete" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@e.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Are you sure to delete this employee?');">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var emp in Model)
-                    {
-                        <tr>
-                            <td>@emp.EmployeeCode</td>
-                            <td>@emp.Name</td>
-                            <td>@emp.Email</td>
-                            <td>@emp.Department</td>
-                            <td>@emp.Position</td>
-                            <td>₹@emp.Salary</td>
-                            <td>@emp.JioTag</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                }
+            </tbody>
+        </table>
     </div>
 </div>

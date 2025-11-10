@@ -1,45 +1,94 @@
 ﻿@model HRMS.Models.Leave
+@{
+    ViewData["Title"] = "Apply for Leave";
+}
 
-<h2>Apply for Leave</h2>
+<div class="container mt-4">
+    <div class="card shadow-sm p-4">
+        <h2 class="text-center mb-4 fw-bold text-primary">Apply for Leave</h2>
 
-<form asp-action="Create" method="post">
-    <div class="form-group">
-        <label asp-for="LeaveType"></label>
-        <select asp-for="LeaveType" class="form-control">
-            <option value="">-- Select Leave Type --</option>
-            <option>Sick Leave</option>
-            <option>Casual Leave</option>
-            <option>Paid Leave</option>
-            <option>Maternity Leave</option>
-            <option>Paternity Leave</option>
-            <option>Unpaid Leave</option>
-        </select>
-        <span asp-validation-for="LeaveType" class="text-danger"></span>
+        <form asp-action="Create" method="post">
+            <!-- Leave Type -->
+            <div class="form-group mb-3">
+                <label asp-for="LeaveType" class="form-label fw-semibold">Leave Type</label>
+                <select asp-for="LeaveType" class="form-select" id="leaveType" required>
+                    <option value="">-- Select Leave Type --</option>
+                    <option>Casual Leave</option>
+                    <option>Sick Leave</option>
+                    <option>Paid Leave</option>
+                    <option>Unpaid Leave</option>
+                    <option>Half Day Leave</option>
+                </select>
+                <span asp-validation-for="LeaveType" class="text-danger"></span>
+            </div>
+
+            <!-- Full Day Section -->
+            <div id="fullDaySection" class="row mb-3 d-none">
+                <div class="col-md-6">
+                    <label asp-for="FromDate" class="form-label fw-semibold">From Date</label>
+                    <input asp-for="FromDate" type="date" class="form-control" />
+                    <span asp-validation-for="FromDate" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ToDate" class="form-label fw-semibold">To Date</label>
+                    <input asp-for="ToDate" type="date" class="form-control" />
+                    <span asp-validation-for="ToDate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Half Day Section -->
+            <div id="halfDaySection" class="row mb-3 d-none">
+                <div class="col-md-6">
+                    <label asp-for="LeaveDate" class="form-label fw-semibold">Leave Date</label>
+                    <input asp-for="LeaveDate" type="date" class="form-control" />
+                    <span asp-validation-for="LeaveDate" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="HalfDayType" class="form-label fw-semibold">Select Half</label>
+                    <select asp-for="HalfDayType" class="form-select">
+                        <option value="None">-- Select Half --</option>
+                        <option value="Morning">Morning (9:00 AM - 1:00 PM)</option>
+                        <option value="Afternoon">Afternoon (1:00 PM - 6:00 PM)</option>
+                    </select>
+                    <span asp-validation-for="HalfDayType" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Reason -->
+            <div class="form-group mb-3">
+                <label asp-for="Reason" class="form-label fw-semibold">Reason</label>
+                <textarea asp-for="Reason" class="form-control" rows="3" placeholder="Enter reason for leave..."></textarea>
+                <span asp-validation-for="Reason" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a asp-action="Index" class="btn btn-outline-secondary px-4">Cancel</a>
+                <button type="submit" class="btn btn-success px-4">Submit</button>
+            </div>
+        </form>
     </div>
-
-    <div class="form-group">
-        <label asp-for="StartDate"></label>
-        <input asp-for="StartDate" class="form-control" type="date" />
-        <span asp-validation-for="StartDate" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="EndDate"></label>
-        <input asp-for="EndDate" class="form-control" type="date" />
-        <span asp-validation-for="EndDate" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Reason"></label>
-        <textarea asp-for="Reason" class="form-control"></textarea>
-        <span asp-validation-for="Reason" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-success mt-3">Submit</button>
-</form>
+</div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const leaveType = document.getElementById('leaveType');
+        const fullDaySection = document.getElementById('fullDaySection');
+        const halfDaySection = document.getElementById('halfDaySection');
+
+        leaveType.addEventListener('change', () => {
+            const value = leaveType.value.toLowerCase();
+
+            if (value === "half day leave") {
+                halfDaySection.classList.remove('d-none');
+                fullDaySection.classList.add('d-none');
+            } else if (value) {
+                fullDaySection.classList.remove('d-none');
+                halfDaySection.classList.add('d-none');
+            } else {
+                fullDaySection.classList.add('d-none');
+                halfDaySection.classList.add('d-none');
+            }
+        });
+    </script>
 }
