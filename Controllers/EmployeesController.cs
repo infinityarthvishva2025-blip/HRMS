@@ -28,11 +28,36 @@ namespace HRMS.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Generate unique Employee Code automatically
+                var lastEmployee = await _context.Employees
+                    .OrderByDescending(e => e.EmployeeCode)
+                    .FirstOrDefaultAsync();
+
+                int nextNumber = 1;
+                if (lastEmployee != null && !string.IsNullOrEmpty(lastEmployee.EmployeeCode))
+                {
+                    // Extract numeric part (e.g., from EMP005 → 5)
+                    string numericPart = new string(lastEmployee.EmployeeCode
+                        .Where(char.IsDigit)
+                        .ToArray());
+
+                    if (int.TryParse(numericPart, out int lastNumber))
+                        nextNumber = lastNumber + 1;
+                }
+
+                // Format as EMP001, EMP002, etc.
+                employee.EmployeeCode = $"EMP{nextNumber:D3}";
+
+                // Default employee status
+                employee.Status = "Active";
+
                 _context.Add(employee);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Employee added successfully!";
+
+                TempData["Success"] = $"Employee {employee.EmployeeCode} added successfully!";
                 return RedirectToAction(nameof(Index));
             }
+
             return View(employee);
         }
 

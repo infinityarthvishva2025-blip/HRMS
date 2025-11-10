@@ -2,20 +2,11 @@
 
 namespace HRMS.Controllers
 {
-    public class AttendanceController : Controller
+    public class AttendanceRecordViewModel : Controller
     {
-        
         public IActionResult Index()
         {
-          
             return View();
         }
-
-      
     }
 }
-
-
-
-
-

@@ -73,5 +73,9 @@ namespace HRMS.Models
         [Display(Name = "Address")]
         public string Address { get; set; } = string.Empty;
 
+        [Required]
+        [Display(Name = "Employment Status")]
+        public string Status { get; set; } = "Active";
+
     }
 }
