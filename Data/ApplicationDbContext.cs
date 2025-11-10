@@ -16,7 +16,24 @@ namespace HRMS.Data
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Leave> Leaves { get; set; }
         public DbSet<Payroll> Payrolls { get; set; }
-        public DbSet<Attendance> Attendances { get; set; }
+       // public DbSet<Attendance1> Attendances { get; set; }
+
+        public DbSet<GeoTag> GeoTags => Set<GeoTag>();
+        public DbSet<Attendance> Attendances => Set<Attendance>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<GeoTag>()
+                .HasIndex(g => g.TagId)
+                .IsUnique();
+
+            // sample seed (optional)
+            modelBuilder.Entity<GeoTag>().HasData(
+                new GeoTag { Id = 1, TagId = "Office-001", Latitude = 19.0760, Longitude = 72.8777, RadiusMeters = 100000, Description = "Mumbai Office" }
+            );
+        }
 
     }
 }
