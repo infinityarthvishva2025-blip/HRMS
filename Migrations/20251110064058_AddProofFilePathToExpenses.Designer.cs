@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251110060401_AddProofFilePathToExpenses")]
+    [Migration("20251110064058_AddProofFilePathToExpenses")]
     partial class AddProofFilePathToExpenses
     {
         /// <inheritdoc />
