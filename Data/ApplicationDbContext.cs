@@ -16,10 +16,9 @@ namespace HRMS.Data
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Leave> Leaves { get; set; }
         public DbSet<Payroll> Payrolls { get; set; }
-       // public DbSet<Attendance1> Attendances { get; set; }
 
         public DbSet<GeoTag> GeoTags => Set<GeoTag>();
-        public DbSet<Attendance> Attendances => Set<Attendance>();
+       
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

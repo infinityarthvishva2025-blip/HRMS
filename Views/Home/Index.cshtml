@@ -58,42 +58,31 @@
 
     <div class="card-body">
         <div class="d-flex flex-wrap justify-content-center gap-3">
-            <!-- Add Employee -->
             <a asp-controller="Employees" asp-action="Create"
                class="btn btn-primary d-flex align-items-center justify-content-center gap-2 px-4 py-2">
                 <i class="fa-solid fa-user-plus"></i>
                 Add Employee
             </a>
-
-            <!-- View Employees -->
             <a asp-controller="Employees" asp-action="Index"
                class="btn btn-success d-flex align-items-center justify-content-center gap-2 px-4 py-2">
                 <i class="fa-solid fa-list"></i>
                 View Employees
             </a>
-
-            <!-- Attendance Report -->
             <a asp-controller="Attendance" asp-action="Index"
                class="btn btn-info text-white d-flex align-items-center justify-content-center gap-2 px-4 py-2">
                 <i class="fa-solid fa-calendar-check"></i>
                 Attendance Report
             </a>
-
-            <!-- Process Payroll -->
             <a asp-controller="Payroll" asp-action="Index"
                class="btn btn-warning text-dark d-flex align-items-center justify-content-center gap-2 px-4 py-2">
                 <i class="fa-solid fa-file-invoice-dollar"></i>
                 Process Payroll
             </a>
-
-            <!-- Manage Leaves -->
             <a asp-controller="Leave" asp-action="Index"
                class="btn btn-outline-primary d-flex align-items-center justify-content-center gap-2 px-4 py-2">
                 <i class="fa-solid fa-plane-departure"></i>
                 Manage Leaves
             </a>
-
-            <!-- Reports -->
             <a asp-controller="Reports" asp-action="Index"
                class="btn btn-outline-dark d-flex align-items-center justify-content-center gap-2 px-4 py-2">
                 <i class="fa-solid fa-chart-bar"></i>
@@ -102,7 +91,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- ✅ Celebrations + Chart Row -->
 <div class="row mt-4">
@@ -205,6 +193,63 @@
     </div>
 </div>
 
+<!-- ✅ Recent Employees Section -->
+<!-- ✅ Recent Employees Section -->
+<div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-white fw-bold border-bottom d-flex justify-content-between align-items-center">
+        <span><i class="fa-solid fa-users me-2 text-primary"></i>Recent Employees</span>
+        <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-primary btn-sm">
+            View All
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Employee Code</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Position</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (ViewBag.RecentEmployees != null && ((List<HRMS.Models.Employee>)ViewBag.RecentEmployees).Any())
+                {
+                    foreach (var emp in (List<HRMS.Models.Employee>)ViewBag.RecentEmployees)
+                    {
+                        <tr>
+                            <td>@emp.EmployeeCode</td>
+                            <td>@emp.Name</td>
+                            <td>@emp.Department</td>
+                            <td>@emp.Position</td>
+                            <td>
+                                @if (emp.Status == "On Leave")
+                                {
+                                    <span class="badge bg-warning text-dark">On Leave</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-3">
+                            No employees found.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
 <!-- ✅ Chart.js Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -220,8 +265,8 @@
                 label: 'Employees',
                 data: departmentValues,
                 backgroundColor: [
-                    '#1976d2', '#009688', '#9c27b0',
-                    '#f44336', '#ff9800', '#00bfa5', '#795548'
+                    '#1976d2', '#009688', '#9c27b0', '#f44336',
+                    '#ff9800', '#00bfa5', '#795548'
                 ],
                 borderWidth: 2,
                 borderColor: '#fff',
@@ -230,10 +275,7 @@
         },
         options: {
             plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { boxWidth: 20, padding: 15 }
-                }
+                legend: { position: 'bottom', labels: { boxWidth: 20, padding: 15 } }
             },
             cutout: '65%',
             responsive: true,
@@ -250,7 +292,6 @@
 
     .card-header {
         font-size: 1.1rem;
-        border-bottom: 1px solid #e0e0e0;
         background: linear-gradient(to right, #f8f9fa, #ffffff);
     }
 
@@ -265,50 +306,12 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-    .icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
+    table th, table td {
+        vertical-align: middle;
     }
 
-    .bg-danger-subtle {
-        background-color: #ffe5e5 !important;
-    }
-
-    .bg-info-subtle {
-        background-color: #e0f7fa !important;
-    }
-
-    .text-muted {
-        font-size: 0.9rem;
-    }
-
-    .card-header {
-        font-size: 1.1rem;
-        border-bottom: 1px solid #e0e0e0;
-        background: linear-gradient(to right, #f8f9fa, #ffffff);
-    }
-
-    .btn {
-        min-width: 160px;
-        font-weight: 900;
-        border-radius: 10px;
-        transition: all 0.25s ease;
-    }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-        }
-
-    /* Responsive gap fix for smaller screens */
-    @@media (max-width: 768px) {
-        .btn {
-            min-width: 100%;
-        }
+    .badge {
+        font-size: 0.85rem;
+        padding: 6px 10px;
     }
 </style>
