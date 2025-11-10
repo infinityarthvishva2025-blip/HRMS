@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251110075241_FixEmployeeAddressConflict")]
-    partial class FixEmployeeAddressConflict
+    [Migration("20251110104256_AddProductHardwareAndSerialNoToAssets")]
+    partial class AddProductHardwareAndSerialNoToAssets
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -38,21 +38,26 @@ namespace HRMS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("AssignedTo")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("Cost")
+                    b.Property<decimal?>("Cost")
+                        .IsRequired()
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("PurchaseDate")
+                    b.Property<string>("ProductHardware")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PurchaseDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Remarks")
-                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SerialNo")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
@@ -72,31 +77,31 @@ namespace HRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("Date")
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FaceVerificationResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("FaceVerified")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("GeoTagId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("TimestampUtc")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("EmployeeName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<TimeSpan?>("InTime")
-                        .HasColumnType("time");
-
-                    b.Property<string>("JioTag")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Location")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Method")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<TimeSpan?>("OutTime")
-                        .HasColumnType("time");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("GeoTagId");
 
                     b.ToTable("Attendances");
                 });
@@ -213,6 +218,49 @@ namespace HRMS.Migrations
                     b.ToTable("Expenses");
                 });
 
+            modelBuilder.Entity("HRMS.Models.GeoTag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("float");
+
+                    b.Property<int>("RadiusMeters")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TagId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TagId")
+                        .IsUnique();
+
+                    b.ToTable("GeoTags");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Mumbai Office",
+                            Latitude = 19.076000000000001,
+                            Longitude = 72.877700000000004,
+                            RadiusMeters = 100000,
+                            TagId = "Office-001"
+                        });
+                });
+
             modelBuilder.Entity("HRMS.Models.Leave", b =>
                 {
                     b.Property<int>("Id")
@@ -289,6 +337,17 @@ namespace HRMS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Payrolls");
+                });
+
+            modelBuilder.Entity("HRMS.Models.Attendance", b =>
+                {
+                    b.HasOne("HRMS.Models.GeoTag", "GeoTag")
+                        .WithMany()
+                        .HasForeignKey("GeoTagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GeoTag");
                 });
 #pragma warning restore 612, 618
         }

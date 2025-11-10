@@ -21,7 +21,8 @@
             <dd class="col-sm-9">@Model.Category</dd>
 
             <dt class="col-sm-3">Purchase Date</dt>
-            <dd class="col-sm-9">@Model.PurchaseDate.ToShortDateString()</dd>
+            <dd class="col-sm-9">@((Model.PurchaseDate.HasValue ? Model.PurchaseDate.Value.ToShortDateString() : "N/A"))</dd>
+
 
             <dt class="col-sm-3">Cost</dt>
             <dd class="col-sm-9">@Model.Cost</dd>

@@ -34,15 +34,15 @@ namespace HRMS.Controllers
                 .ToList();
 
             // Example 4: Attendance summary
-            var attendanceReport = _context.Attendances
-                .GroupBy(a => a.Status)
-                .Select(g => new { Status = g.Key, Count = g.Count() })
-                .ToList();
+            //var attendanceReport = _context.Attendances
+            //    .GroupBy(a => a.Status)
+            //    .Select(g => new { Status = g.Key, Count = g.Count() })
+            //    .ToList();
 
             ViewBag.EmployeeReport = employeeReport;
             ViewBag.LeaveReport = leaveReport;
             ViewBag.PayrollReport = payrollReport;
-            ViewBag.AttendanceReport = attendanceReport;
+            //ViewBag.AttendanceReport = attendanceReport;
 
             return View();
         }

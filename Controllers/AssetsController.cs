@@ -1,12 +1,12 @@
-﻿using HRMS.Data;
-using HRMS.Models;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using HRMS.Data;
+using HRMS.Models;
 
 namespace HRMS.Controllers
 {
-    [Route("Assets")]
-    [Route("[controller]/[action]")]
     public class AssetsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -16,67 +16,136 @@ namespace HRMS.Controllers
             _context = context;
         }
 
-        [HttpGet]
-        public IActionResult Index()
+        // GET: Assets
+        public async Task<IActionResult> Index()
         {
-            var assets = _context.Assets.ToList();
-            return View(assets);
+            return View(await _context.Assets.ToListAsync());
         }
 
-        [HttpGet]
+        // GET: Assets/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var asset = await _context.Assets
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (asset == null)
+            {
+                return NotFound();
+            }
+
+            return View(asset);
+        }
+
+        // GET: Assets/Create
         public IActionResult Create()
         {
             return View();
         }
 
+        // POST: Assets/Create
         [HttpPost]
-        public IActionResult Create(Assets asset)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Id,AssetName,Category,SerialNo,RAM,Storage,PurchaseDate,Cost,Status,AssignedTo,Remarks")] Assets asset)
         {
             if (ModelState.IsValid)
             {
-                _context.Assets.Add(asset);
-                _context.SaveChanges();
-                return RedirectToAction("Index");
+                _context.Add(asset);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
             return View(asset);
         }
 
-        [HttpGet]
-        public IActionResult Edit(int id)
+        // GET: Assets/Edit/5
+        public async Task<IActionResult> Edit(int? id)
         {
-            var asset = _context.Assets.Find(id);
-            return View(asset);
-        }
-
-        [HttpPost]
-        public IActionResult Edit(Assets asset)
-        {
-            if (ModelState.IsValid)
+            if (id == null)
             {
-                _context.Assets.Update(asset);
-                _context.SaveChanges();
-                return RedirectToAction("Index");
+                return NotFound();
+            }
+
+            var asset = await _context.Assets.FindAsync(id);
+            if (asset == null)
+            {
+                return NotFound();
             }
             return View(asset);
         }
 
-        [HttpGet]
-        public IActionResult Delete(int id)
+        // POST: Assets/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,AssetName,Category,SerialNo,RAM,Storage,PurchaseDate,Cost,Status,AssignedTo,Remarks")] Assets asset)
         {
-            var asset = _context.Assets.Find(id);
+            if (id != asset.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(asset);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!AssetExists(asset.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
             return View(asset);
         }
 
+        // GET: Assets/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var asset = await _context.Assets
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (asset == null)
+            {
+                return NotFound();
+            }
+
+            return View(asset);
+        }
+
+        // POST: Assets/Delete/5
         [HttpPost, ActionName("Delete")]
-        public IActionResult DeleteConfirmed(int id)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var asset = _context.Assets.Find(id);
+            var asset = await _context.Assets.FindAsync(id);
             if (asset != null)
             {
                 _context.Assets.Remove(asset);
-                _context.SaveChanges();
             }
-            return RedirectToAction("Index");
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool AssetExists(int id)
+        {
+            return _context.Assets.Any(e => e.Id == id);
         }
     }
 }

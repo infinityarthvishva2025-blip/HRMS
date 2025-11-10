@@ -1,0 +1,47 @@
+﻿@model HRMS.Models.Assets
+@{
+    ViewData["Title"] = "Asset Details";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-center text-primary">Asset Details</h2>
+
+    <div class="card shadow-sm p-4">
+        <dl class="row">
+            <dt class="col-sm-3 fw-bold">Asset Name</dt>
+            <dd class="col-sm-9">@Model.AssetName</dd>
+
+            <dt class="col-sm-3 fw-bold">Category</dt>
+            <dd class="col-sm-9">@Model.Category</dd>
+
+            <dt class="col-sm-3 fw-bold">Serial Number</dt>
+            <dd class="col-sm-9">@Model.SerialNo</dd>
+
+            <dt class="col-sm-3 fw-bold">RAM</dt>
+            <dd class="col-sm-9">@Model.RAM</dd>
+
+            <dt class="col-sm-3 fw-bold">Storage</dt>
+            <dd class="col-sm-9">@Model.Storage</dd>
+
+            <dt class="col-sm-3 fw-bold">Purchase Date</dt>
+            <dd class="col-sm-9">@Model.PurchaseDate?.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3 fw-bold">Cost</dt>
+            <dd class="col-sm-9">@Model.Cost</dd>
+
+            <dt class="col-sm-3 fw-bold">Status</dt>
+            <dd class="col-sm-9">@Model.Status</dd>
+
+            <dt class="col-sm-3 fw-bold">Assigned To</dt>
+            <dd class="col-sm-9">@Model.AssignedTo</dd>
+
+            <dt class="col-sm-3 fw-bold">Remarks</dt>
+            <dd class="col-sm-9">@Model.Remarks</dd>
+        </dl>
+
+        <div class="d-flex justify-content-end gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+            <a asp-action="Index" class="btn btn-secondary">Back</a>
+        </div>
+    </div>
+</div>

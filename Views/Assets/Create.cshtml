@@ -1,52 +1,120 @@
 ﻿@model HRMS.Models.Assets
 @{
-    ViewData["Title"] = "Add Asset";
+    ViewData["Title"] = "Add New Asset";
 }
 
-<h2>Add New Asset</h2>
+<div class="container mt-4">
+    <h2 class="mb-4">Add New Asset</h2>
 
-<form asp-action="Create" method="post">
-    <div class="form-group">
-        <label asp-for="AssetName"></label>
-        <input asp-for="AssetName" class="form-control" />
-        <span asp-validation-for="AssetName" class="text-danger"></span>
+    <div class="card p-4 shadow-sm">
+        <form asp-action="Create" method="post">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="Category" class="form-label">Category</label>
+                    <select asp-for="Category" class="form-control" id="Category">
+                        <option value="">-- Select Category --</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Vehicle">Vehicle</option>
+                        <option value="Accessories">Accessories</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <span asp-validation-for="Category" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="AssetName" class="form-label">Asset Name</label>
+                    <input asp-for="AssetName" class="form-control" />
+                    <span asp-validation-for="AssetName" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Serial Number always visible -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="SerialNo" class="form-label">Serial Number</label>
+                    <input asp-for="SerialNo" class="form-control" placeholder="Enter Serial Number" />
+                    <span asp-validation-for="SerialNo" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Electronics Hardware Section (hidden by default) -->
+            <div id="ElectronicsDetails" class="row mb-3" style="display:none;">
+                <div class="col-md-4">
+                    <label class="form-label">RAM</label>
+                    <input type="text" name="RAM" class="form-control" placeholder="e.g. 8GB" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Storage</label>
+                    <input type="text" name="Storage" class="form-control" placeholder="e.g. 512GB SSD" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Processor</label>
+                    <input type="text" name="Processor" class="form-control" placeholder="e.g. Intel i5" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="PurchaseDate" class="form-label">Purchase Date</label>
+                    <input asp-for="PurchaseDate" class="form-control" type="date" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Cost" class="form-label">Cost</label>
+                    <input asp-for="Cost" class="form-control" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="Status" class="form-label">Status</label>
+                    <input asp-for="Status" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="AssignedTo" class="form-label">Assigned To</label>
+                    <input asp-for="AssignedTo" class="form-control" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Remarks" class="form-label">Remarks</label>
+                <textarea asp-for="Remarks" class="form-control"></textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Save</button>
+                <a asp-action="Index" class="btn btn-secondary">Back</a>
+            </div>
+        </form>
     </div>
+</div>
 
-    <div class="form-group">
-        <label asp-for="Category"></label>
-        <input asp-for="Category" class="form-control" />
-    </div>
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const categorySelect = document.getElementById("Category");
+            const electronicsDetails = document.getElementById("ElectronicsDetails");
 
-    <div class="form-group">
-        <label asp-for="PurchaseDate"></label>
-        <input asp-for="PurchaseDate" class="form-control" type="date" />
-    </div>
+            if (!categorySelect || !electronicsDetails) {
+                console.error("Category or electronics section not found.");
+                return;
+            }
 
-    <div class="form-group">
-        <label asp-for="Cost"></label>
-        <input asp-for="Cost" class="form-control" />
-    </div>
+            function toggleElectronicsFields() {
+                const selected = categorySelect.value.trim().toLowerCase();
+                if (selected === "electronics") {
+                    electronicsDetails.style.display = "flex";
+                } else {
+                    electronicsDetails.style.display = "none";
+                }
+            }
 
-    <div class="form-group">
-        <label asp-for="Status"></label>
-        <select asp-for="Status" class="form-control">
-            <option>Available</option>
-            <option>Assigned</option>
-            <option>Under Maintenance</option>
-            <option>Disposed</option>
-        </select>
-    </div>
+            toggleElectronicsFields(); // Run when page loads
+            categorySelect.addEventListener("change", toggleElectronicsFields);
+        });
+    </script>
 
-    <div class="form-group">
-        <label asp-for="AssignedTo"></label>
-        <input asp-for="AssignedTo" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Remarks"></label>
-        <textarea asp-for="Remarks" class="form-control"></textarea>
-    </div>
-
-    <button type="submit" class="btn btn-success">Save</button>
-    <a asp-action="Index" class="btn btn-secondary">Back</a>
-</form>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
