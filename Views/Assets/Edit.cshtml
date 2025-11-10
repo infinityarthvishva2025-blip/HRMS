@@ -1,0 +1,61 @@
+﻿@model HRMS.Models.Assets
+@{
+    ViewData["Title"] = "Edit Asset";
+}
+
+<h2>Edit Asset</h2>
+<hr />
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-group mb-3">
+        <label asp-for="AssetName"></label>
+        <input asp-for="AssetName" class="form-control" />
+        <span asp-validation-for="AssetName" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Category"></label>
+        <input asp-for="Category" class="form-control" />
+        <span asp-validation-for="Category" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="PurchaseDate"></label>
+        <input asp-for="PurchaseDate" type="date" class="form-control" />
+        <span asp-validation-for="PurchaseDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Cost"></label>
+        <input asp-for="Cost" class="form-control" />
+        <span asp-validation-for="Cost" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Status"></label>
+        <select asp-for="Status" class="form-control">
+            <option>Available</option>
+            <option>Assigned</option>
+            <option>Under Maintenance</option>
+            <option>Disposed</option>
+        </select>
+        <span asp-validation-for="Status" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="AssignedTo"></label>
+        <input asp-for="AssignedTo" class="form-control" />
+        <span asp-validation-for="AssignedTo" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Remarks"></label>
+        <textarea asp-for="Remarks" class="form-control"></textarea>
+        <span asp-validation-for="Remarks" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Update Asset</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

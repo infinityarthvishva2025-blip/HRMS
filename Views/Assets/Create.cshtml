@@ -1,0 +1,52 @@
+﻿@model HRMS.Models.Assets
+@{
+    ViewData["Title"] = "Add Asset";
+}
+
+<h2>Add New Asset</h2>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="AssetName"></label>
+        <input asp-for="AssetName" class="form-control" />
+        <span asp-validation-for="AssetName" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Category"></label>
+        <input asp-for="Category" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="PurchaseDate"></label>
+        <input asp-for="PurchaseDate" class="form-control" type="date" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Cost"></label>
+        <input asp-for="Cost" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Status"></label>
+        <select asp-for="Status" class="form-control">
+            <option>Available</option>
+            <option>Assigned</option>
+            <option>Under Maintenance</option>
+            <option>Disposed</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="AssignedTo"></label>
+        <input asp-for="AssignedTo" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Remarks"></label>
+        <textarea asp-for="Remarks" class="form-control"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
+</form>

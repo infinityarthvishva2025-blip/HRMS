@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251107111658_RecreateLeaveTable")]
-    partial class RecreateLeaveTable
+    [Migration("20251108104141_UpdateExpensesTable")]
+    partial class UpdateExpensesTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,33 +25,33 @@ namespace HRMS.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("HRMS.Models.Asset", b =>
+            modelBuilder.Entity("HRMS.Models.Assets", b =>
                 {
-                    b.Property<int>("AssetId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AssetId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AssetCode")
+                    b.Property<string>("AssetName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AssetDetails")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AssetType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("AssignedDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("AssignedTo")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SerialNumber")
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Cost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("PurchaseDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Remarks")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -59,7 +59,7 @@ namespace HRMS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("AssetId");
+                    b.HasKey("Id");
 
                     b.ToTable("Assets");
                 });
@@ -71,9 +71,6 @@ namespace HRMS.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AttendanceId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
@@ -101,8 +98,6 @@ namespace HRMS.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AttendanceId");
-
                     b.ToTable("Attendances");
                 });
 
@@ -119,7 +114,8 @@ namespace HRMS.Migrations
 
                     b.Property<string>("Department")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -127,11 +123,13 @@ namespace HRMS.Migrations
 
                     b.Property<string>("EmployeeCode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("FatherName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Gender")
                         .IsRequired()
@@ -139,22 +137,26 @@ namespace HRMS.Migrations
 
                     b.Property<string>("JioTag")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime?>("JoiningDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("MotherName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Position")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal>("Salary")
                         .HasColumnType("decimal(18,2)");
@@ -164,7 +166,7 @@ namespace HRMS.Migrations
                     b.ToTable("Employees");
                 });
 
-            modelBuilder.Entity("HRMS.Models.Expense", b =>
+            modelBuilder.Entity("HRMS.Models.Expenses", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -179,12 +181,14 @@ namespace HRMS.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmployeeName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ExpenseType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProofFilePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
@@ -198,15 +202,11 @@ namespace HRMS.Migrations
 
             modelBuilder.Entity("HRMS.Models.Leave", b =>
                 {
-                    b.Property<int>("LeaveId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LeaveId"));
-
-                    b.Property<string>("EmployeeName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
@@ -226,7 +226,7 @@ namespace HRMS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("LeaveId");
+                    b.HasKey("Id");
 
                     b.ToTable("Leaves");
                 });
@@ -265,18 +265,6 @@ namespace HRMS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Payrolls");
-                });
-
-            modelBuilder.Entity("HRMS.Models.Attendance", b =>
-                {
-                    b.HasOne("HRMS.Models.Attendance", null)
-                        .WithMany("RecentRecords")
-                        .HasForeignKey("AttendanceId");
-                });
-
-            modelBuilder.Entity("HRMS.Models.Attendance", b =>
-                {
-                    b.Navigation("RecentRecords");
                 });
 #pragma warning restore 612, 618
         }

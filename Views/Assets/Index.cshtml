@@ -1,120 +1,40 @@
-﻿@model IEnumerable<HRMS.Models.Asset>
+﻿@model IEnumerable<HRMS.Models.Assets>
 @{
-    ViewData["Title"] = "Asset Management";
+    ViewData["Title"] = "Assets List";
 }
 
-<div class="row">
-    <!-- Assign Asset Form -->
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-header"><strong>Assign Asset</strong></div>
-            <div class="card-body">
-                <form asp-action="Assign" method="post">
-                    <div class="mb-3">
-                        <label>Employee Name</label>
-                        <input name="AssignedTo" class="form-control" placeholder="Enter employee name" />
-                    </div>
-                    <div class="mb-3">
-                        <label>Asset Type</label>
-                        <input name="AssetType" class="form-control" placeholder="Enter asset type" />
-                    </div>
-                    <div class="mb-3">
-                        <label>Asset Details</label>
-                        <input name="AssetDetails" class="form-control" placeholder="Enter asset details" />
-                    </div>
-                    <div class="mb-3">
-                        <label>Serial Number</label>
-                        <input name="SerialNumber" class="form-control" placeholder="Enter serial number" />
-                    </div>
-                    <input type="hidden" name="Status" value="Assigned" />
-                    <button type="submit" class="btn btn-primary w-100">Assign Asset</button>
-                </form>
-            </div>
-        </div>
-    </div>
+<h2>Assets List</h2>
+<a href="/Assets/Create" class="btn btn-primary mb-3">Add New Asset</a>
 
-    <!-- Asset Status Chart -->
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-header"><strong>Asset Status</strong></div>
-            <div class="card-body">
-                <canvas id="assetChart"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Asset Records Table -->
-<div class="card mt-4 shadow-sm">
-    <div class="card-header"><strong>Asset Records</strong></div>
-    <div class="card-body">
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>Asset Code</th>
-                    <th>Type</th>
-                    <th>Details</th>
-                    <th>Serial Number</th>
-                    <th>Assigned To</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>@item.AssetCode</td>
-                        <td>@item.AssetType</td>
-                        <td>@item.AssetDetails</td>
-                        <td>@item.SerialNumber</td>
-                        <td>@(string.IsNullOrEmpty(item.AssignedTo) ? "Not Assigned" : item.AssignedTo)</td>
-                        <td>
-                            @if (item.Status == "Assigned")
-                            {
-                                <span class="badge bg-success">Assigned</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning text-dark">Available</span>
-                            }
-                        </td>
-                        <td>
-                            <a asp-action="Edit" asp-route-id="@item.AssetId" class="btn btn-sm btn-primary">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <a asp-action="Delete" asp-route-id="@item.AssetId" class="btn btn-sm btn-danger">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
-
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        const summary = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Summary));
-        const ctx = document.getElementById('assetChart').getContext('2d');
-
-        const labels = summary.map(s => s.Status);
-        const data = summary.map(s => s.Count);
-
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: ['#20c997', '#ffc107'],
-                }]
-            },
-            options: {
-                plugins: { legend: { position: 'bottom' } }
-            }
-        });
-    </script>
-}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Asset Name</th>
+            <th>Category</th>
+            <th>Purchase Date</th>
+            <th>Cost</th>
+            <th>Status</th>
+            <th>Assigned To</th>
+            <th>Remarks</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.AssetName</td>
+                <td>@item.Category</td>
+                <td>@item.PurchaseDate.ToShortDateString()</td>
+                <td>@item.Cost</td>
+                <td>@item.Status</td>
+                <td>@item.AssignedTo</td>
+                <td>@item.Remarks</td>
+                <td>
+                    <a href="/Assets/Edit/@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="/Assets/Delete/@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

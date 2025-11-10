@@ -10,9 +10,9 @@ namespace HRMS.Data
         {
         }
 
-        public DbSet<Expense> Expenses { get; set; }
-        public DbSet<Asset> Assets { get; set; }
+        public DbSet<Expenses> Expenses { get; set; }
 
+        public DbSet<Assets> Assets { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Leave> Leaves { get; set; }
         public DbSet<Payroll> Payrolls { get; set; }

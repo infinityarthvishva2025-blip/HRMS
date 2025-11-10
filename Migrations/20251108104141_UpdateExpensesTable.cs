@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HRMS.Migrations
 {
     /// <inheritdoc />
-    public partial class NewDb : Migration
+    public partial class UpdateExpensesTable : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,19 +15,19 @@ namespace HRMS.Migrations
                 name: "Assets",
                 columns: table => new
                 {
-                    AssetId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    AssetCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AssetType = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AssetDetails = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SerialNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AssignedTo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AssetName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Category = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PurchaseDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Cost = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AssignedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    AssignedTo = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Assets", x => x.AssetId);
+                    table.PrimaryKey("PK_Assets", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -80,11 +80,11 @@ namespace HRMS.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    EmployeeName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ExpenseType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ExpenseType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ProofFilePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>

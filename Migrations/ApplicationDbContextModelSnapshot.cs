@@ -22,33 +22,33 @@ namespace HRMS.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("HRMS.Models.Asset", b =>
+            modelBuilder.Entity("HRMS.Models.Assets", b =>
                 {
-                    b.Property<int>("AssetId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AssetId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AssetCode")
+                    b.Property<string>("AssetName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AssetDetails")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AssetType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("AssignedDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("AssignedTo")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SerialNumber")
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Cost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("PurchaseDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Remarks")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -56,7 +56,7 @@ namespace HRMS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("AssetId");
+                    b.HasKey("Id");
 
                     b.ToTable("Assets");
                 });
@@ -163,7 +163,7 @@ namespace HRMS.Migrations
                     b.ToTable("Employees");
                 });
 
-            modelBuilder.Entity("HRMS.Models.Expense", b =>
+            modelBuilder.Entity("HRMS.Models.Expenses", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -178,12 +178,14 @@ namespace HRMS.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmployeeName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ExpenseType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProofFilePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
