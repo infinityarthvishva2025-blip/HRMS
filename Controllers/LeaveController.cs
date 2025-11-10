@@ -2,7 +2,6 @@
 using HRMS.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace HRMS.Controllers
 {
@@ -18,7 +17,7 @@ namespace HRMS.Controllers
         // GET: Leave/Index
         public IActionResult Index()
         {
-            var leaves = _context.Leaves.ToList();
+            var leaves = _context.Leaves.AsNoTracking().ToList();
             return View(leaves);
         }
 
@@ -35,31 +34,39 @@ namespace HRMS.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Assign default status and employee code if not provided
+                leave.Status = "Pending";
+                if (string.IsNullOrEmpty(leave.EmployeeCode))
+                    leave.EmployeeCode = "EMP001"; // Placeholder if user not logged in
+
                 _context.Leaves.Add(leave);
                 _context.SaveChanges();
-                TempData["Success"] = "Leave request submitted successfully!";
+
+                TempData["SuccessMessage"] = "Leave request submitted successfully!";
                 return RedirectToAction(nameof(Index));
             }
+
+            // If validation fails, redisplay the form
             return View(leave);
         }
 
-        // GET: Leave/Edit/5
-        public IActionResult Edit(int? id)
+        // GET: Leave/Edit/{id}
+        public IActionResult Edit(int id)
         {
-            if (id == null) return NotFound();
-
             var leave = _context.Leaves.Find(id);
-            if (leave == null) return NotFound();
+            if (leave == null)
+                return NotFound();
 
             return View(leave);
         }
 
-        // POST: Leave/Edit/5
+        // POST: Leave/Edit/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, Leave leave)
         {
-            if (id != leave.Id) return NotFound();
+            if (id != leave.Id)
+                return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -67,39 +74,35 @@ namespace HRMS.Controllers
                 {
                     _context.Update(leave);
                     _context.SaveChanges();
-                    TempData["Success"] = "Leave updated successfully!";
+                    TempData["SuccessMessage"] = "Leave updated successfully!";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!_context.Leaves.Any(e => e.Id == leave.Id))
                         return NotFound();
-                    throw;
+                    else
+                        throw;
                 }
+
                 return RedirectToAction(nameof(Index));
             }
-            return View(leave);
-        }
-
-        // GET: Leave/Delete/5
-        public IActionResult Delete(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var leave = _context.Leaves.FirstOrDefault(m => m.Id == id);
-            if (leave == null) return NotFound();
 
             return View(leave);
         }
 
-        // POST: Leave/Delete/5
-        [HttpPost, ActionName("Delete")]
+        // POST: Leave/Delete/{id}
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
+        public IActionResult Delete(int id)
         {
             var leave = _context.Leaves.Find(id);
+            if (leave == null)
+                return NotFound();
+
             _context.Leaves.Remove(leave);
             _context.SaveChanges();
-            TempData["Success"] = "Leave deleted successfully!";
+
+            TempData["SuccessMessage"] = "Leave deleted successfully!";
             return RedirectToAction(nameof(Index));
         }
     }

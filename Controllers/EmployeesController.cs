@@ -2,8 +2,6 @@
 using HRMS.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HRMS.Controllers
 {
@@ -16,17 +14,14 @@ namespace HRMS.Controllers
             _context = context;
         }
 
-        // GET: Employees
         public async Task<IActionResult> Index()
         {
             var employees = await _context.Employees.AsNoTracking().ToListAsync();
             return View(employees);
         }
 
-        // GET: Employees/Create
         public IActionResult Create() => View();
 
-        // POST: Employees/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Employee employee)
@@ -35,13 +30,12 @@ namespace HRMS.Controllers
             {
                 _context.Add(employee);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Employee added successfully!";
+                TempData["Success"] = "Employee added successfully!";
                 return RedirectToAction(nameof(Index));
             }
             return View(employee);
         }
 
-        // GET: Employees/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -50,7 +44,6 @@ namespace HRMS.Controllers
             return View(employee);
         }
 
-        // POST: Employees/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Employee employee)
@@ -59,44 +52,23 @@ namespace HRMS.Controllers
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(employee);
-                    await _context.SaveChangesAsync();
-                    TempData["SuccessMessage"] = "Employee updated successfully!";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_context.Employees.Any(e => e.Id == employee.Id))
-                        return NotFound();
-                    throw;
-                }
-            }
-            return View(employee);
-        }
-
-        // GET: Employees/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee == null) return NotFound();
-            return View(employee);
-        }
-
-        // POST: Employees/DeleteConfirmed
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee != null)
-            {
-                _context.Employees.Remove(employee);
+                _context.Update(employee);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Employee deleted successfully!";
+                TempData["Success"] = "Employee updated successfully!";
+                return RedirectToAction(nameof(Index));
             }
+            return View(employee);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var emp = await _context.Employees.FindAsync(id);
+            if (emp == null) return NotFound();
+
+            _context.Employees.Remove(emp);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Employee deleted successfully!";
             return RedirectToAction(nameof(Index));
         }
     }

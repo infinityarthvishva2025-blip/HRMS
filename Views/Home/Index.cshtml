@@ -4,7 +4,10 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<!-- Dashboard Summary Cards -->
+<!-- ✅ Dashboard Header -->
+<h2 class="fw-bold mb-4 text-primary">My Dashboard</h2>
+
+<!-- ✅ Dashboard Summary Cards -->
 <div class="row">
     <div class="col-md-3 mb-3">
         <div class="card shadow-sm border-0 text-center">
@@ -47,10 +50,63 @@
     </div>
 </div>
 
-<!-- Celebrations + Chart Row -->
-<!-- Celebrations + Chart Row -->
+<!-- ✅ Quick Actions -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white fw-bold border-bottom d-flex align-items-center">
+        <i class="fa-solid fa-bolt text-warning me-2"></i> Quick Actions
+    </div>
+
+    <div class="card-body">
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+            <!-- Add Employee -->
+            <a asp-controller="Employees" asp-action="Create"
+               class="btn btn-primary d-flex align-items-center justify-content-center gap-2 px-4 py-2">
+                <i class="fa-solid fa-user-plus"></i>
+                Add Employee
+            </a>
+
+            <!-- View Employees -->
+            <a asp-controller="Employees" asp-action="Index"
+               class="btn btn-success d-flex align-items-center justify-content-center gap-2 px-4 py-2">
+                <i class="fa-solid fa-list"></i>
+                View Employees
+            </a>
+
+            <!-- Attendance Report -->
+            <a asp-controller="Attendance" asp-action="Index"
+               class="btn btn-info text-white d-flex align-items-center justify-content-center gap-2 px-4 py-2">
+                <i class="fa-solid fa-calendar-check"></i>
+                Attendance Report
+            </a>
+
+            <!-- Process Payroll -->
+            <a asp-controller="Payroll" asp-action="Index"
+               class="btn btn-warning text-dark d-flex align-items-center justify-content-center gap-2 px-4 py-2">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                Process Payroll
+            </a>
+
+            <!-- Manage Leaves -->
+            <a asp-controller="Leave" asp-action="Index"
+               class="btn btn-outline-primary d-flex align-items-center justify-content-center gap-2 px-4 py-2">
+                <i class="fa-solid fa-plane-departure"></i>
+                Manage Leaves
+            </a>
+
+            <!-- Reports -->
+            <a asp-controller="Reports" asp-action="Index"
+               class="btn btn-outline-dark d-flex align-items-center justify-content-center gap-2 px-4 py-2">
+                <i class="fa-solid fa-chart-bar"></i>
+                Reports
+            </a>
+        </div>
+    </div>
+</div>
+
+
+<!-- ✅ Celebrations + Chart Row -->
 <div class="row mt-4">
-    <!-- Celebrations Section (Left) -->
+    <!-- Celebrations Section -->
     <div class="col-lg-6 col-md-12 mb-4">
         <div class="card shadow-sm border-0 h-100">
             <div class="card-header bg-white fw-bold border-bottom">
@@ -61,7 +117,6 @@
                     <!-- Today's Celebrations -->
                     <div class="col-md-6 border-end">
                         <h6 class="fw-bold text-primary mb-3">Today's Celebrations</h6>
-
                         @if ((Model?.TodaysBirthdays?.Any() ?? false) || (Model?.TodaysAnniversaries?.Any() ?? false))
                         {
                             @foreach (var emp in Model.TodaysBirthdays)
@@ -99,7 +154,6 @@
                     <!-- Tomorrow's Celebrations -->
                     <div class="col-md-6">
                         <h6 class="fw-bold text-success mb-3">Tomorrow's Celebrations</h6>
-
                         @if ((Model?.TomorrowsBirthdays?.Any() ?? false) || (Model?.TomorrowsAnniversaries?.Any() ?? false))
                         {
                             @foreach (var emp in Model.TomorrowsBirthdays)
@@ -138,7 +192,7 @@
         </div>
     </div>
 
-    <!-- Employee Distribution Chart (Right) -->
+    <!-- Employee Distribution Chart -->
     <div class="col-lg-6 col-md-12 mb-4">
         <div class="card shadow-sm border-0 h-100">
             <div class="card-header bg-white fw-bold border-bottom">
@@ -151,16 +205,10 @@
     </div>
 </div>
 
-    
-
-   
-
-<!-- Chart.js Script -->
-<!-- Chart.js Script -->
+<!-- ✅ Chart.js Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const ctx = document.getElementById('deptChart');
-
     const departmentLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DepartmentLabels));
     const departmentValues = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DepartmentValues));
 
@@ -172,13 +220,8 @@
                 label: 'Employees',
                 data: departmentValues,
                 backgroundColor: [
-                    '#1976d2', // IT
-                    '#009688', // HR
-                    '#9c27b0', // Finance
-                    '#f44336', // Marketing
-                    '#ff9800', // Operations
-                    '#00bfa5', // Sales
-                    '#795548', // Others
+                    '#1976d2', '#009688', '#9c27b0',
+                    '#f44336', '#ff9800', '#00bfa5', '#795548'
                 ],
                 borderWidth: 2,
                 borderColor: '#fff',
@@ -189,10 +232,7 @@
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: {
-                        boxWidth: 20,
-                        padding: 15
-                    }
+                    labels: { boxWidth: 20, padding: 15 }
                 }
             },
             cutout: '65%',
@@ -202,8 +242,7 @@
     });
 </script>
 
-
-<!-- Celebration Styling -->
+<!-- ✅ Custom Styling -->
 <style>
     .card {
         border-radius: 10px;
@@ -212,27 +251,19 @@
     .card-header {
         font-size: 1.1rem;
         border-bottom: 1px solid #e0e0e0;
+        background: linear-gradient(to right, #f8f9fa, #ffffff);
     }
 
-    .celebration-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        background: rgba(0, 0, 0, 0.05);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.25s ease;
     }
 
-    .text-danger {
-        color: #e53935 !important;
-    }
-
-    .text-info {
-        color: #00838f !important;
-    }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
 
     .icon {
         width: 40px;
@@ -252,16 +283,32 @@
         background-color: #e0f7fa !important;
     }
 
-    .text-danger {
-        color: #e53935 !important;
-    }
-
-    .text-info {
-        color: #00838f !important;
-    }
-
     .text-muted {
         font-size: 0.9rem;
     }
 
+    .card-header {
+        font-size: 1.1rem;
+        border-bottom: 1px solid #e0e0e0;
+        background: linear-gradient(to right, #f8f9fa, #ffffff);
+    }
+
+    .btn {
+        min-width: 160px;
+        font-weight: 900;
+        border-radius: 10px;
+        transition: all 0.25s ease;
+    }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+    /* Responsive gap fix for smaller screens */
+    @@media (max-width: 768px) {
+        .btn {
+            min-width: 100%;
+        }
+    }
 </style>

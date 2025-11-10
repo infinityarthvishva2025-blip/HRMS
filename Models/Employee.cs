@@ -8,40 +8,70 @@ namespace HRMS.Models
         [Key]
         public int Id { get; set; }
 
-        [Required, StringLength(10)]
-        public string EmployeeCode { get; set; }
+        [Required]
+        [Display(Name = "Employee Code")]
+        public string EmployeeCode { get; set; } = string.Empty;
 
-        [Required, StringLength(100)]
-        public string Name { get; set; }
+        [Required]
+        [Display(Name = "Full Name")]
+        public string Name { get; set; } = string.Empty;
 
         [Required, EmailAddress]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
-        [Required, StringLength(50)]
-        public string Department { get; set; }
+        [Required]
+        public string Gender { get; set; } = string.Empty;
 
-        [Required, StringLength(50)]
-        public string Position { get; set; }
+        [Required]
+        [Display(Name = "Father’s Name")]
+        public string FatherName { get; set; } = string.Empty;
 
-        [Required, Range(0, double.MaxValue)]
-        public decimal Salary { get; set; }
+        [Required]
+        [Display(Name = "Mother’s Name")]
+        public string MotherName { get; set; } = string.Empty;
 
-        [StringLength(20)]
-        public string JioTag { get; set; }
-
-        [StringLength(100)]
-        public string FatherName { get; set; }
-
-        [StringLength(100)]
-        public string MotherName { get; set; }
-
+        [Required]
+        [Display(Name = "Date of Birth")]
         [DataType(DataType.Date)]
         public DateTime? DOB_Date { get; set; }
 
+        [Required]
+        [Display(Name = "Date of Joining")]
         [DataType(DataType.Date)]
         public DateTime? JoiningDate { get; set; }
 
         [Required]
-        public string Gender { get; set; }
+        public string Department { get; set; } = string.Empty;
+
+        [Required]
+        public string Position { get; set; } = string.Empty;
+
+        [Required]
+        [DataType(DataType.Currency)]
+        public decimal Salary { get; set; }
+
+        [Display(Name = "Geo Tag")]
+        public string? JioTag { get; set; }
+
+        [Required]
+        [Phone]
+        [Display(Name = "Mobile Number")]
+        public string MobileNumber { get; set; } = string.Empty;
+
+        [Phone]
+        [Display(Name = "Alternate Number")]
+        public string? AlternateNumber { get; set; }
+        [Required]
+        [Display(Name = "Marital Status")]
+        public string MaritalStatus { get; set; } = string.Empty;
+
+        [Required]
+        [Display(Name = "Blood Group")]
+        public string BloodGroup { get; set; } = string.Empty;
+
+        [Required]
+        [Display(Name = "Address")]
+        public string Address { get; set; } = string.Empty;
+
     }
 }
