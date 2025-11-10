@@ -9,7 +9,7 @@ namespace HRMS.Data
             : base(options)
         {
         }
-
+       
         public DbSet<Expenses> Expenses { get; set; }
 
         public DbSet<Assets> Assets { get; set; }

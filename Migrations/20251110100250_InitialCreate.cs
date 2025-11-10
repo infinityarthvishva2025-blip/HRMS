@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HRMS.Migrations
 {
     /// <inheritdoc />
-    public partial class AddEmployeeStatus : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -28,26 +28,6 @@ namespace HRMS.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Assets", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Attendances",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    EmployeeName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Method = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    JioTag = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    InTime = table.Column<TimeSpan>(type: "time", nullable: true),
-                    OutTime = table.Column<TimeSpan>(type: "time", nullable: true),
-                    Location = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Attendances", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -99,6 +79,23 @@ namespace HRMS.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "GeoTags",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TagId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Latitude = table.Column<double>(type: "float", nullable: false),
+                    Longitude = table.Column<double>(type: "float", nullable: false),
+                    RadiusMeters = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GeoTags", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Leaves",
                 columns: table => new
                 {
@@ -136,6 +133,17 @@ namespace HRMS.Migrations
                 {
                     table.PrimaryKey("PK_Payrolls", x => x.Id);
                 });
+
+            migrationBuilder.InsertData(
+                table: "GeoTags",
+                columns: new[] { "Id", "Description", "Latitude", "Longitude", "RadiusMeters", "TagId" },
+                values: new object[] { 1, "Mumbai Office", 19.076000000000001, 72.877700000000004, 100000, "Office-001" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GeoTags_TagId",
+                table: "GeoTags",
+                column: "TagId",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -145,13 +153,13 @@ namespace HRMS.Migrations
                 name: "Assets");
 
             migrationBuilder.DropTable(
-                name: "Attendances");
-
-            migrationBuilder.DropTable(
                 name: "Employees");
 
             migrationBuilder.DropTable(
                 name: "Expenses");
+
+            migrationBuilder.DropTable(
+                name: "GeoTags");
 
             migrationBuilder.DropTable(
                 name: "Leaves");
