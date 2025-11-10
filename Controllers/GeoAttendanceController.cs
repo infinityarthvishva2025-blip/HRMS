@@ -115,30 +115,4 @@ namespace HRMS.Controllers
 }
 
 
-////namespace HRMS.Controllers
-////{
-////    public class GeoAttendanceController
-////    {
-////    }
-////}
-//using HRMS.Models;
-//using Microsoft.AspNetCore.Mvc;
 
-//namespace HRMS.Controllers
-//{
-//    public class GeoAttendanceController : Controller
-//    {
-//        public IActionResult Index()
-//        {
-//            var model = new GeoTagViewModel
-//            {
-//                GeoTags = new List<string> { "Office-001", "Factory-002", "Site-003" },
-//                CurrentLatitude = 19.0760,
-//                CurrentLongitude = 72.8777,
-//                CurrentCity = "Mumbai, India"
-//            };
-
-//            return View(model);
-//        }
-//    }
-//}
