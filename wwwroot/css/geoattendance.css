@@ -1,0 +1,55 @@
+﻿.geo-header {
+    background: linear-gradient(to right, #0A70C6, #003F88);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 6px;
+    color: white;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar {
+    background: #1CADA3;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.location-card {
+    background: #E6F4FF;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.map-box {
+    background: #E9F7FF;
+    padding: 40px;
+    border-radius: 10px;
+}
+
+.face-box {
+    background: #1B2A41;
+    height: 250px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.face-symbol i {
+    font-size: 100px;
+    color: white;
+}
