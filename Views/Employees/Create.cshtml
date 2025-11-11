@@ -4,180 +4,137 @@
     ViewData["Title"] = "Add Employee";
 }
 
-<div class="container mt-5">
+<div class="container mt-5 mb-5">
     <div class="card shadow border-0">
-        <div class="card-header bg-gradient fw-bold text-white"
+        <div class="card-header bg-gradient fw-bold text-black"
              style="background: linear-gradient(90deg, #0077c2, #009688);">
             <i class="fa-solid fa-user-plus me-2"></i> Add New Employee
         </div>
 
         <div class="card-body p-4">
-            <form asp-action="Create" method="post">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
 
-                <!-- Row 1 -->
                 <div class="row mb-3">
                     <div class="col-md-3">
-                        <label asp-for="EmployeeCode" class="form-label fw-semibold">Employee Code</label>
-                        <input asp-for="EmployeeCode" class="form-control" placeholder="EMP001" />
-                        <span asp-validation-for="EmployeeCode" class="text-danger"></span>
+                        <label asp-for="EmployeeCode" class="form-label">Employee Code</label>
+                        <input asp-for="EmployeeCode" class="form-control" placeholder="IA0001" />
                     </div>
-                    <!-- Row 6 (Login Credentials) -->
-                    <div class="row mb-3">
-                        <div class="col-md-3">
-                            <label asp-for="Password" class="form-label fw-semibold">Password</label>
-                            <input asp-for="Password" type="password" class="form-control" placeholder="Set Employee Password" />
-                            <span asp-validation-for="Password" class="text-danger"></span>
-                        </div>
-                    </div>
-
-
                     <div class="col-md-3">
-                        <label asp-for="Name" class="form-label fw-semibold">Full Name</label>
-                        <input asp-for="Name" class="form-control" placeholder="Enter full name" />
-                        <span asp-validation-for="Name" class="text-danger"></span>
+                        <label asp-for="Password" class="form-label">Password</label>
+                        <input asp-for="Password" type="password" class="form-control" />
                     </div>
-
                     <div class="col-md-3">
-                        <label asp-for="Email" class="form-label fw-semibold">Email</label>
-                        <input asp-for="Email" type="email" class="form-control" placeholder="employee@example.com" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" name="ConfirmPassword" class="form-control" />
                     </div>
-
                     <div class="col-md-3">
-                        <label asp-for="Gender" class="form-label fw-semibold">Gender</label>
+                        <label asp-for="Name" class="form-label">Full Name</label>
+                        <input asp-for="Name" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label asp-for="Email" class="form-label">Email</label>
+                        <input asp-for="Email" type="email" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="Gender" class="form-label">Gender</label>
                         <select asp-for="Gender" class="form-select">
-                            <option value="">-- Select Gender --</option>
+                            <option value="">Select</option>
                             <option>Male</option>
                             <option>Female</option>
                             <option>Other</option>
                         </select>
-                        <span asp-validation-for="Gender" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="FatherName" class="form-label">Father’s Name</label>
+                        <input asp-for="FatherName" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="MotherName" class="form-label">Mother’s Name</label>
+                        <input asp-for="MotherName" class="form-control" />
                     </div>
                 </div>
 
-                <!-- Row 2 -->
                 <div class="row mb-3">
                     <div class="col-md-3">
-                        <label asp-for="FatherName" class="form-label fw-semibold">Father’s Name</label>
-                        <input asp-for="FatherName" class="form-control" placeholder="Enter Father’s Name" />
-                        <span asp-validation-for="FatherName" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label asp-for="MotherName" class="form-label fw-semibold">Mother’s Name</label>
-                        <input asp-for="MotherName" class="form-control" placeholder="Enter Mother’s Name" />
-                        <span asp-validation-for="MotherName" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label asp-for="DOB_Date" class="form-label fw-semibold">Date of Birth</label>
+                        <label asp-for="DOB_Date" class="form-label">Date of Birth</label>
                         <input asp-for="DOB_Date" type="date" class="form-control" />
-                        <span asp-validation-for="DOB_Date" class="text-danger"></span>
                     </div>
-
                     <div class="col-md-3">
-                        <label asp-for="JoiningDate" class="form-label fw-semibold">Date of Joining</label>
+                        <label asp-for="JoiningDate" class="form-label">Date of Joining</label>
                         <input asp-for="JoiningDate" type="date" class="form-control" />
-                        <span asp-validation-for="JoiningDate" class="text-danger"></span>
                     </div>
-                </div>
-
-                <!-- Row 3 -->
-                <div class="row mb-3">
                     <div class="col-md-3">
-                        <label asp-for="Department" class="form-label fw-semibold">Department</label>
+                        <label asp-for="Department" class="form-label">Department</label>
                         <select asp-for="Department" id="departmentDropdown" class="form-select">
-                            <option value="">-- Select Department --</option>
+                            <option value="">Select</option>
                             <option>IT</option>
                             <option>HR</option>
                             <option>Finance</option>
                             <option>Marketing</option>
                             <option>Accounting</option>
                         </select>
-                        <span asp-validation-for="Department" class="text-danger"></span>
                     </div>
-
                     <div class="col-md-3">
-                        <label asp-for="Position" class="form-label fw-semibold">Position</label>
-                        <select asp-for="Position" id="positionDropdown" class="form-select">
-                            <option value="">-- Select Position --</option>
-                        </select>
-                        <span asp-validation-for="Position" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label asp-for="Salary" class="form-label fw-semibold">Salary</label>
-                        <input asp-for="Salary" type="number" step="0.01" class="form-control" placeholder="Enter salary" />
-                        <span asp-validation-for="Salary" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label asp-for="JioTag" class="form-label fw-semibold">Geo Tag</label>
-                        <input asp-for="JioTag" class="form-control" placeholder="Enter Geo Tag" />
-                        <span asp-validation-for="JioTag" class="text-danger"></span>
+                        <label asp-for="Position" class="form-label">Position</label>
+                        <input asp-for="Position" class="form-control" />
                     </div>
                 </div>
 
-                <!-- Row 4 (Contact Details) -->
                 <div class="row mb-3">
                     <div class="col-md-3">
-                        <label asp-for="MobileNumber" class="form-label fw-semibold">Mobile Number</label>
-                        <input asp-for="MobileNumber" class="form-control" placeholder="Enter Mobile Number" />
-                        <span asp-validation-for="MobileNumber" class="text-danger"></span>
+                        <label asp-for="ReportingManager" class="form-label">Reporting Manager</label>
+                        <input asp-for="ReportingManager" class="form-control" />
                     </div>
-
                     <div class="col-md-3">
-                        <label asp-for="AlternateNumber" class="form-label fw-semibold">Alternate Number</label>
-                        <input asp-for="AlternateNumber" class="form-control" placeholder="Enter Alternate Number" />
-                        <span asp-validation-for="AlternateNumber" class="text-danger"></span>
+                        <label asp-for="Salary" class="form-label">Salary</label>
+                        <input asp-for="Salary" class="form-control" />
                     </div>
-
                     <div class="col-md-3">
-                        <label asp-for="MaritalStatus" class="form-label fw-semibold">Marital Status</label>
-                        <select asp-for="MaritalStatus" class="form-select">
-                            <option value="">-- Select Status --</option>
-                            <option>Single</option>
-                            <option>Married</option>
-                            <option>Divorced</option>
-                            <option>Widowed</option>
-                        </select>
-                        <span asp-validation-for="MaritalStatus" class="text-danger"></span>
+                        <label asp-for="MobileNumber" class="form-label">Mobile Number</label>
+                        <input asp-for="MobileNumber" class="form-control" />
                     </div>
-
                     <div class="col-md-3">
-                        <label asp-for="BloodGroup" class="form-label fw-semibold">Blood Group</label>
-                        <select asp-for="BloodGroup" class="form-select">
-                            <option value="">-- Select Blood Group --</option>
-                            <option>A+</option>
-                            <option>A-</option>
-                            <option>B+</option>
-                            <option>B-</option>
-                            <option>O+</option>
-                            <option>O-</option>
-                            <option>AB+</option>
-                            <option>AB-</option>
-                        </select>
-                        <span asp-validation-for="BloodGroup" class="text-danger"></span>
+                        <label asp-for="AlternateNumber" class="form-label">Alternate Number</label>
+                        <input asp-for="AlternateNumber" class="form-control" />
                     </div>
                 </div>
 
-                <!-- Row 5 (Address) -->
+                <!-- File Uploads -->
                 <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label asp-for="Address" class="form-label fw-semibold">Address</label>
-                        <textarea asp-for="Address" class="form-control" rows="2" placeholder="Enter full address"></textarea>
-                        <span asp-validation-for="Address" class="text-danger"></span>
+                    <div class="col-md-3">
+                        <label class="form-label">Aadhaar Card</label>
+                        <input type="file" name="AadharCard" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">PAN Card</label>
+                        <input type="file" name="PanCard" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Marksheet</label>
+                        <input type="file" name="Marksheet" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Bank Passbook</label>
+                        <input type="file" name="BankPassbook" class="form-control" />
                     </div>
                 </div>
 
-                <!-- Buttons -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Profile Photo</label>
+                        <input type="file" name="ProfilePhoto" class="form-control" />
+                    </div>
+                </div>
+
                 <div class="text-center mt-4">
-                    <button type="submit" class="btn text-white px-4 shadow-sm"
-                            style="background: linear-gradient(90deg, #0077c2, #009688); border-radius: 6px;">
-                        <i class="fa-solid fa-save me-1"></i> Save Employee
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="fa-solid fa-save me-1"></i> Save
                     </button>
-                    <a asp-action="Index" class="btn btn-outline-secondary ms-2 px-4 shadow-sm" style="border-radius: 6px;">
-                        <i class="fa-solid fa-arrow-left me-1"></i> Back to List
+                    <a asp-action="Index" class="btn btn-outline-secondary ms-2 px-4">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Back
                     </a>
                 </div>
 
@@ -185,67 +142,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        const dept = document.getElementById("departmentDropdown");
-        const pos = document.getElementById("positionDropdown");
-
-        const map = {
-            IT: ["Software Engineer", "System Admin", "QA Tester"],
-            HR: ["HR Manager", "Recruiter", "Payroll Executive"],
-            Finance: ["Accountant", "Finance Analyst", "Auditor"],
-            Marketing: ["Marketing Manager", "SEO Specialist", "Content Writer"],
-            Accounting: ["Bookkeeper", "Tax Specialist", "Account Executive"]
-        };
-
-        dept.addEventListener("change", function () {
-            pos.innerHTML = '<option value="">-- Select Position --</option>';
-            if (map[this.value]) {
-                map[this.value].forEach(p => {
-                    const opt = document.createElement("option");
-                    opt.value = p;
-                    opt.textContent = p;
-                    pos.appendChild(opt);
-                });
-            }
-        });
-    </script>
-}
-
-<style>
-    .card {
-        border-radius: 12px;
-    }
-
-    .card-header {
-        font-size: 1.1rem;
-        letter-spacing: 0.5px;
-    }
-
-    .form-label {
-        font-weight: 600;
-    }
-
-    input, select, textarea {
-        border-radius: 6px;
-        transition: box-shadow 0.2s ease;
-    }
-
-        input:focus, select:focus, textarea:focus {
-            box-shadow: 0 0 0 0.2rem rgba(0, 150, 136, 0.25);
-            border-color: #009688;
-        }
-
-    .btn {
-        min-width: 140px;
-        font-weight: 600;
-        transition: all 0.25s ease;
-    }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-        }
-</style>

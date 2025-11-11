@@ -7,23 +7,24 @@ using HRMS.Models.ViewModels;
 namespace HRMS.Controllers
 {
     [Route("[controller]/[action]")]
-    [Route("Employee/[action]")]  // allows both /Employees/... and /Employee/...
+    [Route("Employee/[action]")]
     public class EmployeesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public EmployeesController(ApplicationDbContext context)
+        public EmployeesController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         // ============================================================
-        // INDEX - Display all employees (for HR)
+        // INDEX - HR Employee List
         // ============================================================
         [HttpGet]
         public IActionResult Index()
         {
-            // Only HR can view full employee list
             var role = HttpContext.Session.GetString("Role");
             if (role != "HR")
                 return RedirectToAction("Login", "Account");
@@ -46,7 +47,6 @@ namespace HRMS.Controllers
             if (emp == null)
                 return RedirectToAction("Login", "Account");
 
-            // Example: count total leaves if you have a Leave table
             var totalLeaves = _context.Leaves.Count(l => l.EmployeeId == emp.Id);
             var approvedLeaves = _context.Leaves.Count(l => l.EmployeeId == emp.Id && l.Status == "Approved");
 
@@ -63,7 +63,7 @@ namespace HRMS.Controllers
         }
 
         // ============================================================
-        // CREATE EMPLOYEE (HR only)
+        // CREATE EMPLOYEE
         // ============================================================
         [HttpGet]
         public IActionResult Create()
@@ -77,25 +77,37 @@ namespace HRMS.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Employee model)
+        public IActionResult Create(Employee model,
+            IFormFile? AadharCard,
+            IFormFile? PanCard,
+            IFormFile? Marksheet,
+            IFormFile? ProfilePhoto,
+            IFormFile? BankPassbook)
         {
-            var role = HttpContext.Session.GetString("Role");
-            if (role != "HR")
-                return RedirectToAction("Login", "Account");
-
             if (ModelState.IsValid)
             {
+                string uploadPath = Path.Combine(_env.WebRootPath, "uploads");
+                if (!Directory.Exists(uploadPath))
+                    Directory.CreateDirectory(uploadPath);
+
+                model.AadharCardPath = AadharCard != null ? SaveFile(AadharCard, uploadPath) : null;
+                model.PanCardPath = PanCard != null ? SaveFile(PanCard, uploadPath) : null;
+                model.MarksheetPath = Marksheet != null ? SaveFile(Marksheet, uploadPath) : null;
+                model.ProfilePhotoPath = ProfilePhoto != null ? SaveFile(ProfilePhoto, uploadPath) : null;
+                model.BankPassbookPath = BankPassbook != null ? SaveFile(BankPassbook, uploadPath) : null;
+
                 _context.Employees.Add(model);
                 _context.SaveChanges();
+
                 TempData["Success"] = "Employee added successfully!";
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
             return View(model);
         }
 
         // ============================================================
-        // EDIT EMPLOYEE (HR only)
+        // EDIT EMPLOYEE
         // ============================================================
         [HttpGet("{id}")]
         public IActionResult Edit(int id)
@@ -113,34 +125,71 @@ namespace HRMS.Controllers
 
         [HttpPost("{id}")]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, Employee model)
+        public IActionResult Edit(int id, Employee model,
+            IFormFile? AadharCard,
+            IFormFile? PanCard,
+            IFormFile? Marksheet,
+            IFormFile? ProfilePhoto,
+            IFormFile? BankPassbook)
         {
-            var role = HttpContext.Session.GetString("Role");
-            if (role != "HR")
-                return RedirectToAction("Login", "Account");
-
             if (id != model.Id)
                 return BadRequest();
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(model);
-                    _context.SaveChanges();
-                    TempData["Success"] = "Employee details updated successfully!";
-                    return RedirectToAction("Index");
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_context.Employees.Any(e => e.Id == model.Id))
-                        return NotFound();
-                    else
-                        throw;
-                }
+                var existing = _context.Employees.AsNoTracking().FirstOrDefault(e => e.Id == id);
+                if (existing == null)
+                    return NotFound();
+
+                string uploadPath = Path.Combine(_env.WebRootPath, "uploads");
+                if (!Directory.Exists(uploadPath))
+                    Directory.CreateDirectory(uploadPath);
+
+                model.AadharCardPath = AadharCard != null ? SaveFile(AadharCard, uploadPath) : existing.AadharCardPath;
+                model.PanCardPath = PanCard != null ? SaveFile(PanCard, uploadPath) : existing.PanCardPath;
+                model.MarksheetPath = Marksheet != null ? SaveFile(Marksheet, uploadPath) : existing.MarksheetPath;
+                model.ProfilePhotoPath = ProfilePhoto != null ? SaveFile(ProfilePhoto, uploadPath) : existing.ProfilePhotoPath;
+                model.BankPassbookPath = BankPassbook != null ? SaveFile(BankPassbook, uploadPath) : existing.BankPassbookPath;
+
+                _context.Update(model);
+                _context.SaveChanges();
+
+                TempData["Success"] = "Employee updated successfully!";
+                return RedirectToAction(nameof(Index));
             }
 
             return View(model);
+        }
+
+        // ============================================================
+        // DELETE EMPLOYEE
+        // ============================================================
+        [HttpPost]
+        public IActionResult Delete(int id)
+        {
+            var employee = _context.Employees.Find(id);
+            if (employee == null)
+                return NotFound();
+
+            _context.Employees.Remove(employee);
+            _context.SaveChanges();
+
+            TempData["Success"] = "Employee deleted successfully!";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ============================================================
+        // HELPER METHOD - FILE SAVE
+        // ============================================================
+        private string SaveFile(IFormFile file, string uploadPath)
+        {
+            string fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+            string filePath = Path.Combine(uploadPath, fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                file.CopyTo(stream);
+            }
+            return "/uploads/" + fileName;
         }
     }
 }

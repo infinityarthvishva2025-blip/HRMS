@@ -108,7 +108,8 @@
                         <h6 class="fw-bold text-primary mb-3">Today's Celebrations</h6>
                         @if ((Model?.TodaysBirthdays?.Any() ?? false) || (Model?.TodaysAnniversaries?.Any() ?? false))
                         {
-                            @foreach (var emp in Model.TodaysBirthdays)
+                            <!-- Limit to 2 Birthdays -->
+                            @foreach (var emp in Model.TodaysBirthdays.Take(2))
                             {
                                 <div class="d-flex align-items-center mb-2">
                                     <div class="icon bg-danger-subtle text-danger me-2">
@@ -121,7 +122,8 @@
                                 </div>
                             }
 
-                            @foreach (var emp in Model.TodaysAnniversaries)
+                            <!-- Limit to 2 Joining Anniversaries -->
+                            @foreach (var emp in Model.TodaysAnniversaries.Take(2))
                             {
                                 <div class="d-flex align-items-center mb-2">
                                     <div class="icon bg-info-subtle text-info me-2">
@@ -129,7 +131,7 @@
                                     </div>
                                     <div>
                                         <strong>@emp.Name</strong><br />
-                                        <small class="text-muted">@emp.Position 🎉</small>
+                                        <small class="text-muted">Joining Anniversary 🎉</small>
                                     </div>
                                 </div>
                             }
@@ -145,7 +147,8 @@
                         <h6 class="fw-bold text-success mb-3">Tomorrow's Celebrations</h6>
                         @if ((Model?.TomorrowsBirthdays?.Any() ?? false) || (Model?.TomorrowsAnniversaries?.Any() ?? false))
                         {
-                            @foreach (var emp in Model.TomorrowsBirthdays)
+                            <!-- Limit to 2 Birthdays -->
+                            @foreach (var emp in Model.TomorrowsBirthdays.Take(2))
                             {
                                 <div class="d-flex align-items-center mb-2">
                                     <div class="icon bg-danger-subtle text-danger me-2">
@@ -158,7 +161,8 @@
                                 </div>
                             }
 
-                            @foreach (var emp in Model.TomorrowsAnniversaries)
+                            <!-- Limit to 2 Joining Anniversaries -->
+                            @foreach (var emp in Model.TomorrowsAnniversaries.Take(2))
                             {
                                 <div class="d-flex align-items-center mb-2">
                                     <div class="icon bg-info-subtle text-info me-2">
@@ -166,7 +170,7 @@
                                     </div>
                                     <div>
                                         <strong>@emp.Name</strong><br />
-                                        <small class="text-muted">@emp.Position 🎊</small>
+                                        <small class="text-muted">Joining Anniversary 🎊</small>
                                     </div>
                                 </div>
                             }
@@ -180,6 +184,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Employee Distribution Chart -->
     <div class="col-lg-6 col-md-12 mb-4">
