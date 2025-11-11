@@ -8,12 +8,10 @@ namespace HRMS.Models
         [Key]
         public int Id { get; set; }
 
-        [Required]
-        [Display(Name = "Employee Code")]
+        [Required, Display(Name = "Employee Code")]
         public string EmployeeCode { get; set; } = string.Empty;
 
-        [Required]
-        [Display(Name = "Full Name")]
+        [Required, Display(Name = "Full Name")]
         public string Name { get; set; } = string.Empty;
 
         [Required, EmailAddress]
@@ -22,22 +20,16 @@ namespace HRMS.Models
         [Required]
         public string Gender { get; set; } = string.Empty;
 
-        [Required]
-        [Display(Name = "Father’s Name")]
+        [Required, Display(Name = "Father’s Name")]
         public string FatherName { get; set; } = string.Empty;
 
-        [Required]
-        [Display(Name = "Mother’s Name")]
+        [Required, Display(Name = "Mother’s Name")]
         public string MotherName { get; set; } = string.Empty;
 
-        [Required]
-        [Display(Name = "Date of Birth")]
-        [DataType(DataType.Date)]
+        [Required, DataType(DataType.Date), Display(Name = "Date of Birth")]
         public DateTime? DOB_Date { get; set; }
 
-        [Required]
-        [Display(Name = "Date of Joining")]
-        [DataType(DataType.Date)]
+        [Required, DataType(DataType.Date), Display(Name = "Date of Joining")]
         public DateTime? JoiningDate { get; set; }
 
         [Required]
@@ -46,36 +38,36 @@ namespace HRMS.Models
         [Required]
         public string Position { get; set; } = string.Empty;
 
-        [Required]
-        [DataType(DataType.Currency)]
+        [Required, DataType(DataType.Currency)]
         public decimal Salary { get; set; }
 
         [Display(Name = "Geo Tag")]
         public string? JioTag { get; set; }
 
-        [Required]
-        [Phone]
-        [Display(Name = "Mobile Number")]
+        [Required, Phone, Display(Name = "Mobile Number")]
         public string MobileNumber { get; set; } = string.Empty;
 
-        [Phone]
-        [Display(Name = "Alternate Number")]
+        [Phone, Display(Name = "Alternate Number")]
         public string? AlternateNumber { get; set; }
-        [Required]
-        [Display(Name = "Marital Status")]
+
+        [Required, Display(Name = "Marital Status")]
         public string MaritalStatus { get; set; } = string.Empty;
 
-        [Required]
-        [Display(Name = "Blood Group")]
+        [Required, Display(Name = "Blood Group")]
         public string BloodGroup { get; set; } = string.Empty;
 
-        [Required]
-        [Display(Name = "Address")]
+        [Required, Display(Name = "Address")]
         public string Address { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Employment Status")]
         public string Status { get; set; } = "Active";
+
+        [Required]
+        [DataType(DataType.Password)]
+        [Display(Name = "Password")]
+        public string Password { get; set; } = string.Empty;
+
 
     }
 }

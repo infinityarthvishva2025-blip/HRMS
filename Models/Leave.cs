@@ -1,15 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HRMS.Models
 {
-    public enum HalfDayType
-    {
-        None,
-        Morning,
-        Afternoon
-    }
-
     public class Leave
     {
         [Key]
@@ -18,27 +12,25 @@ namespace HRMS.Models
         [Required, Display(Name = "Leave Type")]
         public string LeaveType { get; set; } = string.Empty;
 
-        [DataType(DataType.Date)]
-        [Display(Name = "From Date")]
-        public DateTime? FromDate { get; set; }
+        [Required, DataType(DataType.Date), Display(Name = "Start Date")]
+        public DateTime StartDate { get; set; }
 
-        [DataType(DataType.Date)]
-        [Display(Name = "To Date")]
-        public DateTime? ToDate { get; set; }
+        [Required, DataType(DataType.Date), Display(Name = "End Date")]
+        public DateTime EndDate { get; set; }
 
-        [DataType(DataType.Date)]
-        [Display(Name = "Leave Date (Half Day)")]
-        public DateTime? LeaveDate { get; set; }
-
-        [Display(Name = "Half Day Slot")]
-        public HalfDayType HalfDayType { get; set; } = HalfDayType.None;
-
-        [Required, StringLength(250)]
+        [Required, StringLength(500), Display(Name = "Reason")]
         public string Reason { get; set; } = string.Empty;
 
-        public string EmployeeCode { get; set; } = string.Empty;
-
-        [Required]
+        [Display(Name = "Status")]
         public string Status { get; set; } = "Pending";
+
+        // FK → Employee
+        [Required, ForeignKey("Employee"), Display(Name = "Employee")]
+        public int EmployeeId { get; set; }
+
+        public Employee? Employee { get; set; }
+
+        [NotMapped, Display(Name = "Total Days")]
+        public int TotalDays => (EndDate - StartDate).Days + 1;
     }
 }

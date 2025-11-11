@@ -1,19 +1,16 @@
 ﻿@model IEnumerable<HRMS.Models.Leave>
-
 @{
-    ViewData["Title"] = "Leave Applications";
+    ViewData["Title"] = "My Leaves";
 }
-
-<h2 class="mb-3">Leave Applications</h2>
+<h2>My Leaves</h2>
 
 <table class="table table-striped table-bordered">
     <thead class="table-dark">
         <tr>
-            <th>Employee Name</th>
             <th>Leave Type</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Total Days</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Days</th>
             <th>Reason</th>
             <th>Status</th>
         </tr>
@@ -22,7 +19,6 @@
         @foreach (var item in Model)
         {
             <tr>
-                <td>@item.Employee?.Name</td>
                 <td>@item.LeaveType</td>
                 <td>@item.StartDate.ToString("yyyy-MM-dd")</td>
                 <td>@item.EndDate.ToString("yyyy-MM-dd")</td>
@@ -35,10 +31,12 @@
                     }
                     else if (item.Status == "Rejected")
                     {
+
                         <span class="badge bg-danger">@item.Status</span>
                     }
                     else
                     {
+
                         <span class="badge bg-warning text-dark">@item.Status</span>
                     }
                 </td>
@@ -46,5 +44,3 @@
         }
     </tbody>
 </table>
-
-<a class="btn btn-primary" asp-action="Create">Apply New Leave</a>

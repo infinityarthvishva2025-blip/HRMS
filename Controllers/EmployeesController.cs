@@ -1,10 +1,13 @@
-﻿using HRMS.Data;
-using HRMS.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using HRMS.Data;
+using HRMS.Models;
+using HRMS.Models.ViewModels;
 
 namespace HRMS.Controllers
 {
+    [Route("[controller]/[action]")]
+    [Route("Employee/[action]")]  // allows both /Employees/... and /Employee/...
     public class EmployeesController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -14,87 +17,130 @@ namespace HRMS.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        // ============================================================
+        // INDEX - Display all employees (for HR)
+        // ============================================================
+        [HttpGet]
+        public IActionResult Index()
         {
-            var employees = await _context.Employees.AsNoTracking().ToListAsync();
+            // Only HR can view full employee list
+            var role = HttpContext.Session.GetString("Role");
+            if (role != "HR")
+                return RedirectToAction("Login", "Account");
+
+            var employees = _context.Employees.ToList();
             return View(employees);
         }
 
-        public IActionResult Create() => View();
+        // ============================================================
+        // DASHBOARD - Employee Personal Dashboard
+        // ============================================================
+        [HttpGet]
+        public IActionResult Dashboard()
+        {
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (empId == null)
+                return RedirectToAction("Login", "Account");
+
+            var emp = _context.Employees.FirstOrDefault(e => e.Id == empId);
+            if (emp == null)
+                return RedirectToAction("Login", "Account");
+
+            // Example: count total leaves if you have a Leave table
+            var totalLeaves = _context.Leaves.Count(l => l.EmployeeId == emp.Id);
+            var approvedLeaves = _context.Leaves.Count(l => l.EmployeeId == emp.Id && l.Status == "Approved");
+
+            var dashboard = new EmployeeDashboardViewModel
+            {
+                EmployeeName = emp.Name,
+                Department = emp.Department,
+                Position = emp.Position,
+                TotalLeaves = totalLeaves,
+                ApprovedLeaves = approvedLeaves
+            };
+
+            return View(dashboard);
+        }
+
+        // ============================================================
+        // CREATE EMPLOYEE (HR only)
+        // ============================================================
+        [HttpGet]
+        public IActionResult Create()
+        {
+            var role = HttpContext.Session.GetString("Role");
+            if (role != "HR")
+                return RedirectToAction("Login", "Account");
+
+            return View();
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Employee employee)
+        public IActionResult Create(Employee model)
         {
+            var role = HttpContext.Session.GetString("Role");
+            if (role != "HR")
+                return RedirectToAction("Login", "Account");
+
             if (ModelState.IsValid)
             {
-                // Generate unique Employee Code automatically
-                var lastEmployee = await _context.Employees
-                    .OrderByDescending(e => e.EmployeeCode)
-                    .FirstOrDefaultAsync();
+                _context.Employees.Add(model);
+                _context.SaveChanges();
+                TempData["Success"] = "Employee added successfully!";
+                return RedirectToAction("Index");
+            }
 
-                int nextNumber = 1;
-                if (lastEmployee != null && !string.IsNullOrEmpty(lastEmployee.EmployeeCode))
+            return View(model);
+        }
+
+        // ============================================================
+        // EDIT EMPLOYEE (HR only)
+        // ============================================================
+        [HttpGet("{id}")]
+        public IActionResult Edit(int id)
+        {
+            var role = HttpContext.Session.GetString("Role");
+            if (role != "HR")
+                return RedirectToAction("Login", "Account");
+
+            var employee = _context.Employees.Find(id);
+            if (employee == null)
+                return NotFound();
+
+            return View(employee);
+        }
+
+        [HttpPost("{id}")]
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(int id, Employee model)
+        {
+            var role = HttpContext.Session.GetString("Role");
+            if (role != "HR")
+                return RedirectToAction("Login", "Account");
+
+            if (id != model.Id)
+                return BadRequest();
+
+            if (ModelState.IsValid)
+            {
+                try
                 {
-                    // Extract numeric part (e.g., from EMP005 → 5)
-                    string numericPart = new string(lastEmployee.EmployeeCode
-                        .Where(char.IsDigit)
-                        .ToArray());
-
-                    if (int.TryParse(numericPart, out int lastNumber))
-                        nextNumber = lastNumber + 1;
+                    _context.Update(model);
+                    _context.SaveChanges();
+                    TempData["Success"] = "Employee details updated successfully!";
+                    return RedirectToAction("Index");
                 }
-
-                // Format as EMP001, EMP002, etc.
-                employee.EmployeeCode = $"EMP{nextNumber:D3}";
-
-                // Default employee status
-                employee.Status = "Active";
-
-                _context.Add(employee);
-                await _context.SaveChangesAsync();
-
-                TempData["Success"] = $"Employee {employee.EmployeeCode} added successfully!";
-                return RedirectToAction(nameof(Index));
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.Employees.Any(e => e.Id == model.Id))
+                        return NotFound();
+                    else
+                        throw;
+                }
             }
 
-            return View(employee);
-        }
-
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null) return NotFound();
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee == null) return NotFound();
-            return View(employee);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Employee employee)
-        {
-            if (id != employee.Id) return NotFound();
-
-            if (ModelState.IsValid)
-            {
-                _context.Update(employee);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Employee updated successfully!";
-                return RedirectToAction(nameof(Index));
-            }
-            return View(employee);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var emp = await _context.Employees.FindAsync(id);
-            if (emp == null) return NotFound();
-
-            _context.Employees.Remove(emp);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Employee deleted successfully!";
-            return RedirectToAction(nameof(Index));
+            return View(model);
         }
     }
 }

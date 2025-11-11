@@ -13,12 +13,14 @@ namespace HRMS.Data
         public DbSet<Expenses> Expenses { get; set; }
 
         public DbSet<Assets> Assets { get; set; }
-        public DbSet<Employee> Employees { get; set; }
-        public DbSet<Leave> Leaves { get; set; }
+   
         public DbSet<Payroll> Payrolls { get; set; }
-
+        public DbSet<HRMS.Models.Employee> Employees { get; set; }
+        public DbSet<HRMS.Models.Leave> Leaves { get; set; }
+        public DbSet<Hr> Hrs { get; set; }
         public DbSet<GeoTag> GeoTags => Set<GeoTag>();
-       
+      
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

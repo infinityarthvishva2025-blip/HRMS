@@ -14,95 +14,85 @@ namespace HRMS.Controllers
             _context = context;
         }
 
-        // GET: Leave/Index
+        // ============================================================
+        // INDEX - List all leave applications (HR view)
+        // ============================================================
+        [HttpGet]
         public IActionResult Index()
         {
-            var leaves = _context.Leaves.AsNoTracking().ToList();
+            // Only HR can see all employee leaves
+            var role = HttpContext.Session.GetString("Role");
+            if (role != "HR")
+                return RedirectToAction("Login", "Account");
+
+            var leaves = _context.Leaves
+                .Include(l => l.Employee)
+                .OrderByDescending(l => l.StartDate)
+                .ToList();
+
             return View(leaves);
         }
 
-        // GET: Leave/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
+        // ============================================================
+        // CREATE - Employee creates leave request
+        // ============================================================
+        [HttpGet]
+        public IActionResult Create() => View();
 
-        // POST: Leave/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(Leave leave)
         {
-            if (ModelState.IsValid)
-            {
-                // Assign default status and employee code if not provided
-                leave.Status = "Pending";
-                if (string.IsNullOrEmpty(leave.EmployeeCode))
-                    leave.EmployeeCode = "EMP001"; // Placeholder if user not logged in
+            if (!ModelState.IsValid) return View(leave);
 
-                _context.Leaves.Add(leave);
-                _context.SaveChanges();
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (empId == null) return RedirectToAction("Login", "Account");
 
-                TempData["SuccessMessage"] = "Leave request submitted successfully!";
-                return RedirectToAction(nameof(Index));
-            }
+            leave.EmployeeId = empId.Value;
+            leave.Status = "Pending";
 
-            // If validation fails, redisplay the form
-            return View(leave);
-        }
-
-        // GET: Leave/Edit/{id}
-        public IActionResult Edit(int id)
-        {
-            var leave = _context.Leaves.Find(id);
-            if (leave == null)
-                return NotFound();
-
-            return View(leave);
-        }
-
-        // POST: Leave/Edit/{id}
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, Leave leave)
-        {
-            if (id != leave.Id)
-                return NotFound();
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(leave);
-                    _context.SaveChanges();
-                    TempData["SuccessMessage"] = "Leave updated successfully!";
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_context.Leaves.Any(e => e.Id == leave.Id))
-                        return NotFound();
-                    else
-                        throw;
-                }
-
-                return RedirectToAction(nameof(Index));
-            }
-
-            return View(leave);
-        }
-
-        // POST: Leave/Delete/{id}
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Delete(int id)
-        {
-            var leave = _context.Leaves.Find(id);
-            if (leave == null)
-                return NotFound();
-
-            _context.Leaves.Remove(leave);
+            _context.Leaves.Add(leave);
             _context.SaveChanges();
 
-            TempData["SuccessMessage"] = "Leave deleted successfully!";
+            // Redirect to employee dashboard after submission
+            return RedirectToAction("Dashboard", "Employees");
+        }
+
+        // ============================================================
+        // MY LEAVES - Employee view of own leave requests
+        // ============================================================
+        [HttpGet]
+        public IActionResult MyLeaves()
+        {
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (empId == null) return RedirectToAction("Login", "Account");
+
+            var leaves = _context.Leaves
+                .Include(l => l.Employee)
+                .Where(l => l.EmployeeId == empId.Value)
+                .OrderByDescending(l => l.StartDate)
+                .ToList();
+
+            return View(leaves);
+        }
+
+        // ============================================================
+        // UPDATE STATUS - HR approves/rejects leave
+        // ============================================================
+        [HttpPost]
+        public IActionResult UpdateStatus(int id, string status)
+        {
+            var role = HttpContext.Session.GetString("Role");
+            if (role != "HR")
+                return RedirectToAction("Login", "Account");
+
+            var leave = _context.Leaves.FirstOrDefault(l => l.Id == id);
+            if (leave != null)
+            {
+                leave.Status = status;
+                _context.SaveChanges();
+            }
+
             return RedirectToAction(nameof(Index));
         }
     }

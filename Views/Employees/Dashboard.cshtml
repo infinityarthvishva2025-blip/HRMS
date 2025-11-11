@@ -1,0 +1,118 @@
+﻿@model HRMS.Models.ViewModels.EmployeeDashboardViewModel
+
+@{
+    ViewData["Title"] = "Employee Dashboard";
+    Layout = "_MainLayout";
+}
+
+<div class="container py-5">
+    <!-- Welcome Section -->
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-primary mb-1">Welcome, @Model.EmployeeName 👋</h2>
+        <p class="text-muted mb-0">Here’s a summary of your work profile and leave overview</p>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="row g-4 justify-content-center">
+        <!-- Department -->
+        <div class="col-md-3">
+            <div class="info-card shadow-sm p-4 text-center">
+                <div class="icon-circle bg-primary bg-gradient mb-3">
+                    <i class="fa-solid fa-building fa-2x text-white"></i>
+                </div>
+                <h6 class="fw-bold text-secondary mb-1">Department</h6>
+                <h5 class="fw-semibold">@Model.Department</h5>
+            </div>
+        </div>
+
+        <!-- Position -->
+        <div class="col-md-3">
+            <div class="info-card shadow-sm p-4 text-center">
+                <div class="icon-circle bg-success bg-gradient mb-3">
+                    <i class="fa-solid fa-briefcase fa-2x text-white"></i>
+                </div>
+                <h6 class="fw-bold text-secondary mb-1">Position</h6>
+                <h5 class="fw-semibold">@Model.Position</h5>
+            </div>
+        </div>
+
+        <!-- Total Leaves -->
+        <div class="col-md-3">
+            <div class="info-card shadow-sm p-4 text-center">
+                <div class="icon-circle bg-info bg-gradient mb-3">
+                    <i class="fa-solid fa-plane-departure fa-2x text-white"></i>
+                </div>
+                <h6 class="fw-bold text-secondary mb-1">Total Leaves</h6>
+                <h5 class="fw-semibold">@Model.TotalLeaves</h5>
+            </div>
+        </div>
+
+        <!-- Approved Leaves -->
+        <div class="col-md-3">
+            <div class="info-card shadow-sm p-4 text-center">
+                <div class="icon-circle bg-warning bg-gradient mb-3">
+                    <i class="fa-solid fa-check-circle fa-2x text-white"></i>
+                </div>
+                <h6 class="fw-bold text-secondary mb-1">Approved Leaves</h6>
+                <h5 class="fw-semibold">@Model.ApprovedLeaves</h5>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="text-center mt-5">
+        <a asp-controller="Leave" asp-action="Create" class="btn btn-lg text-white me-2 shadow"
+           style="background: linear-gradient(90deg, #0077c2, #009688); border-radius: 8px;">
+            <i class="fa-solid fa-paper-plane me-2"></i> Apply for Leave
+        </a>
+
+        <a asp-controller="Leave" asp-action="MyLeaves" class="btn btn-outline-secondary btn-lg shadow-sm"
+           style="border-radius: 8px;">
+            <i class="fa-solid fa-calendar-check me-2"></i> View My Leaves
+        </a>
+    </div>
+</div>
+
+<!-- Styling -->
+<style>
+    body {
+        background-color: #f5f7fb;
+    }
+
+    .info-card {
+        background-color: #fff;
+        border-radius: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .icon-circle {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .text-primary {
+        background: linear-gradient(90deg, #0077c2, #009688);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    h2 {
+        font-weight: 700;
+    }
+
+    .btn {
+        font-weight: 500;
+        letter-spacing: 0.4px;
+    }
+</style>

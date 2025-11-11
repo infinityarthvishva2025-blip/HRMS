@@ -21,6 +21,15 @@
                         <input asp-for="EmployeeCode" class="form-control" placeholder="EMP001" />
                         <span asp-validation-for="EmployeeCode" class="text-danger"></span>
                     </div>
+                    <!-- Row 6 (Login Credentials) -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label asp-for="Password" class="form-label fw-semibold">Password</label>
+                            <input asp-for="Password" type="password" class="form-control" placeholder="Set Employee Password" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                    </div>
+
 
                     <div class="col-md-3">
                         <label asp-for="Name" class="form-label fw-semibold">Full Name</label>
