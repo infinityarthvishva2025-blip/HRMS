@@ -1,75 +1,38 @@
 ﻿@model IEnumerable<HRMS.Models.Payroll>
+
 @{
-    var investments = ViewBag.Investments as HRMS.Models.InvestmentDeclaration;
+    ViewData["Title"] = "Payroll List";
 }
 
-<h2>Payroll Management</h2>
+<h2>Payroll List</h2>
+<a href="/Payroll/Create" class="btn btn-primary mb-3">Add New Payroll</a>
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card shadow-sm mb-3">
-            <div class="card-header bg-light">
-                <h5>Salary Structure</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>Employee</th>
-                            <th>Basic Salary</th>
-                            <th>HRA</th>
-                            <th>TA</th>
-                            <th>Bonus</th>
-                            <th>Deductions</th>
-                            <th>Net Salary</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var emp in Model)
-                        {
-                            <tr>
-                                <td>@emp.EmployeeName</td>
-                                <td>₹@emp.BasicSalary.ToString("N0")</td>
-                                <td>₹@emp.HRA.ToString("N0")</td>
-                                <td>₹@emp.TA.ToString("N0")</td>
-                                <td>₹@emp.Bonus.ToString("N0")</td>
-                                <td>₹@emp.Deductions.ToString("N0")</td>
-                                <td><strong>₹@emp.NetSalary.ToString("N0")</strong></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-light">
-                <h5>Investment Declaration</h5>
-            </div>
-            <div class="card-body">
-                <form asp-action="SubmitDeclaration" method="post">
-                    <div class="form-group mb-2">
-                        <label>Section 80C</label>
-                        <input type="number" name="Section80C" class="form-control" value="@(investments?.Section80C ?? 0)" />
-                    </div>
-                    <div class="form-group mb-2">
-                        <label>Section 80D</label>
-                        <input type="number" name="Section80D" class="form-control" value="@(investments?.Section80D ?? 0)" />
-                    </div>
-                    <div class="form-group mb-3">
-                        <label>Home Loan Interest</label>
-                        <input type="number" name="HomeLoanInterest" class="form-control" value="@(investments?.HomeLoanInterest ?? 0)" />
-                    </div>
-                    <button type="submit" class="btn btn-teal w-100" style="background-color:#009688;color:white;">Submit Declaration</button>
-                </form>
-
-                @if (ViewBag.Message != null)
-                {
-                    <div class="alert alert-success mt-3">@ViewBag.Message</div>
-                }
-            </div>
-        </div>
-    </div>
-</div>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Employee Name</th>
+            <th>Month</th>
+            <th>Net Pay</th>
+            <th>Date Created</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.EmployeeName</td>
+                <td>@item.MonthYear</td>
+                <td>₹@item.NetPay.ToString("N0")</td>
+                <td>@item.CreatedDate.ToString("dd MMM yyyy")</td>
+                <td>
+                    <a href="/Payroll/GeneratePayslip/@item.Id" class="btn btn-success btn-sm">Payslip</a>
+                    <a href="/Payroll/Delete/@item.Id" class="btn btn-danger btn-sm">Delete</a>
+                    <a asp-action="DownloadPayslip" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-filetype-pdf"></i> Download PDF
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

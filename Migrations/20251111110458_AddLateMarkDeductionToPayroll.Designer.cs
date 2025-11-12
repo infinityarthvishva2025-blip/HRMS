@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251111063917_AddPasswordToEmployeesss")]
-    partial class AddPasswordToEmployeesss
+    [Migration("20251111110458_AddLateMarkDeductionToPayroll")]
+    partial class AddLateMarkDeductionToPayroll
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -310,28 +310,75 @@ namespace HRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("BasicSalary")
+                    b.Property<string>("BankAccountNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("BaseSalary")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("Bonus")
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateOfJoining")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DaysAttended")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("DeductionForLateMarks")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("Deductions")
+                    b.Property<decimal>("DeductionForLeaves")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Designation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmployeeCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EmployeeName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("HRA")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("Month")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("TA")
+                    b.Property<decimal>("NetPay")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("OtherAllowances")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PAN")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("PerformanceAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ProfessionalTax")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalDeductions")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalEarning")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("TotalLeavesTaken")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalWorkingDays")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
