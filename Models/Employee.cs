@@ -59,6 +59,9 @@ namespace HRMS.Models
         [Required, Display(Name = "Address")]
         public string Address { get; set; } = string.Empty;
 
+        [Display(Name = "Reporting Manager")]
+        public string? ReportingManager { get; set; }
+
         [Required]
         [Display(Name = "Employment Status")]
         public string Status { get; set; } = "Active";
@@ -68,6 +71,25 @@ namespace HRMS.Models
         [Display(Name = "Password")]
         public string Password { get; set; } = string.Empty;
 
+        // -----------------------------
+        [Display(Name = "Aadhaar Card")]
+        public string? AadharCardPath { get; set; }
 
+        [Display(Name = "PAN Card")]
+        public string? PanCardPath { get; set; }
+
+        [Display(Name = "Education / Marksheet")]
+        public string? MarksheetPath { get; set; }
+
+        // -----------------------------
+        // 🖼️ Profile Photo
+        // -----------------------------
+        [Display(Name = "Profile Photo")]
+        public string? ProfilePhotoPath { get; set; }
+        [Display(Name = "Bank Passbook")]
+        public string? BankPassbookPath { get; set; }
+
+      
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }
