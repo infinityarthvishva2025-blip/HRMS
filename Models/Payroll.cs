@@ -37,7 +37,7 @@ namespace HRMS.Models
         public DateTime DateOfJoining { get; set; }
 
         [Required(ErrorMessage = "Month and Year are required")]
-        [Display(Name = "Salary Month & Year")]
+        [Display(Name = "Month & Year")]
         public string MonthYear { get; set; }
 
 
