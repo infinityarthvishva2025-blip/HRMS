@@ -43,5 +43,32 @@ namespace HRMS.Models
 
         [Display(Name = "Serial No")]
         public string? SerialNo { get; set; }
+
+
+       
+
+        // Existing fields...
+
+        // New fields for employee requests
+        [Required]
+        public string EmployeeCode { get; set; }
+
+        [Required]
+        public string EmployeeName { get; set; }
+
+        public string Department { get; set; }
+
+        [Required]
+        public string AssetType { get; set; } // e.g., Laptop, Monitor, etc.
+
+        public string AssetDescription { get; set; }
+
+        public DateTime RequestDate { get; set; } = DateTime.Now;
+
+      
+
+
     }
+
+
 }

@@ -143,6 +143,61 @@ namespace HRMS.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // GET: Assets/Request
+        public IActionResult Request()
+        {
+            return View();
+        }
+
+        // POST: Assets/Request
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Request(Assets model)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Assets.Add(model);
+                _context.SaveChanges();
+                TempData["SuccessMessage"] = "Your asset request has been submitted successfully!";
+                return RedirectToAction("Dashboard", "Employee");
+            }
+            return View(model);
+        }
+
+        // HR view: see all employee asset requests
+        public IActionResult RequestsList()
+        {
+            var requests = _context.Assets.ToList();
+            return View(requests);
+        }
+
+        // HR update status (approve/reject)
+        [HttpPost]
+        public IActionResult UpdateStatus(int id, string status)
+        {
+            var req = _context.Assets.FirstOrDefault(r => r.Id == id);
+            if (req != null)
+            {
+                req.Status = status;
+                _context.SaveChanges();
+            }
+            return RedirectToAction("RequestsList");
+        }
+
+
+        //[HttpPost]
+        //public IActionResult UpdateStatus(int id, string status)
+        //{
+        //    var asset = _context.Assets.FirstOrDefault(a => a.Id == id);
+        //    if (asset != null)
+        //    {
+        //        asset.Status = status;
+        //        _context.Update(asset);
+        //        _context.SaveChanges();
+        //    }
+        //    return RedirectToAction("Index");
+        //}
+
         private bool AssetExists(int id)
         {
             return _context.Assets.Any(e => e.Id == id);
