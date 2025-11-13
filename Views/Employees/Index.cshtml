@@ -2,109 +2,111 @@
 
 @{
     ViewData["Title"] = "Employee List";
+    Layout = "_Layout";
 }
 
-<div class="container mt-4">
-    <div class="card shadow border-0 p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="fw-bold text-primary">
-                <i class="fa-solid fa-users me-2 text-success"></i> Employee List
-            </h3>
-            <a asp-action="Create" class="btn btn-primary shadow-sm">
-                <i class="fa-solid fa-user-plus me-1"></i> Add Employee
-            </a>
-        </div>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold text-primary">
+            <i class="fa-solid fa-users me-2 text-success"></i> Employee List
+        </h3>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fa-solid fa-user-plus me-1"></i> Add Employee
+        </a>
+    </div>
 
-        <div class="table-responsive">
-            <table class="table table-hover align-middle table-bordered">
-                <thead class="table-light text-center">
-                    <tr>
-                        <th>Photo</th>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Department</th>
-                        <th>Position</th>
-                        <th>Manager</th>
-                        <th>Mobile</th>
-                        <th>Aadhaar</th>
-                        <th>PAN</th>
-                        <th>Marksheet</th>
-                        <th>Passbook</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="text-center">
-                    @foreach (var e in Model)
-                    {
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-center">
                         <tr>
-                            <td>
-                                @if (!string.IsNullOrEmpty(e.ProfilePhotoPath))
-                                {
-                                    <img src="@Url.Content(e.ProfilePhotoPath)" width="40" height="40" class="rounded-circle" />
-                                }
-                                else
-                                {
-
-                                    <i class="fa-solid fa-user text-muted"></i>
-                                    ;
-                                }
-                            </td>
-                            <td>@e.EmployeeCode</td>
-                            <td>@e.Name</td>
-                            <td>@e.Department</td>
-                            <td>@e.Position</td>
-                            <td>@e.ReportingManager</td>
-                            <td>@e.MobileNumber</td>
-
-                            <td>
-                                @if (!string.IsNullOrEmpty(e.AadharCardPath))
-                                {
-                                    <a href="@Url.Content(e.AadharCardPath)" target="_blank" class="text-success">
-                                        <i class="fa-solid fa-file"></i>
-                                    </a>
-                                }
-                            </td>
-                            <td>
-                                @if (!string.IsNullOrEmpty(e.PanCardPath))
-                                {
-                                    <a href="@Url.Content(e.PanCardPath)" target="_blank" class="text-primary">
-                                        <i class="fa-solid fa-file"></i>
-                                    </a>
-                                }
-                            </td>
-                            <td>
-                                @if (!string.IsNullOrEmpty(e.MarksheetPath))
-                                {
-                                    <a href="@Url.Content(e.MarksheetPath)" target="_blank" class="text-warning">
-                                        <i class="fa-solid fa-file"></i>
-                                    </a>
-                                }
-                            </td>
-                            <td>
-                                @if (!string.IsNullOrEmpty(e.BankPassbookPath))
-                                {
-                                    <a href="@Url.Content(e.BankPassbookPath)" target="_blank" class="text-info">
-                                        <i class="fa-solid fa-file"></i>
-                                    </a>
-                                }
-                            </td>
-
-                            <td>
-                                <a asp-action="Edit" asp-route-id="@e.Id" class="btn btn-sm btn-outline-success me-1">
-                                    <i class="fa-solid fa-pen"></i>
-                                </a>
-                                <form asp-action="Delete" method="post" class="d-inline">
-                                    <input type="hidden" name="id" value="@e.Id" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                                            onclick="return confirm('Are you sure?');">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
+                            <th>Photo</th>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Dept</th>
+                            <th>Position</th>
+                            <th>Mobile</th>
+                            <th>Experience</th>
+                            <th>Aadhaar</th>
+                            <th>PAN</th>
+                            <th></th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="text-center">
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var e in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(e.ProfilePhotoPath))
+                                        {
+                                            <img src="@Url.Content(e.ProfilePhotoPath)" class="emp-avatar" />
+                                        }
+                                        else
+                                        {
+                                            <img src="~/images/default-user.png" class="emp-avatar" />
+                                        }
+                                    </td>
+                                    <td>@e.EmployeeCode</td>
+                                    <td>@e.Name</td>
+                                    <td>@e.Department</td>
+                                    <td>@e.Position</td>
+                                    <td>@e.MobileNumber</td>
+                                    <td>
+                                        @if (e.ExperienceType == "Experienced")
+                                        {
+                                            @($"{e.TotalExperienceYears} yrs")
+                                        }
+                                        else
+                                        {
+                                            @("Fresher")
+                                        }
+                                    </td>
+                                    <td>@e.AadhaarNumber</td>
+                                    <td>@e.PanNumber</td>
+                                    <td>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a asp-action="Edit" asp-route-id="@e.Id"
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </a>
+                                            <form asp-action="Delete" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@e.Id" />
+                                                <button type="submit"
+                                                        onclick="return confirm('Are you sure you want to delete this employee?');"
+                                                        class="btn btn-sm btn-outline-danger">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="10" class="py-4 text-muted">
+                                    No employees found.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    .emp-avatar {
+        width: 45px;
+        height: 45px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 2px solid #e0e0e0;
+    }
+</style>

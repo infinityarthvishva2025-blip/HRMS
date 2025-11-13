@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEO Tag Attendance with Face Recognition</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #2076C7, #1CADA3);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+        }
+
+        .card h2 i {
+            color: #FFD166;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 15px;
+            background: #2076C7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background: #1a5fa0;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.success {
+            background: #1CADA3;
+        }
+
+        button.success:hover {
+            background: #179088;
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #map {
+            height: 300px;
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .status.inactive {
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .status.active {
+            background: rgba(28, 173, 163, 0.3);
+            color: #1CADA3;
+            border: 1px solid rgba(28, 173, 163, 0.5);
+        }
+
+        .status.error {
+            background: rgba(220, 53, 69, 0.3);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.5);
+        }
+
+        .location-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .location-data {
+            display: flex;
+            gap: 10px;
+        }
+
+        .location-data div {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .location-data div span {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .location-data div p {
+            font-weight: bold;
+            margin-top: 8px;
+            font-size: 1.1rem;
+        }
+
+        footer {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .face-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 1.2rem;
+            z-index: 10;
+            border-radius: 10px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .permission-help {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .location-data {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>GEO Tag Attendance System</h1>
+            <p class="subtitle">Face Recognition with Live Location Tracking</p>
+        </header>
+
+        <div class="card">
+            <h2><i>📷</i> Face Recognition</h2>
+            <div class="video-container">
+                <div class="face-overlay" id="faceOverlay">Camera not started. Click "Start Camera" to begin.</div>
+                <video id="video" autoplay muted playsinline></video>
+                <canvas id="canvas"></canvas>
+            </div>
+            <div class="controls">
+                <button id="startCamera">Start Camera</button>
+                <button id="captureFace" disabled>Capture Face</button>
+                <button id="markAttendance" class="success" disabled>Mark Attendance</button>
+            </div>
+            <div id="faceStatus" class="status inactive">Camera not started</div>
+            <div class="permission-help">
+                <p><strong>Camera not working?</strong> Make sure you've allowed camera access when prompted. If you blocked it by mistake, update your browser permissions for this site.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i>🗺️</i> Location & Map</h2>
+            <div id="map"></div>
+            <div class="location-info">
+                <div class="location-data">
+                    <div>
+                        <span>Latitude</span>
+                        <p id="latitude">--</p>
+                    </div>
+                    <div>
+                        <span>Longitude</span>
+                        <p id="longitude">--</p>
+                    </div>
+                    <div>
+                        <span>Accuracy</span>
+                        <p id="accuracy">--</p>
+                    </div>
+                </div>
+                <button id="getLocation">Get Current Location</button>
+            </div>
+            <div class="permission-help">
+                <p><strong>Location not working?</strong> Make sure you've allowed location access. For best results, use HTTPS and grant location permissions when prompted.</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>GEO Tag Attendance System &copy; 2023 | Secure and Automated Attendance Tracking</p>
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize variables
+        let map;
+        let userMarker;
+        let videoStream;
+        let locationWatchId;
+        let faceCaptured = false;
+
+        // DOM Elements
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const startCameraBtn = document.getElementById('startCamera');
+        const captureFaceBtn = document.getElementById('captureFace');
+        const markAttendanceBtn = document.getElementById('markAttendance');
+        const getLocationBtn = document.getElementById('getLocation');
+        const faceStatus = document.getElementById('faceStatus');
+        const faceOverlay = document.getElementById('faceOverlay');
+        const latitudeEl = document.getElementById('latitude');
+        const longitudeEl = document.getElementById('longitude');
+        const accuracyEl = document.getElementById('accuracy');
+
+        // Initialize the map
+        function initMap() {
+            map = L.map('map').setView([0, 0], 2);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            userMarker = L.marker([0, 0]).addTo(map)
+                .bindPopup('Your location will appear here')
+                .openPopup();
+        }
+
+        // Get user's location
+        function getLocation() {
+            if (!navigator.geolocation) {
+                showError({ code: 0, message: "Geolocation is not supported by this browser." });
+                return;
+            }
+
+            // Update button state
+            getLocationBtn.disabled = true;
+            getLocationBtn.textContent = "Getting Location...";
+
+            // Stop any existing location watch
+            if (locationWatchId) {
+                navigator.geolocation.clearWatch(locationWatchId);
+            }
+            
+            // Start watching position
+            locationWatchId = navigator.geolocation.watchPosition(
+                showPosition,
+                showError,
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        function showPosition(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+            
+            // Update location display
+            latitudeEl.textContent = lat.toFixed(6);
+            longitudeEl.textContent = lng.toFixed(6);
+            accuracyEl.textContent = `${accuracy.toFixed(2)} meters`;
+            
+            // Update map
+            map.setView([lat, lng], 16);
+            userMarker.setLatLng([lat, lng])
+                .bindPopup(`You are here!<br>Accuracy: ${accuracy.toFixed(2)} meters`)
+                .openPopup();
+                
+            // Add a circle to show accuracy
+            if (window.accuracyCircle) {
+                map.removeLayer(window.accuracyCircle);
+            }
+            window.accuracyCircle = L.circle([lat, lng], {
+                color: '#2076C7',
+                fillColor: '#1CADA3',
+                fillOpacity: 0.1,
+                radius: accuracy
+            }).addTo(map);
+            
+            // Enable mark attendance button if face is captured
+            if (faceCaptured) {
+                markAttendanceBtn.disabled = false;
+            }
+            
+            // Reset button
+            getLocationBtn.disabled = false;
+            getLocationBtn.textContent = "Update Location";
+        }
+
+        function showError(error) {
+            let message = "An unknown error occurred.";
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message = "Location access denied. Please allow location access in your browser settings.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = "Location information is unavailable. Please check your connection.";
+                    break;
+                case error.TIMEOUT:
+                    message = "The request to get location timed out. Please try again.";
+                    break;
+            }
+            
+            alert("Location Error: " + message);
+            
+            // Reset button
+            getLocationBtn.disabled = false;
+            getLocationBtn.textContent = "Get Current Location";
+        }
+
+        // Start camera for face recognition
+        async function startCamera() {
+            try {
+                // Reset states
+                faceCaptured = false;
+                captureFaceBtn.disabled = false;
+                markAttendanceBtn.disabled = true;
+                
+                // Check if browser supports mediaDevices
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error("Camera API is not supported in this browser");
+                }
+                
+                // Request camera access
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 }, 
+                        height: { ideal: 480 },
+                        facingMode: "user"
+                    },
+                    audio: false
+                });
+                
+                // Set video source
+                video.srcObject = videoStream;
+                
+                // Wait for video to be ready
+                video.onloadedmetadata = () => {
+                    // Update status
+                    faceStatus.textContent = "Camera active - Ready for face detection";
+                    faceStatus.className = "status active";
+                    faceOverlay.style.display = "none";
+                    
+                    // Enable capture button
+                    captureFaceBtn.disabled = false;
+                };
+                
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                faceStatus.textContent = "Error accessing camera: " + err.message;
+                faceStatus.className = "status error";
+                faceOverlay.textContent = "Camera Error: " + err.message + "\n\nPlease allow camera access and try again.";
+                faceOverlay.style.display = "flex";
+                
+                // Disable buttons
+                captureFaceBtn.disabled = true;
+                markAttendanceBtn.disabled = true;
+            }
+        }
+
+        // Capture face (simulated)
+        function captureFace() {
+            if (!videoStream) {
+                alert("Please start the camera first");
+                return;
+            }
+            
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Simulate face detection
+            faceStatus.textContent = "Face detected and captured!";
+            faceCaptured = true;
+            
+            // Draw a rectangle to simulate face detection
+            context.strokeStyle = "#1CADA3";
+            context.lineWidth = 3;
+            context.strokeRect(
+                canvas.width / 4, 
+                canvas.height / 4, 
+                canvas.width / 2, 
+                canvas.height / 2
+            );
+            
+            // Add text
+            context.fillStyle = "#1CADA3";
+            context.font = "20px Arial";
+            context.fillText("Face Detected", 10, 30);
+            
+            // Enable mark attendance button if location is available
+            if (latitudeEl.textContent !== "--" && longitudeEl.textContent !== "--") {
+                markAttendanceBtn.disabled = false;
+            }
+        }
+
+        // Mark attendance
+        function markAttendance() {
+            if (!videoStream) {
+                alert("Please start the camera and capture your face first");
+                return;
+            }
+            
+            const lat = latitudeEl.textContent;
+            const lng = longitudeEl.textContent;
+            
+            if (lat === "--" || lng === "--") {
+                alert("Please get your location first");
+                return;
+            }
+            
+            // Simulate face recognition and attendance marking
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const dateString = now.toLocaleDateString();
+            
+            // Show success message
+            alert(`Attendance marked successfully!\n\nTime: ${timeString}\nDate: ${dateString}\nLocation: ${lat}, ${lng}\n\nYour attendance has been recorded with geo-tagging and face verification.`);
+            
+            // Reset for next attendance
+            faceStatus.textContent = "Ready for next attendance";
+            faceStatus.className = "status inactive";
+            markAttendanceBtn.disabled = true;
+            faceCaptured = false;
+            
+            // Clear canvas
+            const context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Event Listeners
+        startCameraBtn.addEventListener('click', startCamera);
+        captureFaceBtn.addEventListener('click', captureFace);
+        markAttendanceBtn.addEventListener('click', markAttendance);
+        getLocationBtn.addEventListener('click', getLocation);
+
+        // Initialize the application
+        window.onload = function() {
+            initMap();
+        };
+    </script>
+</body>
+</html>
