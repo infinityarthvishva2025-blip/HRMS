@@ -22,14 +22,14 @@
         </div>
         <div class="step-item" data-step="3">
             <span class="step-number">3</span>
-            <span class="step-text">Job & Education</span>
+            <span class="step-text">Job, Education, IDs & Bank</span>
         </div>
     </div>
 
     <form asp-action="Create" asp-controller="Employees" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
 
-        <!-- STEP 1 – BASIC DETAILS -->
+        <!-- STEP 1 – BASIC -->
         <div class="step-pane active" data-step="1">
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header fw-semibold bg-white">Basic Details</div>
@@ -39,37 +39,37 @@
                         <div class="col-md-4">
                             <label asp-for="EmployeeCode" class="form-label"></label>
                             <input asp-for="EmployeeCode" class="form-control" readonly />
-                            <span asp-validation-for="EmployeeCode" class="text-danger small"></span>
+                            <span asp-validation-for="EmployeeCode" class="text-danger"></span>
                         </div>
 
                         <div class="col-md-4">
                             <label asp-for="Name" class="form-label"></label>
                             <input asp-for="Name" class="form-control" />
-                            <span asp-validation-for="Name" class="text-danger small"></span>
+                            <span asp-validation-for="Name" class="text-danger"></span>
                         </div>
 
                         <div class="col-md-4">
                             <label asp-for="Email" class="form-label"></label>
                             <input asp-for="Email" class="form-control" />
-                            <span asp-validation-for="Email" class="text-danger small"></span>
+                            <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
 
                         <div class="col-md-4">
                             <label asp-for="MobileNumber" class="form-label"></label>
                             <input asp-for="MobileNumber" class="form-control" />
-                            <span asp-validation-for="MobileNumber" class="text-danger small"></span>
+                            <span asp-validation-for="MobileNumber" class="text-danger"></span>
                         </div>
 
                         <div class="col-md-4">
                             <label asp-for="Password" class="form-label"></label>
-                            <input asp-for="Password" id="Password" type="password" class="form-control" />
-                            <span asp-validation-for="Password" class="text-danger small"></span>
+                            <input asp-for="Password" type="password" class="form-control" id="Password" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
 
                         <div class="col-md-4">
                             <label asp-for="ConfirmPassword" class="form-label"></label>
-                            <input asp-for="ConfirmPassword" id="ConfirmPassword" type="password" class="form-control" />
-                            <span asp-validation-for="ConfirmPassword" id="ConfirmPasswordError" class="text-danger small"></span>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control" id="ConfirmPassword" />
+                            <span asp-validation-for="ConfirmPassword" id="ConfirmPasswordError" class="text-danger"></span>
                         </div>
 
                     </div>
@@ -84,7 +84,6 @@
                 <div class="card-body">
 
                     <div class="row g-3">
-
                         <div class="col-md-3">
                             <label asp-for="Gender" class="form-label"></label>
                             <select asp-for="Gender" class="form-select">
@@ -93,7 +92,6 @@
                                 <option>Female</option>
                                 <option>Other</option>
                             </select>
-                            <span asp-validation-for="Gender" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-3">
@@ -107,7 +105,7 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label asp-for="DOB_Date" class="form-label"></label>
+                            <label asp-for="DOB_Date" class="form-label">Date of Birth</label>
                             <input asp-for="DOB_Date" type="date" class="form-control" />
                         </div>
 
@@ -120,12 +118,10 @@
                                 <option>Widowed</option>
                             </select>
                         </div>
-
                     </div>
 
                     <hr class="my-3" />
 
-                    <!-- EXPERIENCE -->
                     <div class="row g-3">
                         <div class="col-md-3">
                             <label asp-for="ExperienceType" class="form-label">Experience</label>
@@ -138,11 +134,11 @@
 
                         <div id="experienceFields" class="row g-3 mt-1 d-none">
                             <div class="col-md-3">
-                                <label asp-for="TotalExperienceYears" class="form-label"></label>
-                                <input asp-for="TotalExperienceYears" class="form-control" />
+                                <label asp-for="TotalExperienceYears" class="form-label">Experience (Years)</label>
+                                <input asp-for="TotalExperienceYears" type="number" class="form-control" />
                             </div>
                             <div class="col-md-5">
-                                <label asp-for="LastCompanyName" class="form-label"></label>
+                                <label asp-for="LastCompanyName" class="form-label">Last Company Name</label>
                                 <input asp-for="LastCompanyName" class="form-control" />
                             </div>
                         </div>
@@ -152,10 +148,10 @@
             </div>
         </div>
 
-        <!-- STEP 3 – JOB & EDUCATION -->
+        <!-- STEP 3 – JOB, EDUCATION, IDs, BANK -->
         <div class="step-pane" data-step="3">
             <div class="row">
-                <!-- LEFT -->
+                <!-- LEFT SIDE -->
                 <div class="col-lg-8">
 
                     <!-- JOB DETAILS -->
@@ -163,14 +159,13 @@
                         <div class="card-header fw-semibold bg-white">Job Details</div>
                         <div class="card-body">
                             <div class="row g-3">
-
                                 <div class="col-md-4">
-                                    <label asp-for="JoiningDate" class="form-label"></label>
+                                    <label asp-for="JoiningDate"></label>
                                     <input asp-for="JoiningDate" type="date" class="form-control" />
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label asp-for="Department" class="form-label"></label>
+                                    <label asp-for="Department"></label>
                                     <select asp-for="Department" id="Department" class="form-select">
                                         <option value="">-- Select --</option>
                                         <option>IT</option>
@@ -182,25 +177,24 @@
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label asp-for="Position" class="form-label"></label>
+                                    <label asp-for="Position"></label>
                                     <select asp-for="Position" id="Position" class="form-select"></select>
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label asp-for="Salary" class="form-label"></label>
+                                    <label asp-for="Salary"></label>
                                     <input asp-for="Salary" type="number" class="form-control" />
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label asp-for="ReportingManager" class="form-label"></label>
+                                    <label asp-for="ReportingManager"></label>
                                     <input asp-for="ReportingManager" class="form-control" />
                                 </div>
 
                                 <div class="col-md-12">
-                                    <label asp-for="Address" class="form-label"></label>
-                                    <textarea asp-for="Address" class="form-control" rows="2"></textarea>
+                                    <label asp-for="Address"></label>
+                                    <textarea asp-for="Address" rows="2" class="form-control"></textarea>
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -210,14 +204,12 @@
                         <div class="card-header fw-semibold bg-white">Education Details</div>
                         <div class="card-body">
                             <div class="row g-3">
-
                                 <div class="col-md-4">
-                                    <label asp-for="HSCPercent" class="form-label">12th %</label>
-                                    <input asp-for="HSCPercent" class="form-control" />
+                                    <label asp-for="HSCPercent">12th %</label>
+                                    <input asp-for="HSCPercent" type="number" class="form-control" />
                                 </div>
-
                                 <div class="col-md-4">
-                                    <label asp-for="GraduationCourse" class="form-label"></label>
+                                    <label asp-for="GraduationCourse">Graduation Course</label>
                                     <select asp-for="GraduationCourse" class="form-select">
                                         <option>BCA</option>
                                         <option>BCS</option>
@@ -226,22 +218,18 @@
                                         <option>Other</option>
                                     </select>
                                 </div>
-
                                 <div class="col-md-4">
-                                    <label asp-for="GraduationPercent" class="form-label"></label>
-                                    <input asp-for="GraduationPercent" class="form-control" />
+                                    <label asp-for="GraduationPercent">Graduation %</label>
+                                    <input asp-for="GraduationPercent" type="number" class="form-control" />
                                 </div>
-
                                 <div class="col-md-4">
-                                    <label asp-for="PostGraduationCourse" class="form-label"></label>
+                                    <label asp-for="PostGraduationCourse">PG Course</label>
                                     <input asp-for="PostGraduationCourse" class="form-control" />
                                 </div>
-
                                 <div class="col-md-4">
-                                    <label asp-for="PostGraduationPercent" class="form-label"></label>
-                                    <input asp-for="PostGraduationPercent" class="form-control" />
+                                    <label asp-for="PostGraduationPercent">PG %</label>
+                                    <input asp-for="PostGraduationPercent" type="number" class="form-control" />
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -251,26 +239,50 @@
                         <div class="card-header fw-semibold bg-white">ID Details</div>
                         <div class="card-body">
                             <div class="row g-3">
-
                                 <div class="col-md-4">
-                                    <label asp-for="AadhaarNumber" class="form-label"></label>
-                                    <input asp-for="AadhaarNumber" class="form-control" id="AadhaarNumber" />
-                                    <span id="AadhaarLiveError" class="text-danger small"></span>
+                                    <label asp-for="AadhaarNumber"></label>
+                                    <input asp-for="AadhaarNumber" class="form-control" />
                                 </div>
-
                                 <div class="col-md-4">
-                                    <label asp-for="PanNumber" class="form-label"></label>
-                                    <input asp-for="PanNumber" class="form-control text-uppercase" id="PanNumber" />
-                                    <span id="PanLiveError" class="text-danger small"></span>
+                                    <label asp-for="PanNumber"></label>
+                                    <input asp-for="PanNumber" class="form-control text-uppercase" />
                                 </div>
+                            </div>
+                        </div>
+                    </div>
 
+                    <!-- BANK DETAILS -->
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header fw-semibold bg-white">Bank Details</div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="BankName"></label>
+                                    <input asp-for="BankName" class="form-control" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="AccountHolderName"></label>
+                                    <input asp-for="AccountHolderName" class="form-control" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="AccountNumber"></label>
+                                    <input asp-for="AccountNumber" class="form-control" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label asp-for="IFSC"></label>
+                                    <input asp-for="IFSC" class="form-control text-uppercase" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label asp-for="Branch"></label>
+                                    <input asp-for="Branch" class="form-control" />
+                                </div>
                             </div>
                         </div>
                     </div>
 
                 </div>
 
-                <!-- RIGHT: PROFILE PHOTO -->
+                <!-- RIGHT SIDE PHOTO -->
                 <div class="col-lg-4">
                     <div class="card shadow-sm border-0">
                         <div class="card-header fw-semibold bg-white">Profile Picture</div>
@@ -310,43 +322,9 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-
-                // ========== DEPARTMENT → POSITION ==========
-        const departmentSelect = document.getElementById("Department");
-        const positionSelect = document.getElementById("Position");
-
-        if (departmentSelect && positionSelect) {
-            departmentSelect.addEventListener("change", function () {
-                const dept = this.value;
-
-                // clear current options
-                positionSelect.innerHTML = "";
-
-                if (!dept) return;
-
-                fetch(`/Employees/GetPositions?department=${encodeURIComponent(dept)}`)
-                    .then(r => r.json())
-                    .then(data => {
-                        positionSelect.innerHTML = "";
-                        const defaultOpt = document.createElement("option");
-                        defaultOpt.value = "";
-                        defaultOpt.textContent = "-- Select --";
-                        positionSelect.appendChild(defaultOpt);
-
-                        data.forEach(p => {
-                            const opt = document.createElement("option");
-                            opt.value = p;
-                            opt.textContent = p;
-                            positionSelect.appendChild(opt);
-                        });
-                    });
-            });
-        }
-B
-        // ========== MULTI-STEP FORM ==========
+        // MULTI-STEP
         let currentStep = 1;
         const totalSteps = 3;
-
         const stepPanes = document.querySelectorAll(".step-pane");
         const stepItems = document.querySelectorAll(".step-item");
         const btnPrev = document.getElementById("btnPrev");
@@ -384,26 +362,68 @@ B
 
         showStep(1);
 
-        // ========== PASSWORD MATCH CHECK ==========
-        document.getElementById("ConfirmPassword").addEventListener("input", validatePassword);
-        document.getElementById("Password").addEventListener("input", validatePassword);
+        // EXPERIENCE SHOW/HIDE
+        const expSelect = document.getElementById("ExperienceType");
+        const expFields = document.getElementById("experienceFields");
+
+        expSelect.addEventListener("change", () => {
+            expFields.classList.toggle("d-none", expSelect.value !== "Experienced");
+        });
+
+        // PASSWORD MATCH
+        const pwd = document.getElementById("Password");
+        const cpwd = document.getElementById("ConfirmPassword");
+        const cpwdErr = document.getElementById("ConfirmPasswordError");
 
         function validatePassword() {
-            const password = document.getElementById("Password").value;
-            const confirm = document.getElementById("ConfirmPassword").value;
-            const error = document.getElementById("ConfirmPasswordError");
-
-            if (!confirm) {
-                error.textContent = "";
+            if (!cpwd.value) {
+                cpwdErr.textContent = "";
                 return;
             }
-
-            if (password !== confirm) {
-                error.textContent = "Password and Confirm Password must match.";
-            } else {
-                error.textContent = "";
-            }
+            cpwdErr.textContent = pwd.value !== cpwd.value
+                ? "Password and Confirm Password must match."
+                : "";
         }
+
+        pwd.addEventListener("input", validatePassword);
+        cpwd.addEventListener("input", validatePassword);
+
+        // DEPARTMENT → POSITION
+        const dept = document.getElementById("Department");
+        const pos = document.getElementById("Position");
+
+        dept.addEventListener("change", () => {
+            const d = dept.value;
+            pos.innerHTML = "";
+            if (!d) return;
+
+            fetch(`/Employees/GetPositions?department=${encodeURIComponent(d)}`)
+                .then(r => r.json())
+                .then(list => {
+                    const def = document.createElement("option");
+                    def.value = "";
+                    def.textContent = "-- Select --";
+                    pos.appendChild(def);
+
+                    list.forEach(p => {
+                        const opt = document.createElement("option");
+                        opt.value = p;
+                        opt.textContent = p;
+                        pos.appendChild(opt);
+                    });
+                });
+        });
+
+        // simple image preview
+        document.getElementById("ProfilePhoto").addEventListener("change", function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                document.getElementById("profilePreview").src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
     </script>
 
     <style>

@@ -23,15 +23,13 @@ namespace HRMS.Models
         public string Email { get; set; }
 
         [Required]
-        [Phone]
         [StringLength(15)]
         public string MobileNumber { get; set; }
 
         [Required]
-        [StringLength(200)]   // hashed password will be long
+        [StringLength(200)] // store hash
         public string Password { get; set; }
 
-        // only for UI, not stored
         [NotMapped]
         [Compare("Password", ErrorMessage = "Password and Confirm Password must match.")]
         public string ConfirmPassword { get; set; }
@@ -71,7 +69,6 @@ namespace HRMS.Models
         [StringLength(100)]
         public string Position { get; set; }
 
-        [Range(0, double.MaxValue)]
         public decimal? Salary { get; set; }
 
         [StringLength(100)]
@@ -100,11 +97,29 @@ namespace HRMS.Models
         [StringLength(10)]
         public string PanNumber { get; set; }
 
-        // PROFILE PHOTO
+        // PROFILE PHOTO (only filename stored)
         [StringLength(200)]
         public string ProfileImagePath { get; set; }
 
+        // BANK DETAILS
+        [StringLength(100)]
+        public string BankName { get; set; }
+
+        [StringLength(100)]
+        public string AccountHolderName { get; set; }
+
+        [StringLength(30)]
+        public string AccountNumber { get; set; }
+
+        [StringLength(20)]
+        public string IFSC { get; set; }
+
+        [StringLength(100)]
+        public string Branch { get; set; }
+
         // AUDIT
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public string Status { get; set; }
     }
 }

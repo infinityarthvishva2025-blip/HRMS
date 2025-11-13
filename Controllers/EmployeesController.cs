@@ -19,7 +19,6 @@ namespace HRMS.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
 
-        // Department → Positions map
         private static readonly Dictionary<string, List<string>> DepartmentPositions =
             new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
             {
@@ -48,12 +47,10 @@ namespace HRMS.Controllers
         {
             if (id == null) return NotFound();
 
-            var employee = await _context.Employees
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var emp = await _context.Employees.FirstOrDefaultAsync(x => x.Id == id);
+            if (emp == null) return NotFound();
 
-            if (employee == null) return NotFound();
-
-            return View(employee);
+            return View(emp);
         }
 
         // GET: Employees/Create
@@ -63,7 +60,6 @@ namespace HRMS.Controllers
             {
                 EmployeeCode = GenerateNextEmployeeCode()
             };
-
             return View(model);
         }
 
@@ -72,15 +68,13 @@ namespace HRMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Employee model, IFormFile ProfilePhoto)
         {
-            // remove ConfirmPassword from model state so Compare works only on client
-            ModelState.Remove(nameof(Employee.ConfirmPassword));
-
+            // ConfirmPassword is NotMapped but still validated; that's fine.
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            // unique email & mobile checks
+            // Unique email & mobile check
             if (await _context.Employees.AnyAsync(e => e.Email == model.Email))
             {
                 ModelState.AddModelError("Email", "Email is already registered.");
@@ -93,7 +87,7 @@ namespace HRMS.Controllers
                 return View(model);
             }
 
-            // ensure EmployeeCode
+            // ensure employee code
             if (string.IsNullOrWhiteSpace(model.EmployeeCode))
             {
                 model.EmployeeCode = GenerateNextEmployeeCode();
@@ -102,7 +96,7 @@ namespace HRMS.Controllers
             // hash password
             model.Password = HashPassword(model.Password);
 
-            // handle profile image
+            // save profile image (filename only)
             if (ProfilePhoto != null && ProfilePhoto.Length > 0)
             {
                 model.ProfileImagePath = await SaveProfilePhotoAsync(ProfilePhoto, model.EmployeeCode);
@@ -118,14 +112,14 @@ namespace HRMS.Controllers
         {
             if (id == null) return NotFound();
 
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee == null) return NotFound();
+            var emp = await _context.Employees.FindAsync(id);
+            if (emp == null) return NotFound();
 
-            // don't send password hash back to UI
-            employee.Password = string.Empty;
-            employee.ConfirmPassword = string.Empty;
+            // don't send password hash to UI
+            emp.Password = string.Empty;
+            emp.ConfirmPassword = string.Empty;
 
-            return View(employee);
+            return View(emp);
         }
 
         // POST: Employees/Edit/5
@@ -135,7 +129,7 @@ namespace HRMS.Controllers
         {
             if (id != model.Id) return NotFound();
 
-            // ConfirmPassword not stored
+            // ConfirmPassword is just for UI
             ModelState.Remove(nameof(Employee.ConfirmPassword));
 
             if (!ModelState.IsValid)
@@ -143,10 +137,10 @@ namespace HRMS.Controllers
                 return View(model);
             }
 
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee == null) return NotFound();
+            var emp = await _context.Employees.FindAsync(id);
+            if (emp == null) return NotFound();
 
-            // unique email/mobile (excluding current)
+            // unique email/mobile excluding current
             if (await _context.Employees.AnyAsync(e => e.Email == model.Email && e.Id != id))
             {
                 ModelState.AddModelError("Email", "Email is already registered.");
@@ -159,45 +153,57 @@ namespace HRMS.Controllers
                 return View(model);
             }
 
-            // update basic fields
-            employee.Name = model.Name;
-            employee.Email = model.Email;
-            employee.MobileNumber = model.MobileNumber;
-            employee.Gender = model.Gender;
-            employee.FatherName = model.FatherName;
-            employee.MotherName = model.MotherName;
-            employee.DOB_Date = model.DOB_Date;
-            employee.MaritalStatus = model.MaritalStatus;
-            employee.ExperienceType = model.ExperienceType;
-            employee.TotalExperienceYears = model.TotalExperienceYears;
-            employee.LastCompanyName = model.LastCompanyName;
-            employee.JoiningDate = model.JoiningDate;
-            employee.Department = model.Department;
-            employee.Position = model.Position;
-            employee.Salary = model.Salary;
-            employee.ReportingManager = model.ReportingManager;
-            employee.Address = model.Address;
-            employee.HSCPercent = model.HSCPercent;
-            employee.GraduationCourse = model.GraduationCourse;
-            employee.GraduationPercent = model.GraduationPercent;
-            employee.PostGraduationCourse = model.PostGraduationCourse;
-            employee.PostGraduationPercent = model.PostGraduationPercent;
-            employee.AadhaarNumber = model.AadhaarNumber;
-            employee.PanNumber = model.PanNumber;
+            // update all fields except password & image (handled separately)
+            emp.Name = model.Name;
+            emp.Email = model.Email;
+            emp.MobileNumber = model.MobileNumber;
 
-            // if password entered, update hash
+            emp.Gender = model.Gender;
+            emp.FatherName = model.FatherName;
+            emp.MotherName = model.MotherName;
+            emp.DOB_Date = model.DOB_Date;
+            emp.MaritalStatus = model.MaritalStatus;
+
+            emp.ExperienceType = model.ExperienceType;
+            emp.TotalExperienceYears = model.TotalExperienceYears;
+            emp.LastCompanyName = model.LastCompanyName;
+
+            emp.JoiningDate = model.JoiningDate;
+            emp.Department = model.Department;
+            emp.Position = model.Position;
+            emp.Salary = model.Salary;
+            emp.ReportingManager = model.ReportingManager;
+            emp.Address = model.Address;
+
+            emp.HSCPercent = model.HSCPercent;
+            emp.GraduationCourse = model.GraduationCourse;
+            emp.GraduationPercent = model.GraduationPercent;
+            emp.PostGraduationCourse = model.PostGraduationCourse;
+            emp.PostGraduationPercent = model.PostGraduationPercent;
+
+            emp.AadhaarNumber = model.AadhaarNumber;
+            emp.PanNumber = model.PanNumber;
+
+            // bank details
+            emp.BankName = model.BankName;
+            emp.AccountHolderName = model.AccountHolderName;
+            emp.AccountNumber = model.AccountNumber;
+            emp.IFSC = model.IFSC;
+            emp.Branch = model.Branch;
+
+            // update password only if new one entered
             if (!string.IsNullOrWhiteSpace(model.Password))
             {
-                employee.Password = HashPassword(model.Password);
+                emp.Password = HashPassword(model.Password);
             }
 
-            // new image?
+            // new profile photo?
             if (ProfilePhoto != null && ProfilePhoto.Length > 0)
             {
-                employee.ProfileImagePath = await SaveProfilePhotoAsync(ProfilePhoto, employee.EmployeeCode);
+                emp.ProfileImagePath = await SaveProfilePhotoAsync(ProfilePhoto, emp.EmployeeCode);
             }
 
-            _context.Update(employee);
+            _context.Update(emp);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
@@ -207,12 +213,10 @@ namespace HRMS.Controllers
         {
             if (id == null) return NotFound();
 
-            var employee = await _context.Employees
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var emp = await _context.Employees.FirstOrDefaultAsync(x => x.Id == id);
+            if (emp == null) return NotFound();
 
-            if (employee == null) return NotFound();
-
-            return View(employee);
+            return View(emp);
         }
 
         // POST: Employees/Delete/5
@@ -220,43 +224,51 @@ namespace HRMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee != null)
+            var emp = await _context.Employees.FindAsync(id);
+            if (emp != null)
             {
-                _context.Employees.Remove(employee);
+                _context.Employees.Remove(emp);
                 await _context.SaveChangesAsync();
             }
-
             return RedirectToAction(nameof(Index));
         }
 
-        // ========= Helpers =========
+        // AJAX: department → positions
+        [HttpGet]
+        public IActionResult GetPositions(string department)
+        {
+            if (string.IsNullOrWhiteSpace(department) ||
+                !DepartmentPositions.TryGetValue(department, out var positions))
+            {
+                return Json(new List<string>());
+            }
+
+            return Json(positions);
+        }
+
+        // ========== Helpers ==========
 
         private string GenerateNextEmployeeCode()
         {
-            // default if no employees: IA0001
             var lastCode = _context.Employees
                 .OrderByDescending(e => e.EmployeeCode)
                 .Select(e => e.EmployeeCode)
                 .FirstOrDefault();
 
-            if (string.IsNullOrEmpty(lastCode))
+            if (string.IsNullOrWhiteSpace(lastCode))
                 return "IA0001";
 
-            // assume format "IA0001"
             var prefix = lastCode.Substring(0, 2);
             var numericPart = lastCode.Substring(2);
 
-            if (!int.TryParse(numericPart, out int number))
-            {
-                // fallback
+            if (!int.TryParse(numericPart, out var number))
                 return "IA0001";
-            }
 
             number++;
             return $"{prefix}{number:0000}";
         }
 
+        // returns only filename (e.g. "IA0001.jpg")
         private async Task<string> SaveProfilePhotoAsync(IFormFile file, string employeeCode)
         {
             var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles");
@@ -271,8 +283,7 @@ namespace HRMS.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            // relative path to serve in <img src="">
-            return $"/uploads/profiles/{fileName}";
+            return fileName; // ONLY filename stored in DB
         }
 
         private string HashPassword(string password)
@@ -287,17 +298,5 @@ namespace HRMS.Controllers
                 return Convert.ToBase64String(hash);
             }
         }
-        [HttpGet]
-        public IActionResult GetPositions(string department)
-        {
-            if (string.IsNullOrWhiteSpace(department) ||
-                !DepartmentPositions.TryGetValue(department, out var positions))
-            {
-                return Json(new List<string>());
-            }
-
-            return Json(positions);
-        }
-
     }
 }
