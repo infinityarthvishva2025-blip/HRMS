@@ -11,7 +11,7 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">Employees by Department</div>
                 <div class="card-body">
-                    <canvas id="employeeChart"></canvas>
+                    <canvas id="deptChart"></canvas>
                 </div>
             </div>
         </div>
@@ -51,63 +51,139 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Parse data from backend
-        const employeeData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.EmployeeReport));
-        const leaveData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.LeaveReport));
-        const payrollData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.PayrollReport));
-        const attendanceData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.AttendanceReport));
+        // Line Chart (Monthly Attendance)
+        const ctx1 = document.getElementById('attendanceChart');
+        const attendanceChart = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                datasets: [{
+                    label: 'Average Attendance %',
+                    data: [92, 94, 90, 89, 94, 93, 95, 94, 91, 90, 92, 94],
+                    fill: true,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 85,
+                        max: 100
+                    }
+                }
+            }
+        });
 
-        // Employee Chart
-        new Chart(document.getElementById("employeeChart"), {
+        // Radar Chart (Department-wise)
+        // const ctx2 = document.getElementById('employeeChart');
+        // const deptChart = new Chart(ctx2, {
+        //     type: 'radar',
+        //     data: {
+        //         labels: ['Productivity', 'Attendance', 'Satisfaction', 'Training', 'Performance'],
+        //         datasets: [
+        //             {
+        //                 label: 'IT',
+        //                 data: [90, 95, 85, 80, 88],
+        //                 fill: true,
+        //                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        //                 borderColor: 'rgba(54, 162, 235, 1)',
+        //                 pointBackgroundColor: 'rgba(54, 162, 235, 1)'
+        //             },
+        //             {
+        //                 label: 'HR',
+        //                 data: [95, 92, 90, 85, 80],
+        //                 fill: true,
+        //                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        //                 borderColor: 'rgba(75, 192, 192, 1)',
+        //                 pointBackgroundColor: 'rgba(75, 192, 192, 1)'
+        //             }
+        //         ]
+        //     },
+        //     options: {
+        //         scales: {
+        //             r: {
+        //                 angleLines: { display: true },
+        //                 suggestedMin: 70,
+        //                 suggestedMax: 100
+        //             }
+        //         }
+        //     }
+        // });
+    </script>
+    <script>
+        const ctx = document.getElementById('deptChart');
+        const departmentLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DepartmentLabels));
+        const departmentValues = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DepartmentValues));
+
+        new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: employeeData.map(e => e.Department),
+                labels: departmentLabels,
                 datasets: [{
-                    data: employeeData.map(e => e.Count),
-                    backgroundColor: ['#007bff', '#28a745', '#ffc107', '#17a2b8']
+                    label: 'Employees',
+                    data: departmentValues,
+                    backgroundColor: [
+                        '#1976d2', '#009688', '#9c27b0', '#f44336',
+                        '#ff9800', '#00bfa5', '#795548'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    hoverOffset: 6
                 }]
             },
-            options: { plugins: { legend: { position: 'bottom' } } }
-        });
-
-        // Leave Chart
-        new Chart(document.getElementById("leaveChart"), {
-            type: 'pie',
-            data: {
-                labels: leaveData.map(l => l.Status),
-                datasets: [{
-                    data: leaveData.map(l => l.Count),
-                    backgroundColor: ['#28a745', '#ffc107', '#dc3545']
-                }]
-            },
-            options: { plugins: { legend: { position: 'bottom' } } }
-        });
-
-        // Payroll Chart
-        new Chart(document.getElementById("payrollChart"), {
-            type: 'bar',
-            data: {
-                labels: payrollData.map(p => p.Month),
-                datasets: [{
-                    label: 'Total Salary',
-                    data: payrollData.map(p => p.Total),
-                    backgroundColor: '#17a2b8'
-                }]
-            },
-            options: { scales: { y: { beginAtZero: true } } }
-        });
-
-        // Attendance Chart
-        new Chart(document.getElementById("attendanceChart"), {
-            type: 'polarArea',
-            data: {
-                labels: attendanceData.map(a => a.Status),
-                datasets: [{
-                    data: attendanceData.map(a => a.Count),
-                    backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d']
-                }]
-            },
-            options: { plugins: { legend: { position: 'bottom' } } }
+            options: {
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 20, padding: 15 } }
+                },
+                cutout: '65%',
+                responsive: true,
+                maintainAspectRatio: false
+            }
         });
     </script>
+<script>
+    document.addEventListener("DOMContentLoaded", async function () {
+        // === Load Leave Requests by Status ===
+        const response = await fetch('/api/reports/leave-status');
+        const data = await response.json();
+            alert(data);
+        const labels = data.map(d => d.status);
+        const values = data.map(d => d.count);
+
+        const colors = [
+            'rgba(54, 162, 235, 0.8)',   // Approved
+            'rgba(255, 206, 86, 0.8)',   // Pending
+            'rgba(255, 99, 132, 0.8)'    // Rejected
+        ];
+
+        new Chart(document.getElementById('leaveChart'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    title: {
+                        display: false,
+                        text: 'Leave Requests by Status'
+                    }
+                }
+            }
+        });
+
+        
+    });
+</script>
 }
