@@ -29,8 +29,11 @@ namespace HRMS.Models
         public int EmployeeId { get; set; }
 
         public Employee? Employee { get; set; }
+      //  public Count? Count { get; set; }
 
         [NotMapped, Display(Name = "Total Days")]
         public int TotalDays => (EndDate - StartDate).Days + 1;
+
+        public int Count { get; internal set; }
     }
 }

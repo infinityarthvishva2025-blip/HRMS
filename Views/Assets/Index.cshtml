@@ -35,6 +35,24 @@
                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>
                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Delete</a>
                 </td>
+                <td>
+                    @if (item.Status == "Pending")
+                    {
+                        <form asp-action="UpdateStatus" asp-route-id="@item.Id" method="post" class="d-inline">
+                            <select name="status" class="form-select form-select-sm d-inline" style="width:120px;">
+                                <option value="Pending" selected>Pending</option>
+                                <option value="Approved">Approve</option>
+                                <option value="Rejected">Reject</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">@item.Status</span>
+                    }
+                </td>
+
             </tr>
         }
     </tbody>

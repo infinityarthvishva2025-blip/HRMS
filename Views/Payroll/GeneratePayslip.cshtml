@@ -1,0 +1,91 @@
+﻿@model HRMS.Models.Payroll
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Payslip - @Model.EmployeeName</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: left;
+        }
+
+        .head {
+            background-color: #f7a57a;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        h3 {
+            text-align: center;
+            color: #004080;
+        }
+    </style>
+</head>
+<body>
+    <h3>PAYSLIP FOR THE MONTH OF @Model.MonthYear</h3>
+
+    <table>
+        <tr><td><b>Employee Name</b></td><td>@Model.EmployeeName</td><td><b>Date of Joining</b></td><td>@Model.DateOfJoining.ToString("dd-MM-yyyy")</td></tr>
+        <tr><td><b>Employee Code</b></td><td>@Model.EmployeeCode</td><td><b>Total Working Days</b></td><td>@Model.TotalWorkingDays</td></tr>
+        <tr><td><b>Designation</b></td><td>@Model.Designation</td><td><b>Days Attended</b></td><td>@Model.DaysAttended</td></tr>
+        <tr><td><b>PAN</b></td><td>@Model.PAN</td><td><b>Total Leaves Taken</b></td><td>@Model.TotalLeavesTaken</td></tr>
+        <tr><td><b>Bank Account Number</b></td><td>@Model.BankAccountNumber</td><td><b>Deduction for Late Marks</b></td><td>₹@Model.DeductionForLateMarks.ToString("N0")</td></tr>
+        <tr><td><b>Bank Name</b></td><td>@Model.BankName</td><td></td><td></td></tr>
+    </table>
+
+    <br />
+    <table>
+        <tr class="head"><td colspan="2">EARNINGS</td><td colspan="2">DEDUCTIONS</td></tr>
+        <tr>
+            <td>Base Salary</td>
+            <td>₹@Model.BaseSalary.ToString("N0")</td>
+            <td>Professional Tax</td>
+            <td>₹@Model.ProfessionalTax.ToString("N0")</td>
+        </tr>
+        <tr>
+            <td>Performance Allowance</td>
+            <td>₹@Model.PerformanceAllowance.ToString("N0")</td>
+            <td>Deduction for Leaves</td>
+            <td>₹@Model.DeductionForLeaves.ToString("N0")</td>
+        </tr>
+        <tr>
+            <td>Other Allowances</td>
+            <td>₹@Model.OtherAllowances.ToString("N0")</td>
+            <td>Deduction for Late Marks</td>
+            <td>@Model.DeductionForLateMarks.ToString("N0")</td>
+
+        </tr>
+        <tr>
+            <td><b>Total Earning</b></td>
+            <td>₹@Model.TotalEarning.ToString("N0")</td>
+            <td><b>Total Deductions</b></td>
+            <td>₹@Model.TotalDeductions.ToString("N0")</td>
+        </tr>
+        <tr>
+            <td colspan="2"></td>
+            <td><b>Net Pay</b></td>
+            <td><b>₹@Model.NetPay.ToString("N0")</b></td>
+        </tr>
+    </table>
+
+    <br />
+    <p><b>Authorized Signature:</b> ____________________________</p>
+    <p>Infinity Arthvishva HR Department</p>
+</body>
+</html>

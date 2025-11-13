@@ -66,8 +66,42 @@ namespace HRMS.Controllers
                 .GroupBy(l => l.Status)
                 .Select(g => new { Status = g.Key, Count = g.Count() })
                 .ToList();
+            // Example 3: Payroll summary by month
+            var payrollReport = _context.Payrolls
+                .GroupBy(p => p.MonthYear)
+                .Select(g => new { Month = g.Key, Total = g.Sum(p => p.NetPay) })
+                .ToList();
+            ViewBag.payrollReport = payrollReport;
             ViewBag.LeaveReport = leaveReport;
-            return View();
+
+
+            var data = new List<Payroll>
+    {
+        new Payroll { MonthYear = "Jan", NetPay = 350000 },
+        new Payroll { MonthYear = "Feb", NetPay = 370000 },
+        new Payroll { MonthYear = "Mar", NetPay = 420000 },
+        new Payroll { MonthYear = "Apr", NetPay = 390000 },
+        new Payroll { MonthYear = "May", NetPay = 450000 },
+        new Payroll { MonthYear = "Jun", NetPay = 470000 }
+    };
+            var approved = _context.Leaves.Count(x => x.Status == "Approved");
+            var pending = _context.Leaves.Count(x => x.Status == "Pending");
+            var rejected = _context.Leaves.Count(x => x.Status == "Rejected");
+
+            var data1 = new List<Leave>
+    {
+        new Leave { Status = "Approved", Count = approved },
+        new Leave { Status = "Pending", Count = pending },
+        new Leave { Status = "Rejected", Count = rejected }
+    };
+
+
+            return Json(data, data1);
+
+            //return Json(data);
+            //return View();
         }
     }
+
+
 }
