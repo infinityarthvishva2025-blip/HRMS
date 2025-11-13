@@ -68,43 +68,43 @@ namespace HRMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Employee model, IFormFile ProfilePhoto)
         {
-            // ConfirmPassword is NotMapped but still validated; that's fine.
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
+            // Default Status
+            model.Status = "Active";
+            ModelState.Remove("Status");
+            ModelState.Remove("ConfirmPassword"); // Not mapped, ignore
 
-            // Unique email & mobile check
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // Unique Email check
             if (await _context.Employees.AnyAsync(e => e.Email == model.Email))
             {
-                ModelState.AddModelError("Email", "Email is already registered.");
+                ModelState.AddModelError("Email", "This email is already registered.");
                 return View(model);
             }
 
+            // Unique Mobile check
             if (await _context.Employees.AnyAsync(e => e.MobileNumber == model.MobileNumber))
             {
-                ModelState.AddModelError("MobileNumber", "Mobile number is already registered.");
+                ModelState.AddModelError("MobileNumber", "This mobile number is already registered.");
                 return View(model);
             }
 
-            // ensure employee code
+            // Generate EmployeeCode if missing
             if (string.IsNullOrWhiteSpace(model.EmployeeCode))
-            {
                 model.EmployeeCode = GenerateNextEmployeeCode();
-            }
 
-            // hash password
+            // Hash Password
             model.Password = HashPassword(model.Password);
 
-            // save profile image (filename only)
+            // Save Profile Photo
             if (ProfilePhoto != null && ProfilePhoto.Length > 0)
-            {
                 model.ProfileImagePath = await SaveProfilePhotoAsync(ProfilePhoto, model.EmployeeCode);
-            }
 
-            _context.Add(model);
+            _context.Employees.Add(model);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return RedirectToAction("Index");
         }
 
         // GET: Employees/Edit/5
@@ -246,6 +246,7 @@ namespace HRMS.Controllers
             return Json(positions);
         }
 
+
         // ========== Helpers ==========
 
         private string GenerateNextEmployeeCode()
@@ -298,5 +299,7 @@ namespace HRMS.Controllers
                 return Convert.ToBase64String(hash);
             }
         }
+
+
     }
 }
