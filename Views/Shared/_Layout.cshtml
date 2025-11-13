@@ -279,9 +279,21 @@
                 <a asp-controller="Reports" asp-action="Index" class="menu-item">
                     <i class="fa-solid fa-file-alt icon-reports"></i><span>Reports</span>
                 </a>
+                <a asp-controller="Gurukul" asp-action="Index" class="menu-item">
+                    <i class="fa-solid fa-file-alt icon-Gurukul"></i><span>🎓 Gurukul Management</span>
+                </a>
+                <a asp-controller="Gurukul" asp-action="ProgressReport" class="menu-item">
+                    <i class="fa-solid fa-file-alt icon-Gurukul"></i><span>📊 Employee Progress</span>
+                </a>
                 <a asp-controller="Account" asp-action="Login" class="menu-item logout">
                     <i class="fa-solid fa-right-from-bracket icon-logout"></i><span>Logout</span>
+
+                    @* <li><a href="/Gurukul/Index">🎓 Gurukul Management</a></li>
+                    <li><a href="/Gurukul/ProgressReport">📊 Employee Progress</a></li> *@
                 </a>
+
+              
+
             </div>
 
         </div>

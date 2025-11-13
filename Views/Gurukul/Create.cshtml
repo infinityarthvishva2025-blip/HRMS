@@ -1,0 +1,28 @@
+﻿@model HRMS.Models.GurukulVideo
+
+<h2 class="text-primary mb-4">📤 Upload New Gurukul Video</h2>
+
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label">Title</label>
+        <input asp-for="Title" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Category" class="form-label">Category</label>
+        <input asp-for="Category" class="form-control" required placeholder="Life, Health, Term Insurance etc" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label">Description</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="VideoUrl" class="form-label">Video URL</label>
+        <input asp-for="VideoUrl" class="form-control" required placeholder="Paste YouTube or internal video link" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Save Video</button>
+    <a href="/Gurukul/Index" class="btn btn-secondary">Cancel</a>
+</form>

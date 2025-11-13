@@ -19,7 +19,10 @@ namespace HRMS.Data
         public DbSet<HRMS.Models.Leave> Leaves { get; set; }
         public DbSet<Hr> Hrs { get; set; }
         public DbSet<GeoTag> GeoTags => Set<GeoTag>();
-      
+
+        public DbSet<GurukulVideo> GurukulVideos { get; set; }
+        public DbSet<GurukulProgress> GurukulProgress { get; set; }
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
