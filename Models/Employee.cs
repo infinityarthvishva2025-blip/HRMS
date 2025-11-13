@@ -1,95 +1,110 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HRMS.Models
 {
     public class Employee
     {
-        [Key]
         public int Id { get; set; }
 
-        [Required, Display(Name = "Employee Code")]
-        public string EmployeeCode { get; set; } = string.Empty;
-
-        [Required, Display(Name = "Full Name")]
-        public string Name { get; set; } = string.Empty;
-
-        [Required, EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        // BASIC DETAILS
+        [Required]
+        [StringLength(10)]
+        public string EmployeeCode { get; set; }
 
         [Required]
-        public string Gender { get; set; } = string.Empty;
+        [StringLength(100)]
+        public string Name { get; set; }
 
-        [Required, Display(Name = "Father’s Name")]
-        public string FatherName { get; set; } = string.Empty;
+        [Required]
+        [EmailAddress]
+        [StringLength(150)]
+        public string Email { get; set; }
 
-        [Required, Display(Name = "Mother’s Name")]
-        public string MotherName { get; set; } = string.Empty;
+        [Required]
+        [Phone]
+        [StringLength(15)]
+        public string MobileNumber { get; set; }
 
-        [Required, DataType(DataType.Date), Display(Name = "Date of Birth")]
+        [Required]
+        [StringLength(200)]   // hashed password will be long
+        public string Password { get; set; }
+
+        // only for UI, not stored
+        [NotMapped]
+        [Compare("Password", ErrorMessage = "Password and Confirm Password must match.")]
+        public string ConfirmPassword { get; set; }
+
+        // PERSONAL
+        [StringLength(10)]
+        public string Gender { get; set; }
+
+        [StringLength(100)]
+        public string FatherName { get; set; }
+
+        [StringLength(100)]
+        public string MotherName { get; set; }
+
+        [DataType(DataType.Date)]
         public DateTime? DOB_Date { get; set; }
 
-        [Required, DataType(DataType.Date), Display(Name = "Date of Joining")]
+        [StringLength(20)]
+        public string MaritalStatus { get; set; }
+
+        // EXPERIENCE
+        [StringLength(20)]
+        public string ExperienceType { get; set; } // Fresher / Experienced
+
+        public int? TotalExperienceYears { get; set; }
+
+        [StringLength(150)]
+        public string LastCompanyName { get; set; }
+
+        // JOB
+        [DataType(DataType.Date)]
         public DateTime? JoiningDate { get; set; }
 
-        [Required]
-        public string Department { get; set; } = string.Empty;
+        [StringLength(50)]
+        public string Department { get; set; }
 
-        [Required]
-        public string Position { get; set; } = string.Empty;
+        [StringLength(100)]
+        public string Position { get; set; }
 
-        [Required, DataType(DataType.Currency)]
-        public decimal Salary { get; set; }
+        [Range(0, double.MaxValue)]
+        public decimal? Salary { get; set; }
 
-        [Display(Name = "Geo Tag")]
-        public string? JioTag { get; set; }
+        [StringLength(100)]
+        public string ReportingManager { get; set; }
 
-        [Required, Phone, Display(Name = "Mobile Number")]
-        public string MobileNumber { get; set; } = string.Empty;
+        [StringLength(300)]
+        public string Address { get; set; }
 
-        [Phone, Display(Name = "Alternate Number")]
-        public string? AlternateNumber { get; set; }
+        // EDUCATION
+        public decimal? HSCPercent { get; set; }
 
-        [Required, Display(Name = "Marital Status")]
-        public string MaritalStatus { get; set; } = string.Empty;
+        [StringLength(100)]
+        public string GraduationCourse { get; set; }
 
-        [Required, Display(Name = "Blood Group")]
-        public string BloodGroup { get; set; } = string.Empty;
+        public decimal? GraduationPercent { get; set; }
 
-        [Required, Display(Name = "Address")]
-        public string Address { get; set; } = string.Empty;
+        [StringLength(100)]
+        public string PostGraduationCourse { get; set; }
 
-        [Display(Name = "Reporting Manager")]
-        public string? ReportingManager { get; set; }
+        public decimal? PostGraduationPercent { get; set; }
 
-        [Required]
-        [Display(Name = "Employment Status")]
-        public string Status { get; set; } = "Active";
+        // IDs
+        [StringLength(12)]
+        public string AadhaarNumber { get; set; }
 
-        [Required]
-        [DataType(DataType.Password)]
-        [Display(Name = "Password")]
-        public string Password { get; set; } = string.Empty;
+        [StringLength(10)]
+        public string PanNumber { get; set; }
 
-        // -----------------------------
-        [Display(Name = "Aadhaar Card")]
-        public string? AadharCardPath { get; set; }
+        // PROFILE PHOTO
+        [StringLength(200)]
+        public string ProfileImagePath { get; set; }
 
-        [Display(Name = "PAN Card")]
-        public string? PanCardPath { get; set; }
-
-        [Display(Name = "Education / Marksheet")]
-        public string? MarksheetPath { get; set; }
-
-        // -----------------------------
-        // 🖼️ Profile Photo
-        // -----------------------------
-        [Display(Name = "Profile Photo")]
-        public string? ProfilePhotoPath { get; set; }
-        [Display(Name = "Bank Passbook")]
-        public string? BankPassbookPath { get; set; }
-
-      
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        // AUDIT
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

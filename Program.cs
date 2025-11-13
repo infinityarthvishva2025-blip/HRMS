@@ -39,7 +39,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-app.UseSession();        // must be before Authorization
+app.UseSession();    
 app.UseAuthorization();
 
 app.MapControllerRoute(
