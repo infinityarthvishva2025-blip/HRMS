@@ -1,130 +1,41 @@
-﻿@model HRMS.Models.ViewModels.EmployeeDashboardViewModel
+﻿@model HRMS.Models.Employee
 
-@{
-    ViewData["Title"] = "Employee Dashboard";
-    Layout = "_MainLayout";
-}
+<div class="container py-4">
 
-<div class="container py-5">
-    <!-- Welcome Section -->
-    <div class="text-center mb-5">
-        <h2 class="fw-bold text-primary mb-1">
-            <i class="fa-solid fa-hand-wave text-warning me-2"></i>
-            Welcome, @Model.EmployeeName 
-        </h2>
-        <p class="text-muted mb-0"> 
-            Here’s a summary of your work profile and leave overview
-        </p>
-    </div>
+    <h2 class="fw-bold text-primary mb-3">
+        Welcome, @Model.Name 👋
+    </h2>
 
+    <div class="row">
 
-    <!-- Info Cards -->
-    <div class="row g-4 justify-content-center">
-        <!-- Department -->
-        <div class="col-md-3">
-            <div class="info-card shadow-sm p-4 text-center">
-                <div class="icon-circle bg-primary bg-gradient mb-3">
-                    <i class="fa-solid fa-building fa-2x text-white"></i>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <img src="~/uploads/profiles/@Model.ProfileImagePath"
+                         class="img-fluid rounded-circle mb-3"
+                         style="height:150px;width:150px;object-fit:cover;" />
+
+                    <h4 class="fw-bold">@Model.Name</h4>
+                    <p class="text-muted">@Model.Position</p>
                 </div>
-                <h6 class="fw-bold text-secondary mb-1">Department</h6>
-                <h5 class="fw-semibold">@Model.Department</h5>
             </div>
         </div>
 
-        <!-- Position -->
-        <div class="col-md-3">
-            <div class="info-card shadow-sm p-4 text-center">
-                <div class="icon-circle bg-success bg-gradient mb-3">
-                    <i class="fa-solid fa-briefcase fa-2x text-white"></i>
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header fw-bold">Employee Information</div>
+
+                <div class="card-body">
+                    <p><strong>Employee Code:</strong> @Model.EmployeeCode</p>
+                    <p><strong>Email:</strong> @Model.Email</p>
+                    <p><strong>Mobile:</strong> @Model.MobileNumber</p>
+                    <p><strong>Department:</strong> @Model.Department</p>
+                    <p><strong>Position:</strong> @Model.Position</p>
+                    <p><strong>Reporting Manager:</strong> @Model.ReportingManager</p>
+                    <p><strong>Joining Date:</strong> @Model.JoiningDate?.ToString("dd MMM yyyy")</p>
                 </div>
-                <h6 class="fw-bold text-secondary mb-1">Position</h6>
-                <h5 class="fw-semibold">@Model.Position</h5>
             </div>
         </div>
 
-        <!-- Total Leaves -->
-        <div class="col-md-3">
-            <div class="info-card shadow-sm p-4 text-center">
-                <div class="icon-circle bg-info bg-gradient mb-3">
-                    <i class="fa-solid fa-plane-departure fa-2x text-white"></i>
-                </div>
-                <h6 class="fw-bold text-secondary mb-1">Total Leaves</h6>
-                <h5 class="fw-semibold">@Model.TotalLeaves</h5>
-            </div>
-        </div>
-
-        <!-- Approved Leaves -->
-        <div class="col-md-3">
-            <div class="info-card shadow-sm p-4 text-center">
-                <div class="icon-circle bg-warning bg-gradient mb-3">
-                    <i class="fa-solid fa-check-circle fa-2x text-white"></i>
-                </div>
-                <h6 class="fw-bold text-secondary mb-1">Approved Leaves</h6>
-                <h5 class="fw-semibold">@Model.ApprovedLeaves</h5>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="text-center mt-5">
-        <a asp-controller="Leave" asp-action="Create" class="btn btn-lg text-white me-2 shadow"
-           style="background: linear-gradient(90deg, #0077c2, #009688); border-radius: 8px;">
-            <i class="fa-solid fa-paper-plane me-2"></i> Apply for Leave
-        </a>
-
-        <div class="text-center mt-5">
-            <a asp-controller="Assets" asp-action="Create" class="btn btn-lg text-white me-2 shadow"
-               style="background: linear-gradient(90deg, #0077c2, #009688); border-radius: 8px;">
-                <i class="fa-solid fa-paper-plane me-2"></i> Apply for Assets
-            </a>
- 
-        <a asp-controller="Leave" asp-action="MyLeaves" class="btn btn-outline-secondary btn-lg shadow-sm"
-           style="border-radius: 8px;">
-            <i class="fa-solid fa-calendar-check me-2"></i> View My Leaves
-        </a>
     </div>
 </div>
-
-<!-- Styling -->
-<style>
-    body {
-        background-color: #f5f7fb;
-    }
-
-    .info-card {
-        background-color: #fff;
-        border-radius: 15px;
-        transition: all 0.3s ease;
-    }
-
-    .info-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .icon-circle {
-        width: 70px;
-        height: 70px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    }
-
-    .text-primary {
-        background: linear-gradient(90deg, #0077c2, #009688);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    h2 {
-        font-weight: 700;
-    }
-
-    .btn {
-        font-weight: 500;
-        letter-spacing: 0.4px;
-    }
-</style>

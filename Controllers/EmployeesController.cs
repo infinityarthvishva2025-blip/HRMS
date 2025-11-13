@@ -287,6 +287,25 @@ namespace HRMS.Controllers
             return fileName; // ONLY filename stored in DB
         }
 
+        // GET: Employee Dashboard
+        // GET: Employee Dashboard
+        public IActionResult Dashboard()
+        {
+            // Check login
+            int? empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (empId == null)
+                return RedirectToAction("Login", "Account");
+
+            // Get employee details
+            var emp = _context.Employees.FirstOrDefault(e => e.Id == empId);
+            if (emp == null)
+                return RedirectToAction("Login", "Account");
+
+            return View(emp);
+        }
+
+
+
         private string HashPassword(string password)
         {
             if (string.IsNullOrWhiteSpace(password))
