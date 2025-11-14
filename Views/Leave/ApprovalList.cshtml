@@ -1,0 +1,55 @@
+﻿@model IEnumerable<HRMS.Models.Leave>
+
+@{
+    ViewData["Title"] = "Leave Approvals";
+}
+
+<div class="container mt-4">
+    <h3>@ViewData["Title"]</h3>
+    <hr />
+
+    <table class="table table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Employee</th>
+                <th>Category</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Total Days</th>
+                <th>Reason</th>
+                <th>Status (M / HR / Dir)</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Employee?.Name</td>
+                    <td>@item.Category</td>
+                    <td>@item.StartDate.ToShortDateString()</td>
+                    <td>@(item.EndDate?.ToShortDateString() ?? "-")</td>
+                    <td>@item.TotalDays</td>
+                    <td>@item.Reason</td>
+                    <td>
+                        M: @item.ManagerStatus <br />
+                        HR: @item.HrStatus <br />
+                        Dir: @item.DirectorStatus
+                    </td>
+                    <td>
+                        <form asp-action="ManagerApprove" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <input type="hidden" name="approve" value="true" />
+                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                        </form>
+                        <form asp-action="ManagerApprove" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <input type="hidden" name="approve" value="false" />
+                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

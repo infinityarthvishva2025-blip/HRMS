@@ -1,5 +1,4 @@
-﻿@model IEnumerable<HRMS.Models.Leave>
-
+﻿@model HRMS.Models.Leave
 @{
     ViewData["Title"] = "Leave Applications";
 }
@@ -19,7 +18,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+       @*  @foreach (var item in Model)
         {
             <tr>
                 <td>@item.Employee?.Name</td>
@@ -44,6 +43,7 @@
                 </td>
             </tr>
         }
+    *@
     </tbody>
 </table>
 

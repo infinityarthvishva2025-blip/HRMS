@@ -113,6 +113,78 @@
             categorySelect.addEventListener("change", toggleElectronicsFields);
         });
     </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+
+            // 🔹 DYNAMIC LEAVE UI
+            $("#LeaveCategory").change(function () {
+                let type = $(this).val();
+
+                $("#FullDayBlock").hide();
+                $("#HalfDayBlock").hide();
+                $("#TimeBlock").hide();
+
+                if (type === "FullDay") {
+                    $("#FullDayBlock").show();
+                }
+                else if (type === "HalfDay") {
+                    $("#HalfDayBlock").show();
+                }
+                else if (type === "EarlyGoing" || type === "LateComing") {
+                    $("#TimeBlock").show();
+                }
+            });
+
+
+            // 🔹 SEARCH CONTROL
+            $("#managerSearch").on("keyup focus", function () {
+                let term = $(this).val();
+
+                $.ajax({
+                    url: '/Leave/SearchManagers',
+                    method: 'GET',
+                    data: { term: term },
+                    success: function (data) {
+                        let list = $("#managerList");
+                        list.empty();
+
+                        if (data.length === 0) {
+                            list.hide();
+                            return;
+                        }
+
+                        data.forEach(item => {
+                            list.append(`
+                                <div class="autocomplete-item p-2" data-id="${item.id}">
+                                    ${item.name}
+                                </div>
+                            `);
+                        });
+
+                        list.show();
+                    }
+                });
+            });
+
+            // WHEN SELECTING
+            $(document).on("click", ".autocomplete-item", function () {
+                $("#ReportingManagerId").val($(this).data("id"));
+                $("#managerSearch").val($(this).text());
+                $("#managerList").hide();
+            });
+
+            // CLICK OUTSIDE → HIDE
+            $(document).click(function (e) {
+                if (!$(e.target).closest("#managerSearch").length &&
+                    !$(e.target).closest("#managerList").length) {
+                    $("#managerList").hide();
+                }
+            });
+
+        });
+    </script>
 
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
