@@ -1,16 +1,17 @@
-﻿using System;
+﻿using HRMS.Data;
+using HRMS.Models;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using HRMS.Data;
-using HRMS.Models;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Controllers
 {
@@ -323,6 +324,48 @@ namespace HRMS.Controllers
 
             return View(assignedVideos.ToList());
         }
+
+        public IActionResult ExportExcel()
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            var employees = _context.Employees.ToList();
+
+            using (var package = new ExcelPackage())
+            {
+                var ws = package.Workbook.Worksheets.Add("Employees");
+
+                ws.Cells[1, 1].Value = "Employee Code";
+                ws.Cells[1, 2].Value = "Name";
+                ws.Cells[1, 3].Value = "Email";
+                ws.Cells[1, 4].Value = "Department";
+                ws.Cells[1, 5].Value = "Position";
+
+                int row = 2;
+
+                foreach (var e in employees)
+                {
+                    ws.Cells[row, 1].Value = e.EmployeeCode;
+                    ws.Cells[row, 2].Value = e.Name;
+                    ws.Cells[row, 3].Value = e.Email;
+                    ws.Cells[row, 4].Value = e.Department;
+                    ws.Cells[row, 5].Value = e.Position;
+                    row++;
+                }
+
+                ws.Cells.AutoFitColumns();
+
+                var fileBytes = package.GetAsByteArray();
+
+                return File(
+                    fileBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "Employees.xlsx"
+                );
+            }
+        }
+
+
 
     }
 }
