@@ -4,6 +4,7 @@ using HRMS.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251114083938_AddAttendance")]
+    partial class AddAttendance
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -95,39 +98,6 @@ namespace HRMS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Assets");
-                });
-
-            modelBuilder.Entity("HRMS.Models.Attendance", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CheckInTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("CheckOutTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsEarlyLeave")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsLate")
-                        .HasColumnType("bit");
-
-                    b.Property<double>("WorkingHours")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.ToTable("Attendances");
                 });
 
             modelBuilder.Entity("HRMS.Models.Employee", b =>
@@ -543,17 +513,6 @@ namespace HRMS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Payrolls");
-                });
-
-            modelBuilder.Entity("HRMS.Models.Attendance", b =>
-                {
-                    b.HasOne("HRMS.Models.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("HRMS.Models.GurukulProgress", b =>

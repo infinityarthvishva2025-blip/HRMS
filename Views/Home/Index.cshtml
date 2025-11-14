@@ -2,14 +2,14 @@
 @using System.Linq
 @{
     ViewData["Title"] = "Dashboard";
-
 }
 
 <!-- ✅ Dashboard Header -->
 <h2 class="fw-bold mb-4 text-primary">My Dashboard</h2>
 
-<!-- ✅ Dashboard Summary Cards -->
+<!-- ✅ Dashboard Summary Cards (with Attendance Summary) -->
 <div class="row">
+    <!-- Total Employees -->
     <div class="col-md-3 mb-3">
         <div class="card shadow-sm border-0 text-center">
             <div class="card-body">
@@ -20,32 +20,35 @@
         </div>
     </div>
 
+    <!-- Today's Present -->
     <div class="col-md-3 mb-3">
         <div class="card shadow-sm border-0 text-center">
             <div class="card-body">
                 <i class="fa-solid fa-user-check fa-2x text-success mb-2"></i>
-                <h4 class="fw-bold mb-0">42</h4>
+                <h4 class="fw-bold mb-0">@((int?)ViewBag.PresentToday ?? 0)</h4>
                 <small>Today's Present</small>
             </div>
         </div>
     </div>
 
+    <!-- Today's Absent -->
     <div class="col-md-3 mb-3">
         <div class="card shadow-sm border-0 text-center">
             <div class="card-body">
-                <i class="fa-solid fa-location-dot fa-2x text-info mb-2"></i>
-                <h4 class="fw-bold mb-0">35</h4>
-                <small>Geo Tags Assigned</small>
+                <i class="fa-solid fa-user-xmark fa-2x text-danger mb-2"></i>
+                <h4 class="fw-bold mb-0">@((int?)ViewBag.AbsentToday ?? 0)</h4>
+                <small>Today's Absent</small>
             </div>
         </div>
     </div>
 
+    <!-- Not Checked Out -->
     <div class="col-md-3 mb-3">
         <div class="card shadow-sm border-0 text-center">
             <div class="card-body">
-                <i class="fa-solid fa-calendar-xmark fa-2x text-warning mb-2"></i>
-                <h4 class="fw-bold mb-0">8</h4>
-                <small>Pending Leaves</small>
+                <i class="fa-solid fa-clock-rotate-left fa-2x text-warning mb-2"></i>
+                <h4 class="fw-bold mb-0">@((int?)ViewBag.NotCheckedOutToday ?? 0)</h4>
+                <small>Not Checked-Out</small>
             </div>
         </div>
     </div>
@@ -185,7 +188,6 @@
         </div>
     </div>
 
-
     <!-- Employee Distribution Chart -->
     <div class="col-lg-6 col-md-12 mb-4">
         <div class="card shadow-sm border-0 h-100">
@@ -199,7 +201,6 @@
     </div>
 </div>
 
-<!-- ✅ Recent Employees Section -->
 <!-- ✅ Recent Employees Section -->
 <div class="card shadow-sm border-0 mt-4">
     <div class="card-header bg-white fw-bold border-bottom d-flex justify-content-between align-items-center">
@@ -254,7 +255,6 @@
         </table>
     </div>
 </div>
-
 
 <!-- ✅ Chart.js Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
