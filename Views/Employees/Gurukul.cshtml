@@ -1,39 +1,72 @@
-﻿@model IEnumerable<dynamic>
+﻿@model IEnumerable<HRMS.Models.ViewModels.VideoProgressDetail>
 
 <h2 class="text-primary mb-4">🎓 My Gurukul Learning</h2>
 
-<table class="table table-bordered table-striped">
-    <thead class="table-light">
+<table class="table table-bordered table-striped shadow-sm">
+    <thead class="table-dark">
         <tr>
             <th>Title</th>
             <th>Category</th>
-            <th>Watch</th>
+            <th>Watch Video</th>
             <th>Status</th>
             <th>Completed On</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var v in Model)
+        @foreach (var item in Model)
         {
             <tr>
-                <td>@v.Title</td>
-                <td>@v.Category</td>
+                <td>@item.Title</td>
+                <td>@item.Category</td>
+
+                <!-- Watch Button -->
                 <td>
-                    <a href="@v.VideoUrl" target="_blank" class="btn btn-sm btn-primary">
+                    <a href="@item.VideoUrl" target="_blank" class="btn btn-primary btn-sm">
                         ▶ Watch
                     </a>
                 </td>
+
+                <!-- Status with Tick -->
                 <td>
-                    @if (v.IsCompleted)
+                    @if (item.IsCompleted)
                     {
-                        <span class="badge bg-success">Completed</span>
+                        <span class="text-success fw-bold">✔ Completed</span>
                     }
                     else
                     {
-                        <span class="badge bg-warning text-dark">Pending</span>
+                        <span class="text-danger fw-bold">❌ Pending</span>
                     }
                 </td>
-                <td>@v.CompletedOn?.ToString("dd MMM yyyy")</td>
+
+                <!-- Completed Date -->
+                <td>
+                    @if (item.CompletedOn != null)
+                    {
+                        @item.CompletedOn.Value.ToString("dd MMM yyyy")
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </td>
+
+                <!-- Action Column -->
+                <td>
+                    @if (!item.IsCompleted)
+                    {
+                        <form method="post" action="/Employees/MarkCompleted">
+                            <input type="hidden" name="videoId" value="@item.VideoId" />
+                            <button class="btn btn-success btn-sm">
+                                Mark Complete ✔
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">✔ Done</span>
+                    }
+                </td>
             </tr>
         }
     </tbody>

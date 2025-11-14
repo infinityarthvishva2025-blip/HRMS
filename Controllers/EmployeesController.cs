@@ -12,6 +12,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using HRMS.Models.ViewModels;
+
 
 namespace HRMS.Controllers
 {
@@ -308,23 +310,57 @@ namespace HRMS.Controllers
             if (empId == null)
                 return RedirectToAction("Login", "Account");
 
-            var assignedVideos =
+            var videos =
                 from v in _context.GurukulVideos
                 join p in _context.GurukulProgress
                     on v.Id equals p.VideoId into gj
                 from sub in gj.Where(x => x.EmployeeId == empId).DefaultIfEmpty()
-                select new
+                select new VideoProgressDetail
                 {
-                    v.Title,
-                    v.Category,
-                    v.VideoUrl,
+                    VideoId = v.Id,
+                    Title = v.Title,
+                    Category = v.Category,
+                    VideoUrl = v.VideoUrl,
                     IsCompleted = sub != null && sub.IsCompleted,
                     CompletedOn = sub != null ? sub.CompletedOn : null
                 };
 
-            return View(assignedVideos.ToList());
+            return View(videos.ToList());
         }
 
+        [HttpPost]
+        public IActionResult MarkCompleted(int videoId)
+        {
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (empId == null)
+                return RedirectToAction("Login", "Account");
+
+            var progress = _context.GurukulProgress
+                            .FirstOrDefault(x => x.EmployeeId == empId && x.VideoId == videoId);
+
+            if (progress == null)
+            {
+                progress = new GurukulProgress
+                {
+                    EmployeeId = empId.Value,
+                    VideoId = videoId,
+                    IsCompleted = true,
+                    CompletedOn = DateTime.Now
+                };
+                _context.GurukulProgress.Add(progress);
+            }
+            else
+            {
+                progress.IsCompleted = true;
+                progress.CompletedOn = DateTime.Now;
+                _context.GurukulProgress.Update(progress);
+            }
+
+            _context.SaveChanges();
+            return RedirectToAction("Gurukul");
+        }
+
+        //
         public IActionResult ExportExcel()
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
