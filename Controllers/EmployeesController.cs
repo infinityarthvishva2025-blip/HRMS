@@ -304,6 +304,7 @@ namespace HRMS.Controllers
             }
         }
 
+        [Route("Gurukul")]
         public IActionResult Gurukul()
         {
             var empId = HttpContext.Session.GetInt32("EmployeeId");
