@@ -300,6 +300,29 @@ namespace HRMS.Controllers
             }
         }
 
+        public IActionResult Gurukul()
+        {
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+
+            if (empId == null)
+                return RedirectToAction("Login", "Account");
+
+            var assignedVideos =
+                from v in _context.GurukulVideos
+                join p in _context.GurukulProgress
+                    on v.Id equals p.VideoId into gj
+                from sub in gj.Where(x => x.EmployeeId == empId).DefaultIfEmpty()
+                select new
+                {
+                    v.Title,
+                    v.Category,
+                    v.VideoUrl,
+                    IsCompleted = sub != null && sub.IsCompleted,
+                    CompletedOn = sub != null ? sub.CompletedOn : null
+                };
+
+            return View(assignedVideos.ToList());
+        }
 
     }
 }

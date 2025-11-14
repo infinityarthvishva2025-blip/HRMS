@@ -1,0 +1,40 @@
+﻿@model IEnumerable<dynamic>
+
+<h2 class="text-primary mb-4">🎓 My Gurukul Learning</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-light">
+        <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Watch</th>
+            <th>Status</th>
+            <th>Completed On</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var v in Model)
+        {
+            <tr>
+                <td>@v.Title</td>
+                <td>@v.Category</td>
+                <td>
+                    <a href="@v.VideoUrl" target="_blank" class="btn btn-sm btn-primary">
+                        ▶ Watch
+                    </a>
+                </td>
+                <td>
+                    @if (v.IsCompleted)
+                    {
+                        <span class="badge bg-success">Completed</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    }
+                </td>
+                <td>@v.CompletedOn?.ToString("dd MMM yyyy")</td>
+            </tr>
+        }
+    </tbody>
+</table>
