@@ -1,5 +1,6 @@
 ﻿using HRMS.Data;
 using HRMS.Models;
+using HRMS.Models.ViewModels;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -96,7 +97,7 @@ namespace HRMS.Controllers
                 model.EmployeeCode = GenerateNextEmployeeCode();
 
             // Hash Password
-            model.Password = HashPassword(model.Password);
+           
 
             // Save Profile Photo
             if (ProfilePhoto != null && ProfilePhoto.Length > 0)
@@ -342,7 +343,22 @@ namespace HRMS.Controllers
             }
         }
 
+        public IActionResult Dashboard()
+        {
+            int? empId = HttpContext.Session.GetInt32("EmployeeId");
 
+            if (empId == null)
+                return RedirectToAction("Login", "Account");
+
+            var emp = _context.Employees.FirstOrDefault(e => e.Id == empId);
+
+            var model = new EmployeeDashboardViewModel
+            {
+                EmployeeName = emp?.Name
+            };
+
+            return View(model);
+        }
 
     }
 }
