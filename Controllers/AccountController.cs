@@ -48,7 +48,7 @@ namespace HRMS.Controllers
                 HttpContext.Session.SetString("Role", "Employee");
                 HttpContext.Session.SetInt32("EmployeeId", emp.Id);
                 HttpContext.Session.SetString("EmployeeName", emp.Name);
-                return RedirectToAction("Dashboard", "Employee");
+                return RedirectToAction("Dashboard", "Employees");
             }
 
             // ❌ Invalid credentials
