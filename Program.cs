@@ -1,5 +1,5 @@
 ﻿using HRMS.Data;
-using HRMS.Services;
+
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;   // ← correct
 var builder = WebApplication.CreateBuilder(args);
@@ -11,8 +11,6 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddHttpClient<FaceService>();
-builder.Services.AddScoped<FaceService>();
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>

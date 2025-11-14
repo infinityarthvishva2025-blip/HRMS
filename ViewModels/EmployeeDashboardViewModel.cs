@@ -2,6 +2,7 @@
 {
     public class EmployeeDashboardViewModel
     {
+     
         public string EmployeeName { get; set; } = string.Empty;
         public string Department { get; set; } = string.Empty;
         public string Position { get; set; } = string.Empty;
