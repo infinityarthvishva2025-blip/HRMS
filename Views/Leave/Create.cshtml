@@ -1,4 +1,67 @@
-﻿@model HRMS.Models.Leave
+﻿@model Leave
+
+@{
+    ViewData["Title"] = "Apply for Leave";
+}
+
+<div class="container mt-4">
+    <h3>Apply for Leave</h3>
+    <hr />
+
+    <form asp-action="Create" method="post">
+
+        <div class="mb-3">
+            <label class="form-label">Leave Type</label>
+            <select asp-for="LeaveType" class="form-control">
+                <option value="">-- Select Leave Type --</option>
+                <option value="Casual Leave">Casual Leave</option>
+                <option value="Sick Leave">Sick Leave</option>
+                <option value="Paid Leave">Paid Leave</option>
+                <option value="Maternity Leave">Maternity Leave</option>
+                <option value="Paternity Leave">Paternity Leave</option>
+            </select>
+            <span asp-validation-for="LeaveType" class="text-danger"></span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Start Date</label>
+                <input asp-for="StartDate" type="date" class="form-control" />
+                <span asp-validation-for="StartDate" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">End Date</label>
+                <input asp-for="EndDate" type="date" class="form-control" />
+                <span asp-validation-for="EndDate" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Reason</label>
+            <textarea asp-for="Reason" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Reason" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Contact During Leave</label>
+            <input asp-for="ContactDuringLeave" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Address During Leave</label>
+            <textarea asp-for="AddressDuringLeave" class="form-control" rows="2"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit Leave</button>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+@* @model HRMS.Models.Leave
 @{
     ViewData["Title"] = "Apply for Leave";
 }
@@ -35,3 +98,4 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
+ *@

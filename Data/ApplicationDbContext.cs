@@ -16,7 +16,8 @@ namespace HRMS.Data
    
         public DbSet<Payroll> Payrolls { get; set; }
         public DbSet<HRMS.Models.Employee> Employees { get; set; }
-        public DbSet<HRMS.Models.Leave> Leaves { get; set; }
+        //public DbSet<HRMS.Models.Leave> Leaves { get; set; }
+        public DbSet<Leave> Leaves { get; set; }
         public DbSet<Hr> Hrs { get; set; }
         public DbSet<GeoTag> GeoTags => Set<GeoTag>();
       

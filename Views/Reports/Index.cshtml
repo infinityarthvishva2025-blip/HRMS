@@ -79,41 +79,7 @@
             }
         });
 
-        // Radar Chart (Department-wise)
-        // const ctx2 = document.getElementById('employeeChart');
-        // const deptChart = new Chart(ctx2, {
-        //     type: 'radar',
-        //     data: {
-        //         labels: ['Productivity', 'Attendance', 'Satisfaction', 'Training', 'Performance'],
-        //         datasets: [
-        //             {
-        //                 label: 'IT',
-        //                 data: [90, 95, 85, 80, 88],
-        //                 fill: true,
-        //                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
-        //                 borderColor: 'rgba(54, 162, 235, 1)',
-        //                 pointBackgroundColor: 'rgba(54, 162, 235, 1)'
-        //             },
-        //             {
-        //                 label: 'HR',
-        //                 data: [95, 92, 90, 85, 80],
-        //                 fill: true,
-        //                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        //                 borderColor: 'rgba(75, 192, 192, 1)',
-        //                 pointBackgroundColor: 'rgba(75, 192, 192, 1)'
-        //             }
-        //         ]
-        //     },
-        //     options: {
-        //         scales: {
-        //             r: {
-        //                 angleLines: { display: true },
-        //                 suggestedMin: 70,
-        //                 suggestedMax: 100
-        //             }
-        //         }
-        //     }
-        // });
+     
     </script>
     <script>
         const ctx = document.getElementById('deptChart');
@@ -146,44 +112,53 @@
             }
         });
     </script>
-<script>
-    document.addEventListener("DOMContentLoaded", async function () {
-        // === Load Leave Requests by Status ===
-        const response = await fetch('/api/reports/leave-status');
-        const data = await response.json();
-            alert(data);
-        const labels = data.map(d => d.status);
-        const values = data.map(d => d.count);
 
-        const colors = [
-            'rgba(54, 162, 235, 0.8)',   // Approved
-            'rgba(255, 206, 86, 0.8)',   // Pending
-            'rgba(255, 99, 132, 0.8)'    // Rejected
-        ];
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
 
-        new Chart(document.getElementById('leaveChart'), {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: values,
-                    backgroundColor: colors,
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'bottom' },
-                    title: {
-                        display: false,
-                        text: 'Leave Requests by Status'
-                    }
+            // === LEAVE REPORT ===
+            const leaveRes = await fetch('/Reports/GetLeaveReport');
+            const leaveData = await leaveRes.json();
+
+            new Chart(document.getElementById('leaveChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: leaveData.map(x => x.status),
+                    datasets: [{
+                        data: leaveData.map(x => x.count),
+                        backgroundColor: ['#36A2EB', '#FFCE56', '#FF6384'],
+                        borderColor: '#fff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    plugins: { legend: { position: 'bottom' } },
+                    cutout: '65%'
                 }
-            }
-        });
+            });
 
-        
-    });
-</script>
+            // === PAYROLL REPORT ===
+            const payRes = await fetch('/Reports/GetPayrollReport');
+            const payData = await payRes.json();
+
+            new Chart(document.getElementById('payrollChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: payData.map(x => x.month),
+                    datasets: [{
+                        data: payData.map(x => x.total),
+                        backgroundColor: ['#1976d2','#009688','#9c27b0','#f44336','#ff9800','#4caf50'],
+                        borderColor: '#fff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    plugins: { legend: { position: 'bottom' } },
+                    cutout: '65%'
+                }
+            });
+
+        });
+    </script>
+
 }
