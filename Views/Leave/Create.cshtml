@@ -1,4 +1,4 @@
-﻿@model Leave
+﻿@model HRMS.Models.Leave
 
 @{
     ViewData["Title"] = "Apply for Leave";
@@ -10,92 +10,113 @@
 
     <form asp-action="Create" method="post">
 
-        <div class="mb-3">
-            <label class="form-label">Leave Type</label>
-            <select asp-for="LeaveType" class="form-control">
-                <option value="">-- Select Leave Type --</option>
-                <option value="Casual Leave">Casual Leave</option>
-                <option value="Sick Leave">Sick Leave</option>
-                <option value="Paid Leave">Paid Leave</option>
-                <option value="Maternity Leave">Maternity Leave</option>
-                <option value="Paternity Leave">Paternity Leave</option>
-            </select>
-            <span asp-validation-for="LeaveType" class="text-danger"></span>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Leave Category</label>
+                <select asp-for="Category" class="form-control" id="Category">
+                    <option value="">-- Select --</option>
+                    <option value="FullDay">Full Day</option>
+                    <option value="MultiDay">More Than 1 Day</option>
+                    <option value="HalfDay">Half Day</option>
+                    <option value="EarlyGoing">Early Going</option>
+                    <option value="LateComing">Late Coming</option>
+                </select>
+                <span asp-validation-for="Category" class="text-danger"></span>
+            </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-6 mb-3">
+        <div id="fullOrMultiDayBlock" class="row mb-3" style="display:none;">
+            <div class="col-md-4">
                 <label class="form-label">Start Date</label>
                 <input asp-for="StartDate" type="date" class="form-control" />
                 <span asp-validation-for="StartDate" class="text-danger"></span>
             </div>
-
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4">
                 <label class="form-label">End Date</label>
                 <input asp-for="EndDate" type="date" class="form-control" />
                 <span asp-validation-for="EndDate" class="text-danger"></span>
             </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Reason</label>
-            <textarea asp-for="Reason" class="form-control" rows="3"></textarea>
-            <span asp-validation-for="Reason" class="text-danger"></span>
+        <div id="halfDayBlock" class="row mb-3" style="display:none;">
+            <div class="col-md-4">
+                <label class="form-label">Date</label>
+                <input asp-for="StartDate" type="date" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Session</label>
+                <select asp-for="HalfDaySession" class="form-control">
+                    <option value="">-- Select --</option>
+                    <option value="FirstHalf">First Half</option>
+                    <option value="SecondHalf">Second Half</option>
+                </select>
+                <span asp-validation-for="HalfDaySession" class="text-danger"></span>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Contact During Leave</label>
-            <input asp-for="ContactDuringLeave" class="form-control" />
+        <div id="timeBlock" class="row mb-3" style="display:none;">
+            <div class="col-md-4">
+                <label class="form-label">Date</label>
+                <input asp-for="StartDate" type="date" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Time</label>
+                <input asp-for="TimeValue" type="time" class="form-control" />
+                <span asp-validation-for="TimeValue" class="text-danger"></span>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Address During Leave</label>
-            <textarea asp-for="AddressDuringLeave" class="form-control" rows="2"></textarea>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Reason</label>
+                <textarea asp-for="Reason" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Reason" class="text-danger"></span>
+            </div>
         </div>
 
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Contact During Leave</label>
+                <input asp-for="ContactDuringLeave" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Address During Leave</label>
+                <input asp-for="AddressDuringLeave" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-3 mb-3 text-center">
         <button type="submit" class="btn btn-primary">Submit Leave</button>
+        </div> 
     </form>
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
-
-@* @model HRMS.Models.Leave
-@{
-    ViewData["Title"] = "Apply for Leave";
-}
-<h2>Apply for Leave</h2>
-
-<form asp-action="Create" method="post">
-    <div class="mb-3">
-        <label asp-for="LeaveType" class="form-label"></label>
-        <input asp-for="LeaveType" class="form-control" />
-        <span asp-validation-for="LeaveType" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="StartDate" class="form-label"></label>
-        <input asp-for="StartDate" type="date" class="form-control" />
-        <span asp-validation-for="StartDate" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="EndDate" class="form-label"></label>
-        <input asp-for="EndDate" type="date" class="form-control" />
-        <span asp-validation-for="EndDate" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Reason" class="form-label"></label>
-        <textarea asp-for="Reason" class="form-control"></textarea>
-        <span asp-validation-for="Reason" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Submit Leave</button>
-</form>
-
-@section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const catSelect = document.getElementById("Category");
+            const fullMulti = document.getElementById("fullOrMultiDayBlock");
+            const half = document.getElementById("halfDayBlock");
+            const timeBlock = document.getElementById("timeBlock");
+
+            function updateBlocks() {
+                const val = catSelect.value;
+                fullMulti.style.display = "none";
+                half.style.display = "none";
+                timeBlock.style.display = "none";
+
+                if (val === "FullDay" || val === "MultiDay") {
+                    fullMulti.style.display = "flex";
+                } else if (val === "HalfDay") {
+                    half.style.display = "flex";
+                } else if (val === "EarlyGoing" || val === "LateComing") {
+                    timeBlock.style.display = "flex";
+                }
+            }
+
+            catSelect.addEventListener("change", updateBlocks);
+            updateBlocks();
+        });
+    </script>
 }
- *@

@@ -4,6 +4,7 @@ using HRMS.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251114092415_Finalattendance")]
+    partial class Finalattendance
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -311,11 +314,25 @@ namespace HRMS.Migrations
 
                     b.Property<string>("TagId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TagId")
+                        .IsUnique();
+
                     b.ToTable("GeoTags");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Mumbai Office",
+                            Latitude = 19.076000000000001,
+                            Longitude = 72.877700000000004,
+                            RadiusMeters = 100000,
+                            TagId = "Office-001"
+                        });
                 });
 
             modelBuilder.Entity("HRMS.Models.GurukulProgress", b =>
@@ -370,7 +387,7 @@ namespace HRMS.Migrations
                     b.Property<DateTime>("UploadedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("VideoPath")
+                    b.Property<string>("VideoUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -413,66 +430,34 @@ namespace HRMS.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AddressDuringLeave")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("Category")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ContactDuringLeave")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DirectorRemark")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DirectorStatus")
-                        .IsRequired()
+                    b.Property<string>("ContactDuringLeave")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("EndDate")
+                    b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("HalfDaySession")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HrRemark")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HrStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ManagerRemark")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ManagerStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OverallStatus")
+                    b.Property<string>("LeaveType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Reason")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<TimeSpan?>("TimeValue")
-                        .HasColumnType("time");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("TotalDays")
-                        .HasColumnType("float");
+                    b.Property<int>("TotalDays")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -598,7 +583,7 @@ namespace HRMS.Migrations
                     b.HasOne("HRMS.Models.Employee", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Employee");

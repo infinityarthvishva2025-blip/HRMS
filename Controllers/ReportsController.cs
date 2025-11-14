@@ -39,7 +39,7 @@ namespace HRMS.Controllers
         public IActionResult GetLeaveReport()
         {
             var data = _context.Leaves
-                .GroupBy(l => l.Status)
+                .GroupBy(l => l.OverallStatus)
                 .Select(g => new
                 {
                     Status = g.Key,
