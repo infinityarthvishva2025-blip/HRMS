@@ -11,7 +11,7 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">Employees by Department</div>
                 <div class="card-body">
-                    <canvas id="employeeChart"></canvas>
+                    <canvas id="deptChart"></canvas>
                 </div>
             </div>
         </div>
@@ -51,63 +51,114 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Parse data from backend
-        const employeeData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.EmployeeReport));
-        const leaveData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.LeaveReport));
-        const payrollData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.PayrollReport));
-        const attendanceData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.AttendanceReport));
+        // Line Chart (Monthly Attendance)
+        const ctx1 = document.getElementById('attendanceChart');
+        const attendanceChart = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                datasets: [{
+                    label: 'Average Attendance %',
+                    data: [92, 94, 90, 89, 94, 93, 95, 94, 91, 90, 92, 94],
+                    fill: true,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 85,
+                        max: 100
+                    }
+                }
+            }
+        });
 
-        // Employee Chart
-        new Chart(document.getElementById("employeeChart"), {
+     
+    </script>
+    <script>
+        const ctx = document.getElementById('deptChart');
+        const departmentLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DepartmentLabels));
+        const departmentValues = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DepartmentValues));
+
+        new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: employeeData.map(e => e.Department),
+                labels: departmentLabels,
                 datasets: [{
-                    data: employeeData.map(e => e.Count),
-                    backgroundColor: ['#007bff', '#28a745', '#ffc107', '#17a2b8']
+                    label: 'Employees',
+                    data: departmentValues,
+                    backgroundColor: [
+                        '#1976d2', '#009688', '#9c27b0', '#f44336',
+                        '#ff9800', '#00bfa5', '#795548'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    hoverOffset: 6
                 }]
             },
-            options: { plugins: { legend: { position: 'bottom' } } }
-        });
-
-        // Leave Chart
-        new Chart(document.getElementById("leaveChart"), {
-            type: 'pie',
-            data: {
-                labels: leaveData.map(l => l.Status),
-                datasets: [{
-                    data: leaveData.map(l => l.Count),
-                    backgroundColor: ['#28a745', '#ffc107', '#dc3545']
-                }]
-            },
-            options: { plugins: { legend: { position: 'bottom' } } }
-        });
-
-        // Payroll Chart
-        new Chart(document.getElementById("payrollChart"), {
-            type: 'bar',
-            data: {
-                labels: payrollData.map(p => p.Month),
-                datasets: [{
-                    label: 'Total Salary',
-                    data: payrollData.map(p => p.Total),
-                    backgroundColor: '#17a2b8'
-                }]
-            },
-            options: { scales: { y: { beginAtZero: true } } }
-        });
-
-        // Attendance Chart
-        new Chart(document.getElementById("attendanceChart"), {
-            type: 'polarArea',
-            data: {
-                labels: attendanceData.map(a => a.Status),
-                datasets: [{
-                    data: attendanceData.map(a => a.Count),
-                    backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d']
-                }]
-            },
-            options: { plugins: { legend: { position: 'bottom' } } }
+            options: {
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 20, padding: 15 } }
+                },
+                cutout: '65%',
+                responsive: true,
+                maintainAspectRatio: false
+            }
         });
     </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+
+            // === LEAVE REPORT ===
+            const leaveRes = await fetch('/Reports/GetLeaveReport');
+            const leaveData = await leaveRes.json();
+
+            new Chart(document.getElementById('leaveChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: leaveData.map(x => x.status),
+                    datasets: [{
+                        data: leaveData.map(x => x.count),
+                        backgroundColor: ['#36A2EB', '#FFCE56', '#FF6384'],
+                        borderColor: '#fff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    plugins: { legend: { position: 'bottom' } },
+                    cutout: '65%'
+                }
+            });
+
+            // === PAYROLL REPORT ===
+            const payRes = await fetch('/Reports/GetPayrollReport');
+            const payData = await payRes.json();
+
+            new Chart(document.getElementById('payrollChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: payData.map(x => x.month),
+                    datasets: [{
+                        data: payData.map(x => x.total),
+                        backgroundColor: ['#1976d2','#009688','#9c27b0','#f44336','#ff9800','#4caf50'],
+                        borderColor: '#fff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    plugins: { legend: { position: 'bottom' } },
+                    cutout: '65%'
+                }
+            });
+
+        });
+    </script>
+
 }

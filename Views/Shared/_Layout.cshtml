@@ -259,17 +259,18 @@
                     <i class="fa-solid fa-user-tie icon-employee"></i><span>Employee Management</span>
                 </a>
                 <a asp-controller="Attendance" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-calendar-check icon-attendance"></i><span>Attendance</span>
+                    <i class="fa-solid fa-calendar-check icon-attendance"></i><span>Attendance with Geo Tag</span>
                 </a>
+                @* <a asp-controller="GeoAttendance" asp-action="Index" class="menu-item">
+                    <i class="fa-solid fa-tag icon-geo"></i><span>Geo Tag</span>
+                </a> *@
                 <a asp-controller="Leave" asp-action="Index" class="menu-item">
                     <i class="fa-solid fa-plane-departure icon-leave"></i><span>Leave Management</span>
                 </a>
                 <a asp-controller="Payroll" asp-action="Index" class="menu-item">
                     <i class="fa-solid fa-wallet icon-payroll"></i><span>Payroll</span>
                 </a>
-                <a asp-controller="GeoAttendance" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-tag icon-geo"></i><span>Geo Tag</span>
-                </a>
+               
                 <a asp-controller="Assets" asp-action="Index" class="menu-item">
                     <i class="fa-solid fa-box icon-assets"></i><span>Assets</span>
                 </a>
@@ -326,7 +327,8 @@
           <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-        @RenderSection("Scripts", required: false)
+    <script>   
+    @RenderSection("Scripts", required: false)
 
     </script>
 

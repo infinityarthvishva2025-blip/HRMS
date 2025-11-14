@@ -1,19 +1,21 @@
 ﻿using HRMS.Data;
 using HRMS.Services;
 using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;   // ← correct
+
 var builder = WebApplication.CreateBuilder(args);
 
-ExcelPackage.LicenseContext = LicenseContext.NonCommercial;   // ← works only in EPPlus 5-7
-
+// MVC
 builder.Services.AddControllersWithViews();
 
+// EF Core
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Custom services
 builder.Services.AddHttpClient<FaceService>();
 builder.Services.AddScoped<FaceService>();
 
+// Sessions
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -22,14 +24,22 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Optional during development (requires NuGet Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation)
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 
 var app = builder.Build();
 
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
-app.UseSession();
+app.UseSession();    
 app.UseAuthorization();
 
 app.MapControllerRoute(

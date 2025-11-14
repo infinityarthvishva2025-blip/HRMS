@@ -1,36 +1,34 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace HRMS.Models
 {
     public class Leave
     {
-        [Key]
         public int Id { get; set; }
 
-        [Required, Display(Name = "Leave Type")]
+        [Required]
         public string LeaveType { get; set; } = string.Empty;
 
-        [Required, DataType(DataType.Date), Display(Name = "Start Date")]
+        [Required]
         public DateTime StartDate { get; set; }
 
-        [Required, DataType(DataType.Date), Display(Name = "End Date")]
+        [Required]
         public DateTime EndDate { get; set; }
 
-        [Required, StringLength(500), Display(Name = "Reason")]
+        [Required]
         public string Reason { get; set; } = string.Empty;
 
-        [Display(Name = "Status")]
         public string Status { get; set; } = "Pending";
 
-        // FK → Employee
-        [Required, ForeignKey("Employee"), Display(Name = "Employee")]
+        [Required]
         public int EmployeeId { get; set; }
-
         public Employee? Employee { get; set; }
+        public int TotalDays { get; set; }
 
-        [NotMapped, Display(Name = "Total Days")]
-        public int TotalDays => (EndDate - StartDate).Days + 1;
+        public string? ContactDuringLeave { get; set; }
+
+        public string? AddressDuringLeave { get; set; }
+
+
     }
 }

@@ -43,12 +43,6 @@ namespace HRMS.Models
 
         [Display(Name = "Serial No")]
         public string? SerialNo { get; set; }
-
-
-       
-
-        // Existing fields...
-
         // New fields for employee requests
         [Required]
         public string EmployeeCode { get; set; }
@@ -64,11 +58,5 @@ namespace HRMS.Models
         public string AssetDescription { get; set; }
 
         public DateTime RequestDate { get; set; } = DateTime.Now;
-
-      
-
-
     }
-
-
 }

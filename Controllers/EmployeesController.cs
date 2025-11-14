@@ -7,8 +7,6 @@ using System.Text;
 using System.Threading.Tasks;
 using HRMS.Data;
 using HRMS.Models;
-using OfficeOpenXml;
-using OfficeOpenXml.Style;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -289,25 +287,6 @@ namespace HRMS.Controllers
             return fileName; // ONLY filename stored in DB
         }
 
-        // GET: Employee Dashboard
-        // GET: Employee Dashboard
-        public IActionResult Dashboard()
-        {
-            // Check login
-            int? empId = HttpContext.Session.GetInt32("EmployeeId");
-            if (empId == null)
-                return RedirectToAction("Login", "Account");
-
-            // Get employee details
-            var emp = _context.Employees.FirstOrDefault(e => e.Id == empId);
-            if (emp == null)
-                return RedirectToAction("Login", "Account");
-
-            return View(emp);
-        }
-
-
-
         private string HashPassword(string password)
         {
             if (string.IsNullOrWhiteSpace(password))
@@ -320,50 +299,6 @@ namespace HRMS.Controllers
                 return Convert.ToBase64String(hash);
             }
         }
-
-
-
-        public IActionResult ExportExcel()
-        {
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-
-            var employees = _context.Employees.ToList();
-
-            using (var package = new ExcelPackage())
-            {
-                var ws = package.Workbook.Worksheets.Add("Employees");
-
-                ws.Cells[1, 1].Value = "Employee Code";
-                ws.Cells[1, 2].Value = "Name";
-                ws.Cells[1, 3].Value = "Email";
-                ws.Cells[1, 4].Value = "Department";
-                ws.Cells[1, 5].Value = "Position";
-
-                int row = 2;
-
-                foreach (var e in employees)
-                {
-                    ws.Cells[row, 1].Value = e.EmployeeCode;
-                    ws.Cells[row, 2].Value = e.Name;
-                    ws.Cells[row, 3].Value = e.Email;
-                    ws.Cells[row, 4].Value = e.Department;
-                    ws.Cells[row, 5].Value = e.Position;
-                    row++;
-                }
-
-                ws.Cells.AutoFitColumns();
-
-                var fileBytes = package.GetAsByteArray();
-
-                return File(
-                    fileBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "Employees.xlsx"
-                );
-            }
-        }
-
-
 
 
     }
