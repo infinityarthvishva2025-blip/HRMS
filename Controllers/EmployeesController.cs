@@ -322,7 +322,7 @@ namespace HRMS.Controllers
                     VideoId = v.Id,
                     Title = v.Title,
                     Category = v.Category,
-                    VideoUrl = v.VideoUrl,
+                    VideoUrl = v.VideoPath,
                     IsCompleted = sub != null && sub.IsCompleted,
                     CompletedOn = sub != null ? sub.CompletedOn : null
                 };

@@ -22,8 +22,11 @@
 
                 <!-- Watch Button -->
                 <td>
-                    <a href="@item.VideoUrl" target="_blank" class="btn btn-primary btn-sm">
-                        ▶ Watch
+                    <a asp-controller="Gurukul"
+                       asp-action="Watch"
+                       asp-route-id="@item.VideoId"
+                       class="btn btn-sm btn-primary">
+                        Watch Video
                     </a>
                 </td>
 

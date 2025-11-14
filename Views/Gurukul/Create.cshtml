@@ -2,7 +2,7 @@
 
 <h2 class="text-primary mb-4">📤 Upload New Gurukul Video</h2>
 
-<form asp-action="Create" method="post">
+<form asp-action="Create" method="post" enctype="multipart/form-data">
     <div class="mb-3">
         <label asp-for="Title" class="form-label">Title</label>
         <input asp-for="Title" class="form-control" required />
@@ -19,8 +19,8 @@
     </div>
 
     <div class="mb-3">
-        <label asp-for="VideoUrl" class="form-label">Video URL</label>
-        <input asp-for="VideoUrl" class="form-control" required placeholder="Paste YouTube or internal video link" />
+        <label class="form-label">Upload Video</label>
+        <input type="file" name="VideoFile" accept="video/*" class="form-control" required />
     </div>
 
     <button type="submit" class="btn btn-success">Save Video</button>

@@ -1,0 +1,172 @@
+﻿@model HRMS.Models.GurukulVideo
+
+@{
+    Layout = "_Layout";
+}
+
+<style>
+    /* ---------------------- FIXED CLOSE BUTTON ---------------------- */
+    #closeVideoBtn {
+        position: fixed;
+        top: 80px;
+        right: 30px;
+        background: #ff3333;
+        color: black;
+        border: none;
+        border-radius: 50%;
+        width: 46px;
+        height: 46px;
+        font-size: 26px;
+        cursor: pointer;
+        z-index: 999999 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+        transition: transform .15s ease, background .15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+        #closeVideoBtn:hover {
+            transform: scale(1.07);
+            background: #d90000;
+        }
+
+    /* Inline close for small screens */
+    .close-inline {
+        display: none;
+        margin-left: auto;
+        margin-bottom: 12px;
+    }
+
+    /* ---------------------- VIDEO CONTAINER ---------------------- */
+    .video-container {
+        position: relative;
+        width: 100%;
+        max-width: 980px;
+        margin: 24px auto;
+    }
+
+    /* ---------------------- COMPLETION POPUP ---------------------- */
+    #completePopup {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 1100000;
+    }
+
+    #popupBox {
+        background: white;
+        width: 420px;
+        padding: 24px;
+        border-radius: 10px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+        text-align: center;
+    }
+
+    /* ---------------------- RESPONSIVE CSS ---------------------- */
+     @@media (max-width: 900px) {
+        #closeVideoBtn {
+            top: 70px;
+            right: 14px;
+            width: 40px;
+            height: 40px;
+            font-size: 22px;
+        }
+
+        .video-container {
+            padding: 0 12px;
+        }
+    }
+
+     @@media (max-width: 520px) {
+        #closeVideoBtn {
+            display: none !important;
+        }
+
+        .close-inline {
+            display: inline-block;
+        }
+
+        #popupBox {
+            width: 90%;
+        }
+    }
+</style>
+
+<!-- FLOATING CLOSE BUTTON -->
+<button id="closeVideoBtn" onclick="window.location.href='/Gurukul/Index'">×</button>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="text-primary"><i class="bi bi-film"></i> Watch Gurukul Video</h2>
+
+        <!-- Inline close for small screens -->
+        <div class="close-inline">
+            <button class="btn btn-outline-secondary" onclick="window.location.href='/Gurukul/Index'">Close</button>
+        </div>
+    </div>
+
+    <div class="video-container">
+        <video id="trainingVideo" width="100%" controls>
+            <source src="@Model.VideoPath" type="video/mp4" />
+            Your browser does not support HTML5 video.
+        </video>
+    </div>
+
+    <hr />
+    <h3>@Model.Title</h3>
+    <p><strong>Category:</strong> @Model.Category</p>
+    <p>@Model.Description</p>
+</div>
+
+<!-- POPUP -->
+<div id="completePopup" class="d-flex">
+    <div id="popupBox">
+        <h4>🎉 Well done!</h4>
+        <p>You completed the video.</p>
+        <div class="mt-3">
+            <button class="btn btn-success" onclick="goNext()">Next video</button>
+            <button class="btn btn-secondary ms-2" onclick="window.location.href='/Gurukul/Index'">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+
+        var closeBtn = document.getElementById('closeVideoBtn');
+        var video = document.getElementById('trainingVideo');
+
+        // AUTO POSITION CLOSE BUTTON BELOW HEADER
+        function positionCloseButton() {
+            var header = document.querySelector('header') ||
+                         document.querySelector('.navbar') ||
+                         document.querySelector('.topbar') ||
+                         document.querySelector('.main-header');
+
+            var headerHeight = header ? header.getBoundingClientRect().height : 70;
+            closeBtn.style.top = (headerHeight + 12) + 'px';
+            closeBtn.style.zIndex = '999999';
+        }
+
+        window.addEventListener('load', positionCloseButton);
+        window.addEventListener('resize', positionCloseButton);
+        setTimeout(positionCloseButton, 300);
+
+        // WHEN VIDEO COMPLETES
+        video.addEventListener('ended', function () {
+            fetch('/Gurukul/MarkCompleted?videoId=@Model.Id', { method: 'POST' })
+                .catch(function (e) { console.warn('markcomplete failed', e); });
+
+            document.getElementById('completePopup').style.display = 'flex';
+        });
+    })();
+
+    function goNext() {
+        window.location.href = '/Gurukul/Index';
+    }
+</script>
