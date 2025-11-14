@@ -25,7 +25,8 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <input type="text" id="searchBox" class="form-control" placeholder="Search by name, code, email...">
+                    <input type="text" id="employeeSearch" class="form-control" placeholder="Search by name, code, email...">
+
                 </div>
             </div>
         </div>
@@ -35,7 +36,7 @@
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
 
-            <table class="table table-hover table-striped mb-0" id="employeeTable">
+            <table id="employeeTable" class="table table-striped table-bordered">
                 <thead class="table-dark">
                     <tr>
                         <th>Employee Code</th>
@@ -86,15 +87,15 @@
 
 @section Scripts {
     <script>
-        // LIVE SEARCH
-        document.getElementById("searchBox").addEventListener("keyup", function () {
-            let filter = this.value.toLowerCase();
-            let rows = document.querySelectorAll("#employeeTable tbody tr");
+        document.getElementById("employeeSearch").addEventListener("keyup", function () {
+            var value = this.value.toLowerCase();
+            var rows = document.querySelectorAll("#employeeTable tbody tr");
 
-            rows.forEach(row => {
-                let text = row.innerText.toLowerCase();
-                row.style.display = text.includes(filter) ? "" : "none";
+            rows.forEach(function (row) {
+                var text = row.textContent.toLowerCase();
+                row.style.display = text.includes(value) ? "" : "none";
             });
         });
     </script>
 }
+
