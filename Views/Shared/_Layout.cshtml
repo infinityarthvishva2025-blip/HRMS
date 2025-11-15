@@ -3,124 +3,127 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Infinity Arthvishva HRMS</title>
+    <title>@ViewData["Title"] - Infinity HRMS</title>
 
-    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-   
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
+
         body {
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fb;
+            font-family: "Segoe UI", sans-serif;
+            background: #f3f4f7;
         }
 
-        /* === SIDEBAR === */
+        /* =======================================================
+                   APPLE MATERIAL YOU STYLE SIDEBAR
+                   Clean, soft, professional UI
+                   ======================================================= */
+
         .sidebar {
             width: 250px;
             height: 100vh;
-            background: linear-gradient(180deg, White,white);
-            color: #fff;
             position: fixed;
             left: 0;
             top: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: all 0.3s ease;
-            box-shadow: 3px 0 8px rgba(0, 0, 0, 0.15);
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.05);
+            padding: 25px 0;
+            border-radius: 0 20px 20px 0;
+            transition: 0.35s ease;
             z-index: 1000;
         }
 
             .sidebar.collapsed {
-                width: 80px;
+                width: 82px;
             }
 
-        /* === SIDEBAR HEADER === */
+        /* LOGO AREA */
         .sidebar-header {
             text-align: center;
-            padding: 20px 10px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            transition: all 0.3s ease;
+            padding: 0 10px 25px;
+            border-bottom: 1px solid #eaeaea;
         }
 
         .sidebar-logo {
-            max-width: 180px;
-            height: auto;
-            margin-bottom: 5px;
-            background-color:white;
-            transition: all 0.3s ease;
+            width: 150px;
+            transition: 0.3s ease;
         }
 
         .sidebar.collapsed .sidebar-logo {
-            max-width: 45px;
+            width: 50px;
         }
 
-        .sidebar-header h5 {
-            font-weight: 600;
-            color: #ffffff;
-            margin: 0;
-            font-size: 1rem;
-            transition: opacity 0.3s ease;
+        .sidebar-header h4 {
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: 700;
+            color: #1f2937;
+            transition: .3s;
         }
 
-        .sidebar.collapsed .sidebar-header h5 {
+        .sidebar.collapsed .sidebar-header h4 {
             opacity: 0;
             visibility: hidden;
         }
 
-        /* === SIDEBAR MENU === */
+        /* MENU LIST */
         .sidebar-menu {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            margin: 0;
-            padding: 10px 0;
+            margin-top: 25px;
         }
 
         .menu-item {
+            margin: 10px 15px;
+            height: 48px;
             display: flex;
             align-items: center;
-            padding: 12px 18px;
-            color: black;
-            font-size: 15px;
-            font-weight: 500;
+            padding: 0 18px;
+            border-radius: 12px;
             text-decoration: none;
-            border-left: 4px solid transparent;
-            transition: all 0.25s ease;
+            color: #374151;
+            font-size: 15px;
+            font-weight: 600;
+            transition: 0.25s ease-in-out;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
         }
 
             .menu-item i {
-                font-size: 30px;
-                min-width: 30px;
-                text-align: center;
-                margin-right: 20px;
-                transition: all 0.25s ease;
+                font-size: 22px;
+                margin-right: 14px;
+                color: #6366f1;
+                transition: 0.25s ease;
             }
 
             .menu-item:hover {
-                background: rgba(255,255,255,0.15);
-                color: gray;
-                border-left: 4px solid #ffffff;
-                padding-left: 22px;
-                text-shadow: 0 0 8px currentColor;
+                background: #eef2ff;
+                color: #3730a3;
+                border-color: #c7d2fe;
+                transform: translateX(6px);
             }
+
+                .menu-item:hover i {
+                    color: #4f46e5;
+                    transform: scale(1.15);
+                }
 
             .menu-item.active {
-                background: rgba(255,255,255,0.25);
-                border-left: 4px solid #ffffff;
-                color: black;
-                font-weight: 600;
+                background: #4f46e5;
+                color: white;
+                border: none;
             }
 
-        /* Collapsed State Menu */
+                .menu-item.active i {
+                    color: white;
+                }
+
+        /* COLLAPSED MODE */
         .sidebar.collapsed .menu-item {
             justify-content: center;
-            padding: 12px 0;
+            padding: 0;
         }
 
             .sidebar.collapsed .menu-item span {
@@ -128,107 +131,94 @@
             }
 
             .sidebar.collapsed .menu-item i {
-                margin-right: 0;
-                font-size: 20px;
+                margin: 0;
             }
 
-        /* Logout */
-        .logout {
-            margin-top: auto;
-            color:red;
-            border-top: 1px solid rgba(255,255,255,0.15);
+        .menu-item i {
+            font-size: 22px;
+            margin-right: 14px;
+            transition: 0.25s ease;
         }
 
-            .logout:hover {
-                background: rgba(255,0,0,0.2);
-                border-left: 4px solid #ff4444;
-                color: #fff;
+            /* MULTI-COLOR ICONS BELOW */
+            .menu-item i.fa-gauge {
+                color: #2ecc71 !important;
             }
 
-        /* === PAGE CONTENT === */
+            .menu-item i.fa-user-tie {
+                color: #3498db !important;
+            }
+
+            .menu-item i.fa-calendar-check {
+                color: #f1c40f !important;
+            }
+
+            .menu-item i.fa-plane-departure {
+                color: #9b59b6 !important;
+            }
+
+            .menu-item i.fa-wallet {
+                color: #1abc9c !important;
+            }
+
+            .menu-item i.fa-box {
+                color: #8e5c42 !important;
+            }
+
+            .menu-item i.fa-file-invoice-dollar {
+                color: #f39c12 !important;
+            }
+
+            .menu-item i.fa-chart-line {
+                color: #3f51b5 !important;
+            }
+
+            .menu-item i.fa-graduation-cap {
+                color: #2c3e50 !important;
+            }
+
+            .menu-item i.fa-right-from-bracket {
+                color: #e63946 !important;
+            }
+
+        /* LOGOUT */
+        .logout .menu-item {
+            background: #fee2e2;
+            color: #b91c1c;
+            border-color: #fecaca;
+        }
+
+            .logout .menu-item:hover {
+                background: #fecaca;
+            }
+
+        /* PAGE CONTENT */
         #page-content {
             margin-left: 250px;
-            transition: all 0.3s ease;
+            transition: 0.35s;
         }
 
         .sidebar.collapsed ~ #page-content {
-            margin-left: 80px;
+            margin-left: 82px;
         }
 
         .navbar {
             background: #ffffff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+            border-bottom: 1px solid #e5e7eb;
         }
 
         #sidebarToggle {
-            background: linear-gradient(90deg, #0077c2, #009688);
-            color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 5px;
-        }
-        /* Base icon styling */
-        .sidebar-menu i {
-            font-size: 18px;
-            margin-right: 8px;
-            transition: transform 0.2s ease, color 0.2s ease;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: #4f46e5;
+            color: white;
         }
 
-        /* Hover effect */
-        .menu-item:hover i {
-            transform: scale(1.2);
-        }
-
-        /* Colorful icons */
-        .icon-dashboard {
-            color: #4CAF50;
-        }
-        /* Green */
-        .icon-employee {
-            color: #2196F3;
-        }
-        /* Blue */
-        .icon-attendance {
-            color: #FF9800;
-        }
-        /* Orange */
-        .icon-leave {
-            color: #9C27B0;
-        }
-        /* Purple */
-        .icon-payroll {
-            color: #009688;
-        }
-        /* Teal */
-        .icon-geo {
-            color: #E91E63;
-        }
-        /* Pink */
-        .icon-assets {
-            color: #795548;
-        }
-        /* Brown */
-        .icon-expenses {
-            color: #FFC107;
-        }
-        /* Amber */
-        .icon-reports {
-            color: #3F51B5;
-        }
-        /* Indigo */
-        .icon-logout {
-            color: #F44336;
-        }
-        /* Red */
-
-       
-
-           
-        /* === RESPONSIVE === */
         @@media (max-width: 768px) {
             .sidebar {
-                position: absolute;
-                left: -250px;
+                left: -260px;
             }
 
                 .sidebar.active {
@@ -236,104 +226,104 @@
                 }
 
             #page-content {
-                margin-left: 0;
+                margin-left: 0 !important;
             }
         }
+
     </style>
+
 </head>
+
 <body>
 
-    <div id="wrapper">
-        <!-- Sidebar -->
-        <div id="sidebar-wrapper" class="sidebar">
-            <div class="sidebar-header">
-                <img src="~/images/infinity-logo.png" alt="Infinity Arthvishva" class="sidebar-logo" />
-                <h4 class="text-black">HRMS Portal</h4>
-            </div>
+    <!-- SIDEBAR -->
+    <div id="sidebar-wrapper" class="sidebar">
 
-            <div class="sidebar-menu">
-                <a asp-controller="Home" asp-action="Index" class="menu-item active">
-                    <i class="fa-solid fa-gauge icon-dashboard"></i><span>Dashboard</span>
-                </a>
-                <a asp-controller="Employees" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-user-tie icon-employee"></i><span>Employee Management</span>
-                </a>
-                <a asp-controller="Attendance" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-calendar-check icon-attendance"></i><span>Attendance </span>
-                </a>
-                @* <a asp-controller="GeoAttendance" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-tag icon-geo"></i><span>Geo Tag</span>
-                </a> *@
-                <a asp-controller="Leave" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-plane-departure icon-leave"></i><span>Leave Management</span>
-                </a>
-                <a asp-controller="Payroll" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-wallet icon-payroll"></i><span>Payroll</span>
-                </a>
-               
-                <a asp-controller="Assets" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-box icon-assets"></i><span>Assets</span>
-                </a>
-                <a asp-controller="Expenses" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-laptop icon-expenses"></i><span>Expenses</span>
-                </a>
-                <a asp-controller="Reports" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-file-alt icon-reports"></i><span>Reports</span>
-                </a>
-                <a asp-controller="Gurukul" asp-action="Index" class="menu-item">
-                    <i class="fa-solid fa-book-open"></i><span>🎓 Gurukul </span>
-                </a>
-                @* <a asp-controller="Gurukul" asp-action="ProgressReport" class="menu-item">
-                    <i class="fa-solid fa-file-alt icon-Gurukul"></i><span>📊 Employee Progress</span>
-                </a> *@
-                <a asp-controller="Account" asp-action="Login" class="menu-item logout">
-                    <i class="fa-solid fa-right-from-bracket icon-logout"></i><span>Logout</span>
-
-                    @* <li><a href="/Gurukul/Index">🎓 Gurukul Management</a></li>
-                    <li><a href="/Gurukul/ProgressReport">📊 Employee Progress</a></li> *@
-                </a>
-
-              
-
-            </div>
-
+        <div class="sidebar-header">
+            <img src="~/images/infinity-logo.png" class="sidebar-logo" />
+            <h4>HRMS Portal</h4>
         </div>
 
-        <!-- Page Content -->
-        <div id="page-content">
-            <nav class="navbar navbar-expand-lg navbar-light border-bottom px-3 py-2">
-                <div class="container-fluid">
-                    <button id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
-                    <span class="ms-auto fw-semibold">Welcome, Gaurav @User.Identity?.Name</span>
-                </div>
-            </nav>
+        <div class="sidebar-menu">
 
-            <div class="container-fluid p-4">
+            <a asp-controller="Home" asp-action="Index" class="menu-item active">
+                <i class="fa-solid fa-gauge"></i>
+                <span>Dashboard</span>
+            </a>
 
-                @RenderBody()
+            <a asp-controller="Employees" asp-action="Index" class="menu-item">
+                <i class="fa-solid fa-user-tie icon-employee"></i>
+                <span>Employee Management</span>
+            </a>
+
+            <a asp-controller="Attendance" asp-action="Index" class="menu-item">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Attendance</span>
+            </a>
+
+            <a asp-controller="Leave" asp-action="Index" class="menu-item">
+                <i class="fa-solid fa-plane-departure"></i>
+                <span>Leave Management</span>
+            </a>
+
+            <a asp-controller="Payroll" asp-action="Index" class="menu-item">
+                <i class="fa-solid fa-wallet"></i>
+                <span>Payroll</span>
+            </a>
+
+            <a asp-controller="Assets" asp-action="Index" class="menu-item">
+                <i class="fa-solid fa-box"></i>
+                <span>Assets</span>
+            </a>
+
+            <a asp-controller="Expenses" asp-action="Index" class="menu-item">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                <span>Expenses</span>
+            </a>
+
+            <a asp-controller="Reports" asp-action="Index" class="menu-item">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Reports</span>
+            </a>
+
+            <a asp-controller="Gurukul" asp-action="Index" class="menu-item">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>Gurukul</span>
+            </a>
+
+            <div class="logout">
+                <a asp-controller="Account" asp-action="Login" class="menu-item">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                </a>
             </div>
+
         </div>
     </div>
 
-    <!-- Scripts -->
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- PAGE CONTENT -->
+    <div id="page-content">
+        <nav class="navbar px-4 py-3">
+            <button id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+            <span class="ms-auto fw-semibold ">Infinity Arthvishva</span>
+        </nav>
+
+        <div class="container-fluid p-4">
+            @RenderBody()
+        </div>
+    </div>
+
+    <!-- JS -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebar = document.getElementById('sidebar-wrapper');
-
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
+        const sidebar = document.getElementById("sidebar-wrapper");
+        document.getElementById("sidebarToggle").addEventListener("click", () => {
+            sidebar.classList.toggle("collapsed");
         });
     </script>
 
     @RenderSection("Scripts", required: false)
-
-
-
 </body>
 </html>

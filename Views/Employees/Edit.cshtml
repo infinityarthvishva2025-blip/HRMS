@@ -7,272 +7,379 @@
 
 <div class="container py-4">
 
-    <h3 class="fw-bold text-primary mb-4">
-        <i class="fa fa-edit me-1"></i> Edit Employee
-    </h3>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary">
+            <i class="fa-solid fa-user-pen me-2"></i> Edit Employee – @Model.Name
+        </h3>
 
-    <form asp-action="Edit" asp-controller="Employees" method="post" enctype="multipart/form-data">
+        <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-primary">
+            <i class="fa-solid fa-list me-1"></i> See All Employees
+        </a>
+    </div>
+
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="Id" />
 
-        @* Profile *@
-        @{
-            var photoPath = string.IsNullOrEmpty(Model.ProfileImagePath)
-            ? "/images/default-user.png"
-            : "/uploads/profiles/" + Model.ProfileImagePath;
-        }
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-        <div class="row">
+        <div class="card shadow-sm border-0 p-4">
 
-            <!-- LEFT PHOTO -->
-            <div class="col-lg-3 text-center">
-                <img src="@photoPath" class="rounded mb-3"
-                     style="width: 180px; height: 180px; object-fit: cover;">
+            <!---------------------- BASIC DETAILS -------------------------->
+            <h5 class="fw-bold text-secondary mb-3">Basic Details</h5>
 
-                <input type="file" name="ProfilePhoto" class="form-control" />
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <label asp-for="EmployeeCode" class="form-label"></label>
+                    <input asp-for="EmployeeCode" class="form-control" readonly />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="MobileNumber" class="form-label"></label>
+                    <input asp-for="MobileNumber" class="form-control" />
+                    <span asp-validation-for="MobileNumber" class="text-danger"></span>
+                </div>
+
+                <!-- Password fields (Optional on Edit) -->
+                <div class="col-md-4">
+                    <label class="form-label">New Password (Optional)</label>
+                    <input asp-for="Password" type="password" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Confirm Password</label>
+                    <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                </div>
+
             </div>
 
-            <!-- RIGHT FORM -->
-            <div class="col-lg-9">
+            <hr class="my-4" />
 
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-body">
+            <!---------------------- PERSONAL DETAILS -------------------------->
+            <h5 class="fw-bold text-secondary mb-3">Personal Details</h5>
 
-                        <h5 class="fw-bold border-bottom pb-2 mb-3">Basic Details</h5>
+            <div class="row g-3">
 
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label asp-for="EmployeeCode"></label>
-                                <input asp-for="EmployeeCode" class="form-control" readonly />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="Name"></label>
-                                <input asp-for="Name" class="form-control" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="Email"></label>
-                                <input asp-for="Email" class="form-control" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="MobileNumber"></label>
-                                <input asp-for="MobileNumber" class="form-control" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="Password">New Password (optional)</label>
-                                <input asp-for="Password" type="password" class="form-control" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="ConfirmPassword">Confirm New Password</label>
-                                <input asp-for="ConfirmPassword" type="password" class="form-control" />
-                            </div>
-                        </div>
-
-                        <h5 class="fw-bold border-bottom pb-2 mt-4">Personal Details</h5>
-
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label asp-for="Gender"></label>
-                                <select asp-for="Gender" class="form-select">
-                                    <option>Male</option>
-                                    <option>Female</option>
-                                    <option>Other</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="FatherName"></label>
-                                <input asp-for="FatherName" class="form-control" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="MotherName"></label>
-                                <input asp-for="MotherName" class="form-control" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="DOB_Date"></label>
-                                <input asp-for="DOB_Date" type="date" class="form-control" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="MaritalStatus"></label>
-                                <select asp-for="MaritalStatus" class="form-select">
-                                    <option>Single</option>
-                                    <option>Married</option>
-                                    <option>Divorced</option>
-                                    <option>Widowed</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <h5 class="fw-bold border-bottom pb-2 mt-4">Experience</h5>
-
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label asp-for="ExperienceType"></label>
-                                <select asp-for="ExperienceType" id="ExperienceType" class="form-select">
-                                    <option value="">-- Select --</option>
-                                    <option value="Fresher">Fresher</option>
-                                    <option value="Experienced">Experienced</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="TotalExperienceYears"></label>
-                                <input asp-for="TotalExperienceYears" class="form-control" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="LastCompanyName"></label>
-                                <input asp-for="LastCompanyName" class="form-control" />
-                            </div>
-                        </div>
-
-                        <h5 class="fw-bold border-bottom pb-2 mt-4">Job Details</h5>
-
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label asp-for="JoiningDate"></label>
-                                <input asp-for="JoiningDate" type="date" class="form-control" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="Department"></label>
-                                <select asp-for="Department" id="Department" class="form-select">
-                                    <option value="">-- Select --</option>
-                                    <option>IT</option>
-                                    <option>HR</option>
-                                    <option>Finance</option>
-                                    <option>Marketing</option>
-                                    <option>Accounting</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="Position"></label>
-                                <select asp-for="Position" id="Position" class="form-select"></select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="Salary"></label>
-                                <input asp-for="Salary" class="form-control" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="ReportingManager"></label>
-                                <input asp-for="ReportingManager" class="form-control" />
-                            </div>
-
-                            <div class="col-md-12">
-                                <label asp-for="Address"></label>
-                                <textarea asp-for="Address" rows="2" class="form-control"></textarea>
-                            </div>
-                        </div>
-
-                        <h5 class="fw-bold border-bottom pb-2 mt-4">Education</h5>
-
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label asp-for="HSCPercent"></label>
-                                <input asp-for="HSCPercent" class="form-control" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="GraduationCourse"></label>
-                                <select asp-for="GraduationCourse" class="form-select">
-                                    <option>BCA</option>
-                                    <option>BCS</option>
-                                    <option>BBA</option>
-                                    <option>B.Com</option>
-                                    <option>Other</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="GraduationPercent"></label>
-                                <input asp-for="GraduationPercent" class="form-control" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="PostGraduationCourse"></label>
-                                <input asp-for="PostGraduationCourse" class="form-control" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label asp-for="PostGraduationPercent"></label>
-                                <input asp-for="PostGraduationPercent" class="form-control" />
-                            </div>
-                        </div>
-
-                        <h5 class="fw-bold border-bottom pb-2 mt-4">Identity Details</h5>
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label asp-for="AadhaarNumber"></label>
-                                <input asp-for="AadhaarNumber" class="form-control" />
-                            </div>
-
-                            <div class="col-md-6">
-                                <label asp-for="PanNumber"></label>
-                                <input asp-for="PanNumber" class="form-control text-uppercase" />
-                            </div>
-                        </div>
-
-                    </div>
+                <div class="col-md-3">
+                    <label asp-for="Gender" class="form-label"></label>
+                    <select asp-for="Gender" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Other</option>
+                    </select>
                 </div>
+
+                <div class="col-md-3">
+                    <label asp-for="FatherName" class="form-label"></label>
+                    <input asp-for="FatherName" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="MotherName" class="form-label"></label>
+                    <input asp-for="MotherName" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="DOB_Date" class="form-label"></label>
+                    <input asp-for="DOB_Date" type="date" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="MaritalStatus" class="form-label"></label>
+                    <select asp-for="MaritalStatus" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option>Single</option>
+                        <option>Married</option>
+                        <option>Divorced</option>
+                        <option>Widowed</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <hr class="my-4" />
+
+            <!---------------------- EXPERIENCE DETAILS -------------------------->
+            <h5 class="fw-bold text-secondary mb-3">Experience Details</h5>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="ExperienceType" class="form-label"></label>
+                    <select asp-for="ExperienceType" id="ExperienceType" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option value="Fresher">Fresher</option>
+                        <option value="Experienced">Experienced</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="experience-section" class="row g-3 mt-2 @(Model.ExperienceType == "Experienced" ? "" : "d-none")">
+
+                <div class="col-md-4">
+                    <label asp-for="TotalExperienceYears"></label>
+                    <input asp-for="TotalExperienceYears" id="TotalExperienceYears" type="number" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="LastCompanyName"></label>
+                    <input asp-for="LastCompanyName" id="LastCompanyName" class="form-control" />
+                </div>
+
+            </div>
+
+            <hr class="my-4" />
+
+            <!---------------------- JOB DETAILS -------------------------->
+            <h5 class="fw-bold text-secondary mb-3">Job Details</h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <label asp-for="JoiningDate"></label>
+                    <input asp-for="JoiningDate" type="date" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Department"></label>
+                    <select asp-for="Department" id="Department" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option>IT</option>
+                        <option>HR</option>
+                        <option>Finance</option>
+                        <option>Marketing</option>
+                        <option>Accounting</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Position"></label>
+                    <select asp-for="Position" id="Position" class="form-select">
+                        <option value="">-- Select Position --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Salary"></label>
+                    <input asp-for="Salary" type="number" class="form-control" />
+                </div>
+
+                <div class="col-md-8">
+                    <label asp-for="ReportingManager"></label>
+                    <input asp-for="ReportingManager" class="form-control" />
+                </div>
+
+                <div class="col-md-12">
+                    <label asp-for="Address"></label>
+                    <textarea asp-for="Address" class="form-control" rows="2"></textarea>
+                </div>
+
+            </div>
+
+            <hr class="my-4" />
+
+            <!---------------------- EDUCATION DETAILS -------------------------->
+            <h5 class="fw-bold text-secondary mb-3">Education Details</h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <label asp-for="HSCPercent"></label>
+                    <input asp-for="HSCPercent" type="number" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="GraduationCourse"></label>
+                    <select asp-for="GraduationCourse" class="form-select">
+                        <option value="">-- Select Graduation --</option>
+                        <option>BCA</option>
+                        <option>BCS</option>
+                        <option>BBA</option>
+                        <option>B.Com</option>
+                        <option>BA</option>
+                        <option>B.Sc</option>
+                        <option>BE</option>
+                        <option>B.Tech</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="GraduationPercent"></label>
+                    <input asp-for="GraduationPercent" type="number" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="PostGraduationCourse"></label>
+                    <select asp-for="PostGraduationCourse" class="form-select">
+                        <option value="">-- Select PG --</option>
+                        <option>MCA</option>
+                        <option>MBA</option>
+                        <option>M.Com</option>
+                        <option>M.Sc</option>
+                        <option>ME</option>
+                        <option>M.Tech</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="PostGraduationPercent"></label>
+                    <input asp-for="PostGraduationPercent" type="number" class="form-control" />
+                </div>
+
+            </div>
+
+            <hr class="my-4" />
+
+            <!---------------------- ID DETAILS -------------------------->
+            <h5 class="fw-bold text-secondary mb-3">Identity Details</h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <label asp-for="AadhaarNumber"></label>
+                    <input asp-for="AadhaarNumber" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="PanNumber"></label>
+                    <input asp-for="PanNumber" class="form-control" />
+                </div>
+
+            </div>
+
+            <hr class="my-4" />
+
+            <!---------------------- BANK DETAILS -------------------------->
+            <h5 class="fw-bold text-secondary mb-3">Bank Details</h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <label asp-for="BankName"></label>
+                    <input asp-for="BankName" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="AccountHolderName"></label>
+                    <input asp-for="AccountHolderName" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="AccountNumber"></label>
+                    <input asp-for="AccountNumber" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="IFSC"></label>
+                    <input asp-for="IFSC" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Branch"></label>
+                    <input asp-for="Branch" class="form-control" />
+                </div>
+
+            </div>
+
+            <hr class="my-4" />
+
+            <!---------------------- PROFILE PHOTO -------------------------->
+            <h5 class="fw-bold text-secondary mb-3">Profile Photo</h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <input type="file" name="ProfilePhoto" class="form-control" accept="image/*" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
+                {
+                    <div class="col-md-6">
+                        <label class="fw-bold">Current Photo:</label>
+                        <br />
+                        <img src="~/uploads/profiles/@Model.ProfileImagePath"
+                             width="150" class="rounded shadow mt-2" />
+                    </div>
+                }
+
             </div>
 
         </div>
 
-        <button type="submit" class="btn btn-success px-4 mt-3">
-            <i class="fa fa-check me-1"></i> Save Changes
-        </button>
-
-        <a asp-action="Index" class="btn btn-secondary mt-3">Back</a>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success px-4">
+                <i class="fa-solid fa-save me-1"></i>
+                Update Employee
+            </button>
+        </div>
 
     </form>
+
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
     <script>
-        // Department → Position loader
+        // EXPERIENCE TYPE
+        function toggleExperienceFields() {
+            const typeEl = document.getElementById("ExperienceType");
+            const section = document.getElementById("experience-section");
+
+            if (typeEl.value === "Experienced") {
+                section.classList.remove("d-none");
+            } else {
+                section.classList.add("d-none");
+            }
+        }
+        document.getElementById("ExperienceType").addEventListener("change", toggleExperienceFields);
+        toggleExperienceFields();
+
+        // DEPARTMENT → POSITION
         const dept = document.getElementById("Department");
         const pos = document.getElementById("Position");
 
-        if (dept && pos) {
-            dept.addEventListener("change", loadPositions);
+        function loadPositions() {
+            if (dept.value === "") return;
 
-            loadPositions(); // auto-fill on edit
+            fetch(`/Employees/GetPositions?department=${dept.value}`)
+                .then(r => r.json())
+                .then(list => {
+                    pos.innerHTML = "";
 
-            function loadPositions() {
-                const d = dept.value;
-                pos.innerHTML = "";
+                    const def = document.createElement("option");
+                    def.value = "";
+                    def.textContent = "-- Select Position --";
+                    pos.appendChild(def);
 
-                if (!d) return;
-
-                fetch(`/Employees/GetPositions?department=${encodeURIComponent(d)}`)
-                    .then(r => r.json())
-                    .then(list => {
-                        const def = document.createElement("option");
-                        def.value = "";
-                        def.textContent = "-- Select --";
-                        pos.appendChild(def);
-
-                        list.forEach(p => {
-                            const opt = document.createElement("option");
-                            opt.value = p;
-                            opt.textContent = p;
-                            pos.appendChild(opt);
-                        });
-
-                        pos.value = "@Model.Position";
+                    list.forEach(p => {
+                        const opt = document.createElement("option");
+                        opt.value = p;
+                        opt.textContent = p;
+                        pos.appendChild(opt);
                     });
-            }
+
+                    // Preselect existing position
+                    pos.value = "@Model.Position";
+                });
         }
+
+        dept.addEventListener("change", loadPositions);
+        loadPositions();
     </script>
 }

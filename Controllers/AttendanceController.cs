@@ -20,7 +20,9 @@ namespace HRMS.Controllers
             _context = context;
         }
 
-        // ================= EMPLOYEE PANEL (Check-In / Check-Out) =================
+        // ============================================================
+        // EMPLOYEE PANEL (Check-In / Check-Out)
+        // ============================================================
 
         public IActionResult EmployeePanel()
         {
@@ -85,7 +87,9 @@ namespace HRMS.Controllers
             return RedirectToAction(nameof(EmployeePanel));
         }
 
-        // ================= EMPLOYEE SELF SUMMARY REDIRECT =================
+        // ============================================================
+        // EMPLOYEE SELF SUMMARY
+        // ============================================================
 
         public IActionResult MySummary()
         {
@@ -97,7 +101,9 @@ namespace HRMS.Controllers
             return RedirectToAction(nameof(EmployeeSummary), new { employeeId = empId.Value });
         }
 
-        // ================= EMPLOYEE-WISE SUMMARY (HR + Employee) =================
+        // ============================================================
+        // EMPLOYEE-WISE SUMMARY
+        // ============================================================
 
         public IActionResult EmployeeSummary(int employeeId, DateTime? fromDate, DateTime? toDate)
         {
@@ -122,14 +128,9 @@ namespace HRMS.Controllers
             int earlyLeaveDays = attendance.Count(a => a.CheckOutTime.HasValue &&
                                                        a.CheckOutTime.Value.TimeOfDay < new TimeSpan(18, 0, 0));
 
-            double totalHours = 0;
-            foreach (var a in attendance)
-            {
-                if (a.CheckOutTime.HasValue)
-                {
-                    totalHours += (a.CheckOutTime.Value - a.CheckInTime).TotalHours;
-                }
-            }
+            double totalHours = attendance
+                .Where(a => a.CheckOutTime.HasValue)
+                .Sum(a => (a.CheckOutTime.Value - a.CheckInTime).TotalHours);
 
             int totalDays = attendance.Count;
             double avgHours = totalDays > 0 ? totalHours / totalDays : 0;
@@ -149,37 +150,92 @@ namespace HRMS.Controllers
             return View(model);
         }
 
-        // ================= HR LIST VIEW (WITH SUMMARY BUTTONS) =================
+        // ============================================================
+        // HR LIST PAGE — SEARCH + FILTERS + EXPORT
+        // ============================================================
 
-        public IActionResult Index()
+        public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status)
         {
-            var records = _context.Attendances
+            var today = DateTime.Today;
+
+            var attendance = _context.Attendances
                 .Include(a => a.Employee)
+                .Where(a => a.CheckInTime.Date == today)   // ✅ Only today's records
+                .AsQueryable();
+
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                attendance = attendance.Where(a =>
+                    a.Employee.Name.Contains(search) ||
+                    a.Employee.EmployeeCode.Contains(search));
+            }
+
+            if (fromDate.HasValue)
+                attendance = attendance.Where(a => a.CheckInTime.Date >= fromDate.Value);
+
+            if (toDate.HasValue)
+                attendance = attendance.Where(a => a.CheckInTime.Date <= toDate.Value);
+
+            if (!string.IsNullOrEmpty(status) && status != "All")
+            {
+                if (status == "Completed")
+                    attendance = attendance.Where(a => a.CheckOutTime != null);
+
+                if (status == "NotCheckedOut")
+                    attendance = attendance.Where(a => a.CheckOutTime == null);
+            }
+
+            ViewBag.Search = search;
+            ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
+            ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
+            ViewBag.Status = status ?? "All";
+
+            var list = attendance
                 .OrderByDescending(a => a.CheckInTime)
                 .ToList();
 
-            return View(records);
+            return View(list);
         }
 
-        // ================= MONTHLY EXCEL EXPORT =================
+        // ============================================================
+        // EXPORT FILTERED RESULTS TO EXCEL
+        // ============================================================
 
-        public IActionResult ExportMonthlyReport(int year, int month)
+        [HttpGet]
+        public IActionResult ExportFiltered(string search, DateTime? fromDate, DateTime? toDate, string status)
         {
-            var startDate = new DateTime(year, month, 1);
-            var endDate = startDate.AddMonths(1);
-
-            var data = _context.Attendances
+            var attendance = _context.Attendances
                 .Include(a => a.Employee)
-                .Where(a => a.CheckInTime >= startDate && a.CheckInTime < endDate)
-                .OrderBy(a => a.Employee.EmployeeCode)
-                .ThenBy(a => a.CheckInTime)
-                .ToList();
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+                attendance = attendance.Where(a =>
+                    a.Employee.Name.Contains(search) ||
+                    a.Employee.EmployeeCode.Contains(search));
+
+            if (fromDate.HasValue)
+                attendance = attendance.Where(a => a.CheckInTime.Date >= fromDate.Value);
+
+            if (toDate.HasValue)
+                attendance = attendance.Where(a => a.CheckInTime.Date <= toDate.Value);
+
+            if (!string.IsNullOrEmpty(status) && status != "All")
+            {
+                if (status == "Completed")
+                    attendance = attendance.Where(a => a.CheckOutTime != null);
+
+                if (status == "NotCheckedOut")
+                    attendance = attendance.Where(a => a.CheckOutTime == null);
+            }
+
+            var data = attendance.ToList();
 
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
             using (var package = new ExcelPackage())
             {
-                var ws = package.Workbook.Worksheets.Add("Monthly Attendance");
+                var ws = package.Workbook.Worksheets.Add("Filtered Attendance");
 
                 ws.Cells[1, 1].Value = "Employee Code";
                 ws.Cells[1, 2].Value = "Employee Name";
@@ -189,7 +245,6 @@ namespace HRMS.Controllers
                 ws.Cells[1, 6].Value = "Working Hours";
 
                 ws.Row(1).Style.Font.Bold = true;
-
                 int row = 2;
 
                 foreach (var a in data)
@@ -215,15 +270,11 @@ namespace HRMS.Controllers
 
                 ws.Cells.AutoFitColumns();
 
-                var bytes = package.GetAsByteArray();
-                string filename = $"Attendance_{month}_{year}.xlsx";
-
-                return File(
-                    bytes,
+                return File(package.GetAsByteArray(),
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    filename
-                );
+                    "Filtered_Attendance.xlsx");
             }
         }
+
     }
 }
