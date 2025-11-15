@@ -170,7 +170,7 @@ namespace HRMS.Controllers
                     a.Employee.Name.Contains(search) ||
                     a.Employee.EmployeeCode.Contains(search));
             }
-
+            
             if (fromDate.HasValue)
                 attendance = attendance.Where(a => a.CheckInTime.Date >= fromDate.Value);
 
