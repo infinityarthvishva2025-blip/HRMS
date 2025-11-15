@@ -25,7 +25,7 @@ namespace HRMS.Data
         public DbSet<GurukulProgress> GurukulProgress { get; set; }
 
         public DbSet<Leave> Leaves { get; set; } = null!;
-       
+        public DbSet<LeaveApprovalRoute> LeaveApprovalRoutes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

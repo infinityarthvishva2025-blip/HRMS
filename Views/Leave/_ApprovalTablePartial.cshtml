@@ -1,0 +1,43 @@
+﻿
+@model IEnumerable<Leave>
+
+@foreach (var item in Model)
+{
+    <tr>
+        <td>@item.Employee?.Name</td>
+        <td>@item.Category</td>
+        <td>@item.StartDate.ToShortDateString()</td>
+        <td>@item.EndDate?.ToShortDateString()</td>
+        <td>@item.TotalDays</td>
+        <td>@item.Reason</td>
+        <td>
+            M: <span class="badge @(item.ManagerStatus == "Approved" ? "bg-success" : item.ManagerStatus == "Rejected" ? "bg-danger" : "bg-warning text-dark")">
+                @item.ManagerStatus
+            </span><br />
+            HR: <span class="badge @(item.HrStatus == "Approved" ? "bg-success" : item.HrStatus == "Rejected" ? "bg-danger" :   "bg-warning text-dark")">
+                @item.HrStatus
+            </span><br />
+            Dir: <span class="badge @(item.DirectorStatus == "Approved" ? "bg-success" : item.DirectorStatus == "Rejected" ? "bg-danger" : "bg-warning text-dark")">
+                @item.DirectorStatus
+            </span>
+        </td>
+        <td>
+            <form asp-controller="Leave" asp-action="@ViewData["ApproveAction"]" method="post" class="d-flex flex-column gap-1">
+                <input type="hidden" name="id" value="@item.Id" />
+                <textarea name="remark" class="form-control form-control-sm" rows="2"
+                      placeholder="Remark (optional)"></textarea>
+
+                <div class="d-flex gap-1 mt-1">
+                    <button type="submit" name="approve" value="true"
+                            class="btn btn-success btn-sm w-50">
+                        Approve
+                    </button>
+                    <button type="submit" name="approve" value="false"
+                            class="btn btn-danger btn-sm w-50">
+                        Reject
+                    </button>
+                </div>
+            </form>
+        </td>
+    </tr>
+}

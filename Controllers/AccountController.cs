@@ -48,12 +48,17 @@ namespace HRMS.Controllers
                 HttpContext.Session.SetString("Role", "Employee");
                 HttpContext.Session.SetInt32("EmployeeId", emp.Id);
                 HttpContext.Session.SetString("EmployeeName", emp.Name);
+               
+                HttpContext.Session.SetString("Role", emp.Role);
                 return RedirectToAction("Dashboard", "Employees");
             }
+            else
 
-            // ❌ Invalid credentials
-            ViewBag.Error = "Invalid ID or Password.";
+                // ❌ Invalid credentials
+                ViewBag.Error = "Invalid ID or Password.";
             return View(model);
+
+           
         }
 
         public IActionResult Logout()

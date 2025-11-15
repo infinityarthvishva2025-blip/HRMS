@@ -16,49 +16,42 @@ namespace HRMS.Models
     {
         public int Id { get; set; }
 
-        // Who is applying
         public int EmployeeId { get; set; }
         public Employee? Employee { get; set; }
-
         [Required]
         public LeaveCategory Category { get; set; }
 
         [Required]
-        [DataType(DataType.Date)]
         public DateTime StartDate { get; set; }
 
-        [DataType(DataType.Date)]
-        public DateTime? EndDate { get; set; }    // Used for FullDay + MultiDay
+        public DateTime? EndDate { get; set; }
 
-        // For half day
-        public string? HalfDaySession { get; set; }   // "FirstHalf" / "SecondHalf"
+        public string? HalfDaySession { get; set; } // FirstHalf / SecondHalf
 
-        // For EarlyGoing / LateComing
-        [DataType(DataType.Time)]
-        public TimeSpan? TimeValue { get; set; }
+        public TimeSpan? TimeValue { get; set; } // Early / Late Time
 
         [Required]
-        [StringLength(500)]
-        public string Reason { get; set; } = string.Empty;
+        public string Reason { get; set; }
 
-        [StringLength(100)]
         public string? ContactDuringLeave { get; set; }
 
-        [StringLength(500)]
         public string? AddressDuringLeave { get; set; }
 
         public double TotalDays { get; set; }
 
-        // Approval workflow
-        public string ManagerStatus { get; set; } = "Pending";   // Pending/Approved/Rejected
+        public string ManagerStatus { get; set; } = "Pending";
+
         public string HrStatus { get; set; } = "Pending";
+
         public string DirectorStatus { get; set; } = "Pending";
+
         public string OverallStatus { get; set; } = "Pending";
 
-        public string? ManagerRemark { get; set; }
-        public string? HrRemark { get; set; }
-        public string? DirectorRemark { get; set; }
-
-        public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedOn { get; set; } = DateTime.Now;
+        public string? ManagerRemark { get; internal set; }
+        public string? DirectorRemark { get; internal set; }
+        public string? HrRemark { get; internal set; }
+        public string? CurrentApproverRole { get; set; } = "Employee";
+        public string? NextApproverRole { get; set; } = "Manager";
     }
 }

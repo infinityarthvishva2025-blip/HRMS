@@ -93,5 +93,7 @@ namespace HRMS.Models
 
         // EMPLOYEE STATUS
         public string? Status { get; set; }
+
+        public  string Role { get; set; }
     }
 }

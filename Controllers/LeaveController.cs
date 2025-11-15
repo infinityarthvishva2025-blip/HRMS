@@ -1,8 +1,6 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using HRMS.Data;
+﻿using HRMS.Data;
 using HRMS.Models;
+using HRMS.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,24 +9,56 @@ namespace HRMS.Controllers
     public class LeaveController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly INotificationService _notification;
+        private readonly IWorkflowService _workflow;
 
-        public LeaveController(ApplicationDbContext context)
+        public LeaveController(ApplicationDbContext context, INotificationService notification, IWorkflowService workflow)
         {
             _context = context;
+            _notification = notification;
+            _workflow = workflow;
         }
+        //public LeaveController(ApplicationDbContext context, INotificationService notification)
+        //{
+        //    _context = context;
+        //    _notification = notification;
+        //}
 
-        // Helper – replace with your real logged-in employee logic
-        private int GetLoggedInEmployeeId()
+        // -------------------- helpers --------------------
+        private int? GetCurrentEmployeeId()
         {
-            // TODO: lookup employee ID from User.Identity.Name
-            return 1; // TEMP: hard-coded for testing
+            return HttpContext.Session.GetInt32("EmployeeId");
         }
 
-        // ========== EMPLOYEE FORM ==========
+        private void UpdateOverallStatus(Leave leave)
+        {
+            if (leave.ManagerStatus == "Rejected" ||
+                leave.HrStatus == "Rejected" ||
+                leave.DirectorStatus == "Rejected")
+            {
+                leave.OverallStatus = "Rejected";
+            }
+            else if (leave.ManagerStatus == "Approved" &&
+                     leave.HrStatus == "Approved" &&
+                     leave.DirectorStatus == "Approved")
+            {
+                leave.OverallStatus = "Approved";
+            }
+            else
+            {
+                leave.OverallStatus = "Pending";
+            }
+        }
+
+        // -------------------- create leave --------------------
 
         [HttpGet]
         public IActionResult Create()
         {
+            var empId = GetCurrentEmployeeId();
+            if (empId == null)
+                return RedirectToAction("Login", "Account");
+
             var model = new Leave
             {
                 StartDate = DateTime.Today,
@@ -41,200 +71,142 @@ namespace HRMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Leave model)
         {
-            model.EmployeeId = GetLoggedInEmployeeId();
+            var empId = GetCurrentEmployeeId();
+            if (empId == null)
+                return RedirectToAction("Login", "Account");
+
+            model.EmployeeId = empId.Value;
 
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Normalize dates
             model.StartDate = model.StartDate.Date;
             if (model.EndDate.HasValue)
                 model.EndDate = model.EndDate.Value.Date;
 
-            // ===== Category-specific logic =====
-            switch (model.Category)
-            {
-                case LeaveCategory.FullDay:
-                    if (!model.EndDate.HasValue)
-                        model.EndDate = model.StartDate;
+            // simple total days for now
+            if (!model.EndDate.HasValue || model.EndDate < model.StartDate)
+                model.EndDate = model.StartDate;
+            model.TotalDays = (model.EndDate.Value - model.StartDate).TotalDays + 1;
 
-                    if (model.EndDate.Value < model.StartDate)
-                    {
-                        ModelState.AddModelError(nameof(model.EndDate),
-                            "End date must be on or after start date.");
-                        return View(model);
-                    }
+            model.CurrentApproverRole = "Employee";
+            model.NextApproverRole = await _workflow.GetNextApproverRoleAsync("Employee");
 
-                    model.TotalDays = (model.EndDate.Value - model.StartDate).TotalDays + 1;
-                    break;
-
-                case LeaveCategory.MultiDay:
-                    if (!model.EndDate.HasValue)
-                    {
-                        ModelState.AddModelError(nameof(model.EndDate),
-                            "Please select an end date for multi-day leave.");
-                        return View(model);
-                    }
-
-                    if (model.EndDate.Value < model.StartDate)
-                    {
-                        ModelState.AddModelError(nameof(model.EndDate),
-                            "End date must be on or after start date.");
-                        return View(model);
-                    }
-
-                    model.TotalDays = (model.EndDate.Value - model.StartDate).TotalDays + 1;
-                    break;
-
-                case LeaveCategory.HalfDay:
-                    model.EndDate = model.StartDate;
-                    model.TotalDays = 0.5;
-                    if (string.IsNullOrWhiteSpace(model.HalfDaySession))
-                    {
-                        ModelState.AddModelError(nameof(model.HalfDaySession),
-                            "Please choose First Half or Second Half.");
-                        return View(model);
-                    }
-                    break;
-
-                case LeaveCategory.EarlyGoing:
-                case LeaveCategory.LateComing:
-                    model.EndDate = model.StartDate;
-                    model.TotalDays = 0;
-                    if (!model.TimeValue.HasValue)
-                    {
-                        ModelState.AddModelError(nameof(model.TimeValue),
-                            "Please select a time.");
-                        return View(model);
-                    }
-                    break;
-            }
-
-            // ===== Overlap check for Full / Multi / Half =====
-            if (model.Category == LeaveCategory.FullDay
-                || model.Category == LeaveCategory.MultiDay
-                || model.Category == LeaveCategory.HalfDay)
-            {
-                var start = model.StartDate;
-                var end = model.EndDate ?? model.StartDate;
-
-                bool overlaps = await _context.Leaves.AnyAsync(l =>
-                    l.EmployeeId == model.EmployeeId &&
-                    (l.OverallStatus != "Rejected") &&
-                    start <= (l.EndDate ?? l.StartDate) &&
-                    end >= l.StartDate);
-
-                if (overlaps)
-                {
-                    ModelState.AddModelError(string.Empty,
-                        "These dates overlap with an existing leave request.");
-                    return View(model);
-                }
-            }
+          
 
             model.ManagerStatus = "Pending";
             model.HrStatus = "Pending";
             model.DirectorStatus = "Pending";
             model.OverallStatus = "Pending";
+            model.CreatedOn = DateTime.Now;
+
+            model.CurrentApproverRole = "Employee";   // created by employee
+            model.NextApproverRole = "Manager";       // first approver
 
             _context.Leaves.Add(model);
             await _context.SaveChangesAsync();
 
+            await _notification.NotifyLeaveCreatedAsync(model);
+
             return RedirectToAction("MyLeaves");
         }
 
-        // Shows logged-in employee's leaves
+        // -------------------- my leaves --------------------
+
         public async Task<IActionResult> MyLeaves()
         {
-            int empId = GetLoggedInEmployeeId();
-            var data = await _context.Leaves
-                .Include(l => l.Employee)
-                .Where(l => l.EmployeeId == empId)
+            var empId = GetCurrentEmployeeId();
+            if (empId == null)
+                return RedirectToAction("Login", "Account");
+
+            var leaves = await _context.Leaves
+                .Where(l => l.EmployeeId == empId.Value)
                 .OrderByDescending(l => l.CreatedOn)
                 .ToListAsync();
 
-            return View(data);
+            return View(leaves);
         }
 
-        // ========== APPROVAL FLOWS ==========
-
-        // Generic helper to update OverallStatus
-        private void UpdateOverallStatus(Leave leave)
-        {
-            if (leave.ManagerStatus == "Rejected"
-                || leave.HrStatus == "Rejected"
-                || leave.DirectorStatus == "Rejected")
-            {
-                leave.OverallStatus = "Rejected";
-            }
-            else if (leave.ManagerStatus == "Approved"
-                     && leave.HrStatus == "Approved"
-                     && leave.DirectorStatus == "Approved")
-            {
-                leave.OverallStatus = "Approved";
-            }
-            else
-            {
-                leave.OverallStatus = "Pending";
-            }
-        }
-
-        // ========== Manager ==========
-
+        // -------------------- MANAGER APPROVAL --------------------
+        [AuthorizeRole("Manager")]
         public async Task<IActionResult> ManagerApprovalList()
         {
-            // TODO: filter by team; for now: all pending for manager
+            // You can filter by manager's team here if you store ManagerId
             var pending = await _context.Leaves
                 .Include(l => l.Employee)
                 .Where(l => l.ManagerStatus == "Pending")
+                .OrderByDescending(l => l.CreatedOn)
+                .OrderBy(l => l.CreatedOn)
                 .ToListAsync();
+
+            ViewData["ApproverRole"] = "Manager";
+            ViewData["ApproveAction"] = "ManagerApprove";
 
             return View("ApprovalList", pending);
         }
+       
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> ManagerApprove(int id, bool approve, string? remark)
+        //{
+        //    var leave = await _context.Leaves
+        //        .Include(l => l.Employee)
+        //        .FirstOrDefaultAsync(l => l.Id == id);
 
-        [HttpPost]
-        public async Task<IActionResult> ManagerApprove(int id, bool approve, string? remark)
-        {
-            var leave = await _context.Leaves.FindAsync(id);
-            if (leave == null) return NotFound();
+        //    if (leave == null) return NotFound();
 
-            leave.ManagerStatus = approve ? "Approved" : "Rejected";
-            leave.ManagerRemark = remark;
-            UpdateOverallStatus(leave);
+        //    leave.ManagerStatus = approve ? "Approved" : "Rejected";
+        //    leave.ManagerRemark = remark;
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction("ManagerApprovalList");
-        }
+        //    UpdateOverallStatus(leave);
+        //    await _context.SaveChangesAsync();
 
-        // ========== HR ==========
+        //    await _notification.NotifyLeaveStatusChangedAsync(leave, "Manager", approve);
 
+        //    return RedirectToAction("ManagerApprovalList");
+        //}
+
+        // -------------------- HR APPROVAL --------------------
+        [AuthorizeRole("HR")]
         public async Task<IActionResult> HrApprovalList()
         {
             var pending = await _context.Leaves
                 .Include(l => l.Employee)
                 .Where(l => l.ManagerStatus == "Approved" &&
                             l.HrStatus == "Pending")
+                .OrderBy(l => l.CreatedOn)
+                 .OrderByDescending(l => l.CreatedOn)
                 .ToListAsync();
+
+            ViewData["ApproverRole"] = "HR";
+            ViewData["ApproveAction"] = "HrApprove";
 
             return View("ApprovalList", pending);
         }
+      
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> HrApprove(int id, bool approve, string? remark)
+        //{
+        //    var leave = await _context.Leaves
+        //        .Include(l => l.Employee)
+        //        .FirstOrDefaultAsync(l => l.Id == id);
 
-        [HttpPost]
-        public async Task<IActionResult> HrApprove(int id, bool approve, string? remark)
-        {
-            var leave = await _context.Leaves.FindAsync(id);
-            if (leave == null) return NotFound();
+        //    if (leave == null) return NotFound();
 
-            leave.HrStatus = approve ? "Approved" : "Rejected";
-            leave.HrRemark = remark;
-            UpdateOverallStatus(leave);
+        //    leave.HrStatus = approve ? "Approved" : "Rejected";
+        //    leave.HrRemark = remark;
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction("HrApprovalList");
-        }
+        //    UpdateOverallStatus(leave);
+        //    await _context.SaveChangesAsync();
 
-        // ========== Director ==========
+        //    await _notification.NotifyLeaveStatusChangedAsync(leave, "HR", approve);
 
+        //    return RedirectToAction("HrApprovalList");
+        //}
+
+        // -------------------- DIRECTOR APPROVAL --------------------
+        [AuthorizeRole("Director")]
         public async Task<IActionResult> DirectorApprovalList()
         {
             var pending = await _context.Leaves
@@ -242,23 +214,277 @@ namespace HRMS.Controllers
                 .Where(l => l.ManagerStatus == "Approved" &&
                             l.HrStatus == "Approved" &&
                             l.DirectorStatus == "Pending")
+                .OrderBy(l => l.CreatedOn)
+                .OrderByDescending(l => l.CreatedOn)
                 .ToListAsync();
+
+            ViewData["ApproverRole"] = "Director";
+            ViewData["ApproveAction"] = "DirectorApprove";
 
             return View("ApprovalList", pending);
         }
+       
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> DirectorApprove(int id, bool approve, string? remark)
+        //{
+        //    var leave = await _context.Leaves
+        //        .Include(l => l.Employee)
+        //        .FirstOrDefaultAsync(l => l.Id == id);
 
-        [HttpPost]
-        public async Task<IActionResult> DirectorApprove(int id, bool approve, string? remark)
+        //    if (leave == null) return NotFound();
+
+        //    leave.DirectorStatus = approve ? "Approved" : "Rejected";
+        //    leave.DirectorRemark = remark;
+
+        //    UpdateOverallStatus(leave);
+        //    await _context.SaveChangesAsync();
+
+        //    await _notification.NotifyLeaveStatusChangedAsync(leave, "Director", approve);
+
+        //    return RedirectToAction("DirectorApprovalList");
+        //}
+
+        // -------------------- LEAVE REPORT CHART --------------------
+
+        //public IActionResult LeaveReport()
+        //{
+        //    return View();
+        //}
+
+        [HttpGet]
+        public async Task<IActionResult> GetLeaveStatusSummary()
         {
-            var leave = await _context.Leaves.FindAsync(id);
-            if (leave == null) return NotFound();
+            var data = await _context.Leaves
+                .GroupBy(l => l.OverallStatus)
+                .Select(g => new
+                {
+                    status = g.Key,
+                    count = g.Count()
+                })
+                .ToListAsync();
 
-            leave.DirectorStatus = approve ? "Approved" : "Rejected";
-            leave.DirectorRemark = remark;
-            UpdateOverallStatus(leave);
+            return Json(data);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetApprovalTableAjax(
+    string role,
+    DateTime? from,
+    DateTime? to,
+    string? category,
+    string? status,
+    string? employee)
+        {
+            var query = _context.Leaves
+                .Include(l => l.Employee)
+                .AsQueryable();
+
+            // Role-based base filter
+            switch (role)
+            {
+                case "Manager":
+                    // show all for manager (you can restrict to team if you have ManagerId)
+                    break;
+
+                case "HR":
+                    query = query.Where(l => l.ManagerStatus == "Approved");
+                    break;
+
+                case "Director":
+                    query = query.Where(l => l.ManagerStatus == "Approved" &&
+                                             l.HrStatus == "Approved");
+                    break;
+            }
+
+            if (from.HasValue)
+                query = query.Where(l => l.StartDate >= from.Value);
+
+            if (to.HasValue)
+                query = query.Where(l => l.StartDate <= to.Value);
+
+            if (!string.IsNullOrWhiteSpace(employee))
+                query = query.Where(l => l.Employee != null && l.Employee.Name.Contains(employee));
+
+            if (!string.IsNullOrWhiteSpace(category) &&
+                Enum.TryParse<LeaveCategory>(category, out var catEnum))
+            {
+                query = query.Where(l => l.Category == catEnum);
+            }
+
+            if (!string.IsNullOrWhiteSpace(status) && status != "All")
+                query = query.Where(l => l.OverallStatus == status);
+
+            var list = await query
+                .OrderByDescending(l => l.CreatedOn)
+                .ToListAsync();
+
+            // need ApproveAction in partial too
+            ViewData["ApproveAction"] = role switch
+            {
+                "HR" => "HrApprove",
+                "Director" => "DirectorApprove",
+                _ => "ManagerApprove"
+            };
+
+            return PartialView("_ApprovalTablePartial", list);
+        }
+        public async Task<IActionResult> LeaveReport()
+        {
+            var now = DateTime.Today;
+            var startOfMonth = new DateTime(now.Year, now.Month, 1);
+
+            var pendingManager = await _context.Leaves.CountAsync(l => l.ManagerStatus == "Pending");
+            var pendingHr = await _context.Leaves.CountAsync(l => l.ManagerStatus == "Approved" &&
+                                                                   l.HrStatus == "Pending");
+            var pendingDirector = await _context.Leaves.CountAsync(l => l.ManagerStatus == "Approved" &&
+                                                                         l.HrStatus == "Approved" &&
+                                                                         l.DirectorStatus == "Pending");
+            var totalThisMonth = await _context.Leaves.CountAsync(l => l.StartDate >= startOfMonth &&
+                                                                        l.StartDate <= now);
+
+            ViewBag.PendingManager = pendingManager;
+            ViewBag.PendingHr = pendingHr;
+            ViewBag.PendingDirector = pendingDirector;
+            ViewBag.TotalThisMonth = totalThisMonth;
+           // var leaves = await _context.Leaves.ToListAsync();
+            //return View();
+
+
+            var empId = GetCurrentEmployeeId();
+            if (empId == null)
+                return RedirectToAction("Login", "Account");
+
+            var leaves = await _context.Leaves
+                .Where(l => l.EmployeeId == empId.Value)
+                .OrderByDescending(l => l.CreatedOn)
+                .ToListAsync();
+
+            return View(leaves);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetMonthlyLeaveSummary(int? year)
+        {
+            int targetYear = year ?? DateTime.Today.Year;
+
+            var raw = await _context.Leaves
+                .Where(l => l.StartDate.Year == targetYear)
+                .GroupBy(l => l.StartDate.Month)
+                .Select(g => new
+                {
+                    month = g.Key,
+                    count = g.Count()
+                })
+                .ToListAsync();
+
+            // Fill all 12 months
+            var result = Enumerable.Range(1, 12)
+                .Select(m => new
+                {
+                    month = m,
+                    count = raw.FirstOrDefault(r => r.month == m)?.count ?? 0
+                });
+
+            return Json(result);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetEmployeeList()
+        {
+            var list = await _context.Employees
+                .Select(e => new { id = e.Id, name = e.Name })
+                .OrderBy(e => e.name)
+                .ToListAsync();
+
+            return Json(list);
+        }
+
+       
+
+        [HttpGet]
+        public async Task<IActionResult> GetPendingCounts()
+        {
+            var manager = await _context.Leaves.CountAsync(l => l.ManagerStatus == "Pending");
+
+            var hr = await _context.Leaves.CountAsync(l =>
+                l.ManagerStatus == "Approved" &&
+                l.HrStatus == "Pending");
+
+            var director = await _context.Leaves.CountAsync(l =>
+                l.ManagerStatus == "Approved" &&
+                l.HrStatus == "Approved" &&
+                l.DirectorStatus == "Pending");
+
+            return Json(new
+            {
+                managerPending = manager,
+                hrPending = hr,
+                directorPending = director
+            });
+        }
+
+        private async Task ProcessApproval(int id, string role, bool approve, string? remark)
+        {
+            var leave = await _context.Leaves.FirstOrDefaultAsync(l => l.Id == id);
+            if (leave == null) return;
+
+            switch (role)
+            {
+                case "Manager":
+                    leave.ManagerStatus = approve ? "Approved" : "Rejected";
+                    leave.ManagerRemark = remark;
+                    break;
+
+                case "HR":
+                    leave.HrStatus = approve ? "Approved" : "Rejected";
+                    leave.HrRemark = remark;
+                    break;
+
+                case "Director":
+                    leave.DirectorStatus = approve ? "Approved" : "Rejected";
+                    leave.DirectorRemark = remark;
+                    break;
+            }
+
+            if (!approve)
+            {
+                leave.OverallStatus = "Rejected";
+                leave.NextApproverRole = "Completed";
+            }
+            else
+            {
+                leave.CurrentApproverRole = role;
+                leave.NextApproverRole = await _workflow.GetNextApproverRoleAsync(role);
+
+                if (leave.NextApproverRole == "Completed")
+                    leave.OverallStatus = "Approved";
+            }
 
             await _context.SaveChangesAsync();
+        }
+
+        // -------------------- MANAGER APPROVAL --------------------
+        public async Task<IActionResult> ManagerApprove(int id, bool approve, string? remark)
+        {
+            await ProcessApproval(id, "Manager", approve, remark);
+            return RedirectToAction("ManagerApprovalList");
+        }
+
+        // -------------------- HR APPROVAL --------------------
+        public async Task<IActionResult> HrApprove(int id, bool approve, string? remark)
+        {
+            await ProcessApproval(id, "HR", approve, remark);
+            return RedirectToAction("HrApprovalList");
+        }
+
+        // -------------------- DIRECTOR APPROVAL --------------------
+        public async Task<IActionResult> DirectorApprove(int id, bool approve, string? remark)
+        {
+            await ProcessApproval(id, "Director", approve, remark);
             return RedirectToAction("DirectorApprovalList");
         }
+
     }
 }
+
+
