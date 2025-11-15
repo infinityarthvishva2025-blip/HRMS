@@ -2,125 +2,197 @@
 
 @{
     ViewData["Title"] = "Employee Dashboard";
-    
 }
 
-<div class="container py-5">
-    <!-- Welcome Section -->
-    <div class="text-center mb-5">
-        <h2 class="fw-bold text-primary mb-1">
-            <i class="fa-solid fa-hand-wave text-warning me-2"></i>
-            Welcome, @Model.EmployeeName 
-        </h2>
-        <p class="text-muted mb-0"> 
-            Here’s a summary of your work profile and leave overview
-        </p>
-    </div>
-    <a href="/Attendance/EmployeePanel" class="btn btn-primary btn-lg">
-        Attendance
-    </a>
+<div class="dashboard-container py-5">
 
-    <!-- Info Cards -->
+    <!-- HEADER SECTION -->
+    <div class="dashboard-header text-center mb-5">
+        <h2 class="welcome-title mb-2">
+            <i class="fa-solid fa-hand-wave text-warning me-2"></i>
+            Welcome, @Model.EmployeeName
+        </h2>
+        <p class="lead text-muted">Your personalized work summary & attendance panel</p>
+
+        <a href="/Attendance/EmployeePanel" class="btn btn-attendance mt-3 shadow">
+            <i class="fa-solid fa-calendar-check me-2"></i> Mark Attendance
+        </a>
+    </div>
+
+
+    <!-- INFO CARDS -->
     <div class="row g-4 justify-content-center">
+
         <!-- Department -->
-        <div class="col-md-3">
-            <div class="info-card shadow-sm p-4 text-center">
+        <div class="col-md-3 col-sm-6">
+            <div class="info-card shadow-sm p-4 text-center animate-card">
                 <div class="icon-circle bg-primary bg-gradient mb-3">
                     <i class="fa-solid fa-building fa-2x text-white"></i>
                 </div>
-                <h6 class="fw-bold text-secondary mb-1">Department</h6>
-                <h5 class="fw-semibold">@Model.Department</h5>
+                <h6 class="fw-bold text-muted">Department</h6>
+                <h5 class="fw-bold text-dark">@Model.Department</h5>
             </div>
         </div>
 
         <!-- Position -->
-        <div class="col-md-3">
-            <div class="info-card shadow-sm p-4 text-center">
+        <div class="col-md-3 col-sm-6">
+            <div class="info-card shadow-sm p-4 text-center animate-card">
                 <div class="icon-circle bg-success bg-gradient mb-3">
                     <i class="fa-solid fa-briefcase fa-2x text-white"></i>
                 </div>
-                <h6 class="fw-bold text-secondary mb-1">Position</h6>
-                <h5 class="fw-semibold">@Model.Position</h5>
+                <h6 class="fw-bold text-muted">Position</h6>
+                <h5 class="fw-bold text-dark">@Model.Position</h5>
             </div>
         </div>
 
         <!-- Total Leaves -->
-        <div class="col-md-3">
-            <div class="info-card shadow-sm p-4 text-center">
+        <div class="col-md-3 col-sm-6">
+            <div class="info-card shadow-sm p-4 text-center animate-card">
                 <div class="icon-circle bg-info bg-gradient mb-3">
                     <i class="fa-solid fa-plane-departure fa-2x text-white"></i>
                 </div>
-                <h6 class="fw-bold text-secondary mb-1">Total Leaves</h6>
-                <h5 class="fw-semibold">@Model.TotalLeaves</h5>
+                <h6 class="fw-bold text-muted">Total Leaves</h6>
+                <h5 class="fw-bold text-dark">@Model.TotalLeaves</h5>
             </div>
         </div>
 
         <!-- Approved Leaves -->
-        <div class="col-md-3">
-            <div class="info-card shadow-sm p-4 text-center">
+        <div class="col-md-3 col-sm-6">
+            <div class="info-card shadow-sm p-4 text-center animate-card">
                 <div class="icon-circle bg-warning bg-gradient mb-3">
-                    <i class="fa-solid fa-check-circle fa-2x text-white"></i>
+                    <i class="fa-solid fa-circle-check fa-2x text-white"></i>
                 </div>
-                <h6 class="fw-bold text-secondary mb-1">Approved Leaves</h6>
-                <h5 class="fw-semibold">@Model.ApprovedLeaves</h5>
+                <h6 class="fw-bold text-muted">Approved Leaves</h6>
+                <h5 class="fw-bold text-dark">@Model.ApprovedLeaves</h5>
             </div>
         </div>
+
     </div>
+
 
     <!-- Quick Actions -->
-    <div class="text-center mt-5">
-        <a asp-controller="Leave" asp-action="Create" class="btn btn-lg text-white me-2 shadow"
-           style="background: linear-gradient(90deg, #0077c2, #009688); border-radius: 8px;">
-            <i class="fa-solid fa-paper-plane me-2"></i> Apply for Leave
+    <div class="quick-actions text-center mt-5">
+        <a asp-controller="Leave" asp-action="Create"
+           class="btn btn-lg text-white shadow action-btn">
+            <i class="fa-solid fa-paper-plane me-2"></i> Apply Leave
         </a>
 
-        <a asp-controller="Leave" asp-action="MyLeaves" class="btn btn-outline-secondary btn-lg shadow-sm"
-           style="border-radius: 8px;">
-            <i class="fa-solid fa-calendar-check me-2"></i> View My Leaves
+        <a asp-controller="Leave" asp-action="MyLeaves"
+           class="btn btn-lg btn-outline-secondary shadow-sm ms-3 action-btn-outline">
+            <i class="fa-solid fa-calendar-check me-2"></i> My Leaves
+        </a>
+
+        <a asp-controller="Employees" asp-action="Gurukul"
+           class="btn btn-lg btn-outline-secondary shadow-sm ms-3 action-btn-outline">
+            <i class="fa-solid fa-book-open me-2"></i> Gurukul
         </a>
     </div>
+
 </div>
 
-<!-- Styling -->
+<!-- ============================= -->
+<!--          PAGE STYLING         -->
+<!-- ============================= -->
+
 <style>
+
     body {
-        background-color: #f5f7fb;
+        background: #f0f4fb;
     }
 
+    /* Dashboard Wrapper */
+    .dashboard-container {
+        animation: fadeIn 0.8s ease;
+    }
+
+    /* HEADER */
+    .dashboard-header {
+        background: linear-gradient(135deg, #0d47a1, #009688);
+        padding: 40px;
+        border-radius: 16px;
+        color: white;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .welcome-title {
+        font-weight: 700;
+        font-size: 32px;
+    }
+
+    .btn-attendance {
+        background: white;
+        color: #0d47a1;
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 12px 24px;
+        transition: 0.3s ease;
+    }
+
+        .btn-attendance:hover {
+            background: #e3f2fd;
+            transform: translateY(-2px);
+        }
+
+
+    /* CARDS */
     .info-card {
-        background-color: #fff;
+        background: #fff;
         border-radius: 15px;
         transition: all 0.3s ease;
     }
 
-    .info-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-    }
+        .info-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
 
     .icon-circle {
-        width: 70px;
-        height: 70px;
+        width: 75px;
+        height: 75px;
         border-radius: 50%;
         display: flex;
-        align-items: center;
         justify-content: center;
+        align-items: center;
         margin: 0 auto;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 6px 14px rgba(0,0,0,0.2);
     }
 
-    .text-primary {
-        background: linear-gradient(90deg, #0077c2, #009688);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    /* Quick Action Buttons */
+    .action-btn {
+        background: linear-gradient(90deg,#0077c2,#009688);
+        padding: 12px 26px;
+        border-radius: 10px;
+        transition: 0.3s;
     }
 
-    h2 {
-        font-weight: 700;
+        .action-btn:hover {
+            transform: translateY(-3px);
+            opacity: 0.9;
+        }
+
+    .action-btn-outline {
+        border-radius: 10px;
+        padding: 12px 26px;
+        transition: 0.3s;
     }
 
-    .btn {
-        font-weight: 500;
-        letter-spacing: 0.4px;
+        .action-btn-outline:hover {
+            background: #e0e0e0;
+            transform: translateY(-3px);
+        }
+
+
+    /* Animations */
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
 </style>

@@ -17,7 +17,7 @@ namespace HRMS.Models
         public string Description { get; set; }
 
         [Required]
-        public string VideoUrl { get; set; } // YouTube or internal URL
+        public string VideoPath { get; set; }
 
         public DateTime UploadedOn { get; set; } = DateTime.Now;
     }

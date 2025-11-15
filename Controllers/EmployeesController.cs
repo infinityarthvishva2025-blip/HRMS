@@ -37,14 +37,13 @@ namespace HRMS.Controllers
             _env = env;
         }
 
-        // GET: Employees
+        // LIST
         public async Task<IActionResult> Index()
         {
-            var employees = await _context.Employees.ToListAsync();
-            return View(employees);
+            return View(await _context.Employees.ToListAsync());
         }
 
-        // GET: Employees/Details/5
+        // DETAILS
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -55,61 +54,49 @@ namespace HRMS.Controllers
             return View(emp);
         }
 
-        // GET: Employees/Create
+        // CREATE GET
         public IActionResult Create()
         {
-            var model = new Employee
-            {
-                EmployeeCode = GenerateNextEmployeeCode()
-            };
-            return View(model);
+            return View(new Employee { EmployeeCode = GenerateNextEmployeeCode() });
         }
 
-        // POST: Employees/Create
+        // CREATE POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Employee model, IFormFile ProfilePhoto)
         {
-            // Default Status
-            model.Status = "Active";
-            ModelState.Remove("Status");
-            ModelState.Remove("ConfirmPassword"); // Not mapped, ignore
+            ModelState.Remove("ConfirmPassword");
 
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Unique Email check
+            // Unique Email
             if (await _context.Employees.AnyAsync(e => e.Email == model.Email))
             {
                 ModelState.AddModelError("Email", "This email is already registered.");
                 return View(model);
             }
 
-            // Unique Mobile check
+            // Unique Mobile
             if (await _context.Employees.AnyAsync(e => e.MobileNumber == model.MobileNumber))
             {
                 ModelState.AddModelError("MobileNumber", "This mobile number is already registered.");
                 return View(model);
             }
 
-            // Generate EmployeeCode if missing
-            if (string.IsNullOrWhiteSpace(model.EmployeeCode))
-                model.EmployeeCode = GenerateNextEmployeeCode();
+            model.EmployeeCode ??= GenerateNextEmployeeCode();
+            model.Password = HashPassword(model.Password);
+            model.Status = "Active";
 
-            // Hash Password
-           
-
-            // Save Profile Photo
-            if (ProfilePhoto != null && ProfilePhoto.Length > 0)
+            if (ProfilePhoto != null)
                 model.ProfileImagePath = await SaveProfilePhotoAsync(ProfilePhoto, model.EmployeeCode);
 
             _context.Employees.Add(model);
             await _context.SaveChangesAsync();
-
             return RedirectToAction("Index");
         }
 
-        // GET: Employees/Edit/5
+        // EDIT GET
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -117,45 +104,41 @@ namespace HRMS.Controllers
             var emp = await _context.Employees.FindAsync(id);
             if (emp == null) return NotFound();
 
-            // don't send password hash to UI
-            emp.Password = string.Empty;
-            emp.ConfirmPassword = string.Empty;
+            emp.Password = "";
+            emp.ConfirmPassword = "";
 
             return View(emp);
         }
 
-        // POST: Employees/Edit/5
+        // EDIT POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Employee model, IFormFile ProfilePhoto)
         {
             if (id != model.Id) return NotFound();
 
-            // ConfirmPassword is just for UI
-            ModelState.Remove(nameof(Employee.ConfirmPassword));
+            ModelState.Remove("ConfirmPassword");
 
             if (!ModelState.IsValid)
-            {
                 return View(model);
-            }
 
             var emp = await _context.Employees.FindAsync(id);
             if (emp == null) return NotFound();
 
-            // unique email/mobile excluding current
-            if (await _context.Employees.AnyAsync(e => e.Email == model.Email && e.Id != id))
+            // *** FIXED: No duplicate email/mobile for same employee ***
+            if (await _context.Employees.AnyAsync(e => e.Email == model.Email && e.Id != model.Id))
             {
-                ModelState.AddModelError("Email", "Email is already registered.");
+                ModelState.AddModelError("Email", "This email is already used by another employee.");
                 return View(model);
             }
 
-            if (await _context.Employees.AnyAsync(e => e.MobileNumber == model.MobileNumber && e.Id != id))
+            if (await _context.Employees.AnyAsync(e => e.MobileNumber == model.MobileNumber && e.Id != model.Id))
             {
-                ModelState.AddModelError("MobileNumber", "Mobile number is already registered.");
+                ModelState.AddModelError("MobileNumber", "This mobile number is already used by another employee.");
                 return View(model);
             }
 
-            // update all fields except password & image (handled separately)
+            // UPDATE FIELDS
             emp.Name = model.Name;
             emp.Email = model.Email;
             emp.MobileNumber = model.MobileNumber;
@@ -186,42 +169,36 @@ namespace HRMS.Controllers
             emp.AadhaarNumber = model.AadhaarNumber;
             emp.PanNumber = model.PanNumber;
 
-            // bank details
             emp.BankName = model.BankName;
             emp.AccountHolderName = model.AccountHolderName;
             emp.AccountNumber = model.AccountNumber;
             emp.IFSC = model.IFSC;
             emp.Branch = model.Branch;
 
-            // update password only if new one entered
+            // Password only if changed
             if (!string.IsNullOrWhiteSpace(model.Password))
-            {
                 emp.Password = HashPassword(model.Password);
-            }
 
-            // new profile photo?
-            if (ProfilePhoto != null && ProfilePhoto.Length > 0)
-            {
+            // Photo
+            if (ProfilePhoto != null)
                 emp.ProfileImagePath = await SaveProfilePhotoAsync(ProfilePhoto, emp.EmployeeCode);
-            }
 
             _context.Update(emp);
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Employees/Delete/5
+        // DELETE GET
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
 
             var emp = await _context.Employees.FirstOrDefaultAsync(x => x.Id == id);
-            if (emp == null) return NotFound();
-
-            return View(emp);
+            return emp == null ? NotFound() : View(emp);
         }
 
-        // POST: Employees/Delete/5
+        // DELETE POST
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -235,114 +212,50 @@ namespace HRMS.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // AJAX: department → positions
-        [HttpGet]
+        // AJAX Positions
         public IActionResult GetPositions(string department)
         {
-            if (string.IsNullOrWhiteSpace(department) ||
-                !DepartmentPositions.TryGetValue(department, out var positions))
-            {
+            if (!DepartmentPositions.TryGetValue(department, out var positions))
                 return Json(new List<string>());
-            }
-
             return Json(positions);
         }
 
-
-        // ========== Helpers ==========
-
+        // Helpers
         private string GenerateNextEmployeeCode()
         {
-            var lastCode = _context.Employees
+            var last = _context.Employees
                 .OrderByDescending(e => e.EmployeeCode)
                 .Select(e => e.EmployeeCode)
                 .FirstOrDefault();
 
-            if (string.IsNullOrWhiteSpace(lastCode))
+            if (last == null)
                 return "IA0001";
 
-            var prefix = lastCode.Substring(0, 2);
-            var numericPart = lastCode.Substring(2);
-
-            if (!int.TryParse(numericPart, out var number))
-                return "IA0001";
-
-            number++;
-            return $"{prefix}{number:0000}";
+            int num = int.Parse(last.Substring(2)) + 1;
+            return $"IA{num:0000}";
         }
 
-        // returns only filename (e.g. "IA0001.jpg")
-        private async Task<string> SaveProfilePhotoAsync(IFormFile file, string employeeCode)
+        private async Task<string> SaveProfilePhotoAsync(IFormFile file, string code)
         {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles");
-            Directory.CreateDirectory(uploadsFolder);
+            var folder = Path.Combine(_env.WebRootPath, "uploads/profiles");
+            Directory.CreateDirectory(folder);
 
             var ext = Path.GetExtension(file.FileName);
-            var fileName = $"{employeeCode}{ext}";
-            var filePath = Path.Combine(uploadsFolder, fileName);
+            var fileName = code + ext;
+            var path = Path.Combine(folder, fileName);
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
+            using var stream = new FileStream(path, FileMode.Create);
+            await file.CopyToAsync(stream);
 
-            return fileName; // ONLY filename stored in DB
+            return fileName;
         }
 
-        private string HashPassword(string password)
+        private string HashPassword(string pwd)
         {
-            if (string.IsNullOrWhiteSpace(password))
-                return password;
-
-            using (var sha = SHA256.Create())
-            {
-                var bytes = Encoding.UTF8.GetBytes(password);
-                var hash = sha.ComputeHash(bytes);
-                return Convert.ToBase64String(hash);
-            }
+            using var sha = SHA256.Create();
+            return Convert.ToBase64String(sha.ComputeHash(Encoding.UTF8.GetBytes(pwd)));
         }
-
-
-        public IActionResult ExportExcel()
-        {
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-
-            var employees = _context.Employees.ToList();
-
-            using (var package = new ExcelPackage())
-            {
-                var ws = package.Workbook.Worksheets.Add("Employees");
-
-                ws.Cells[1, 1].Value = "Employee Code";
-                ws.Cells[1, 2].Value = "Name";
-                ws.Cells[1, 3].Value = "Email";
-                ws.Cells[1, 4].Value = "Department";
-                ws.Cells[1, 5].Value = "Position";
-
-                int row = 2;
-
-                foreach (var e in employees)
-                {
-                    ws.Cells[row, 1].Value = e.EmployeeCode;
-                    ws.Cells[row, 2].Value = e.Name;
-                    ws.Cells[row, 3].Value = e.Email;
-                    ws.Cells[row, 4].Value = e.Department;
-                    ws.Cells[row, 5].Value = e.Position;
-                    row++;
-                }
-
-                ws.Cells.AutoFitColumns();
-
-                var fileBytes = package.GetAsByteArray();
-
-                return File(
-                    fileBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "Employees.xlsx"
-                );
-            }
-        }
-
+        // EMPLOYEE DASHBOARD
         public IActionResult Dashboard()
         {
             int? empId = HttpContext.Session.GetInt32("EmployeeId");
@@ -354,7 +267,10 @@ namespace HRMS.Controllers
 
             var model = new EmployeeDashboardViewModel
             {
-                EmployeeName = emp?.Name
+                EmployeeName = emp?.Name,
+                Department = emp?.Department,
+                Position = emp?.Position,
+                ProfileImage = emp?.ProfileImagePath
             };
 
             return View(model);

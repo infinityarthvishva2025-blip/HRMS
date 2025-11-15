@@ -1,5 +1,6 @@
 ﻿using HRMS.Data;
 using HRMS.Models;
+using HRMS.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -52,16 +53,57 @@ namespace HRMS.Controllers
                     .ToList()
             };
 
-            // Recent Employees
-            var recentEmployees = _context.Employees
+            // ========= TODAY ATTENDANCE =========
+            var todaysAttendance = _context.Attendances
+                .Where(a => a.CheckInTime.Date == today)
+                .AsNoTracking()
+                .ToList();
+
+            int presentCount = todaysAttendance
+                .Select(a => a.EmployeeId)
+                .Distinct()
+                .Count();
+
+            int notCheckedOutCount = todaysAttendance
+                .Where(a => a.CheckOutTime == null)
+                .Count();
+
+            int absentCount = employees.Count - presentCount;
+
+            ViewBag.PresentToday = presentCount;
+            ViewBag.AbsentToday = absentCount;
+            ViewBag.NotCheckedOutToday = notCheckedOutCount;
+
+
+            // ========= RECENT EMPLOYEES WITH TODAY STATUS =========
+                
+
+            // Get last 5 employees from DB
+            var last5Employees = _context.Employees
                 .AsNoTracking()
                 .OrderByDescending(e => e.JoiningDate ?? DateTime.MinValue)
                 .Take(5)
                 .ToList();
 
+            // Build viewmodel list
+            var recentEmployees = last5Employees
+                .Select(e => new RecentEmployeeViewModel
+                {
+                    Employee = e,
+                    Attendance = todaysAttendance.FirstOrDefault(a => a.EmployeeId == e.Id)
+                })
+                .ToList();
+
             ViewBag.RecentEmployees = recentEmployees;
 
-            // Department Chart
+
+
+
+
+            ViewBag.RecentEmployees = recentEmployees;
+
+
+            // ========= DEPARTMENT CHART =========
             var departmentGroups = employees
                 .Where(e => !string.IsNullOrEmpty(e.Department))
                 .GroupBy(e => e.Department)
@@ -71,30 +113,7 @@ namespace HRMS.Controllers
             ViewBag.DepartmentLabels = departmentGroups.Select(d => d.Department).ToList();
             ViewBag.DepartmentValues = departmentGroups.Select(d => d.Count).ToList();
 
-
-            // ========== TODAY'S ATTENDANCE SUMMARY ==========
-            var attendanceToday = _context.Attendances
-                .Where(a => a.CheckInTime.Date == today)
-                .ToList();
-
-            int presentCount = attendanceToday
-                .Select(a => a.EmployeeId)
-                .Distinct()
-                .Count();
-
-            int notCheckedOutCount = attendanceToday
-                .Where(a => a.CheckOutTime == null)
-                .Count();
-
-            int absentCount = employees.Count - presentCount;
-
-            ViewBag.PresentToday = presentCount;
-            ViewBag.AbsentToday = absentCount;
-            ViewBag.NotCheckedOutToday = notCheckedOutCount;
-            ViewBag.TotalEmployees = employees.Count;
-
             return View(model);
         }
-
     }
 }

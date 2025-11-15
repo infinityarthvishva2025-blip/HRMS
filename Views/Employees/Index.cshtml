@@ -11,23 +11,30 @@
         <h2 class="fw-bold text-primary">
             <i class="fa-solid fa-users me-2"></i> Employee Directory
         </h2>
-
-        <a class="btn btn-success px-4" asp-action="Create">
-            <i class="fa-solid fa-user-plus me-1"></i> Add New Employee
-        </a>
-        <a class="btn btn-info px-4 text-white" asp-action="ExportExcel">
-            <i class="fa-solid fa-file-excel me-1"></i> Export to Excel
-        </a>
     </div>
 
-    <!-- Search Bar -->
+    <!-- Search + Buttons Row -->
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <input type="text" id="employeeSearch" class="form-control" placeholder="Search by name, code, email...">
+            <div class="row g-3 align-items-center">
 
+                <!-- Search Bar -->
+                <div class="col-md-6">
+                    <input type="text" id="employeeSearch" class="form-control"
+                           placeholder="Search by name, code, email..." />
                 </div>
+
+                <!-- Right Side Buttons -->
+                <div class="col-md-6 text-end">
+                    <a class="btn btn-success me-2 px-4" asp-action="Create">
+                        <i class="fa-solid fa-user-plus me-1"></i> Add New Employee
+                    </a>
+
+                    <a class="btn btn-info px-4 text-white" asp-action="ExportExcel">
+                        <i class="fa-solid fa-file-excel me-1"></i> Export to Excel
+                    </a>
+                </div>
+
             </div>
         </div>
     </div>
@@ -75,6 +82,7 @@
                                    onclick="return confirm('Are you sure you want to delete this employee?');">
                                     <i class="fa-solid fa-trash"></i>
                                 </a>
+
                             </td>
                         </tr>
                     }
@@ -99,4 +107,3 @@
         });
     </script>
 }
-

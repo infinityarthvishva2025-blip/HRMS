@@ -370,7 +370,7 @@ namespace HRMS.Migrations
                     b.Property<DateTime>("UploadedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("VideoUrl")
+                    b.Property<string>("VideoPath")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

@@ -545,3 +545,31 @@ body {
     border-bottom: 1px solid #e0e0e0;
 }
 
+
+/* Rotate + Slide */
+.combo-box {
+    display: inline-block;
+    padding: 14px 24px;
+    background: #6f42c1;
+    color: white;
+    font-weight: bold;
+    border-radius: 12px;
+    animation: rotateSlide 1s ease-out;
+}
+
+@keyframes rotateSlide {
+    0% {
+        transform: translateX(-50px) rotate(-45deg);
+        opacity: 0;
+    }
+
+    60% {
+        transform: translateX(10px) rotate(20deg);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translateX(0) rotate(0deg);
+        opacity: 1;
+    }
+}

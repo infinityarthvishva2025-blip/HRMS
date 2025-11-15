@@ -221,37 +221,37 @@
                 </tr>
             </thead>
             <tbody>
-                @if (ViewBag.RecentEmployees != null && ((List<HRMS.Models.Employee>)ViewBag.RecentEmployees).Any())
+              @foreach (HRMS.Models.ViewModels.RecentEmployeeViewModel item in ViewBag.RecentEmployees)
+
                 {
-                    foreach (var emp in (List<HRMS.Models.Employee>)ViewBag.RecentEmployees)
-                    {
-                        <tr>
-                            <td>@emp.EmployeeCode</td>
-                            <td>@emp.Name</td>
-                            <td>@emp.Department</td>
-                            <td>@emp.Position</td>
-                            <td>
-                                @if (emp.Status == "On Leave")
-                                {
-                                    <span class="badge bg-warning text-dark">On Leave</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success">Active</span>
-                                }
-                            </td>
-                        </tr>
-                    }
-                }
-                else
-                {
+                    var emp = item.Employee;
+                    var att = item.Attendance;
+
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-3">
-                            No employees found.
+                        <td>@emp.EmployeeCode</td>
+                        <td>@emp.Name</td>
+                        <td>@emp.Department</td>
+                        <td>@emp.Position</td>
+                        <td>
+                            @if (att == null)
+                            {
+                                <span class="badge bg-danger">Absent</span>
+                            }
+                            else if (att.CheckOutTime == null)
+                            {
+                                <span class="badge bg-warning text-dark">Not Checked Out</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
                         </td>
                     </tr>
+
                 }
+
             </tbody>
+
         </table>
     </div>
 </div>

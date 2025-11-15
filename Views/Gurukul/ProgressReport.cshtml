@@ -4,7 +4,10 @@
     ViewData["Title"] = "Gurukul Progress Report";
 }
 
-<h2 class="text-primary mb-4 text-center">
+@* <h2 class="text-primary mb-4 text-center">
+    📊 Gurukul Progress Report
+</h2> *@
+<h2 class="text-primary mb-4 text-center rotate-box">
     📊 Gurukul Progress Report
 </h2>
 
@@ -28,6 +31,7 @@
                     <td>@e.EmployeeCode</td>
                     <td class="text-center">@e.TotalVideos</td>
                     <td class="text-center">@e.CompletedVideos</td>
+
                     <td style="width: 200px;">
                         <div class="progress" style="height: 22px;">
                             <div class="progress-bar bg-success fw-bold"
@@ -37,18 +41,19 @@
                             </div>
                         </div>
                     </td>
+
                     <td class="text-center">
-                        <button class="btn btn-sm btn-outline-info"
+                        <button class="btn btn-sm btn-outline-info view-details-btn"
                                 type="button"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#details-@e.EmployeeCode">
-                            View Details
+                                data-target="details-@e.EmployeeCode">
+                            <span class="btn-text">View Details</span>
+                            <span class="icon">▼</span>
                         </button>
                     </td>
                 </tr>
 
                 <!-- Collapsible details row -->
-                <tr class="collapse" id="details-@e.EmployeeCode">
+                <tr class="details-row collapse" id="details-@e.EmployeeCode">
                     <td colspan="6">
                         <table class="table table-sm table-hover mb-0">
                             <thead class="table-secondary">
@@ -76,7 +81,7 @@
                                             }
                                         </td>
                                         <td>
-                                            @v.CompletedOn?.ToString("dd-MMM-yyyy") ?? "-"
+                                            @v.CompletedOn?.ToString("dd-MMM-yyyy")
                                         </td>
                                     </tr>
                                 }
@@ -88,3 +93,44 @@
         </tbody>
     </table>
 </div>
+
+<!-- 🔥 Auto-close, toggle icons -->
+<script>
+    document.querySelectorAll('.view-details-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+
+            let targetId = this.getAttribute("data-target");
+            let targetRow = document.getElementById(targetId);
+
+            // Close all other detail rows
+            document.querySelectorAll(".details-row.show")
+                .forEach(row => {
+                    if (row.id !== targetId) {
+                        row.classList.remove("show");
+                    }
+                });
+
+            // Reset all icons
+            document.querySelectorAll('.view-details-btn .icon')
+                .forEach(i => i.textContent = "▼");
+
+            // Toggle selected row
+            targetRow.classList.toggle("show");
+
+            // Update the icon for selected row
+            const icon = this.querySelector(".icon");
+            if (targetRow.classList.contains("show")) {
+                icon.textContent = "▲";  // opened
+            } else {
+                icon.textContent = "▼";  // closed
+            }
+        });
+    });
+</script>
+
+<style>
+    .view-details-btn .icon {
+        font-weight: bold;
+        margin-left: 6px;
+    }
+</style>

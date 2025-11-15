@@ -12,13 +12,12 @@
             <i class="fa-solid fa-user-plus me-2"></i> Add New Employee
         </h3>
 
-        <!-- SEE ALL EMPLOYEES BUTTON -->
         <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-primary">
             <i class="fa-solid fa-list me-1"></i> See All Employees
         </a>
     </div>
 
-    <form asp-action="Create" method="post" enctype="multipart/form-data">
+    <form asp-action="Create" method="post" enctype="multipart/form-data" id="employeeForm">
         @Html.AntiForgeryToken()
 
         <div asp-validation-summary="All" class="text-danger mb-3"></div>
@@ -36,40 +35,59 @@
 
                 <div class="col-md-4">
                     <label asp-for="Name" class="form-label"></label>
-                    <input asp-for="Name" class="form-control" />
+                    <input asp-for="Name" class="form-control" required minlength="2" />
+                    <span class="text-danger" asp-validation-for="Name"></span>
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="Email" class="form-label"></label>
-                    <input asp-for="Email" class="form-control" />
+                    <input asp-for="Email" type="email" class="form-control" required />
+                    <span class="text-danger" asp-validation-for="Email"></span>
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="MobileNumber" class="form-label"></label>
-                    <input asp-for="MobileNumber" class="form-control" />
+                    <input asp-for="MobileNumber" class="form-control"
+                           required maxlength="10" minlength="10" pattern="[0-9]{10}"
+                           title="Enter a valid 10-digit mobile number" />
+                    <span class="text-danger" asp-validation-for="MobileNumber"></span>
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="Password" class="form-label"></label>
-                    <input asp-for="Password" type="password" class="form-control" />
+                    <div class="input-group">
+                        <input asp-for="Password" type="password" class="form-control" id="Password" required minlength="6" />
+                        <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('Password', this)">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                    <span class="text-danger" asp-validation-for="Password"></span>
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="ConfirmPassword" class="form-label"></label>
-                    <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                    <div class="input-group">
+                        <input asp-for="ConfirmPassword" type="password" class="form-control" id="ConfirmPassword"
+                               required minlength="6" oninput="validatePasswordMatch()" />
+                        <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('ConfirmPassword', this)">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                    <span class="text-danger" id="passwordError"></span>
                 </div>
+
 
             </div>
 
             <hr class="my-4" />
 
-            <!---------------------- PERSONAL DETAILS -------------------------->
+            <!---------------------- PERSONAL ---------------------------->
             <h5 class="fw-bold text-secondary mb-3">Personal Details</h5>
             <div class="row g-3">
 
                 <div class="col-md-3">
-                    <label asp-for="Gender" class="form-label"></label>
-                    <select asp-for="Gender" class="form-select">
+                    <label asp-for="Gender"></label>
+                    <select asp-for="Gender" class="form-select" required>
                         <option value="">-- Select --</option>
                         <option>Male</option>
                         <option>Female</option>
@@ -78,23 +96,23 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label asp-for="FatherName" class="form-label"></label>
-                    <input asp-for="FatherName" class="form-control" />
+                    <label asp-for="FatherName"></label>
+                    <input asp-for="FatherName" class="form-control" required />
                 </div>
 
                 <div class="col-md-3">
-                    <label asp-for="MotherName" class="form-label"></label>
-                    <input asp-for="MotherName" class="form-control" />
+                    <label asp-for="MotherName"></label>
+                    <input asp-for="MotherName" class="form-control" required />
                 </div>
 
                 <div class="col-md-3">
-                    <label asp-for="DOB_Date" class="form-label"></label>
-                    <input asp-for="DOB_Date" type="date" class="form-control" />
+                    <label asp-for="DOB_Date"></label>
+                    <input asp-for="DOB_Date" type="date" class="form-control" required max="@DateTime.Today.ToString("yyyy-MM-dd")" />
                 </div>
 
                 <div class="col-md-3">
-                    <label asp-for="MaritalStatus" class="form-label"></label>
-                    <select asp-for="MaritalStatus" class="form-select">
+                    <label asp-for="MaritalStatus"></label>
+                    <select asp-for="MaritalStatus" class="form-select" required>
                         <option value="">-- Select --</option>
                         <option>Single</option>
                         <option>Married</option>
@@ -112,8 +130,8 @@
 
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label asp-for="ExperienceType" class="form-label"></label>
-                    <select asp-for="ExperienceType" id="ExperienceType" class="form-select">
+                    <label asp-for="ExperienceType"></label>
+                    <select asp-for="ExperienceType" id="ExperienceType" class="form-select" required>
                         <option value="">-- Select --</option>
                         <option value="Fresher">Fresher</option>
                         <option value="Experienced">Experienced</option>
@@ -123,13 +141,13 @@
 
             <div class="row g-3 mt-2 d-none" id="experience-section">
                 <div class="col-md-4">
-                    <label asp-for="TotalExperienceYears" class="form-label"></label>
-                    <input asp-for="TotalExperienceYears" id="TotalExperienceYears" type="number" class="form-control" />
+                    <label asp-for="TotalExperienceYears"></label>
+                    <input asp-for="TotalExperienceYears" type="number" min="1" max="40" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="LastCompanyName" class="form-label"></label>
-                    <input asp-for="LastCompanyName" id="LastCompanyName" class="form-control" />
+                    <label asp-for="LastCompanyName"></label>
+                    <input asp-for="LastCompanyName" class="form-control" />
                 </div>
             </div>
 
@@ -137,16 +155,18 @@
 
             <!---------------------- JOB DETAILS -------------------------->
             <h5 class="fw-bold text-secondary mb-3">Job Details</h5>
+
             <div class="row g-3">
 
                 <div class="col-md-4">
                     <label asp-for="JoiningDate"></label>
-                    <input asp-for="JoiningDate" type="date" class="form-control" />
+                    <input asp-for="JoiningDate" type="date" class="form-control"
+                           required min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="Department"></label>
-                    <select asp-for="Department" id="Department" class="form-select">
+                    <select asp-for="Department" id="Department" class="form-select" required>
                         <option value="">-- Select --</option>
                         <option>IT</option>
                         <option>HR</option>
@@ -158,24 +178,24 @@
 
                 <div class="col-md-4">
                     <label asp-for="Position"></label>
-                    <select asp-for="Position" id="Position" class="form-select">
+                    <select asp-for="Position" id="Position" class="form-select" required>
                         <option value="">-- Select Position --</option>
                     </select>
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="Salary"></label>
-                    <input asp-for="Salary" type="number" class="form-control" />
+                    <input asp-for="Salary" type="number" class="form-control" required min="1000" />
                 </div>
 
                 <div class="col-md-8">
                     <label asp-for="ReportingManager"></label>
-                    <input asp-for="ReportingManager" class="form-control" />
+                    <input asp-for="ReportingManager" class="form-control" required />
                 </div>
 
                 <div class="col-md-12">
                     <label asp-for="Address"></label>
-                    <textarea asp-for="Address" class="form-control" rows="2"></textarea>
+                    <textarea asp-for="Address" class="form-control" rows="2" required></textarea>
                 </div>
 
             </div>
@@ -183,17 +203,17 @@
             <hr class="my-4" />
 
             <!---------------------- EDUCATION -------------------------->
-            <!---------------------- EDUCATION -------------------------->
-            <h5 class="fw-bold text-secondary mb-3">Education Details</h5>
+            <h5 class="fw-bold text-secondary mb-3">Education</h5>
+
             <div class="row g-3">
 
                 <div class="col-md-4">
                     <label asp-for="HSCPercent"></label>
-                    <input asp-for="HSCPercent" type="number" class="form-control" />
+                    <input asp-for="HSCPercent" type="number" min="35" max="100" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="GraduationCourse">Graduation Course</label>
+                    <label asp-for="GraduationCourse"></label>
                     <select asp-for="GraduationCourse" class="form-select">
                         <option value="">-- Select Graduation --</option>
                         <option>BCA</option>
@@ -210,11 +230,11 @@
 
                 <div class="col-md-4">
                     <label asp-for="GraduationPercent"></label>
-                    <input asp-for="GraduationPercent" type="number" class="form-control" />
+                    <input asp-for="GraduationPercent" type="number" min="35" max="100" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="PostGraduationCourse">Post Graduation Course</label>
+                    <label asp-for="PostGraduationCourse"></label>
                     <select asp-for="PostGraduationCourse" class="form-select">
                         <option value="">-- Select PG --</option>
                         <option>MCA</option>
@@ -229,7 +249,7 @@
 
                 <div class="col-md-4">
                     <label asp-for="PostGraduationPercent"></label>
-                    <input asp-for="PostGraduationPercent" type="number" class="form-control" />
+                    <input asp-for="PostGraduationPercent" type="number" min="35" max="100" class="form-control" />
                 </div>
 
             </div>
@@ -238,16 +258,21 @@
 
             <!---------------------- ID DETAILS -------------------------->
             <h5 class="fw-bold text-secondary mb-3">Identity Details</h5>
+
             <div class="row g-3">
 
                 <div class="col-md-4">
                     <label asp-for="AadhaarNumber"></label>
-                    <input asp-for="AadhaarNumber" class="form-control" />
+                    <input asp-for="AadhaarNumber" class="form-control"
+                           pattern="[0-9]{12}"
+                           title="Aadhaar must be 12 digits" />
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="PanNumber"></label>
-                    <input asp-for="PanNumber" class="form-control" />
+                    <input asp-for="PanNumber" class="form-control"
+                           pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
+                           title="Enter valid PAN e.g. ABCDE1234F" />
                 </div>
 
             </div>
@@ -256,31 +281,36 @@
 
             <!---------------------- BANK DETAILS -------------------------->
             <h5 class="fw-bold text-secondary mb-3">Bank Details</h5>
+
             <div class="row g-3">
 
                 <div class="col-md-4">
                     <label asp-for="BankName"></label>
-                    <input asp-for="BankName" class="form-control" />
+                    <input asp-for="BankName" class="form-control" required />
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="AccountHolderName"></label>
-                    <input asp-for="AccountHolderName" class="form-control" />
+                    <input asp-for="AccountHolderName" class="form-control" required />
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="AccountNumber"></label>
-                    <input asp-for="AccountNumber" class="form-control" />
+                    <input asp-for="AccountNumber" class="form-control"
+                           pattern="[0-9]{9,18}"
+                           title="Account number must be 9–18 digits" />
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="IFSC"></label>
-                    <input asp-for="IFSC" class="form-control" />
+                    <input asp-for="IFSC" class="form-control"
+                           pattern="[A-Z]{4}0[A-Z0-9]{6}"
+                           title="Enter valid IFSC e.g. HDFC0001234" />
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="Branch"></label>
-                    <input asp-for="Branch" class="form-control" />
+                    <input asp-for="Branch" class="form-control" required />
                 </div>
 
             </div>
@@ -290,7 +320,7 @@
             <!---------------------- PROFILE PHOTO -------------------------->
             <h5 class="fw-bold text-secondary mb-3">Profile Photo</h5>
             <div class="col-md-6">
-                <input type="file" name="ProfilePhoto" class="form-control" accept="image/*" />
+                <input type="file" name="ProfilePhoto" class="form-control" accept="image/*" required />
             </div>
 
         </div>
@@ -309,51 +339,65 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        // EXPERIENCE TYPE → SHOW/HIDE
-        function toggleExperienceFields() {
-            const typeEl = document.getElementById("ExperienceType");
-            const section = document.getElementById("experience-section");
 
-            if (!typeEl || !section) return;
+        // ------------------ Password Match ------------------
+        function validatePasswordMatch() {
+            const pwd = document.getElementById("Password");
+            const conf = document.getElementById("ConfirmPassword");
+            const err = document.getElementById("passwordError");
 
-            if (typeEl.value === "Experienced") {
-                section.classList.remove("d-none");
+            if (pwd.value !== conf.value) {
+                err.textContent = "Passwords do not match.";
             } else {
-                section.classList.add("d-none");
-                document.getElementById("TotalExperienceYears").value = "";
-                document.getElementById("LastCompanyName").value = "";
+                err.textContent = "";
             }
         }
 
-        document.getElementById("ExperienceType").addEventListener("change", toggleExperienceFields);
-        toggleExperienceFields();
+        // ---------------- EXPERIENCE SHOW/HIDE ----------------
+        const expType = document.getElementById("ExperienceType");
+        const expSection = document.getElementById("experience-section");
+
+        expType.addEventListener("change", () => {
+            if (expType.value === "Experienced") {
+                expSection.classList.remove("d-none");
+            } else {
+                expSection.classList.add("d-none");
+            }
+        });
+
+        //show password button
+                function togglePassword(fieldId, btn) {
+            const input = document.getElementById(fieldId);
+            const icon = btn.querySelector("i");
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
 
 
-        // DEPARTMENT → POSITION
+        // ---------------- DEPARTMENT -> POSITION LOAD ----------------
         const dept = document.getElementById("Department");
         const pos = document.getElementById("Position");
 
         dept.addEventListener("change", function () {
             pos.innerHTML = "";
 
-            if (!this.value) return;
-
             fetch(`/Employees/GetPositions?department=${this.value}`)
                 .then(r => r.json())
                 .then(list => {
-
-                    const def = document.createElement("option");
-                    def.value = "";
-                    def.textContent = "-- Select Position --";
-                    pos.appendChild(def);
-
-                    list.forEach(p => {
-                        const opt = document.createElement("option");
-                        opt.value = p;
-                        opt.textContent = p;
-                        pos.appendChild(opt);
+                    pos.innerHTML = '<option value="">-- Select Position --</option>';
+                    list.forEach(item => {
+                        pos.innerHTML += `<option value="${item}">${item}</option>`;
                     });
                 });
         });
+
     </script>
 }
