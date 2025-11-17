@@ -276,5 +276,84 @@ namespace HRMS.Controllers
             return View(model);
         }
 
+
+        public async Task<IActionResult> MyProfile()
+        {
+            int? empId = HttpContext.Session.GetInt32("EmployeeId");
+
+            if (empId == null)
+                return RedirectToAction("Login", "Account");
+
+            var emp = await _context.Employees.FindAsync(empId);
+
+            if (emp == null)
+                return NotFound();
+
+            // Do not show hashed password
+            emp.Password = "";
+            emp.ConfirmPassword = "";
+
+            return View(emp);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MyProfile(Employee model, IFormFile? ProfilePhoto)
+        {
+            int? empId = HttpContext.Session.GetInt32("EmployeeId");
+
+            if (empId == null)
+                return RedirectToAction("Login", "Account");
+
+            var emp = await _context.Employees.FindAsync(empId);
+
+            if (emp == null)
+                return NotFound();
+
+            ModelState.Remove("ConfirmPassword");
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // UNIQUE EMAIL VALIDATION
+            if (await _context.Employees.AnyAsync(e => e.Email == model.Email && e.Id != emp.Id))
+            {
+                ModelState.AddModelError("Email", "Email already used by another employee.");
+                return View(model);
+            }
+
+            // UNIQUE MOBILE VALIDATION
+            if (await _context.Employees.AnyAsync(e => e.MobileNumber == model.MobileNumber && e.Id != emp.Id))
+            {
+                ModelState.AddModelError("MobileNumber", "Mobile number already used by another employee.");
+                return View(model);
+            }
+
+            // UPDATE BASIC INFO
+            emp.Name = model.Name;
+            emp.Email = model.Email;
+            emp.MobileNumber = model.MobileNumber;
+            emp.Address = model.Address;
+            emp.Gender = model.Gender;
+            emp.MaritalStatus = model.MaritalStatus;
+            emp.DOB_Date = model.DOB_Date;
+
+            // UPDATE JOB DETAILS
+            emp.Department = model.Department;
+            emp.Position = model.Position;
+
+            // UPDATE PASSWORD IF ENTERED
+            if (!string.IsNullOrWhiteSpace(model.Password))
+                emp.Password = HashPassword(model.Password);
+
+            // UPDATE PROFILE PHOTO IF SELECTED
+            if (ProfilePhoto != null)
+                emp.ProfileImagePath = await SaveProfilePhotoAsync(ProfilePhoto, emp.EmployeeCode);
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Profile updated successfully!";
+            return RedirectToAction("MyProfile");
+        }
+
     }
 }

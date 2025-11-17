@@ -10,9 +10,9 @@ namespace HRMS.Data
         {
         }
        
-        public DbSet<Expenses> Expenses { get; set; }
+   
 
-        public DbSet<Assets> Assets { get; set; }
+      
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<Payroll> Payrolls { get; set; }
         public DbSet<HRMS.Models.Employee> Employees { get; set; }
@@ -21,8 +21,7 @@ namespace HRMS.Data
         public DbSet<Hr> Hrs { get; set; }
         public DbSet<GeoTag> GeoTags => Set<GeoTag>();
 
-        public DbSet<GurukulVideo> GurukulVideos { get; set; }
-        public DbSet<GurukulProgress> GurukulProgress { get; set; }
+      
 
         public DbSet<Leave> Leaves { get; set; } = null!;
         public DbSet<LeaveApprovalRoute> LeaveApprovalRoutes { get; set; }
