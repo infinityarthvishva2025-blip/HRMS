@@ -68,7 +68,7 @@ namespace HRMS.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Leave model)
         {
             var empId = GetCurrentEmployeeId();
@@ -128,7 +128,7 @@ namespace HRMS.Controllers
         }
 
         // -------------------- MANAGER APPROVAL --------------------
-        [AuthorizeRole("Manager")]
+      //  [AuthorizeRole("Manager")]
         public async Task<IActionResult> ManagerApprovalList()
         {
             // You can filter by manager's team here if you store ManagerId
@@ -167,7 +167,7 @@ namespace HRMS.Controllers
         //}
 
         // -------------------- HR APPROVAL --------------------
-        [AuthorizeRole("HR")]
+       // [AuthorizeRole("HR")]
         public async Task<IActionResult> HrApprovalList()
         {
             var pending = await _context.Leaves
@@ -206,7 +206,7 @@ namespace HRMS.Controllers
         //}
 
         // -------------------- DIRECTOR APPROVAL --------------------
-        [AuthorizeRole("Director")]
+        //[AuthorizeRole("Director")]
         public async Task<IActionResult> DirectorApprovalList()
         {
             var pending = await _context.Leaves

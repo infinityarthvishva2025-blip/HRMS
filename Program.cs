@@ -1,5 +1,5 @@
 ﻿using HRMS.Data;
-
+using HRMS.Services;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;   // ← correct
 var builder = WebApplication.CreateBuilder(args);
@@ -10,8 +10,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-
+builder.Services.AddScoped<IWorkflowService, WorkflowService>();
+builder.Services.AddScoped<INotificationService, EmailNotificationService>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -29,6 +29,13 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 app.UseAuthorization();
+
+builder.Services.AddSession();
+
+
+app.UseSession();
+
+app.MapControllers();
 
 app.MapControllerRoute(
     name: "default",
