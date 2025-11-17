@@ -105,11 +105,14 @@ namespace HRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CheckInTime")
+                    b.Property<DateTime?>("CheckInTime")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("CheckOutTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CheckoutStatus")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
@@ -239,6 +242,10 @@ namespace HRMS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ReportingManager")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("Salary")
@@ -413,18 +420,19 @@ namespace HRMS.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AddressDuringLeave")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Category")
                         .HasColumnType("int");
 
                     b.Property<string>("ContactDuringLeave")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrentApproverRole")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DirectorRemark")
                         .HasColumnType("nvarchar(max)");
@@ -456,14 +464,16 @@ namespace HRMS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NextApproverRole")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("OverallStatus")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Reason")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -479,6 +489,30 @@ namespace HRMS.Migrations
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("Leaves");
+                });
+
+            modelBuilder.Entity("HRMS.Models.LeaveApprovalRoute", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CurrentRole")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LevelOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NextRole")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LeaveApprovalRoutes");
                 });
 
             modelBuilder.Entity("HRMS.Models.Payroll", b =>

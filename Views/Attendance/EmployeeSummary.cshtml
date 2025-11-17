@@ -80,12 +80,12 @@
             {
                 var shiftStart = new TimeSpan(9, 30, 0);
                 var shiftEnd = new TimeSpan(18, 0, 0);
-                bool isLate = a.CheckInTime.TimeOfDay > shiftStart;
+                bool isLate = a.CheckInTime?.TimeOfDay > shiftStart;
                 bool isEarly = a.CheckOutTime.HasValue && a.CheckOutTime.Value.TimeOfDay < shiftEnd;
 
                 <tr>
-                    <td>@a.CheckInTime.ToString("dd-MMM-yyyy")</td>
-                    <td>@a.CheckInTime.ToString("hh:mm tt")</td>
+                    <td>@a.CheckInTime?.ToString("dd-MMM-yyyy")</td>
+                    <td>@a.CheckInTime?.ToString("hh:mm tt")</td>
                     <td>@(a.CheckOutTime?.ToString("hh:mm tt") ?? "--")</td>
 
                     <td>
@@ -109,11 +109,10 @@
                             <span class="badge bg-success">OK</span>
                         }
                     </td>
-
                     <td>
                         @if (a.CheckOutTime.HasValue)
                         {
-                            var diff = a.CheckOutTime.Value - a.CheckInTime;
+                            var diff = a.CheckOutTime.Value - a.CheckInTime.Value;
                             @($"{diff.Hours}h {diff.Minutes}m")
                         }
                         else
@@ -121,6 +120,7 @@
                             @("--")
                         }
                     </td>
+
                 </tr>
             }
         </tbody>

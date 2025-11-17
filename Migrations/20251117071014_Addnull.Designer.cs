@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251114085859_gurukulbideo")]
-    partial class gurukulbideo
+    [Migration("20251117071014_Addnull")]
+    partial class Addnull
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -98,6 +98,43 @@ namespace HRMS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Assets");
+                });
+
+            modelBuilder.Entity("HRMS.Models.Attendance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CheckInTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CheckOutTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CheckoutStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsEarlyLeave")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsLate")
+                        .HasColumnType("bit");
+
+                    b.Property<double>("WorkingHours")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("Attendances");
                 });
 
             modelBuilder.Entity("HRMS.Models.Employee", b =>
@@ -211,6 +248,10 @@ namespace HRMS.Migrations
                     b.Property<string>("ReportingManager")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal?>("Salary")
                         .HasColumnType("decimal(18,2)");
 
@@ -281,25 +322,11 @@ namespace HRMS.Migrations
 
                     b.Property<string>("TagId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TagId")
-                        .IsUnique();
-
                     b.ToTable("GeoTags");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Description = "Mumbai Office",
-                            Latitude = 19.076000000000001,
-                            Longitude = 72.877700000000004,
-                            RadiusMeters = 100000,
-                            TagId = "Office-001"
-                        });
                 });
 
             modelBuilder.Entity("HRMS.Models.GurukulProgress", b =>
@@ -399,16 +426,52 @@ namespace HRMS.Migrations
                     b.Property<string>("AddressDuringLeave")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
                     b.Property<string>("ContactDuringLeave")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrentApproverRole")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DirectorRemark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DirectorStatus")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("EndDate")
+                    b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("LeaveType")
+                    b.Property<string>("HalfDaySession")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HrRemark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HrStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ManagerRemark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ManagerStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NextApproverRole")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OverallStatus")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -419,18 +482,41 @@ namespace HRMS.Migrations
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<TimeSpan?>("TimeValue")
+                        .HasColumnType("time");
 
-                    b.Property<int>("TotalDays")
-                        .HasColumnType("int");
+                    b.Property<double>("TotalDays")
+                        .HasColumnType("float");
 
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("Leaves");
+                });
+
+            modelBuilder.Entity("HRMS.Models.LeaveApprovalRoute", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CurrentRole")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LevelOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NextRole")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LeaveApprovalRoutes");
                 });
 
             modelBuilder.Entity("HRMS.Models.Payroll", b =>
@@ -515,6 +601,17 @@ namespace HRMS.Migrations
                     b.ToTable("Payrolls");
                 });
 
+            modelBuilder.Entity("HRMS.Models.Attendance", b =>
+                {
+                    b.HasOne("HRMS.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("HRMS.Models.GurukulProgress", b =>
                 {
                     b.HasOne("HRMS.Models.Employee", "Employee")
@@ -539,7 +636,7 @@ namespace HRMS.Migrations
                     b.HasOne("HRMS.Models.Employee", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Employee");

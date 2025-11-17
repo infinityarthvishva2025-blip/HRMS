@@ -1,17 +1,23 @@
 ﻿using HRMS.Data;
 using HRMS.Services;
 using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;   // ← correct
+using OfficeOpenXml;   // EPPlus
+
 var builder = WebApplication.CreateBuilder(args);
 
-ExcelPackage.LicenseContext = LicenseContext.NonCommercial;   // ← works only in EPPlus 5-7
+// =================== EPPLUS LICENSE ===================
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
+// =================== SERVICES ===================
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<INotificationService, EmailNotificationService>();
+
+// SESSION
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -20,23 +26,22 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Razor runtime compilation (auto refresh views)
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 
 var app = builder.Build();
 
+// =================== MIDDLEWARE ===================
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
+// SESSION must be BEFORE Authorization
 app.UseSession();
+
 app.UseAuthorization();
 
-builder.Services.AddSession();
-
-
-app.UseSession();
-
-app.MapControllers();
-
+// =================== ROUTING ===================
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");

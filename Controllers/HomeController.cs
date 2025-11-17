@@ -19,11 +19,14 @@ namespace HRMS.Controllers
 
         public IActionResult Index()
         {
-            var employees = _context.Employees.AsNoTracking().ToList();
+            var employees = _context.Employees
+                .AsNoTracking()
+                .ToList();
 
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
 
+            // ======================= CELEBRATIONS =========================
             var model = new CelebrationViewModel
             {
                 TotalEmployees = employees.Count,
@@ -53,12 +56,11 @@ namespace HRMS.Controllers
                     .ToList()
             };
 
-            // ========= TODAY ATTENDANCE =========
+            // ======================= TODAY ATTENDANCE FIXED =========================
             var todaysAttendance = _context.Attendances
-                .Where(a => a.CheckInTime.Date == today)
-                .AsNoTracking()
-                .ToList();
-
+     .Where(a => a.CheckInTime >= today && a.CheckInTime < tomorrow)
+     .AsNoTracking()
+     .ToList();
             int presentCount = todaysAttendance
                 .Select(a => a.EmployeeId)
                 .Distinct()
@@ -74,18 +76,14 @@ namespace HRMS.Controllers
             ViewBag.AbsentToday = absentCount;
             ViewBag.NotCheckedOutToday = notCheckedOutCount;
 
+            // ======================= RECENT EMPLOYEES =========================
 
-            // ========= RECENT EMPLOYEES WITH TODAY STATUS =========
-                
-
-            // Get last 5 employees from DB
             var last5Employees = _context.Employees
                 .AsNoTracking()
                 .OrderByDescending(e => e.JoiningDate ?? DateTime.MinValue)
                 .Take(5)
                 .ToList();
 
-            // Build viewmodel list
             var recentEmployees = last5Employees
                 .Select(e => new RecentEmployeeViewModel
                 {
@@ -96,14 +94,8 @@ namespace HRMS.Controllers
 
             ViewBag.RecentEmployees = recentEmployees;
 
+            // ======================= DEPARTMENT CHART =========================
 
-
-
-
-            ViewBag.RecentEmployees = recentEmployees;
-
-
-            // ========= DEPARTMENT CHART =========
             var departmentGroups = employees
                 .Where(e => !string.IsNullOrEmpty(e.Department))
                 .GroupBy(e => e.Department)

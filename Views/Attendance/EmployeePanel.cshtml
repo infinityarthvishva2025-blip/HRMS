@@ -24,7 +24,7 @@
             else
             {
                 <p class="mb-1">
-                    <strong>Check-In:</strong> @Model.CheckInTime.ToString("dd MMM yyyy, hh:mm tt")
+                    <strong>Check-In:</strong> @Model.CheckInTime?.ToString("dd MMM yyyy, hh:mm tt")
                 </p>
 
                 @if (Model.CheckOutTime == null)

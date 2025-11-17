@@ -120,7 +120,7 @@
                                 <td>@a.Employee.EmployeeCode</td>
                                 <td>@a.Employee.Name</td>
 
-                                <td>@a.CheckInTime.ToString("dd MMM yyyy, hh:mm tt")</td>
+                                <td>@a.CheckInTime?.ToString("dd MMM yyyy, hh:mm tt")</td>
 
                                 <td>@(a.CheckOutTime?.ToString("dd MMM yyyy, hh:mm tt") ?? "--")</td>
 
