@@ -95,5 +95,12 @@ namespace HRMS.Models
         public string? Status { get; set; }
 
         public  string Role { get; set; }
+
+        // DOCUMENT UPLOADS
+        public string? AadhaarFilePath { get; set; }
+        public string? PanFilePath { get; set; }
+        public string? PassbookFilePath { get; set; }
+        public string? MarksheetFilePath { get; set; }
+
     }
 }

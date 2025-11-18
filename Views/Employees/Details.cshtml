@@ -8,7 +8,7 @@
 @{
     var photoPath = string.IsNullOrEmpty(Model.ProfileImagePath)
         ? "/images/default-user.png"
-        : "/uploads/profiles/" + Model.ProfileImagePath;
+        : $"/uploads/employees/{Model.EmployeeCode}/{Model.ProfileImagePath}";
 }
 
 <div class="container py-4">
@@ -29,20 +29,25 @@
                 <!-- DETAILS RIGHT -->
                 <div class="col-md-9">
 
+                    <!-- BASIC DETAILS -->
                     <h5 class="fw-bold border-bottom pb-2">Basic Details</h5>
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <p><strong>Employee Code:</strong> @Model.EmployeeCode</p>
                             <p><strong>Email:</strong> @Model.Email</p>
                             <p><strong>Mobile:</strong> @Model.MobileNumber</p>
+                            <p><strong>Father Name:</strong> @Model.FatherName</p>
+                            <p><strong>Mother Name:</strong> @Model.MotherName</p>
                         </div>
                         <div class="col-md-6">
                             <p><strong>Gender:</strong> @Model.Gender</p>
                             <p><strong>DOB:</strong> @Model.DOB_Date?.ToString("dd-MM-yyyy")</p>
                             <p><strong>Marital Status:</strong> @Model.MaritalStatus</p>
+                            <p><strong>Role:</strong> @Model.Role</p>
                         </div>
                     </div>
 
+                    <!-- JOB DETAILS -->
                     <h5 class="fw-bold border-bottom pb-2">Job Details</h5>
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -56,6 +61,21 @@
                         </div>
                     </div>
 
+                    <!-- EXPERIENCE DETAILS -->
+                    <h5 class="fw-bold border-bottom pb-2">Experience Details</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Experience Type:</strong> @Model.ExperienceType</p>
+
+                            @if (Model.ExperienceType == "Experienced")
+                            {
+                                <p><strong>Total Experience:</strong> @Model.TotalExperienceYears Years</p>
+                                <p><strong>Last Company:</strong> @Model.LastCompanyName</p>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- EDUCATION -->
                     <h5 class="fw-bold border-bottom pb-2">Education</h5>
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -69,28 +89,66 @@
                         </div>
                     </div>
 
+                    <!-- IDENTITY DETAILS -->
                     <h5 class="fw-bold border-bottom pb-2">Identity Details</h5>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <p><strong>Aadhaar:</strong> @Model.AadhaarNumber</p>
+                            <p><strong>Aadhaar No:</strong> @Model.AadhaarNumber</p>
+
+                            @if (!string.IsNullOrEmpty(Model.AadhaarFilePath))
+                            {
+                                <p>
+                                    <a href="/uploads/employees/@Model.EmployeeCode/@Model.AadhaarFilePath"
+                                       target="_blank" class="btn btn-outline-primary btn-sm">View Aadhaar</a>
+                                </p>
+                            }
                         </div>
+
                         <div class="col-md-6">
                             <p><strong>PAN:</strong> @Model.PanNumber</p>
+
+                            @if (!string.IsNullOrEmpty(Model.PanFilePath))
+                            {
+                                <p>
+                                    <a href="/uploads/employees/@Model.EmployeeCode/@Model.PanFilePath"
+                                       target="_blank" class="btn btn-outline-primary btn-sm">View PAN</a>
+                                </p>
+                            }
                         </div>
                     </div>
 
+                    <!-- BANK DETAILS -->
                     <h5 class="fw-bold border-bottom pb-2">Bank Details</h5>
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <p><strong>Bank Name:</strong> @Model.BankName</p>
                             <p><strong>Account Holder:</strong> @Model.AccountHolderName</p>
+                            <p><strong>Branch:</strong> @Model.Branch</p>
                         </div>
                         <div class="col-md-6">
                             <p><strong>Account Number:</strong> @Model.AccountNumber</p>
                             <p><strong>IFSC:</strong> @Model.IFSC</p>
-                            <p><strong>Branch:</strong> @Model.Branch</p>
+
+                            @if (!string.IsNullOrEmpty(Model.PassbookFilePath))
+                            {
+                                <p>
+                                    <a href="/uploads/employees/@Model.EmployeeCode/@Model.PassbookFilePath"
+                                       target="_blank" class="btn btn-outline-primary btn-sm">View Passbook</a>
+                                </p>
+                            }
                         </div>
                     </div>
+
+                    <!-- MARKSHEET -->
+                    <h5 class="fw-bold border-bottom pb-2">Marksheet</h5>
+
+                    @if (!string.IsNullOrEmpty(Model.MarksheetFilePath))
+                    {
+                        <p>
+                            <a href="/uploads/employees/@Model.EmployeeCode/@Model.MarksheetFilePath"
+                               target="_blank" class="btn btn-outline-primary btn-sm">View Marksheet</a>
+                        </p>
+                    }
 
                 </div>
             </div>
