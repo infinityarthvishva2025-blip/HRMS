@@ -1,0 +1,64 @@
+﻿@model HRMS.Models.Expenses
+@{
+    ViewData["Title"] = "Approve Expense";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-success text-white text-center">
+            <h4>Approve Expense Request</h4>
+        </div>
+
+        <div class="card-body">
+
+            <h5 class="mb-3">Are you sure you want to <b>Approve</b> this expense?</h5>
+
+            <table class="table table-bordered">
+                <tr>
+                    <th>Employee</th>
+                    <td>@Model.Employee?.Name</td>
+                </tr>
+                <tr>
+                    <th>Expense Type</th>
+                    <td>@Model.ExpenseType</td>
+                </tr>
+                <tr>
+                    <th>Amount</th>
+                    <td>₹ @Model.Amount</td>
+                </tr>
+                <tr>
+                    <th>Date</th>
+                    <td>@Model.Date.ToShortDateString()</td>
+                </tr>
+                <tr>
+                    <th>Description</th>
+                    <td>@Model.Description</td>
+                </tr>
+                <tr>
+                    <th>Proof</th>
+                    <td>
+                        @if (!string.IsNullOrEmpty(Model.ProofFilePath))
+                        {
+                            <a href="@Model.ProofFilePath" target="_blank" class="btn btn-info btn-sm">
+                                View Proof
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No Proof</span>
+                        }
+                    </td>
+                </tr>
+            </table>
+
+            <form asp-action="Approve" method="post">
+                <input type="hidden" name="id" value="@Model.Id" />
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="HRList" class="btn btn-secondary px-4">Cancel</a>
+                    <button type="submit" class="btn btn-success px-4">Confirm Approve</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

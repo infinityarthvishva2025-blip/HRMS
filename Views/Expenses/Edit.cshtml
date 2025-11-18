@@ -1,0 +1,44 @@
+﻿@model HRMS.Models.Expenses
+
+<h2>Edit Expense</h2>
+
+<form asp-action="Edit" asp-controller="Expenses" method="post" enctype="multipart/form-data">
+
+    @Html.HiddenFor(m => m.Id)
+    @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label>Expense Type</label>
+        <input asp-for="ExpenseType" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Amount (₹)</label>
+        <input asp-for="Amount" type="number" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Description</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label>Current Proof:</label><br />
+        @if (!string.IsNullOrEmpty(Model.ProofFilePath))
+        {
+            <a href="@Model.ProofFilePath" target="_blank" class="btn btn-info btn-sm">View File</a>
+        }
+        else
+        {
+            <span class="text-muted">No file uploaded</span>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label>Upload New Proof (optional)</label>
+        <input type="file" name="ProofFile" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Update</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

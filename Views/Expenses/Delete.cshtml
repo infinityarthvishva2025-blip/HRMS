@@ -1,0 +1,14 @@
+﻿@model HRMS.Models.Expenses
+
+<h2>Delete Expense</h2>
+
+<div class="alert alert-danger">
+    Are you sure you want to delete <strong>@Model.ExpenseType</strong> ?
+</div>
+
+<form method="post">
+
+    <button class="btn btn-danger">Confirm Delete</button>
+    <a href="/Expenses/Index" class="btn btn-secondary">Cancel</a>
+
+</form>

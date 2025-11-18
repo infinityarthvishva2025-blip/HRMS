@@ -1,0 +1,103 @@
+﻿@model IEnumerable<HRMS.Models.Expenses>
+@{
+    Layout = "_HrLayout";
+}
+
+<h2 class="mb-3">All Employee Expenses</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Employee</th>
+            <th>Date</th>
+            <th>Title</th>
+            <th>Amount</th>
+            <th>Proof</th>
+            <th>Status</th>
+            <th>HR Comment</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var e in Model)
+        {
+            <tr>
+                <td>@e.Employee?.Name</td>
+                <td>@e.Date.ToString("dd-MM-yyyy")</td>
+                <td>@e.ExpenseType</td>
+                <td>₹@e.Amount</td>
+
+                <td>
+                    @if (!string.IsNullOrEmpty(e.ProofFilePath))
+                    {
+                        <a href="@e.ProofFilePath" target="_blank" class="btn btn-info btn-sm">View</a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">No File</span>
+                    }
+                </td>
+
+                <td>
+                    @if (e.Status == "Approved")
+                    {
+                        <span class="badge bg-success">Approved</span>
+                    }
+                    else if (e.Status == "Rejected")
+                    {
+                        <span class="badge bg-danger">Rejected</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    }
+                </td>
+
+                <!-- 👇 COMBINED COMMENT + BUTTONS IN CENTER -->
+                <td style="vertical-align: middle; text-align:center;">
+                    @if (e.Status == "Pending")
+                    {
+                        <div style="display:flex; justify-content:center; align-items:center; gap:12px;">
+
+                            <!-- HR COMMENT INPUT -->
+                            <input type="text"
+                                   id="comment_@e.Id"
+                                   placeholder="Reason"
+                                   class="form-control"
+                                   style="width:180px;" />
+
+                            <!-- APPROVE BUTTON -->
+                            <form asp-action="Approve" asp-controller="Expenses" method="post" style="display:inline;">
+                                <input type="hidden" name="id" value="@e.Id" />
+                                <input type="hidden" name="comment" id="approveComment_@e.Id" />
+                                <button type="submit"
+                                        class="btn btn-success btn-sm"
+                                        onclick="document.getElementById('approveComment_@e.Id').value = document.getElementById('comment_@e.Id').value;">
+                                    Approve
+                                </button>
+                            </form>
+
+                            <!-- REJECT BUTTON -->
+                            <form asp-action="Reject" asp-controller="Expenses" method="post" style="display:inline;">
+                                <input type="hidden" name="id" value="@e.Id" />
+                                <input type="hidden" name="comment" id="rejectComment_@e.Id" />
+                                <button type="submit"
+                                        class="btn btn-danger btn-sm"
+                                        onclick="document.getElementById('rejectComment_@e.Id').value = document.getElementById('comment_@e.Id').value;">
+                                    Reject
+                                </button>
+                            </form>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Completed</span>
+                    }
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>

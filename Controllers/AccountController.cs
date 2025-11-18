@@ -64,7 +64,7 @@ namespace HRMS.Controllers
             HttpContext.Session.SetString("Role", "Employee");
             HttpContext.Session.SetInt32("EmployeeId", emp.Id);
             HttpContext.Session.SetString("EmployeeName", emp.Name);
-            HttpContext.Session.SetString("Role", emp.Role);
+           
 
             // =============================================
             // 3️⃣ AUTO CHECKOUT LOGIC (RUNS AT LOGIN)
@@ -107,8 +107,8 @@ namespace HRMS.Controllers
         // =============================================
         public IActionResult Logout()
         {
-            HttpContext.Session.Clear();
-            return RedirectToAction("Login");
+            HttpContext.Session.Clear();   // Clear all login session values
+            return RedirectToAction("Login", "Account"); // Redirect user back to login page
         }
     }
 }

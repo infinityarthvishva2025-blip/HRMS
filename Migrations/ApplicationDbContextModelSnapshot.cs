@@ -198,21 +198,20 @@ namespace HRMS.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("ApprovedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
 
                     b.Property<string>("ExpenseType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("HRRemark")
+                    b.Property<string>("HRComment")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProofFilePath")
@@ -222,11 +221,9 @@ namespace HRMS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
 
                     b.ToTable("Expenses");
                 });
@@ -472,6 +469,17 @@ namespace HRMS.Migrations
                 });
 
             modelBuilder.Entity("HRMS.Models.Attendance", b =>
+                {
+                    b.HasOne("HRMS.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("HRMS.Models.Expenses", b =>
                 {
                     b.HasOne("HRMS.Models.Employee", "Employee")
                         .WithMany()

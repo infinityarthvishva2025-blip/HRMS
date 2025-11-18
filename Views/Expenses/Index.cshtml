@@ -1,0 +1,68 @@
+﻿@model IEnumerable<HRMS.Models.Expenses>
+
+<h2 class="mb-3">My Expenses</h2>
+
+<a href="/Expenses/Create" class="btn btn-primary mb-3">+ Add Expense</a>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Date</th>
+            <th>Title</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Proof</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Date.ToString("dd-MM-yyyy")</td>
+                <td>@item.ExpenseType</td>
+                <td>₹@item.Amount</td>
+                <td>
+                    @if (item.Status == "Rejected")
+                    {
+                        <span class="badge bg-danger">Rejected</span>
+                        <br />
+                        <small class="text-muted">@item.HRComment</small>
+                    }
+                    else if (item.Status == "Approved")
+                    {
+                        <span class="badge bg-success">Completed</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    }
+                </td>
+
+                <td>
+                    @if (!string.IsNullOrEmpty(item.ProofFilePath))
+                    {
+                        <a href="@item.ProofFilePath" target="_blank" class="btn btn-sm btn-info">View</a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">No File</span>
+                    }
+                </td>
+
+                <td>
+                    @if (item.Status == "Pending")
+                    {
+                        <a href="/Expenses/Edit/@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="/Expenses/Delete/@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Locked</span>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

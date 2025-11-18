@@ -24,6 +24,7 @@ namespace HRMS.Data
       
 
         public DbSet<Leave> Leaves { get; set; } = null!;
+        public DbSet<Expenses> Expenses { get; set; }
         public DbSet<LeaveApprovalRoute> LeaveApprovalRoutes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
