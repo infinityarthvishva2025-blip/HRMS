@@ -24,7 +24,7 @@
 
         <div class="card shadow-sm border-0 p-4">
 
-            <!---------------------- BASIC DETAILS -------------------------->
+            <!-- BASIC DETAILS -->
             <h5 class="fw-bold text-secondary mb-3">Basic Details</h5>
             <div class="row g-3">
 
@@ -76,15 +76,14 @@
                     <span class="text-danger" id="passwordError"></span>
                 </div>
 
-
             </div>
 
             <hr class="my-4" />
 
-            <!---------------------- PERSONAL ---------------------------->
+            <!-- PERSONAL DETAILS -->
             <h5 class="fw-bold text-secondary mb-3">Personal Details</h5>
-            <div class="row g-3">
 
+            <div class="row g-3">
                 <div class="col-md-3">
                     <label asp-for="Gender"></label>
                     <select asp-for="Gender" class="form-select" required>
@@ -125,7 +124,7 @@
 
             <hr class="my-4" />
 
-            <!---------------------- EXPERIENCE -------------------------->
+            <!-- EXPERIENCE -->
             <h5 class="fw-bold text-secondary mb-3">Experience Details</h5>
 
             <div class="row g-3">
@@ -153,16 +152,15 @@
 
             <hr class="my-4" />
 
-            <!---------------------- JOB DETAILS -------------------------->
+            <!-- JOB DETAILS -->
             <h5 class="fw-bold text-secondary mb-3">Job Details</h5>
 
             <div class="row g-3">
-
                 <div class="col-md-4">
                     <label asp-for="JoiningDate"></label>
-                    <input asp-for="JoiningDate" type="date" class="form-control"
-                           required min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    <input asp-for="JoiningDate" type="date" class="form-control" required />
                 </div>
+
 
                 <div class="col-md-4">
                     <label asp-for="Department"></label>
@@ -180,6 +178,16 @@
                     <label asp-for="Position"></label>
                     <select asp-for="Position" id="Position" class="form-select" required>
                         <option value="">-- Select Position --</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Role" class="form-label"></label>
+                    <select asp-for="Role" class="form-select" required>
+                        <option value="">-- Select Role --</option>
+                        <option>Employee</option>
+                        <option>Manager</option>
+                        <option>Vice President</option>
+                        <option>Director</option>
                     </select>
                 </div>
 
@@ -202,7 +210,7 @@
 
             <hr class="my-4" />
 
-            <!---------------------- EDUCATION -------------------------->
+            <!-- EDUCATION -->
             <h5 class="fw-bold text-secondary mb-3">Education</h5>
 
             <div class="row g-3">
@@ -256,7 +264,7 @@
 
             <hr class="my-4" />
 
-            <!---------------------- ID DETAILS -------------------------->
+            <!-- ID DETAILS -->
             <h5 class="fw-bold text-secondary mb-3">Identity Details</h5>
 
             <div class="row g-3">
@@ -277,47 +285,76 @@
 
             </div>
 
+
             <hr class="my-4" />
 
-            <!---------------------- BANK DETAILS -------------------------->
+            <!-- BANK DETAILS -->
             <h5 class="fw-bold text-secondary mb-3">Bank Details</h5>
 
             <div class="row g-3">
 
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label asp-for="BankName"></label>
                     <input asp-for="BankName" class="form-control" required />
                 </div>
+                <div class="col-md-6">
+                    <label asp-for="Branch"></label>
+                    <input asp-for="Branch" class="form-control" required />
+                </div>
 
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label asp-for="AccountHolderName"></label>
                     <input asp-for="AccountHolderName" class="form-control" required />
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label asp-for="AccountNumber"></label>
                     <input asp-for="AccountNumber" class="form-control"
                            pattern="[0-9]{9,18}"
-                           title="Account number must be 9–18 digits" />
+                           title="Account number must be 9–18 digits" required />
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label asp-for="IFSC"></label>
                     <input asp-for="IFSC" class="form-control"
                            pattern="[A-Z]{4}0[A-Z0-9]{6}"
-                           title="Enter valid IFSC e.g. HDFC0001234" />
-                </div>
-
-                <div class="col-md-4">
-                    <label asp-for="Branch"></label>
-                    <input asp-for="Branch" class="form-control" required />
+                           title="Enter valid IFSC e.g. HDFC0001234" required />
                 </div>
 
             </div>
 
             <hr class="my-4" />
 
-            <!---------------------- PROFILE PHOTO -------------------------->
+            <!-- NEW DOCUMENT UPLOADS -->
+            <h5 class="fw-bold text-secondary mb-3">Document Uploads</h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label>Aadhaar Card (PDF / Image)</label>
+                    <input type="file" name="AadhaarFile" class="form-control" accept=".pdf,image/*" />
+                </div>
+
+                <div class="col-md-6">
+                    <label>PAN Card (PDF / Image)</label>
+                    <input type="file" name="PanFile" class="form-control" accept=".pdf,image/*" />
+                </div>
+
+                <div class="col-md-6">
+                    <label>Bank Passbook (PDF / Image)</label>
+                    <input type="file" name="PassbookFile" class="form-control" accept=".pdf,image/*" />
+                </div>
+
+                <div class="col-md-6">
+                    <label>Marksheet (PDF / Image)</label>
+                    <input type="file" name="MarksheetFile" class="form-control" accept=".pdf,image/*" />
+                </div>
+
+            </div>
+
+            <hr class="my-4" />
+
+            <!-- PROFILE PHOTO -->
             <h5 class="fw-bold text-secondary mb-3">Profile Photo</h5>
             <div class="col-md-6">
                 <input type="file" name="ProfilePhoto" class="form-control" accept="image/*" required />
@@ -340,7 +377,6 @@
 
     <script>
 
-        // ------------------ Password Match ------------------
         function validatePasswordMatch() {
             const pwd = document.getElementById("Password");
             const conf = document.getElementById("ConfirmPassword");
@@ -353,7 +389,6 @@
             }
         }
 
-        // ---------------- EXPERIENCE SHOW/HIDE ----------------
         const expType = document.getElementById("ExperienceType");
         const expSection = document.getElementById("experience-section");
 
@@ -365,8 +400,7 @@
             }
         });
 
-        //show password button
-                function togglePassword(fieldId, btn) {
+        function togglePassword(fieldId, btn) {
             const input = document.getElementById(fieldId);
             const icon = btn.querySelector("i");
 
@@ -381,8 +415,6 @@
             }
         }
 
-
-        // ---------------- DEPARTMENT -> POSITION LOAD ----------------
         const dept = document.getElementById("Department");
         const pos = document.getElementById("Position");
 
