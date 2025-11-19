@@ -22,14 +22,14 @@ namespace HRMS.Controllers
         private readonly IWebHostEnvironment _env;
 
         private static readonly Dictionary<string, List<string>> DepartmentPositions =
-     new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
- {
-    { "IT",        new List<string> { "Developer", "Senior Developer", "Tester", "Team Lead" } },
-    { "HR",        new List<string> { "HR Executive", "HR Manager" } },
-    { "Finance",   new List<string> { "Accountant", "Finance Manager" } },
-    { "Marketing", new List<string> { "Marketing Executive", "Marketing Manager" } },
-    { "Accounting",new List<string> { "Junior Accountant", "Senior Accountant" } }
- };
+             new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "IT",        new List<string> { "Developer", "Senior Developer", "Tester", "Team Lead" } },
+            { "HR",        new List<string> { "HR Executive", "HR Manager" } },
+            { "Finance",   new List<string> { "Accountant", "Finance Manager" } },
+            { "Marketing", new List<string> { "Marketing Executive", "Marketing Manager" } },
+            { "Accounting",new List<string> { "Junior Accountant", "Senior Accountant" } }
+        };
 
         public EmployeesController(ApplicationDbContext context, IWebHostEnvironment env)
         {
@@ -38,7 +38,7 @@ namespace HRMS.Controllers
         }
 
         // ================================
-        // LIST
+        // INDEX
         // ================================
         public async Task<IActionResult> Index()
         {
@@ -58,29 +58,49 @@ namespace HRMS.Controllers
             return View(emp);
         }
 
-        // ========================================
-        // CREATE EMPLOYEE (HR ONLY)
-        // ========================================
+        // ================================
+        // CREATE (GET)
+        // ================================
         public IActionResult Create()
         {
             return View(new Employee { EmployeeCode = GenerateNextEmployeeCode() });
         }
 
+        // ================================
+        // CREATE (POST)
+        // Includes 10th/12th/Grad/PG Marksheets
+        // ================================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Employee model,
-            IFormFile ProfilePhoto,
-            IFormFile AadhaarFile,
-            IFormFile PanFile,
-            IFormFile PassbookFile,
-            IFormFile MarksheetFile)
+        public async Task<IActionResult> Create(
+     Employee model,
+     IFormFile ProfilePhoto,
+     IFormFile AadhaarFile,
+     IFormFile PanFile,
+     IFormFile PassbookFile,
+     List<IFormFile> ExperienceCertificateFiles,
+     IFormFile MedicalDocumentFile,
+     IFormFile TenthMarksheetFile,
+     IFormFile TwelfthMarksheetFile,
+     IFormFile GraduationMarksheetFile,
+     IFormFile PostGraduationMarksheetFile
+ )
         {
+            // REMOVE NON-NEEDED MODEL VALIDATION
             ModelState.Remove("ConfirmPassword");
+            ModelState.Remove("MedicalDocumentFile");
+            ModelState.Remove("MarksheetFile");
+
+            // CONDITIONAL VALIDATION
+            if (model.HasDisease == "Yes" && MedicalDocumentFile == null)
+            {
+                ModelState.AddModelError("MedicalDocumentFile", "Please upload medical document because you selected 'Yes'.");
+            }
 
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Unique Email / Mobile
+            // UNIQUE MOBILE / EMAIL CHECKS
             if (await _context.Employees.AnyAsync(e => e.Email == model.Email))
             {
                 ModelState.AddModelError("Email", "This email is already registered.");
@@ -93,173 +113,249 @@ namespace HRMS.Controllers
                 return View(model);
             }
 
+            // SET DEFAULTS
             model.EmployeeCode ??= GenerateNextEmployeeCode();
             model.Status = "Active";
 
-            // ❌ DO NOT HASH PASSWORD (your requirement)
-            // model.Password = HashPassword(model.Password);
-
-            // Create Employee Folder
+            // CREATE FOLDER
             string empFolder = Path.Combine(_env.WebRootPath, "uploads/employees", model.EmployeeCode);
             Directory.CreateDirectory(empFolder);
 
-            // Save all files
+            // STORE REQUIRED FILES
             model.ProfileImagePath = await SaveEmployeeFile(ProfilePhoto, empFolder, "profile");
             model.AadhaarFilePath = await SaveEmployeeFile(AadhaarFile, empFolder, "aadhaar");
             model.PanFilePath = await SaveEmployeeFile(PanFile, empFolder, "pan");
             model.PassbookFilePath = await SaveEmployeeFile(PassbookFile, empFolder, "passbook");
-            model.MarksheetFilePath = await SaveEmployeeFile(MarksheetFile, empFolder, "marksheet");
 
+            // MULTIPLE EXPERIENCE FILES
+            if (ExperienceCertificateFiles != null && ExperienceCertificateFiles.Any())
+            {
+                List<string> savedExp = new();
+
+                foreach (var file in ExperienceCertificateFiles)
+                {
+                    var saved = await SaveEmployeeFile(file, empFolder, $"exp_{Guid.NewGuid()}");
+                    savedExp.Add(saved);
+                }
+
+                model.ExperienceCertificateFilePath = string.Join(",", savedExp);
+            }
+
+            // MEDICAL (OPTIONAL)
+            model.MedicalDocumentFilePath =
+                await SaveEmployeeFile(MedicalDocumentFile, empFolder, "medical");
+
+            // EDUCATION FILES
+            model.TenthMarksheetFilePath =
+                await SaveEmployeeFile(TenthMarksheetFile, empFolder, "10th");
+
+            model.TwelfthMarksheetFilePath =
+                await SaveEmployeeFile(TwelfthMarksheetFile, empFolder, "12th");
+
+            model.GraduationMarksheetFilePath =
+                await SaveEmployeeFile(GraduationMarksheetFile, empFolder, "graduation");
+
+            model.PostGraduationMarksheetFilePath =
+                await SaveEmployeeFile(PostGraduationMarksheetFile, empFolder, "pg");
+
+            // SAVE
             _context.Employees.Add(model);
             await _context.SaveChangesAsync();
+
             return RedirectToAction("Index");
         }
 
-        // ========================================
-        // EDIT (HR ONLY)
-        // ========================================
-        public async Task<IActionResult> Edit(int? id)
+
+        // ================================
+        // EDIT (GET)
+        // ================================
+        public async Task<IActionResult> Edit(int id)
         {
-            if (id == null) return NotFound();
+            var employee = await _context.Employees.FindAsync(id);
 
-            var emp = await _context.Employees.FindAsync(id);
-            if (emp == null) return NotFound();
+            if (employee == null)
+                return NotFound();
 
-            emp.Password = "";
-            emp.ConfirmPassword = "";
-
-            return View(emp);
+            return View(employee);
         }
 
+
+        // ================================
+        // EDIT (POST)
+        // Supports updating new education docs
+        // ================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Employee model,
-            IFormFile ProfilePhoto,
-            IFormFile AadhaarFile,
-            IFormFile PanFile,
-            IFormFile PassbookFile,
-            IFormFile MarksheetFile)
+     IFormFile ProfilePhoto,
+     IFormFile AadhaarFile,
+     IFormFile PanFile,
+     IFormFile PassbookFile,
+     IFormFile MedicalDocumentFile,
+     IFormFile TenthMarksheetFile,
+     IFormFile TwelfthMarksheetFile,
+     IFormFile GraduationMarksheetFile,
+     IFormFile PostGraduationMarksheetFile,
+     List<IFormFile> ExperienceCertificateFiles)
         {
-            if (id != model.Id) return NotFound();
-
-            ModelState.Remove("ConfirmPassword");
-
             if (!ModelState.IsValid)
                 return View(model);
 
             var emp = await _context.Employees.FindAsync(id);
-            if (emp == null) return NotFound();
+            if (emp == null)
+                return NotFound();
 
-            // Unique checks
-            if (await _context.Employees.AnyAsync(e => e.Email == model.Email && e.Id != emp.Id))
+            string empFolder = Path.Combine(_env.WebRootPath, "uploads/employees", emp.EmployeeCode);
+            Directory.CreateDirectory(empFolder);
+
+            // *************** FILE UPLOAD HANDLING ***************
+
+            emp.ProfileImagePath =
+                await SaveEmployeeFile(ProfilePhoto, empFolder, "profile", emp.ProfileImagePath);
+
+            emp.AadhaarFilePath =
+                await SaveEmployeeFile(AadhaarFile, empFolder, "aadhaar", emp.AadhaarFilePath);
+
+            emp.PanFilePath =
+                await SaveEmployeeFile(PanFile, empFolder, "pan", emp.PanFilePath);
+
+            emp.PassbookFilePath =
+                await SaveEmployeeFile(PassbookFile, empFolder, "passbook", emp.PassbookFilePath);
+
+            emp.MedicalDocumentFilePath =
+                await SaveEmployeeFile(MedicalDocumentFile, empFolder, "medical_document", emp.MedicalDocumentFilePath);
+
+            emp.TenthMarksheetFilePath =
+                await SaveEmployeeFile(TenthMarksheetFile, empFolder, "10th", emp.TenthMarksheetFilePath);
+
+            emp.TwelfthMarksheetFilePath =
+                await SaveEmployeeFile(TwelfthMarksheetFile, empFolder, "12th", emp.TwelfthMarksheetFilePath);
+
+            emp.GraduationMarksheetFilePath =
+                await SaveEmployeeFile(GraduationMarksheetFile, empFolder, "grad", emp.GraduationMarksheetFilePath);
+
+            emp.PostGraduationMarksheetFilePath =
+                await SaveEmployeeFile(PostGraduationMarksheetFile, empFolder, "pg", emp.PostGraduationMarksheetFilePath);
+
+            // *************** EXPERIENCE CERTIFICATES (MULTIPLE FILES) ***************
+            if (ExperienceCertificateFiles != null && ExperienceCertificateFiles.Count > 0)
             {
-                ModelState.AddModelError("Email", "This email is already used by another employee.");
-                return View(model);
+                List<string> uploadedFiles = new List<string>();
+
+                foreach (var file in ExperienceCertificateFiles)
+                {
+                    if (file != null && file.Length > 0)
+                    {
+                        var ext = Path.GetExtension(file.FileName);
+                        var fileName = $"exp_{Guid.NewGuid()}{ext}";
+                        var filePath = Path.Combine(empFolder, fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        uploadedFiles.Add(fileName);
+                    }
+                }
+
+                // Append new files with existing
+                if (!string.IsNullOrEmpty(emp.ExperienceCertificateFilePath))
+                {
+                    emp.ExperienceCertificateFilePath += "," + string.Join(",", uploadedFiles);
+                }
+                else
+                {
+                    emp.ExperienceCertificateFilePath = string.Join(",", uploadedFiles);
+                }
             }
 
-            if (await _context.Employees.AnyAsync(e => e.MobileNumber == model.MobileNumber && e.Id != emp.Id))
+
+
+            // *************** OPTIONAL PASSWORD UPDATE ***************
+            if (!string.IsNullOrEmpty(model.Password))
             {
-                ModelState.AddModelError("MobileNumber", "This mobile number is already used by another employee.");
-                return View(model);
+                emp.Password = model.Password;
             }
 
-            // Update Main Fields
+            // *************** UPDATE ALL OTHER NORMAL FIELDS ***************
             emp.Name = model.Name;
             emp.Email = model.Email;
             emp.MobileNumber = model.MobileNumber;
-            emp.Address = model.Address;
-
-            emp.Department = model.Department;
-            emp.Position = model.Position;
-            emp.ReportingManager = model.ReportingManager;
-            emp.Salary = model.Salary;
-
+            emp.AlternateMobileNumber = model.AlternateMobileNumber;
             emp.Gender = model.Gender;
             emp.FatherName = model.FatherName;
             emp.MotherName = model.MotherName;
-            emp.MaritalStatus = model.MaritalStatus;
             emp.DOB_Date = model.DOB_Date;
+            emp.MaritalStatus = model.MaritalStatus;
+
+            emp.Address = model.Address;
+            emp.PermanentAddress = model.PermanentAddress;
+
+            emp.ExperienceType = model.ExperienceType;
+            emp.TotalExperienceYears = model.TotalExperienceYears;
+            emp.LastCompanyName = model.LastCompanyName;
+
+            emp.HasDisease = model.HasDisease;
+            emp.DiseaseName = model.DiseaseName;
+            emp.DiseaseSince = model.DiseaseSince;
+            emp.MedicinesRequired = model.MedicinesRequired;
+            emp.DoctorName = model.DoctorName;
+            emp.DoctorContact = model.DoctorContact;
+            emp.LastAffectedDate = model.LastAffectedDate;
+
+            emp.JoiningDate = model.JoiningDate;
+            emp.Department = model.Department;
+            emp.Position = model.Position;
+            emp.Role = model.Role;
+            emp.Salary = model.Salary;
 
             emp.AadhaarNumber = model.AadhaarNumber;
             emp.PanNumber = model.PanNumber;
 
-            // Update password if changed (you can remove hashing if needed)
-            if (!string.IsNullOrWhiteSpace(model.Password))
-                emp.Password = HashPassword(model.Password);
+            emp.AccountHolderName = model.AccountHolderName;
+            emp.BankName = model.BankName;
+            emp.AccountNumber = model.AccountNumber;
+            emp.IFSC = model.IFSC;
+            emp.Branch = model.Branch;
 
-            // Save updated documents
-            string empFolder = Path.Combine(_env.WebRootPath, "uploads/employees", emp.EmployeeCode);
-            Directory.CreateDirectory(empFolder);
+            emp.EmergencyContactName = model.EmergencyContactName;
+            emp.EmergencyContactRelationship = model.EmergencyContactRelationship;
+            emp.EmergencyContactMobile = model.EmergencyContactMobile;
+            emp.EmergencyContactAddress = model.EmergencyContactAddress;
 
-            emp.ProfileImagePath = await SaveEmployeeFile(ProfilePhoto, empFolder, "profile", emp.ProfileImagePath);
-            emp.AadhaarFilePath = await SaveEmployeeFile(AadhaarFile, empFolder, "aadhaar", emp.AadhaarFilePath);
-            emp.PanFilePath = await SaveEmployeeFile(PanFile, empFolder, "pan", emp.PanFilePath);
-            emp.PassbookFilePath = await SaveEmployeeFile(PassbookFile, empFolder, "passbook", emp.PassbookFilePath);
-            emp.MarksheetFilePath = await SaveEmployeeFile(MarksheetFile, empFolder, "marksheet", emp.MarksheetFilePath);
-
-            _context.Update(emp);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index");
         }
 
-        // ==========================================================
-        // EMPLOYEE DASHBOARD
-        // ==========================================================
-        public IActionResult Dashboard()
-        {
-            int? empId = HttpContext.Session.GetInt32("EmployeeId");
-
-            if (empId == null)
-                return RedirectToAction("Login", "Account");
-
-            var emp = _context.Employees.FirstOrDefault(e => e.Id == empId);
-
-            var model = new EmployeeDashboardViewModel
-            {
-                EmployeeName = emp?.Name,
-                Department = emp?.Department,
-                Position = emp?.Position,
-                ProfileImage = emp?.ProfileImagePath
-            };
-
-            return View(model);
-        }
-
-        // ==========================================================
-        // EMPLOYEE — VIEW ONLY PROFILE
-        // ==========================================================
-        public async Task<IActionResult> MyProfile()
-        {
-            int? empId = HttpContext.Session.GetInt32("EmployeeId");
-            if (empId == null)
-                return RedirectToAction("Login", "Account");
-
-            var emp = await _context.Employees.FindAsync(empId);
-            if (emp == null)
-                return NotFound();
-
-            return View(emp);
-        }
 
         // ==========================================================
         // FILE SAVE METHOD
         // ==========================================================
-        private async Task<string> SaveEmployeeFile(IFormFile file, string folder, string name, string existingFile = null)
+        private async Task<string> SaveEmployeeFile(IFormFile file, string folder, string name, string existing = null)
         {
-            if (file == null) return existingFile;
+            // No new file → keep old file
+            if (file == null || file.Length == 0)
+                return existing;
+
+            // Ensure folder exists
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
 
             string ext = Path.GetExtension(file.FileName);
-            string newFile = $"{name}{ext}";
-            string filePath = Path.Combine(folder, newFile);
+            string fileName = $"{name}{ext}";
+            string filePath = Path.Combine(folder, fileName);
 
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
             }
 
-            return newFile;
+            return fileName;
         }
+
+
 
         // ==========================================================
         // PASSWORD HASH
@@ -287,6 +383,9 @@ namespace HRMS.Controllers
             return $"IA{num:0000}";
         }
 
+        // ==========================================================
+        // GET POSITIONS
+        // ==========================================================
         [HttpGet]
         public IActionResult GetPositions(string department)
         {
@@ -302,6 +401,95 @@ namespace HRMS.Controllers
 
             return Json(positions);
         }
+
+        public async Task<IActionResult> Dashboard()
+        {
+            // 1️⃣ Get Employee ID from session
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+
+            if (empId == null || empId == 0)
+            {
+                // Session expired / not logged in
+                return RedirectToAction("Login", "Account");
+            }
+
+            // 2️⃣ Load logged-in employee
+            var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == empId);
+
+            if (employee == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // 3️⃣ Total Attendance Count
+            int totalAttendance = await _context.Attendances
+                .CountAsync(a => a.EmployeeId == empId);
+
+            // 4️⃣ Today’s Attendance (Present / Absent / Not Marked)
+            var todayRecord = await _context.Attendances
+                .FirstOrDefaultAsync(a =>
+                    a.EmployeeId == empId &&
+                    a.CheckInTime.HasValue &&
+                    a.CheckInTime.Value.Date == DateTime.Today);
+
+            string todayStatus = "Not Marked";
+
+            if (todayRecord != null)
+            {
+                todayStatus = todayRecord.CheckOutTime == null ? "Present" : "Present";
+            }
+
+            // 5️⃣ Total Leave Count
+            int totalLeaves = await _context.Leaves
+                .CountAsync(l => l.EmployeeId == empId);
+
+            // 6️⃣ Upcoming Birthdays (Next 30 days)
+            var upcomingBirthdays = await _context.Employees
+                .Where(e =>
+                    e.DOB_Date.HasValue &&
+                    e.DOB_Date.Value.Month == DateTime.Today.Month &&
+                    e.DOB_Date.Value.Day >= DateTime.Today.Day)
+                .OrderBy(e => e.DOB_Date.Value.Day)
+                .Take(5)
+                .ToListAsync();
+
+            // 7️⃣ Build ViewModel
+            var vm = new EmployeeDashboardViewModel
+            {
+                Employee = employee,
+                TotalAttendance = totalAttendance,
+                TodayStatus = todayStatus,
+                TotalLeave = totalLeaves,
+                UpcomingBirthdays = upcomingBirthdays
+            };
+
+            return View(vm);
+        }
+
+        public async Task<IActionResult> MyProfile()
+        {
+            // 1️⃣ Check Employee Session
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+
+            if (empId == null || empId == 0)
+            {
+                return RedirectToAction("Login", "Account");  // Not logged in
+            }
+
+            // 2️⃣ Fetch the employee details
+            var employee = await _context.Employees
+                .FirstOrDefaultAsync(e => e.Id == empId);
+
+            if (employee == null)
+            {
+                return RedirectToAction("Login", "Account"); // Employee not found
+            }
+
+            // 3️⃣ Return the profile view
+            return View(employee);
+        }
+
+
 
 
     }

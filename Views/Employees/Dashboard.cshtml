@@ -11,9 +11,9 @@
     <div class="dashboard-header text-center mb-5">
         <h2 class="welcome-title mb-2">
             <i class="fa-solid fa-hand-wave text-warning me-2"></i>
-            Welcome, @Model.EmployeeName
+            Welcome, @Model.Employee.Name
         </h2>
-        <p class="lead text-muted">Your personalized work summary & attendance panel</p>
+        <p class="lead  text-black">Your personalized work summary & attendance panel</p>
 
         <a href="/Attendance/EmployeePanel" class="btn btn-attendance mt-3 shadow">
             <i class="fa-solid fa-calendar-check me-2"></i> Mark Attendance
@@ -31,7 +31,7 @@
                     <i class="fa-solid fa-building fa-2x text-white"></i>
                 </div>
                 <h6 class="fw-bold text-muted">Department</h6>
-                <h5 class="fw-bold text-dark">@Model.Department</h5>
+                <h5 class="fw-bold text-dark">@Model.Employee.Department    </h5>
             </div>
         </div>
 
@@ -42,7 +42,7 @@
                     <i class="fa-solid fa-briefcase fa-2x text-white"></i>
                 </div>
                 <h6 class="fw-bold text-muted">Position</h6>
-                <h5 class="fw-bold text-dark">@Model.Position</h5>
+                <h5 class="fw-bold text-dark">@Model.Employee.Position</h5>
             </div>
         </div>
 

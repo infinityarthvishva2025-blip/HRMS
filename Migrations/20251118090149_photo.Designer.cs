@@ -4,6 +4,7 @@ using HRMS.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251118090149_photo")]
+    partial class photo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,37 +104,10 @@ namespace HRMS.Migrations
                     b.Property<string>("Department")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DiseaseName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DiseaseSince")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DiseaseType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DoctorContact")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DoctorName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
-
-                    b.Property<string>("EmergencyContactAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmergencyContactMobile")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmergencyContactName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmergencyContactRelationship")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EmployeeCode")
                         .IsRequired()
@@ -162,17 +138,11 @@ namespace HRMS.Migrations
                     b.Property<decimal?>("HSCPercent")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("HasDisease")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("IFSC")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("JoiningDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("LastAffectedDate")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastCompanyName")
                         .HasColumnType("nvarchar(max)");
@@ -181,12 +151,6 @@ namespace HRMS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MarksheetFilePath")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MedicalDocumentFilePath")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MedicinesRequired")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MobileNumber")
@@ -215,9 +179,6 @@ namespace HRMS.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("PermanentAddress")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Position")
                         .HasColumnType("nvarchar(max)");
@@ -329,74 +290,6 @@ namespace HRMS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("GeoTags");
-                });
-
-            modelBuilder.Entity("HRMS.Models.GurukulProgress", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("CompletedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("VideoId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("VideoId");
-
-                    b.ToTable("GurukulProgress");
-                });
-
-            modelBuilder.Entity("HRMS.Models.GurukulVideo", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsExternal")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TitleGroup")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UploadedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("VideoPath")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("GurukulVideos");
                 });
 
             modelBuilder.Entity("HRMS.Models.Hr", b =>
@@ -630,25 +523,6 @@ namespace HRMS.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("HRMS.Models.GurukulProgress", b =>
-                {
-                    b.HasOne("HRMS.Models.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("HRMS.Models.GurukulVideo", "Video")
-                        .WithMany()
-                        .HasForeignKey("VideoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Video");
                 });
 
             modelBuilder.Entity("HRMS.Models.Leave", b =>

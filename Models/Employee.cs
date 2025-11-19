@@ -8,7 +8,9 @@ namespace HRMS.Models
     {
         public int Id { get; set; }
 
+        // ====================================
         // BASIC DETAILS
+        // ====================================
         [Required]
         [StringLength(10)]
         public string EmployeeCode { get; set; } = string.Empty;
@@ -27,6 +29,10 @@ namespace HRMS.Models
         public string MobileNumber { get; set; } = string.Empty;
 
         [Required]
+        [StringLength(15)]
+        public string? AlternateMobileNumber { get; set; }
+
+        [Required]
         [StringLength(200)]
         public string Password { get; set; } = string.Empty;
 
@@ -35,7 +41,9 @@ namespace HRMS.Models
         public string? ConfirmPassword { get; set; }
 
 
-        // PERSONAL (nullable)
+        // ====================================
+        // PERSONAL DETAILS
+        // ====================================
         public string? Gender { get; set; }
         public string? FatherName { get; set; }
         public string? MotherName { get; set; }
@@ -46,13 +54,21 @@ namespace HRMS.Models
         public string? MaritalStatus { get; set; }
 
 
+        // ====================================
         // EXPERIENCE
+        // ====================================
         public string? ExperienceType { get; set; }   // Fresher / Experienced
         public int? TotalExperienceYears { get; set; }
+
+        // MULTIPLE CERTIFICATES (comma separated)
+        public string? ExperienceCertificateFilePath { get; set; }
+
         public string? LastCompanyName { get; set; }
 
 
-        // JOB
+        // ====================================
+        // JOB DETAILS
+        // ====================================
         [DataType(DataType.Date)]
         public DateTime? JoiningDate { get; set; }
 
@@ -60,10 +76,13 @@ namespace HRMS.Models
         public string? Position { get; set; }
         public decimal? Salary { get; set; }
         public string? ReportingManager { get; set; }
-        public string? Address { get; set; }
+        public string? Address { get; set; }   // Present Address
+        public string? PermanentAddress { get; set; }
 
 
+        // ====================================
         // EDUCATION
+        // ====================================
         public decimal? HSCPercent { get; set; }
         public string? GraduationCourse { get; set; }
         public decimal? GraduationPercent { get; set; }
@@ -71,36 +90,68 @@ namespace HRMS.Models
         public decimal? PostGraduationPercent { get; set; }
 
 
-        // IDs
+        // ====================================
+        // ID NUMBERS
+        // ====================================
         public string? AadhaarNumber { get; set; }
         public string? PanNumber { get; set; }
 
-
-        // PROFILE PHOTO
-        public string? ProfileImagePath { get; set; }
-
-
-        // BANK DETAILS
-        public string? BankName { get; set; }
+        // ====================================
+        // Bank DETAILS
+        // ====================================
         public string? AccountHolderName { get; set; }
+        public string? BankName { get; set; }
         public string? AccountNumber { get; set; }
         public string? IFSC { get; set; }
         public string? Branch { get; set; }
 
 
-        // AUDIT
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        // EMPLOYEE STATUS
-        public string? Status { get; set; }
-
-        public  string Role { get; set; }
-
-        // DOCUMENT UPLOADS
+        // ====================================
+        // FILE UPLOAD PATHS
+        // ====================================
+        public string? ProfileImagePath { get; set; }
         public string? AadhaarFilePath { get; set; }
         public string? PanFilePath { get; set; }
         public string? PassbookFilePath { get; set; }
-        public string? MarksheetFilePath { get; set; }
+   
 
+        // Education Documents
+        public string? TenthMarksheetFilePath { get; set; }
+        public string? TwelfthMarksheetFilePath { get; set; }
+        public string? GraduationMarksheetFilePath { get; set; }
+        public string? PostGraduationMarksheetFilePath { get; set; }
+
+        // Health Document
+        public string? MedicalDocumentFilePath { get; set; }
+
+
+        // ====================================
+        // EMERGENCY CONTACT
+        // ====================================
+        public string? EmergencyContactName { get; set; }
+        public string? EmergencyContactRelationship { get; set; }
+        public string? EmergencyContactMobile { get; set; }
+        public string? EmergencyContactAddress { get; set; }
+
+
+        // ====================================
+        // HEALTH INFORMATION
+        // ====================================
+        public string? HasDisease { get; set; }  // Yes / No
+        public string? DiseaseName { get; set; }
+        public string? DiseaseType { get; set; } // NEW FIELD
+        public string? DiseaseSince { get; set; }
+        public string? MedicinesRequired { get; set; }
+        public string? DoctorName { get; set; }
+        public string? DoctorContact { get; set; }
+        public string? LastAffectedDate { get; set; }
+
+
+        // ====================================
+        // APP INFO
+        // ====================================
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string? Status { get; set; }
+        public string Role { get; set; }
     }
 }

@@ -34,58 +34,63 @@ namespace HRMS.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // =============================================
-            // 1️⃣ HR LOGIN (HARDCODED)
-            // =============================================
-            const string defaultHrId = "HR001";
-            const string defaultHrPassword = "admin123";
-
-            if (model.UserId.Equals(defaultHrId, StringComparison.OrdinalIgnoreCase)
-                && model.Password == defaultHrPassword)
+            // ================================
+            // 1️⃣ HR LOGIN (STATIC)
+            // ================================
+            if (model.UserId.Equals("HR001", StringComparison.OrdinalIgnoreCase)
+                && model.Password == "admin123")
             {
                 HttpContext.Session.SetString("Role", "HR");
                 HttpContext.Session.SetString("HrName", "Admin HR");
                 return RedirectToAction("Index", "Home");
             }
 
-            // =============================================
-            // 2️⃣ EMPLOYEE LOGIN
-            // =============================================
+            // ================================
+            // 2️⃣ EMPLOYEE LOGIN USING EmployeeCode + Password
+            // ================================
             var emp = _context.Employees
-                .FirstOrDefault(e => e.EmployeeCode == model.UserId && e.Password == model.Password);
+                .FirstOrDefault(e =>
+                    e.EmployeeCode == model.UserId &&
+                    e.Password == model.Password);
 
             if (emp == null)
             {
-                ViewBag.Error = "Invalid ID or Password.";
+                ViewBag.Error = "Invalid Employee Code or Password.";
                 return View(model);
             }
 
-            // Store session
+            // Save session for the logged employee
             HttpContext.Session.SetString("Role", "Employee");
             HttpContext.Session.SetInt32("EmployeeId", emp.Id);
             HttpContext.Session.SetString("EmployeeName", emp.Name);
-           
 
-            // =============================================
-            // 3️⃣ AUTO CHECKOUT LOGIC (RUNS AT LOGIN)
-            // =============================================
+            // Run auto checkout cleanup
             AutoCheckoutForgottenRecords(emp.Id);
 
-            // Redirect to employee dashboard
+            // Redirect only this employee to HIS dashboard
             return RedirectToAction("Dashboard", "Employees");
         }
 
+
+
         // =============================================
-        // AUTO CHECK-OUT FUNCTION
+        // LOGOUT
         // =============================================
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear();   // Clear all login session values
+            return RedirectToAction("Login", "Account"); // Redirect user back to login page
+        }
+
+
         private void AutoCheckoutForgottenRecords(int employeeId)
         {
             var yesterday = DateTime.Today.AddDays(-1);
 
-            // Find attendance records from yesterday where employee forgot to checkout
             var pending = _context.Attendances
                 .Where(a =>
                     a.EmployeeId == employeeId &&
+                    a.CheckInTime.HasValue &&
                     a.CheckInTime.Value.Date == yesterday &&
                     a.CheckOutTime == null)
                 .ToList();
@@ -96,19 +101,11 @@ namespace HRMS.Controllers
             foreach (var record in pending)
             {
                 record.CheckOutTime = yesterday.Date.AddHours(23).AddMinutes(59); // 11:59 PM
-                record.CheckoutStatus = "Auto Checkout";  // <-- Make sure this column exists
+                record.CheckoutStatus = "Auto Checkout";
             }
 
             _context.SaveChanges();
         }
 
-        // =============================================
-        // LOGOUT
-        // =============================================
-        public IActionResult Logout()
-        {
-            HttpContext.Session.Clear();   // Clear all login session values
-            return RedirectToAction("Login", "Account"); // Redirect user back to login page
-        }
     }
 }
