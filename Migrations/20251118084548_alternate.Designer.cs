@@ -4,6 +4,7 @@ using HRMS.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251118084548_alternate")]
+    partial class alternate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,45 +104,15 @@ namespace HRMS.Migrations
                     b.Property<string>("Department")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DiseaseName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DiseaseSince")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DiseaseType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DoctorContact")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DoctorName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<string>("EmergencyContactAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmergencyContactMobile")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmergencyContactName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmergencyContactRelationship")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("EmployeeCode")
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("ExperienceCertificateFilePath")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ExperienceType")
                         .HasColumnType("nvarchar(max)");
@@ -162,17 +135,11 @@ namespace HRMS.Migrations
                     b.Property<decimal?>("HSCPercent")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("HasDisease")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("IFSC")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("JoiningDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("LastAffectedDate")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastCompanyName")
                         .HasColumnType("nvarchar(max)");
@@ -181,12 +148,6 @@ namespace HRMS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MarksheetFilePath")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MedicalDocumentFilePath")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MedicinesRequired")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MobileNumber")
@@ -215,9 +176,6 @@ namespace HRMS.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("PermanentAddress")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Position")
                         .HasColumnType("nvarchar(max)");

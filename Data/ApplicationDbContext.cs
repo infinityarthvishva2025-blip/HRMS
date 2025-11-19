@@ -9,10 +9,8 @@ namespace HRMS.Data
             : base(options)
         {
         }
-       
-   
 
-      
+
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<Payroll> Payrolls { get; set; }
         public DbSet<HRMS.Models.Employee> Employees { get; set; }

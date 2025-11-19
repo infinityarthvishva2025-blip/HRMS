@@ -3,159 +3,525 @@
 @{
     ViewData["Title"] = "Employee Details";
     Layout = "~/Views/Shared/_HrLayout.cshtml";
-}
-
-@{
-    var photoPath = string.IsNullOrEmpty(Model.ProfileImagePath)
-        ? "/images/default-user.png"
-        : $"/uploads/employees/{Model.EmployeeCode}/{Model.ProfileImagePath}";
+    string baseFolder = Url.Content("~/uploads/employees/" + Model.EmployeeCode + "/");
 }
 
 <div class="container py-4">
 
-    <div class="card shadow border-0 mb-4">
-        <div class="card-body">
-            <div class="row">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary">
+            <i class="fa-solid fa-user me-2"></i> Employee Details
+        </h3>
 
-                <!-- PROFILE LEFT -->
-                <div class="col-md-3 text-center">
-                    <img src="@photoPath" class="rounded-circle mb-3"
-                         style="width:150px;height:150px;object-fit:cover;" />
-                    <h4 class="fw-bold">@Model.Name</h4>
-                    <p class="text-muted mb-1">@Model.Position</p>
-                    <p class="text-muted">@Model.Department</p>
-                </div>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-warning me-2">
+                <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+            </a>
+            <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to List
+            </a>
+        </div>
+    </div>
 
-                <!-- DETAILS RIGHT -->
-                <div class="col-md-9">
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <div class="row">
 
-                    <!-- BASIC DETAILS -->
-                    <h5 class="fw-bold border-bottom pb-2">Basic Details</h5>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p><strong>Employee Code:</strong> @Model.EmployeeCode</p>
-                            <p><strong>Email:</strong> @Model.Email</p>
-                            <p><strong>Mobile:</strong> @Model.MobileNumber</p>
-                            <p><strong>Father Name:</strong> @Model.FatherName</p>
-                            <p><strong>Mother Name:</strong> @Model.MotherName</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Gender:</strong> @Model.Gender</p>
-                            <p><strong>DOB:</strong> @Model.DOB_Date?.ToString("dd-MM-yyyy")</p>
-                            <p><strong>Marital Status:</strong> @Model.MaritalStatus</p>
-                            <p><strong>Role:</strong> @Model.Role</p>
-                        </div>
-                    </div>
-
-                    <!-- JOB DETAILS -->
-                    <h5 class="fw-bold border-bottom pb-2">Job Details</h5>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p><strong>Department:</strong> @Model.Department</p>
-                            <p><strong>Position:</strong> @Model.Position</p>
-                            <p><strong>Salary:</strong> @Model.Salary</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Joining Date:</strong> @Model.JoiningDate?.ToString("dd-MM-yyyy")</p>
-                            <p><strong>Reporting Manager:</strong> @Model.ReportingManager</p>
-                        </div>
-                    </div>
-
-                    <!-- EXPERIENCE DETAILS -->
-                    <h5 class="fw-bold border-bottom pb-2">Experience Details</h5>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p><strong>Experience Type:</strong> @Model.ExperienceType</p>
-
-                            @if (Model.ExperienceType == "Experienced")
-                            {
-                                <p><strong>Total Experience:</strong> @Model.TotalExperienceYears Years</p>
-                                <p><strong>Last Company:</strong> @Model.LastCompanyName</p>
-                            }
-                        </div>
-                    </div>
-
-                    <!-- EDUCATION -->
-                    <h5 class="fw-bold border-bottom pb-2">Education</h5>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p><strong>12th %:</strong> @Model.HSCPercent</p>
-                            <p><strong>Graduation:</strong> @Model.GraduationCourse</p>
-                            <p><strong>Graduation %:</strong> @Model.GraduationPercent</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>PG Course:</strong> @Model.PostGraduationCourse</p>
-                            <p><strong>PG %:</strong> @Model.PostGraduationPercent</p>
-                        </div>
-                    </div>
-
-                    <!-- IDENTITY DETAILS -->
-                    <h5 class="fw-bold border-bottom pb-2">Identity Details</h5>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p><strong>Aadhaar No:</strong> @Model.AadhaarNumber</p>
-
-                            @if (!string.IsNullOrEmpty(Model.AadhaarFilePath))
-                            {
-                                <p>
-                                    <a href="/uploads/employees/@Model.EmployeeCode/@Model.AadhaarFilePath"
-                                       target="_blank" class="btn btn-outline-primary btn-sm">View Aadhaar</a>
-                                </p>
-                            }
-                        </div>
-
-                        <div class="col-md-6">
-                            <p><strong>PAN:</strong> @Model.PanNumber</p>
-
-                            @if (!string.IsNullOrEmpty(Model.PanFilePath))
-                            {
-                                <p>
-                                    <a href="/uploads/employees/@Model.EmployeeCode/@Model.PanFilePath"
-                                       target="_blank" class="btn btn-outline-primary btn-sm">View PAN</a>
-                                </p>
-                            }
-                        </div>
-                    </div>
-
-                    <!-- BANK DETAILS -->
-                    <h5 class="fw-bold border-bottom pb-2">Bank Details</h5>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p><strong>Bank Name:</strong> @Model.BankName</p>
-                            <p><strong>Account Holder:</strong> @Model.AccountHolderName</p>
-                            <p><strong>Branch:</strong> @Model.Branch</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Account Number:</strong> @Model.AccountNumber</p>
-                            <p><strong>IFSC:</strong> @Model.IFSC</p>
-
-                            @if (!string.IsNullOrEmpty(Model.PassbookFilePath))
-                            {
-                                <p>
-                                    <a href="/uploads/employees/@Model.EmployeeCode/@Model.PassbookFilePath"
-                                       target="_blank" class="btn btn-outline-primary btn-sm">View Passbook</a>
-                                </p>
-                            }
-                        </div>
-                    </div>
-
-                    <!-- MARKSHEET -->
-                    <h5 class="fw-bold border-bottom pb-2">Marksheet</h5>
-
-                    @if (!string.IsNullOrEmpty(Model.MarksheetFilePath))
+            <div class="col-md-3 text-center">
+                @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
+                {
+                    var profileUrl = baseFolder + Model.ProfileImagePath;
+                    var ext = System.IO.Path.GetExtension(Model.ProfileImagePath)?.ToLower();
+                    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".webp")
                     {
-                        <p>
-                            <a href="/uploads/employees/@Model.EmployeeCode/@Model.MarksheetFilePath"
-                               target="_blank" class="btn btn-outline-primary btn-sm">View Marksheet</a>
-                        </p>
+                        <img src="@profileUrl" class="img-thumbnail mb-3" style="max-height:180px;" alt="Profile Photo" />
                     }
+                    else
+                    {
+                        <a href="@profileUrl" target="_blank" class="btn btn-sm btn-outline-secondary mb-3">
+                            View / Download Photo
+                        </a>
+                    }
+                }
+                else
+                {
+                    <div class="border rounded p-4 text-muted">No Photo</div>
+                }
 
+                <h5 class="mt-2">@Model.Name</h5>
+                <p class="mb-1 text-muted">Employee Code: <strong>@Model.EmployeeCode</strong></p>
+                <p class="mb-0"><span class="badge bg-primary">@Model.Role</span></p>
+            </div>
+
+            <div class="col-md-9">
+                <h5 class="fw-bold text-secondary mb-3">Basic Details</h5>
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <strong>Email:</strong><br /> @Model.Email
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Mobile:</strong><br /> @Model.MobileNumber
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Alternate Mobile:</strong><br /> @(string.IsNullOrEmpty(Model.AlternateMobileNumber) ? "-" : Model.AlternateMobileNumber)
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Gender:</strong><br /> @(string.IsNullOrEmpty(Model.Gender) ? "-" : Model.Gender)
+                    </div>
+                    <div class="col-md-4">
+                        <strong>DOB:</strong><br /> @(Model.DOB_Date?.ToString("dd-MMM-yyyy") ?? "-")
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Marital Status:</strong><br /> @(string.IsNullOrEmpty(Model.MaritalStatus) ? "-" : Model.MaritalStatus)
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Father Name:</strong><br /> @(string.IsNullOrEmpty(Model.FatherName) ? "-" : Model.FatherName)
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Mother Name:</strong><br /> @(string.IsNullOrEmpty(Model.MotherName) ? "-" : Model.MotherName)
+                    </div>
                 </div>
+
+                <hr />
+
+                <h5 class="fw-bold text-secondary mb-2">Address</h5>
+                <p class="mb-1">
+                    <strong>Current Address:</strong><br />
+                    @(string.IsNullOrEmpty(Model.Address) ? "-" : Model.Address)
+                </p>
+                <p class="mb-0">
+                    <strong>Permanent Address:</strong><br />
+                    @(string.IsNullOrEmpty(Model.PermanentAddress) ? "-" : Model.PermanentAddress)
+                </p>
             </div>
         </div>
     </div>
 
-    <a asp-action="Index" class="btn btn-secondary">Back</a>
-    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning text-white">Edit</a>
+    <!-- JOB DETAILS -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h5 class="fw-bold text-secondary mb-3">Job Details</h5>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <strong>Joining Date:</strong><br />
+                @(Model.JoiningDate?.ToString("dd-MMM-yyyy") ?? "-")
+            </div>
+            <div class="col-md-4">
+                <strong>Department:</strong><br />
+                @(string.IsNullOrEmpty(Model.Department) ? "-" : Model.Department)
+            </div>
+            <div class="col-md-4">
+                <strong>Position:</strong><br />
+                @(string.IsNullOrEmpty(Model.Position) ? "-" : Model.Position)
+            </div>
+            <div class="col-md-4">
+                <strong>Role:</strong><br />
+                @Model.Role
+            </div>
+            <div class="col-md-4">
+                <strong>Salary:</strong><br />
+                @(Model.Salary.HasValue? Model.Salary.Value.ToString("0.00") : "-")
+            </div>
+            <div class="col-md-4">
+                <strong>Reporting Manager:</strong><br />
+                @(string.IsNullOrEmpty(Model.ReportingManager) ? "-" : Model.ReportingManager)
+            </div>
+            <div class="col-md-4">
+                <strong>Status:</strong><br />
+                @(string.IsNullOrEmpty(Model.Status) ? "-" : Model.Status)
+            </div>
+            <div class="col-md-4">
+                <strong>Created At:</strong><br />
+                @Model.CreatedAt.ToString("dd-MMM-yyyy HH:mm")
+            </div>
+        </div>
+    </div>
+
+    <!-- EXPERIENCE -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h5 class="fw-bold text-secondary mb-3">Experience Details</h5>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <strong>Experience Type:</strong><br />
+                @(string.IsNullOrEmpty(Model.ExperienceType) ? "-" : Model.ExperienceType)
+            </div>
+            <div class="col-md-4">
+                <strong>Total Experience Years:</strong><br />
+                @(Model.TotalExperienceYears.HasValue? Model.TotalExperienceYears.ToString() : "-")
+            </div>
+            <div class="col-md-4">
+                <strong>Last Company Name:</strong><br />
+                @(string.IsNullOrEmpty(Model.LastCompanyName) ? "-" : Model.LastCompanyName)
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <strong>Experience Certificates:</strong><br />
+            @if (!string.IsNullOrEmpty(Model.ExperienceCertificateFilePath))
+            {
+                var files = Model.ExperienceCertificateFilePath
+                .Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+                <div class="row g-2 mt-1">
+                    @foreach (var f in files)
+                    {
+                        var trimmed = f.Trim();
+                        var url = baseFolder + trimmed;
+                        var ext = System.IO.Path.GetExtension(trimmed)?.ToLower();
+
+                        <div class="col-md-3">
+                            @if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".webp")
+                            {
+                                <div class="border rounded p-1 text-center">
+                                    <img src="@url" alt="Certificate" class="img-fluid" style="max-height:120px;" />
+                                    <div class="small mt-1">
+                                        <a href="@url" target="_blank">View / Download</a>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <a href="@url" target="_blank" class="btn btn-sm btn-outline-secondary w-100">
+                                    Download @System.IO.Path.GetFileName(trimmed)
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <span class="text-muted">No certificates uploaded.</span>
+            }
+        </div>
+    </div>
+
+    <!-- EDUCATION -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h5 class="fw-bold text-secondary mb-3">Education</h5>
+
+        <div class="row g-3">
+
+            <div class="col-md-4">
+                <strong>12th %:</strong><br />
+                @(Model.HSCPercent.HasValue? Model.HSCPercent.ToString() : "-")
+            </div>
+
+            <div class="col-md-4">
+                <strong>Graduation:</strong><br />
+                @(string.IsNullOrEmpty(Model.GraduationCourse) ? "-" : Model.GraduationCourse)
+            </div>
+
+            <div class="col-md-4">
+                <strong>Graduation %:</strong><br />
+                @(Model.GraduationPercent.HasValue? Model.GraduationPercent.ToString() : "-")
+            </div>
+
+            <div class="col-md-4">
+                <strong>Post Graduation:</strong><br />
+                @(string.IsNullOrEmpty(Model.PostGraduationCourse) ? "-" : Model.PostGraduationCourse)
+            </div>
+
+            <div class="col-md-4">
+                <strong>Post Graduation %:</strong><br />
+                @(Model.PostGraduationPercent.HasValue? Model.PostGraduationPercent.ToString() : "-")
+            </div>
+
+        </div>
+
+        <hr />
+
+        <h6 class="fw-bold">Marksheet Documents</h6>
+        <div class="row g-3 mt-1">
+
+            <!-- 10th -->
+            <div class="col-md-3">
+                <strong>10th Marksheet:</strong><br />
+                @if (!string.IsNullOrEmpty(Model.TenthMarksheetFilePath))
+                {
+                    var url = baseFolder + Model.TenthMarksheetFilePath;
+                    var ext = System.IO.Path.GetExtension(Model.TenthMarksheetFilePath)?.ToLower();
+                    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".webp")
+                    {
+                        <img src="@url" class="img-thumbnail" style="max-height:120px;" alt="10th Marksheet" />
+                    }
+                    else
+                    {
+                        <a href="@url" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">
+                            View / Download
+                        </a>
+                    }
+                }
+                else
+                {
+                    <span class="text-muted">Not uploaded</span>
+                }
+            </div>
+
+            <!-- 12th -->
+            <div class="col-md-3">
+                <strong>12th Marksheet:</strong><br />
+                @if (!string.IsNullOrEmpty(Model.TwelfthMarksheetFilePath))
+                {
+                    var url = baseFolder + Model.TwelfthMarksheetFilePath;
+                    var ext = System.IO.Path.GetExtension(Model.TwelfthMarksheetFilePath)?.ToLower();
+                    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".webp")
+                    {
+                        <img src="@url" class="img-thumbnail" style="max-height:120px;" alt="12th Marksheet" />
+                    }
+                    else
+                    {
+                        <a href="@url" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">
+                            View / Download
+                        </a>
+                    }
+                }
+                else
+                {
+                    <span class="text-muted">Not uploaded</span>
+                }
+            </div>
+
+            <!-- Graduation -->
+            <div class="col-md-3">
+                <strong>Graduation Marksheet:</strong><br />
+                @if (!string.IsNullOrEmpty(Model.GraduationMarksheetFilePath))
+                {
+                    var url = baseFolder + Model.GraduationMarksheetFilePath;
+                    var ext = System.IO.Path.GetExtension(Model.GraduationMarksheetFilePath)?.ToLower();
+                    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".webp")
+                    {
+                        <img src="@url" class="img-thumbnail" style="max-height:120px;" alt="Graduation Marksheet" />
+                    }
+                    else
+                    {
+                        <a href="@url" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">
+                            View / Download
+                        </a>
+                    }
+                }
+                else
+                {
+                    <span class="text-muted">Not uploaded</span>
+                }
+            </div>
+
+            <!-- PG -->
+            <div class="col-md-3">
+                <strong>PG Marksheet:</strong><br />
+                @if (!string.IsNullOrEmpty(Model.PostGraduationMarksheetFilePath))
+                {
+                    var url = baseFolder + Model.PostGraduationMarksheetFilePath;
+                    var ext = System.IO.Path.GetExtension(Model.PostGraduationMarksheetFilePath)?.ToLower();
+                    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".webp")
+                    {
+                        <img src="@url" class="img-thumbnail" style="max-height:120px;" alt="PG Marksheet" />
+                    }
+                    else
+                    {
+                        <a href="@url" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">
+                            View / Download
+                        </a>
+                    }
+                }
+                else
+                {
+                    <span class="text-muted">Not uploaded</span>
+                }
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ID & BANK & EMERGENCY & HEALTH -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h5 class="fw-bold text-secondary mb-3">ID & Bank Details</h5>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <strong>Aadhaar Number:</strong><br />
+                @(string.IsNullOrEmpty(Model.AadhaarNumber) ? "-" : Model.AadhaarNumber)
+            </div>
+            <div class="col-md-4">
+                <strong>PAN Number:</strong><br />
+                @(string.IsNullOrEmpty(Model.PanNumber) ? "-" : Model.PanNumber)
+            </div>
+        </div>
+
+        <div class="row g-3 mt-3">
+            <div class="col-md-3">
+                <strong>Aadhaar File:</strong><br />
+                @if (!string.IsNullOrEmpty(Model.AadhaarFilePath))
+                {
+                    var url = baseFolder + Model.AadhaarFilePath;
+                    var ext = System.IO.Path.GetExtension(Model.AadhaarFilePath)?.ToLower();
+                    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".webp")
+                    {
+                        <img src="@url" class="img-thumbnail" style="max-height:120px;" alt="Aadhaar" />
+                    }
+                    else
+                    {
+                        <a href="@url" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">
+                            View / Download
+                        </a>
+                    }
+                }
+                else
+                {
+                    <span class="text-muted">Not uploaded</span>
+                }
+            </div>
+
+            <div class="col-md-3">
+                <strong>PAN File:</strong><br />
+                @if (!string.IsNullOrEmpty(Model.PanFilePath))
+                {
+                    var url = baseFolder + Model.PanFilePath;
+                    var ext = System.IO.Path.GetExtension(Model.PanFilePath)?.ToLower();
+                    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".webp")
+                    {
+                        <img src="@url" class="img-thumbnail" style="max-height:120px;" alt="PAN" />
+                    }
+                    else
+                    {
+                        <a href="@url" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">
+                            View / Download
+                        </a>
+                    }
+                }
+                else
+                {
+                    <span class="text-muted">Not uploaded</span>
+                }
+            </div>
+
+            <div class="col-md-3">
+                <strong>Passbook File:</strong><br />
+                @if (!string.IsNullOrEmpty(Model.PassbookFilePath))
+                {
+                    var url = baseFolder + Model.PassbookFilePath;
+                    var ext = System.IO.Path.GetExtension(Model.PassbookFilePath)?.ToLower();
+                    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".webp")
+                    {
+                        <img src="@url" class="img-thumbnail" style="max-height:120px;" alt="Passbook" />
+                    }
+                    else
+                    {
+                        <a href="@url" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">
+                            View / Download
+                        </a>
+                    }
+                }
+                else
+                {
+                    <span class="text-muted">Not uploaded</span>
+                }
+            </div>
+        </div>
+
+        <hr />
+
+        <h5 class="fw-bold text-secondary mb-3">Bank Details</h5>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <strong>Account Holder Name:</strong><br />
+                @(string.IsNullOrEmpty(Model.AccountHolderName) ? "-" : Model.AccountHolderName)
+            </div>
+            <div class="col-md-4">
+                <strong>Bank Name:</strong><br />
+                @(string.IsNullOrEmpty(Model.BankName) ? "-" : Model.BankName)
+            </div>
+            <div class="col-md-4">
+                <strong>Account Number:</strong><br />
+                @(string.IsNullOrEmpty(Model.AccountNumber) ? "-" : Model.AccountNumber)
+            </div>
+            <div class="col-md-4">
+                <strong>IFSC:</strong><br />
+                @(string.IsNullOrEmpty(Model.IFSC) ? "-" : Model.IFSC)
+            </div>
+            <div class="col-md-4">
+                <strong>Branch:</strong><br />
+                @(string.IsNullOrEmpty(Model.Branch) ? "-" : Model.Branch)
+            </div>
+        </div>
+
+        <hr />
+
+        <h5 class="fw-bold text-secondary mb-3">Emergency Contact</h5>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <strong>Name:</strong><br />
+                @(string.IsNullOrEmpty(Model.EmergencyContactName) ? "-" : Model.EmergencyContactName)
+            </div>
+            <div class="col-md-4">
+                <strong>Relationship:</strong><br />
+                @(string.IsNullOrEmpty(Model.EmergencyContactRelationship) ? "-" : Model.EmergencyContactRelationship)
+            </div>
+            <div class="col-md-4">
+                <strong>Mobile:</strong><br />
+                @(string.IsNullOrEmpty(Model.EmergencyContactMobile) ? "-" : Model.EmergencyContactMobile)
+            </div>
+            <div class="col-md-12">
+                <strong>Address:</strong><br />
+                @(string.IsNullOrEmpty(Model.EmergencyContactAddress) ? "-" : Model.EmergencyContactAddress)
+            </div>
+        </div>
+
+        <hr />
+
+        <h5 class="fw-bold text-secondary mb-3">Health Information</h5>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <strong>Has Disease:</strong><br />
+                @(string.IsNullOrEmpty(Model.HasDisease) ? "-" : Model.HasDisease)
+            </div>
+            <div class="col-md-4">
+                <strong>Disease Name:</strong><br />
+                @(string.IsNullOrEmpty(Model.DiseaseName) ? "-" : Model.DiseaseName)
+            </div>
+            <div class="col-md-4">
+                <strong>Disease Since:</strong><br />
+                @(string.IsNullOrEmpty(Model.DiseaseSince) ? "-" : Model.DiseaseSince)
+            </div>
+            <div class="col-md-4">
+                <strong>Medicines Required:</strong><br />
+                @(string.IsNullOrEmpty(Model.MedicinesRequired) ? "-" : Model.MedicinesRequired)
+            </div>
+            <div class="col-md-4">
+                <strong>Doctor Name:</strong><br />
+                @(string.IsNullOrEmpty(Model.DoctorName) ? "-" : Model.DoctorName)
+            </div>
+            <div class="col-md-4">
+                <strong>Doctor Contact:</strong><br />
+                @(string.IsNullOrEmpty(Model.DoctorContact) ? "-" : Model.DoctorContact)
+            </div>
+            <div class="col-md-4">
+                <strong>Last Affected Date:</strong><br />
+                @(string.IsNullOrEmpty(Model.LastAffectedDate) ? "-" : Model.LastAffectedDate)
+            </div>
+            <div class="col-md-4">
+                <strong>Medical Document:</strong><br />
+                @if (!string.IsNullOrEmpty(Model.MedicalDocumentFilePath))
+                {
+                    var url = baseFolder + Model.MedicalDocumentFilePath;
+                    var ext = System.IO.Path.GetExtension(Model.MedicalDocumentFilePath)?.ToLower();
+                    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".webp")
+                    {
+                        <img src="@url" class="img-thumbnail" style="max-height:120px;" alt="Medical Document" />
+                    }
+                    else
+                    {
+                        <a href="@url" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">
+                            View / Download
+                        </a>
+                    }
+                }
+                else
+                {
+                    <span class="text-muted">Not uploaded</span>
+                }
+            </div>
+        </div>
+    </div>
 
 </div>

@@ -1,196 +1,186 @@
 ﻿@model HRMS.Models.Employee
+
 @{
-    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
     ViewData["Title"] = "My Profile";
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    string baseFolder = Url.Content("~/uploads/employees/" + Model.EmployeeCode + "/");
 }
 
-@{
-    var photoPath = string.IsNullOrEmpty(Model.ProfileImagePath)
-        ? "/images/default-user.png"
-        : $"/uploads/employees/{Model.EmployeeCode}/{Model.ProfileImagePath}";
-}
+<div class="container py-4">
 
-<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary">
+            <i class="fa-solid fa-id-card me-2"></i> My Profile
+        </h3>
 
-    <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-header bg-primary text-white text-center">
-            <h3>My Profile</h3>
-        </div>
+        
+    </div>
 
-        <div class="card-body p-4">
-
-            <div class="text-center mb-4">
-
-                <img src="@photoPath"
-                     class="rounded-circle shadow"
-                     style="width: 130px; height: 130px; object-fit: cover;" />
-
-                <h4 class="mt-3">@Model.Name</h4>
-                <p class="text-muted">@Model.Position | @Model.Department</p>
-                <p class="text-muted"><strong>Role:</strong> @Model.Role</p>
-            </div>
-
-            <div class="row g-3">
-
-                <!-- BASIC DETAILS -->
-                <div class="col-md-6">
-                    <label class="form-label">Full Name</label>
-                    <input value="@Model.Name" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Email</label>
-                    <input value="@Model.Email" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Mobile Number</label>
-                    <input value="@Model.MobileNumber" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Gender</label>
-                    <input value="@Model.Gender" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">DOB</label>
-                    <input value="@Model.DOB_Date?.ToString("yyyy-MM-dd")" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Marital Status</label>
-                    <input value="@Model.MaritalStatus" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Father Name</label>
-                    <input value="@Model.FatherName" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Mother Name</label>
-                    <input value="@Model.MotherName" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-12">
-                    <label class="form-label">Address</label>
-                    <textarea class="form-control" readonly>@Model.Address</textarea>
-                </div>
-
-                <!-- JOB DETAILS -->
-                <div class="col-md-6">
-                    <label class="form-label">Department</label>
-                    <input value="@Model.Department" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Position</label>
-                    <input value="@Model.Position" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Reporting Manager</label>
-                    <input value="@Model.ReportingManager" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Joining Date</label>
-                    <input value="@Model.JoiningDate?.ToString("yyyy-MM-dd")" class="form-control" readonly />
-                </div>
-
-                <!-- EXPERIENCE DETAILS -->
-                <div class="col-md-6">
-                    <label class="form-label">Experience Type</label>
-                    <input value="@Model.ExperienceType" class="form-control" readonly />
-                </div>
-
-                @if (Model.ExperienceType == "Experienced")
+    <!-- Reuse Details-style layout but slightly more compact -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <div class="row">
+            <div class="col-md-3 text-center">
+                @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
                 {
-                    <div class="col-md-6">
-                        <label class="form-label">Total Experience (Years)</label>
-                        <input value="@Model.TotalExperienceYears" class="form-control" readonly />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Last Company</label>
-                        <input value="@Model.LastCompanyName" class="form-control" readonly />
-                    </div>
+                    var profileUrl = baseFolder + Model.ProfileImagePath;
+                    var ext = System.IO.Path.GetExtension(Model.ProfileImagePath)?.ToLower();
+                    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".webp")
+                    {
+                        <img src="@profileUrl" class="img-thumbnail mb-3" style="max-height:180px;" alt="Profile Photo" />
+                    }
+                    else
+                    {
+                        <a href="@profileUrl" target="_blank" class="btn btn-sm btn-outline-secondary mb-3">
+                            View / Download Photo
+                        </a>
+                    }
+                }
+                else
+                {
+                    <div class="border rounded p-4 text-muted">No Photo</div>
                 }
 
-                <!-- ID DETAILS -->
-                <div class="col-md-6">
-                    <label class="form-label">Aadhaar</label>
-                    <input value="@Model.AadhaarNumber" class="form-control" readonly />
-
-                    @if (!string.IsNullOrEmpty(Model.AadhaarFilePath))
-                    {
-                        <a href="/uploads/employees/@Model.EmployeeCode/@Model.AadhaarFilePath"
-                           target="_blank" class="btn btn-sm btn-outline-primary mt-1">View Aadhaar</a>
-                    }
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">PAN</label>
-                    <input value="@Model.PanNumber" class="form-control" readonly />
-
-                    @if (!string.IsNullOrEmpty(Model.PanFilePath))
-                    {
-                        <a href="/uploads/employees/@Model.EmployeeCode/@Model.PanFilePath"
-                           target="_blank" class="btn btn-sm btn-outline-primary mt-1">View PAN</a>
-                    }
-                </div>
-
-                <!-- BANK DETAILS -->
-                <div class="col-md-6">
-                    <label class="form-label">Bank Name</label>
-                    <input value="@Model.BankName" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Account Number</label>
-                    <input value="@Model.AccountNumber" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">IFSC</label>
-                    <input value="@Model.IFSC" class="form-control" readonly />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Branch</label>
-                    <input value="@Model.Branch" class="form-control" readonly />
-                </div>
-
-                <!-- MARKSHEET & PASSBOOK LINKS -->
-                <div class="col-md-6">
-                    @if (!string.IsNullOrEmpty(Model.PassbookFilePath))
-                    {
-                        <label class="form-label">Passbook</label>
-                    
-                        <br />
-                        <a href="/uploads/employees/@Model.EmployeeCode/@Model.PassbookFilePath"
-                           target="_blank" class="btn btn-sm btn-outline-primary">View Passbook</a>
-                    }
-                </div>
-
-                <div class="col-md-6">
-                    @if (!string.IsNullOrEmpty(Model.MarksheetFilePath))
-                    {
-                        <label class="form-label">Marksheet</label>
-                    
-                        <br />
-                        <a href="/uploads/employees/@Model.EmployeeCode/@Model.MarksheetFilePath"
-                           target="_blank" class="btn btn-sm btn-outline-primary">View Marksheet</a>
-                    }
-                </div>
-
+                <h5 class="mt-2">@Model.Name</h5>
+                <p class="mb-1 text-muted">Employee Code: <strong>@Model.EmployeeCode</strong></p>
+                <p class="mb-0"><span class="badge bg-primary">@Model.Role</span></p>
             </div>
 
-            <div class="text-center mt-4">
-                <a href="/Employees/Dashboard" class="btn btn-secondary px-4">Back</a>
-            </div>
+            <div class="col-md-9">
+                <h5 class="fw-bold text-secondary mb-3">Basic & Contact Details</h5>
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <strong>Email:</strong><br /> @Model.Email
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Mobile:</strong><br /> @Model.MobileNumber
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Alternate Mobile:</strong><br /> @(string.IsNullOrEmpty(Model.AlternateMobileNumber) ? "-" : Model.AlternateMobileNumber)
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Gender:</strong><br /> @(string.IsNullOrEmpty(Model.Gender) ? "-" : Model.Gender)
+                    </div>
+                    <div class="col-md-4">
+                        <strong>DOB:</strong><br /> @(Model.DOB_Date?.ToString("dd-MMM-yyyy") ?? "-")
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Marital Status:</strong><br /> @(string.IsNullOrEmpty(Model.MaritalStatus) ? "-" : Model.MaritalStatus)
+                    </div>
+                </div>
 
+                <hr />
+
+                <h5 class="fw-bold text-secondary mb-2">Address</h5>
+                <p class="mb-1">
+                    <strong>Current Address:</strong><br />
+                    @(string.IsNullOrEmpty(Model.Address) ? "-" : Model.Address)
+                </p>
+                <p class="mb-0">
+                    <strong>Permanent Address:</strong><br />
+                    @(string.IsNullOrEmpty(Model.PermanentAddress) ? "-" : Model.PermanentAddress)
+                </p>
+            </div>
         </div>
     </div>
+
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h5 class="fw-bold text-secondary mb-3">Job Details</h5>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <strong>Joining Date:</strong><br />
+                @(Model.JoiningDate?.ToString("dd-MMM-yyyy") ?? "-")
+            </div>
+            <div class="col-md-4">
+                <strong>Department:</strong><br />
+                @(string.IsNullOrEmpty(Model.Department) ? "-" : Model.Department)
+            </div>
+            <div class="col-md-4">
+                <strong>Position:</strong><br />
+                @(string.IsNullOrEmpty(Model.Position) ? "-" : Model.Position)
+            </div>
+            <div class="col-md-4">
+                <strong>Reporting Manager:</strong><br />
+                @(string.IsNullOrEmpty(Model.ReportingManager) ? "-" : Model.ReportingManager)
+            </div>
+            <div class="col-md-4">
+                <strong>Salary:</strong><br />
+                @(Model.Salary.HasValue ? Model.Salary.Value.ToString("0.00") : "-")
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h5 class="fw-bold text-secondary mb-3">Emergency & Health</h5>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <strong>Emergency Contact Name:</strong><br />
+                @(string.IsNullOrEmpty(Model.EmergencyContactName) ? "-" : Model.EmergencyContactName)
+            </div>
+            <div class="col-md-4">
+                <strong>Relationship:</strong><br />
+                @(string.IsNullOrEmpty(Model.EmergencyContactRelationship) ? "-" : Model.EmergencyContactRelationship)
+            </div>
+            <div class="col-md-4">
+                <strong>Emergency Mobile:</strong><br />
+                @(string.IsNullOrEmpty(Model.EmergencyContactMobile) ? "-" : Model.EmergencyContactMobile)
+            </div>
+            <div class="col-md-12">
+                <strong>Emergency Address:</strong><br />
+                @(string.IsNullOrEmpty(Model.EmergencyContactAddress) ? "-" : Model.EmergencyContactAddress)
+            </div>
+        </div>
+
+        <hr />
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <strong>Has Disease:</strong><br />
+                @(string.IsNullOrEmpty(Model.HasDisease) ? "-" : Model.HasDisease)
+            </div>
+            <div class="col-md-4">
+                <strong>Disease Name:</strong><br />
+                @(string.IsNullOrEmpty(Model.DiseaseName) ? "-" : Model.DiseaseName)
+            </div>
+            <div class="col-md-4">
+                <strong>Disease Since:</strong><br />
+                @(string.IsNullOrEmpty(Model.DiseaseSince) ? "-" : Model.DiseaseSince)
+            </div>
+            <div class="col-md-4">
+                <strong>Medicines Required:</strong><br />
+                @(string.IsNullOrEmpty(Model.MedicinesRequired) ? "-" : Model.MedicinesRequired)
+            </div>
+            <div class="col-md-4">
+                <strong>Doctor Name:</strong><br />
+                @(string.IsNullOrEmpty(Model.DoctorName) ? "-" : Model.DoctorName)
+            </div>
+            <div class="col-md-4">
+                <strong>Doctor Contact:</strong><br />
+                @(string.IsNullOrEmpty(Model.DoctorContact) ? "-" : Model.DoctorContact)
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.MedicalDocumentFilePath))
+        {
+            var url = baseFolder + Model.MedicalDocumentFilePath;
+            var ext = System.IO.Path.GetExtension(Model.MedicalDocumentFilePath)?.ToLower();
+
+            <hr />
+            <h6 class="fw-bold">Medical Document</h6>
+
+            if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".webp")
+            {
+                <img src="@url" class="img-thumbnail" style="max-height:150px;" alt="Medical Document" />
+            }
+            else
+            {
+                <a href="@url" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">
+                    View / Download
+                </a>
+            }
+        }
+
+    </div>
+
 </div>
