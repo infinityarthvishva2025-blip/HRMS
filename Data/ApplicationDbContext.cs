@@ -38,8 +38,9 @@ namespace HRMS.Data
                 .OnDelete(DeleteBehavior.Restrict);
         }
 
+        public DbSet<GurukulVideo> GurukulVideos { get; set; }
+        public DbSet<GurukulProgress> GurukulProgress { get; set; }
 
-       
 
     }
 }

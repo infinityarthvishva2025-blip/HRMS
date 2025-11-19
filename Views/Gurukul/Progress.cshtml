@@ -1,0 +1,31 @@
+﻿@model IEnumerable<HRMS.Models.GurukulProgress>
+@{
+    var video = (HRMS.Models.GurukulVideo?)ViewBag.Video;
+    Layout = "_HRLayout";
+
+}
+<h2>Progress for @video?.Title</h2>
+
+<table class="table">
+    <thead><tr><th>Employee</th><th>Completed</th><th>Date</th></tr></thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>@p.Employee?.Name</td>
+                <td>
+                    @if (p.IsCompleted)
+                    {
+                        <span class="badge bg-success">Yes</span>
+                    }
+                    else
+                    {
+
+                        <span class="badge bg-warning">No</span>
+                    }
+                </td>
+                <td>@p.CompletedOn?.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</td>
+            </tr>
+        }
+    </tbody>
+</table>
