@@ -6,7 +6,7 @@ using OfficeOpenXml;   // EPPlus
 var builder = WebApplication.CreateBuilder(args);
 
 // =================== EPPLUS LICENSE ===================
-ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+//ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 // =================== SERVICES ===================
 builder.Services.AddControllersWithViews();

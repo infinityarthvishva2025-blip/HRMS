@@ -26,93 +26,40 @@ namespace HRMS.Controllers
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
 
-            // =====================================================
-            // 🎉 CELEBRATION DATA (BIRTHDAYS + ANNIVERSARIES)
-            // =====================================================
+            // Celebration Model
             var model = new CelebrationViewModel
             {
                 TotalEmployees = employees.Count,
-
-                TodaysBirthdays = employees
-                    .Where(e => e.DOB_Date.HasValue &&
-                                e.DOB_Date.Value.Month == today.Month &&
-                                e.DOB_Date.Value.Day == today.Day)
-                    .ToList(),
-
-                TomorrowsBirthdays = employees
-                    .Where(e => e.DOB_Date.HasValue &&
-                                e.DOB_Date.Value.Month == tomorrow.Month &&
-                                e.DOB_Date.Value.Day == tomorrow.Day)
-                    .ToList(),
-
-                TodaysAnniversaries = employees
-                    .Where(e => e.JoiningDate.HasValue &&
-                                e.JoiningDate.Value.Month == today.Month &&
-                                e.JoiningDate.Value.Day == today.Day)
-                    .ToList(),
-
-                TomorrowsAnniversaries = employees
-                    .Where(e => e.JoiningDate.HasValue &&
-                                e.JoiningDate.Value.Month == tomorrow.Month &&
-                                e.JoiningDate.Value.Day == tomorrow.Day)
-                    .ToList()
+                TodaysBirthdays = employees.Where(e => e.DOB_Date?.Date == today).ToList(),
+                TomorrowsBirthdays = employees.Where(e => e.DOB_Date?.Date == tomorrow).ToList(),
+                TodaysAnniversaries = employees.Where(e => e.JoiningDate?.Date == today).ToList(),
+                TomorrowsAnniversaries = employees.Where(e => e.JoiningDate?.Date == tomorrow).ToList()
             };
 
-
-            // =====================================================
-            // 🟢 TODAY’S ATTENDANCE
-            // =====================================================
-            var todaysAttendance = _context.Attendances
+            // Today Attendance
+            var todaysAtt = _context.Attendances
                 .Where(a => a.Date == today)
-                .AsNoTracking()
                 .ToList();
 
-            int presentCount = todaysAttendance
-                .Select(a => a.Emp_Code)
-                .Distinct()
-                .Count();
+            ViewBag.PresentToday = todaysAtt.Select(a => a.EmpCode).Distinct().Count();
+            ViewBag.AbsentToday = employees.Count - ViewBag.PresentToday;
+            ViewBag.NotCheckedOutToday = todaysAtt.Count(a => a.OutTime == null);
 
-            int absentCount = employees.Count - presentCount;
-
-            int notCheckedOutCount = todaysAttendance
-                .Count(a => a.OutTime == null);
-
-            ViewBag.PresentToday = presentCount;
-            ViewBag.AbsentToday = absentCount;
-            ViewBag.NotCheckedOutToday = notCheckedOutCount;
-
-
-            // =====================================================
-            // 🆕 RECENT EMPLOYEES (LAST 5)
-            // =====================================================
-            var last5Employees = _context.Employees
-                .AsNoTracking()
+            // Recent Employees
+            var last5 = employees
                 .OrderByDescending(e => e.JoiningDate ?? DateTime.MinValue)
                 .Take(5)
                 .ToList();
 
-            var recentEmployees = last5Employees
-                .Select(e => new RecentEmployeeViewModel
+            var recentList = last5
+                .Select(emp => new RecentEmployeeViewModel
                 {
-                    Employee = e,
-                    Attendance = todaysAttendance.FirstOrDefault(a => a.Emp_Code == e.EmployeeCode)
+                    Employee = emp,
+                    Attendance = todaysAtt.FirstOrDefault(a => a.EmpCode == emp.EmployeeCode)
                 })
                 .ToList();
 
-            ViewBag.RecentEmployees = recentEmployees;
-
-
-            // =====================================================
-            // 📊 DEPARTMENT CHART
-            // =====================================================
-            var departmentGroups = employees
-                .Where(e => !string.IsNullOrEmpty(e.Department))
-                .GroupBy(e => e.Department)
-                .Select(g => new { Department = g.Key, Count = g.Count() })
-                .ToList();
-
-            ViewBag.DepartmentLabels = departmentGroups.Select(d => d.Department).ToList();
-            ViewBag.DepartmentValues = departmentGroups.Select(d => d.Count).ToList();
+            ViewBag.RecentEmployees = recentList;
 
             return View(model);
         }

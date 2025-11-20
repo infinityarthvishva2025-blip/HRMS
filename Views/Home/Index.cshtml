@@ -1,16 +1,21 @@
 ﻿@model HRMS.Models.CelebrationViewModel
+@using HRMS.Models.ViewModels
 @using System.Linq
+
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_HrLayout.cshtml";
+
+    // SAFE CAST FOR RECENT EMPLOYEES
+    var recentEmployees = ViewBag.RecentEmployees as List<RecentEmployeeViewModel>
+                          ?? new List<RecentEmployeeViewModel>();
 }
 
-<!-- ✅ Dashboard Header -->
+
 <h2 class="fw-bold mb-4 text-primary">My Dashboard</h2>
 
-<!-- ✅ Dashboard Summary Cards (with Attendance Summary) -->
+<!-- ======================= SUMMARY CARDS ======================= -->
 <div class="row">
-    <!-- Total Employees -->
     <div class="col-md-3 mb-3">
         <div class="card shadow-sm border-0 text-center">
             <div class="card-body">
@@ -21,7 +26,6 @@
         </div>
     </div>
 
-    <!-- Today's Present -->
     <div class="col-md-3 mb-3">
         <div class="card shadow-sm border-0 text-center">
             <div class="card-body">
@@ -32,7 +36,6 @@
         </div>
     </div>
 
-    <!-- Today's Absent -->
     <div class="col-md-3 mb-3">
         <div class="card shadow-sm border-0 text-center">
             <div class="card-body">
@@ -43,7 +46,6 @@
         </div>
     </div>
 
-    <!-- Not Checked Out -->
     <div class="col-md-3 mb-3">
         <div class="card shadow-sm border-0 text-center">
             <div class="card-body">
@@ -55,7 +57,7 @@
     </div>
 </div>
 
-<!-- ✅ Quick Actions -->
+<!-- ======================= QUICK ACTIONS ======================= -->
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-white fw-bold border-bottom d-flex align-items-center">
         <i class="fa-solid fa-bolt text-warning me-2"></i> Quick Actions
@@ -63,56 +65,58 @@
 
     <div class="card-body">
         <div class="d-flex flex-wrap justify-content-center gap-3">
+
             <a asp-controller="Employees" asp-action="Create"
-               class="btn btn-primary d-flex align-items-center justify-content-center gap-2 px-4 py-2">
-                <i class="fa-solid fa-user-plus"></i>
-                Add Employee
+               class="btn btn-primary d-flex align-items-center gap-2 px-4 py-2">
+                <i class="fa-solid fa-user-plus"></i> Add Employee
             </a>
+
             <a asp-controller="Employees" asp-action="Index"
-               class="btn btn-success d-flex align-items-center justify-content-center gap-2 px-4 py-2">
-                <i class="fa-solid fa-list"></i>
-                View Employees
+               class="btn btn-success d-flex align-items-center gap-2 px-4 py-2">
+                <i class="fa-solid fa-list"></i> View Employees
             </a>
+
             <a asp-controller="Attendance" asp-action="Index"
-               class="btn btn-info text-white d-flex align-items-center justify-content-center gap-2 px-4 py-2">
-                <i class="fa-solid fa-calendar-check"></i>
-                Attendance Report
+               class="btn btn-info text-white d-flex align-items-center gap-2 px-4 py-2">
+                <i class="fa-solid fa-calendar-check"></i> Attendance Report
             </a>
+
             <a asp-controller="Payroll" asp-action="Index"
-               class="btn btn-warning text-dark d-flex align-items-center justify-content-center gap-2 px-4 py-2">
-                <i class="fa-solid fa-file-invoice-dollar"></i>
-                Process Payroll
+               class="btn btn-warning text-dark d-flex align-items-center gap-2 px-4 py-2">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Process Payroll
             </a>
+
             <a asp-controller="Leave" asp-action="Index"
-               class="btn btn-outline-primary d-flex align-items-center justify-content-center gap-2 px-4 py-2">
-                <i class="fa-solid fa-plane-departure"></i>
-                Manage Leaves
+               class="btn btn-outline-primary d-flex align-items-center gap-2 px-4 py-2">
+                <i class="fa-solid fa-plane-departure"></i> Manage Leaves
             </a>
+
             <a asp-controller="Reports" asp-action="Index"
-               class="btn btn-outline-dark d-flex align-items-center justify-content-center gap-2 px-4 py-2">
-                <i class="fa-solid fa-chart-bar"></i>
-                Reports
+               class="btn btn-outline-dark d-flex align-items-center gap-2 px-4 py-2">
+                <i class="fa-solid fa-chart-bar"></i> Reports
             </a>
+
         </div>
     </div>
 </div>
 
-<!-- ✅ Celebrations + Chart Row -->
+<!-- ======================= CELEBRATIONS + CHART ======================= -->
 <div class="row mt-4">
-    <!-- Celebrations Section -->
+
+    <!-- Celebrations -->
     <div class="col-lg-6 col-md-12 mb-4">
         <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white fw-bold border-bottom">
-                🎉 Celebrations
-            </div>
+            <div class="card-header bg-white fw-bold border-bottom">🎉 Celebrations</div>
             <div class="card-body">
+
                 <div class="row">
+
                     <!-- Today's Celebrations -->
                     <div class="col-md-6 border-end">
                         <h6 class="fw-bold text-primary mb-3">Today's Celebrations</h6>
+
                         @if ((Model?.TodaysBirthdays?.Any() ?? false) || (Model?.TodaysAnniversaries?.Any() ?? false))
                         {
-                            <!-- Limit to 2 Birthdays -->
                             @foreach (var emp in Model.TodaysBirthdays.Take(2))
                             {
                                 <div class="d-flex align-items-center mb-2">
@@ -126,7 +130,6 @@
                                 </div>
                             }
 
-                            <!-- Limit to 2 Joining Anniversaries -->
                             @foreach (var emp in Model.TodaysAnniversaries.Take(2))
                             {
                                 <div class="d-flex align-items-center mb-2">
@@ -146,12 +149,12 @@
                         }
                     </div>
 
-                    <!-- Tomorrow's Celebrations -->
+                    <!-- Tomorrow Celebrations -->
                     <div class="col-md-6">
                         <h6 class="fw-bold text-success mb-3">Tomorrow's Celebrations</h6>
+
                         @if ((Model?.TomorrowsBirthdays?.Any() ?? false) || (Model?.TomorrowsAnniversaries?.Any() ?? false))
                         {
-                            <!-- Limit to 2 Birthdays -->
                             @foreach (var emp in Model.TomorrowsBirthdays.Take(2))
                             {
                                 <div class="d-flex align-items-center mb-2">
@@ -165,7 +168,6 @@
                                 </div>
                             }
 
-                            <!-- Limit to 2 Joining Anniversaries -->
                             @foreach (var emp in Model.TomorrowsAnniversaries.Take(2))
                             {
                                 <div class="d-flex align-items-center mb-2">
@@ -184,12 +186,13 @@
                             <div class="text-muted">No celebrations tomorrow 🎉</div>
                         }
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Employee Distribution Chart -->
+    <!-- Department Chart -->
     <div class="col-lg-6 col-md-12 mb-4">
         <div class="card shadow-sm border-0 h-100">
             <div class="card-header bg-white fw-bold border-bottom">
@@ -200,17 +203,18 @@
             </div>
         </div>
     </div>
+
 </div>
 
-<!-- ✅ Recent Employees Section -->
+<!-- ======================= RECENT EMPLOYEES ======================= -->
 <div class="card shadow-sm border-0 mt-4">
-    <div class="card-header bg-white fw-bold border-bottom d-flex justify-content-between align-items-center">
+    <div class="card-header bg-white fw-bold border-bottom d-flex justify-content-between">
         <span><i class="fa-solid fa-users me-2 text-primary"></i>Recent Employees</span>
-        <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-primary btn-sm">
-            View All
-        </a>
+        <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-primary btn-sm">View All</a>
     </div>
+
     <div class="card-body p-0">
+
         <table class="table table-striped mb-0">
             <thead class="table-light">
                 <tr>
@@ -221,43 +225,55 @@
                     <th>Status</th>
                 </tr>
             </thead>
+
             <tbody>
-              @foreach (HRMS.Models.ViewModels.RecentEmployeeViewModel item in ViewBag.RecentEmployees)
 
+                @if (!recentEmployees.Any())
                 {
-                    var emp = item.Employee;
-                    var att = item.Attendance;
-
                     <tr>
-                        <td>@emp.EmployeeCode</td>
-                        <td>@emp.Name</td>
-                        <td>@emp.Department</td>
-                        <td>@emp.Position</td>
-                        <td>
-                            @if (att == null)
-                            {
-                                <span class="badge bg-danger">Absent</span>
-                            }
-                            else if (att.OutTime == null)
-                            {
-                                <span class="badge bg-warning text-dark">Not Checked Out</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-success">Active</span>
-                            }
+                        <td colspan="5" class="text-center py-3 text-danger fw-bold">
+                            No recent employees found.
                         </td>
                     </tr>
+                }
+                else
+                {
+                    foreach (var item in recentEmployees)
+                    {
+                        var emp = item.Employee;
+                        var att = item.Attendance;
 
+                        <tr>
+                            <td>@emp.EmployeeCode</td>
+                            <td>@emp.Name</td>
+                            <td>@emp.Department</td>
+                            <td>@emp.Position</td>
+
+                            <td>
+                                @if (att == null)
+                                {
+                                    <span class="badge bg-danger">Absent</span>
+                                }
+                                else if (att.OutTime == null)
+                                {
+                                    <span class="badge bg-warning text-dark">Not Checked Out</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                            </td>
+                        </tr>
+                    }
                 }
 
             </tbody>
-
         </table>
+
     </div>
 </div>
 
-<!-- ✅ Chart.js Script -->
+<!-- ======================= CHART JS ======================= -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const ctx = document.getElementById('deptChart');
@@ -285,13 +301,12 @@
                 legend: { position: 'bottom', labels: { boxWidth: 20, padding: 15 } }
             },
             cutout: '65%',
-            responsive: true,
-            maintainAspectRatio: false
+            responsive: true
         }
     });
 </script>
 
-<!-- ✅ Custom Styling -->
+<!-- ======================= STYLES ======================= -->
 <style>
     .card {
         border-radius: 10px;
@@ -305,7 +320,7 @@
     .btn {
         border-radius: 8px;
         font-weight: 500;
-        transition: all 0.25s ease;
+        transition: 0.25s;
     }
 
         .btn:hover {
