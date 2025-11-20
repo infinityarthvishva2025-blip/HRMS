@@ -4,15 +4,11 @@ namespace HRMS.Models
 {
     public class Attendance
     {
-        public int Id { get; set; }
-        public int EmployeeId { get; set; }
-        public DateTime? CheckInTime { get; set; }
-        public DateTime? CheckOutTime { get; set; }
-        public string? CheckoutStatus { get; set; }
-        public Employee Employee { get; set; }
-        public bool IsLate { get; set; }
-        public bool IsEarlyLeave { get; set; }
-        public double WorkingHours { get; set; }
-
+        public string Emp_Code { get; set; }     // VARCHAR in DB
+        public DateTime Date { get; set; }       // Date column
+        public string Status { get; set; }       // P / A / WO / etc.
+        public DateTime? InTime { get; set; }    // nullable datetime
+        public DateTime? OutTime { get; set; }   // nullable datetime
+        public TimeSpan? Total_Hours { get; set; } // time(7) column
     }
 }

@@ -404,46 +404,35 @@ namespace HRMS.Controllers
 
         public async Task<IActionResult> Dashboard()
         {
-            // 1️⃣ Get Employee ID from session
             var empId = HttpContext.Session.GetInt32("EmployeeId");
 
             if (empId == null || empId == 0)
-            {
-                // Session expired / not logged in
                 return RedirectToAction("Login", "Account");
-            }
 
-            // 2️⃣ Load logged-in employee
             var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == empId);
-
             if (employee == null)
-            {
                 return RedirectToAction("Login", "Account");
-            }
 
-            // 3️⃣ Total Attendance Count
+            string empCode = employee.EmployeeCode;
+
+            // Total attendance records
             int totalAttendance = await _context.Attendances
-                .CountAsync(a => a.EmployeeId == empId);
+                .CountAsync(a => a.Emp_Code == empCode);
 
-            // 4️⃣ Today’s Attendance (Present / Absent / Not Marked)
-            var todayRecord = await _context.Attendances
-                .FirstOrDefaultAsync(a =>
-                    a.EmployeeId == empId &&
-                    a.CheckInTime.HasValue &&
-                    a.CheckInTime.Value.Date == DateTime.Today);
+            // Today’s attendance
+            //var todayRecord = await _context.Attendances
+            //    .FirstOrDefaultAsync(a =>
+            //        a.Emp_Code == empCode &&
+            //        a.Date == DateTime.Today
+            //    );
 
-            string todayStatus = "Not Marked";
+           // string todayStatus = todayRecord != null ? "Present" : "Not Marked";
 
-            if (todayRecord != null)
-            {
-                todayStatus = todayRecord.CheckOutTime == null ? "Present" : "Present";
-            }
-
-            // 5️⃣ Total Leave Count
+            // Total leaves
             int totalLeaves = await _context.Leaves
                 .CountAsync(l => l.EmployeeId == empId);
 
-            // 6️⃣ Upcoming Birthdays (Next 30 days)
+            // Upcoming birthdays (next 30 days)
             var upcomingBirthdays = await _context.Employees
                 .Where(e =>
                     e.DOB_Date.HasValue &&
@@ -453,18 +442,18 @@ namespace HRMS.Controllers
                 .Take(5)
                 .ToListAsync();
 
-            // 7️⃣ Build ViewModel
             var vm = new EmployeeDashboardViewModel
             {
                 Employee = employee,
                 TotalAttendance = totalAttendance,
-                TodayStatus = todayStatus,
+               // TodayStatus = todayStatus,
                 TotalLeave = totalLeaves,
                 UpcomingBirthdays = upcomingBirthdays
             };
 
             return View(vm);
         }
+
 
         public async Task<IActionResult> MyProfile()
         {

@@ -59,15 +59,16 @@ namespace HRMS.Controllers
                 return View(model);
             }
 
-            // Save session for the logged employee
+            // Save employee login session
             HttpContext.Session.SetString("Role", "Employee");
             HttpContext.Session.SetInt32("EmployeeId", emp.Id);
             HttpContext.Session.SetString("EmployeeName", emp.Name);
+            HttpContext.Session.SetString("EmpCode", emp.EmployeeCode);
 
-            // Run auto checkout cleanup
-            AutoCheckoutForgottenRecords(emp.Id);
+            // Auto checkout yesterday's records for this employee
+            //AutoCheckoutForgottenRecords(emp.EmployeeCode);
 
-            // Redirect only this employee to HIS dashboard
+            // Redirect employee to dashboard
             return RedirectToAction("Dashboard", "Employees");
         }
 
@@ -78,34 +79,45 @@ namespace HRMS.Controllers
         // =============================================
         public IActionResult Logout()
         {
-            HttpContext.Session.Clear();   // Clear all login session values
-            return RedirectToAction("Login", "Account"); // Redirect user back to login page
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login", "Account");
         }
 
 
-        private void AutoCheckoutForgottenRecords(int employeeId)
-        {
-            var yesterday = DateTime.Today.AddDays(-1);
+        // =============================================
+        // AUTO CHECKOUT FOR FORGOTTEN RECORDS
+        // =============================================
+        //private void AutoCheckoutForgottenRecords(string empCode)
+        //{
+        //    var yesterday = DateTime.Today.AddDays(-1);
 
-            var pending = _context.Attendances
-                .Where(a =>
-                    a.EmployeeId == employeeId &&
-                    a.CheckInTime.HasValue &&
-                    a.CheckInTime.Value.Date == yesterday &&
-                    a.CheckOutTime == null)
-                .ToList();
+        //    var pending = _context.Attendances
+        //        .Where(a =>
+        //            a.Emp_Code == empCode &&
+        //            a.Date == yesterday &&
+        //            a.InTime != null &&
+        //            a.OutTime == null
+        //        )
+        //        .ToList();
 
-            if (pending.Count == 0)
-                return;
+        //    if (pending.Count == 0)
+        //        return;
 
-            foreach (var record in pending)
-            {
-                record.CheckOutTime = yesterday.Date.AddHours(23).AddMinutes(59); // 11:59 PM
-                record.CheckoutStatus = "Auto Checkout";
-            }
+        //    foreach (var record in pending)
+        //    {
+        //        // Set auto-checkout at 11:59 PM
+        //        record.OutTime = yesterday.AddHours(23).AddMinutes(59);
 
-            _context.SaveChanges();
-        }
+        //        // Calculate hours
+        //        if (record.InTime.HasValue)
+        //            record.Total_Hours = record.OutTime.Value - record.InTime.Value;
+
+        //        // Set updated status
+        //        record.Status = "Auto Checkout";
+        //    }
+
+        //    _context.SaveChanges();
+        //}
 
     }
 }

@@ -26,7 +26,9 @@ namespace HRMS.Controllers
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
 
-            // ======================= CELEBRATIONS =========================
+            // =====================================================
+            // 🎉 CELEBRATION DATA (BIRTHDAYS + ANNIVERSARIES)
+            // =====================================================
             var model = new CelebrationViewModel
             {
                 TotalEmployees = employees.Count,
@@ -56,28 +58,33 @@ namespace HRMS.Controllers
                     .ToList()
             };
 
-            // ======================= TODAY ATTENDANCE FIXED =========================
+
+            // =====================================================
+            // 🟢 TODAY’S ATTENDANCE
+            // =====================================================
             var todaysAttendance = _context.Attendances
-     .Where(a => a.CheckInTime >= today && a.CheckInTime < tomorrow)
-     .AsNoTracking()
-     .ToList();
+                .Where(a => a.Date == today)
+                .AsNoTracking()
+                .ToList();
+
             int presentCount = todaysAttendance
-                .Select(a => a.EmployeeId)
+                .Select(a => a.Emp_Code)
                 .Distinct()
                 .Count();
 
-            int notCheckedOutCount = todaysAttendance
-                .Where(a => a.CheckOutTime == null)
-                .Count();
-
             int absentCount = employees.Count - presentCount;
+
+            int notCheckedOutCount = todaysAttendance
+                .Count(a => a.OutTime == null);
 
             ViewBag.PresentToday = presentCount;
             ViewBag.AbsentToday = absentCount;
             ViewBag.NotCheckedOutToday = notCheckedOutCount;
 
-            // ======================= RECENT EMPLOYEES =========================
 
+            // =====================================================
+            // 🆕 RECENT EMPLOYEES (LAST 5)
+            // =====================================================
             var last5Employees = _context.Employees
                 .AsNoTracking()
                 .OrderByDescending(e => e.JoiningDate ?? DateTime.MinValue)
@@ -88,14 +95,16 @@ namespace HRMS.Controllers
                 .Select(e => new RecentEmployeeViewModel
                 {
                     Employee = e,
-                    Attendance = todaysAttendance.FirstOrDefault(a => a.EmployeeId == e.Id)
+                    Attendance = todaysAttendance.FirstOrDefault(a => a.Emp_Code == e.EmployeeCode)
                 })
                 .ToList();
 
             ViewBag.RecentEmployees = recentEmployees;
 
-            // ======================= DEPARTMENT CHART =========================
 
+            // =====================================================
+            // 📊 DEPARTMENT CHART
+            // =====================================================
             var departmentGroups = employees
                 .Where(e => !string.IsNullOrEmpty(e.Department))
                 .GroupBy(e => e.Department)

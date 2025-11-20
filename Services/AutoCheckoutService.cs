@@ -34,30 +34,33 @@ public class AutoCheckoutService : BackgroundService
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
             var yesterday = DateTime.Today.AddDays(-1);
-            var yesterdayStart = yesterday.Date;
-            var yesterdayEnd = yesterdayStart.AddDays(1);
 
-            // Employees who checked-in yesterday but DID NOT checkout
+            // Attendance records for yesterday where IN exists but OUT is missing
             var pending = await context.Attendances
                 .Where(a =>
-                    a.CheckInTime >= yesterdayStart &&
-                    a.CheckInTime < yesterdayEnd &&
-                    a.CheckOutTime == null
+                    a.Date == yesterday &&
+                    a.InTime != null &&
+                    a.OutTime == null
                 )
                 .ToListAsync();
 
             foreach (var record in pending)
             {
-                record.CheckOutTime = yesterdayStart.AddHours(23).AddMinutes(59); // 11:59 PM
-                record.CheckoutStatus = "Auto Checkout";
+                // Set automatic checkout time to 11:59 PM yesterday
+                record.OutTime = yesterday.AddHours(23).AddMinutes(59);
 
-                var diff = record.CheckOutTime.Value - record.CheckInTime.Value;
-                record.WorkingHours = diff.TotalHours;
+                // Calculate total working hours
+                if (record.InTime.HasValue)
+                {
+                    record.Total_Hours = record.OutTime.Value - record.InTime.Value;
+                }
+
+                // Update status (optional)
+                record.Status = "Auto Checkout";
             }
 
             if (pending.Count > 0)
                 await context.SaveChangesAsync();
         }
-
     }
 }
