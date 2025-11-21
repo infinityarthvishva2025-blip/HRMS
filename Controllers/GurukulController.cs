@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,13 +14,14 @@ namespace HRMS.Controllers
     public class GurukulController : Controller
     {
         private readonly ApplicationDbContext _context;
+
         public GurukulController(ApplicationDbContext context)
         {
             _context = context;
         }
 
         // ============================================================
-        // EMPLOYEE: GURUKUL MAIN PAGE (TitleGroup → Category → Videos)
+        // EMPLOYEE: GURUKUL MAIN PAGE
         // ============================================================
         public async Task<IActionResult> Index()
         {
@@ -36,16 +38,14 @@ namespace HRMS.Controllers
                 .ThenBy(v => v.Title)
                 .ToListAsync();
 
-            // FIXED GROUPING: TitleGroup → Category → Videos
             var groupedData = videos
-                .GroupBy(v => (string.IsNullOrWhiteSpace(v.TitleGroup) ? "General" : v.TitleGroup.Trim()))
+                .GroupBy(v => string.IsNullOrWhiteSpace(v.TitleGroup) ? "General" : v.TitleGroup.Trim())
                 .ToDictionary(
                     tg => tg.Key,
-                    tg => tg.GroupBy(v => (string.IsNullOrWhiteSpace(v.Category) ? "General" : v.Category.Trim()))
+                    tg => tg.GroupBy(v => string.IsNullOrWhiteSpace(v.Category) ? "General" : v.Category.Trim())
                             .ToDictionary(cat => cat.Key, cat => cat.ToList())
                 );
 
-            // Employee progress
             var progress = await _context.GurukulProgress
                 .Where(p => p.EmployeeId == employeeId)
                 .ToListAsync();
@@ -69,16 +69,14 @@ namespace HRMS.Controllers
             if (employeeId == null)
                 return RedirectToAction("Login", "Account");
 
-            var video = await _context.GurukulVideos
-                .FirstOrDefaultAsync(v => v.Id == id);
+            var video = await _context.GurukulVideos.FirstOrDefaultAsync(v => v.Id == id);
 
             if (video == null)
                 return NotFound();
 
-            string titleGroup = (string.IsNullOrWhiteSpace(video.TitleGroup) ? "General" : video.TitleGroup.Trim());
-            string category = (string.IsNullOrWhiteSpace(video.Category) ? "General" : video.Category.Trim());
+            string titleGroup = string.IsNullOrWhiteSpace(video.TitleGroup) ? "General" : video.TitleGroup.Trim();
+            string category = string.IsNullOrWhiteSpace(video.Category) ? "General" : video.Category.Trim();
 
-            // Load SAME TitleGroup + Category
             var list = await _context.GurukulVideos
                 .Where(v =>
                     (string.IsNullOrWhiteSpace(v.TitleGroup) ? "General" : v.TitleGroup.Trim()) == titleGroup &&
@@ -88,11 +86,9 @@ namespace HRMS.Controllers
                 .ToListAsync();
 
             ViewBag.VideoList = list;
-
-            var prog = await _context.GurukulProgress
+            ViewBag.Progress = await _context.GurukulProgress
                 .FirstOrDefaultAsync(p => p.EmployeeId == employeeId && p.VideoId == id);
 
-            ViewBag.Progress = prog;
             ViewBag.EmployeeId = employeeId;
 
             return View(video);
@@ -138,17 +134,14 @@ namespace HRMS.Controllers
         // ============================================================
         // HR PANEL
         // ============================================================
-
         public async Task<IActionResult> HRList()
         {
             if (HttpContext.Session.GetString("Role") != "HR")
                 return RedirectToAction("Login", "Account");
 
-            var videos = await _context.GurukulVideos
+            return View(await _context.GurukulVideos
                 .OrderByDescending(v => v.UploadedOn)
-                .ToListAsync();
-
-            return View(videos);
+                .ToListAsync());
         }
 
         public IActionResult Create()
@@ -159,6 +152,9 @@ namespace HRMS.Controllers
             return View();
         }
 
+        // ============================================================
+        // HR: CREATE VIDEO WITH THUMBNAIL (RAW FFMPEG)
+        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(GurukulVideo model, IFormFile? VideoFile, string? ExternalLink)
@@ -173,29 +169,56 @@ namespace HRMS.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // FILE or LINK
+            string root = Directory.GetCurrentDirectory();
+            string videoFolder = Path.Combine(root, "wwwroot", "uploads", "gurukul");
+            string thumbFolder = Path.Combine(root, "wwwroot", "uploads", "gurukul-thumbs");
+            string ffmpegPath = Path.Combine(root, "wwwroot", "ffmpeg", "ffmpeg.exe");
+
+            Directory.CreateDirectory(videoFolder);
+            Directory.CreateDirectory(thumbFolder);
+
+            // CASE 1 — INTERNAL MP4
             if (VideoFile != null && VideoFile.Length > 0)
             {
-                string folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "gurukul");
-                Directory.CreateDirectory(folder);
-
                 string fileName = Guid.NewGuid() + Path.GetExtension(VideoFile.FileName);
-                string fullPath = Path.Combine(folder, fileName);
+                string fullVideoPath = Path.Combine(videoFolder, fileName);
 
-                using var fs = new FileStream(fullPath, FileMode.Create);
-                await VideoFile.CopyToAsync(fs);
+                using (var fs = new FileStream(fullVideoPath, FileMode.Create))
+                {
+                    await VideoFile.CopyToAsync(fs);
+                }
 
                 model.VideoPath = "/uploads/gurukul/" + fileName;
                 model.IsExternal = false;
+
+                // THUMBNAIL NAME
+                string thumbFileName = Path.GetFileNameWithoutExtension(fileName) + ".jpg";
+                string fullThumbPath = Path.Combine(thumbFolder, thumbFileName);
+
+                // RAW FFMPEG COMMAND
+                var process = new Process();
+                process.StartInfo.FileName = ffmpegPath;
+                process.StartInfo.Arguments = $"-i \"{fullVideoPath}\" -ss 00:00:01 -vframes 1 \"{fullThumbPath}\"";
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.UseShellExecute = false;
+
+                process.Start();
+                process.WaitForExit();
+
+                model.ThumbnailPath = "/uploads/gurukul-thumbs/" + thumbFileName;
             }
+            // CASE 2 — YOUTUBE LINK
             else if (!string.IsNullOrWhiteSpace(ExternalLink))
             {
-                model.VideoPath = ExternalLink.Trim();
+                string link = ExternalLink.Trim();
+                model.VideoPath = link;
                 model.IsExternal = true;
+                model.ThumbnailPath = GetYouTubeThumbnail(link);
             }
             else
             {
-                ModelState.AddModelError("", "Upload a file OR enter an external link.");
+                ModelState.AddModelError("", "Upload a file OR enter a link.");
                 return View(model);
             }
 
@@ -207,7 +230,11 @@ namespace HRMS.Controllers
             return RedirectToAction(nameof(HRList));
         }
 
-        public async Task<IActionResult> Progress(int id)
+
+        // ============================================================
+        // HR: VIDEO PROGRESS PAGE (WITH FILTERS)
+        // ============================================================
+        public async Task<IActionResult> Progress(int id, string? status, string? search)
         {
             if (HttpContext.Session.GetString("Role") != "HR")
                 return RedirectToAction("Login", "Account");
@@ -215,14 +242,18 @@ namespace HRMS.Controllers
             var video = await _context.GurukulVideos.FindAsync(id);
             if (video == null) return NotFound();
 
-            var allEmployees = await _context.Employees.OrderBy(e => e.Name).ToListAsync();
+            // All employees
+            var allEmployees = await _context.Employees
+                .OrderBy(e => e.Name)
+                .ToListAsync();
 
+            // Actual progress records
             var progress = await _context.GurukulProgress
                 .Include(p => p.Employee)
                 .Where(p => p.VideoId == id)
                 .ToListAsync();
 
-            // FIND employees who did NOT start
+            // Employees who have no progress entry yet (Pending by default)
             var pendingEmployees = allEmployees
                 .Where(e => !progress.Any(p => p.EmployeeId == e.Id))
                 .Select(e => new GurukulProgress
@@ -235,55 +266,61 @@ namespace HRMS.Controllers
                 })
                 .ToList();
 
-            // COMBINE
             var finalList = progress.Concat(pendingEmployees)
                 .OrderBy(p => p.Employee.Name)
                 .ToList();
 
-            ViewBag.Video = video;
-            return View(finalList);
-        }
-
-        public async Task<IActionResult> ProgressAll(int? employeeId, string? status)
-        {
-            if (HttpContext.Session.GetString("Role") != "HR")
-                return RedirectToAction("Login", "Account");
-
-            var employees = await _context.Employees
-                .OrderBy(e => e.Name)
-                .ToListAsync();
-
-            var videos = await _context.GurukulVideos
-                .OrderBy(v => v.TitleGroup)
-                .ThenBy(v => v.Category)
-                .ThenBy(v => v.Title)
-                .ToListAsync();
-
-            var progress = await _context.GurukulProgress
-                .Include(p => p.Employee)
-                .Include(p => p.Video)
-                .ToListAsync();
-
-            // FILTERING
-            if (employeeId.HasValue)
-                progress = progress.Where(p => p.EmployeeId == employeeId.Value).ToList();
-
+            // ===== FILTER: Completed / Pending =====
             if (!string.IsNullOrWhiteSpace(status))
             {
                 if (status == "completed")
-                    progress = progress.Where(p => p.IsCompleted).ToList();
+                    finalList = finalList.Where(p => p.IsCompleted).ToList();
                 else if (status == "pending")
-                    progress = progress.Where(p => !p.IsCompleted).ToList();
+                    finalList = finalList.Where(p => !p.IsCompleted).ToList();
             }
 
-            ViewBag.Employees = employees;
-            ViewBag.Videos = videos;
-            ViewBag.SelectedEmployee = employeeId;
-            ViewBag.SelectedStatus = status;
+            // ===== SEARCH: Employee Name =====
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                string term = search.Trim().ToLower();
+                finalList = finalList
+                    .Where(p => p.Employee.Name.ToLower().Contains(term))
+                    .ToList();
+            }
 
-            return View(progress);
+            ViewBag.Video = video;
+            ViewBag.SelectedStatus = status;
+            ViewBag.Search = search;
+
+            return View(finalList);
+        }
+        // ============================================================
+        // Get YouTube Thumbnail
+        // ============================================================
+        private string? GetYouTubeThumbnail(string url)
+        {
+            try
+            {
+                string? videoId = null;
+                var uri = new Uri(url);
+
+                if (uri.Host.Contains("youtu.be"))
+                    videoId = uri.AbsolutePath.Trim('/');
+                else if (uri.Host.Contains("youtube.com"))
+                {
+                    var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+                    if (query.TryGetValue("v", out var v))
+                        videoId = v.ToString();
+                }
+
+                return videoId != null ? $"https://img.youtube.com/vi/{videoId}/hqdefault.jpg" : null;
+            }
+            catch { return null; }
         }
 
+        // ============================================================
+        // HR: DELETE VIDEO
+        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
@@ -294,9 +331,9 @@ namespace HRMS.Controllers
             var video = await _context.GurukulVideos.FindAsync(id);
             if (video != null)
             {
-                if (!video.IsExternal && !string.IsNullOrEmpty(video.VideoPath))
+                if (!video.IsExternal)
                 {
-                    var full = Path.Combine(
+                    string full = Path.Combine(
                         Directory.GetCurrentDirectory(),
                         "wwwroot",
                         video.VideoPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar)

@@ -14,5 +14,7 @@ namespace HRMS.Models
         public string VideoPath { get; set; } = "";
         public bool IsExternal { get; set; } = false;
         public DateTime UploadedOn { get; set; } = DateTime.UtcNow;
+
+        public string? ThumbnailPath { get; set; }
     }
 }
