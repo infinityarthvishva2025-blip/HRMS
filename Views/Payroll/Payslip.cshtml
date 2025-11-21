@@ -1,0 +1,57 @@
+﻿@model HRMS.Models.ViewModels.PayrollSummaryVm
+@{
+    Layout = "~/Views/Shared/_HrLayout.cshtml";
+}
+
+<div class="container mt-4">
+
+    <h2 class="fw-bold text-primary mb-4">
+        Salary Slip - @Model.Month/@Model.Year
+    </h2>
+
+    <h4 class="mt-4">Employee Details</h4>
+    <table class="table table-bordered w-50">
+        <tr><th>Code</th><td>@Model.EmpCode</td></tr>
+        <tr><th>Name</th><td>@Model.EmpName</td></tr>
+    </table>
+
+    <h4 class="mt-4">Attendance Summary</h4>
+    <table class="table table-bordered w-75">
+        <tr>
+            <th>Working Days</th>
+            <td>@Model.TotalDaysInMonth</td>
+            <th>Present Full</th>
+            <td>@Model.PresentFullDays</td>
+        </tr>
+        <tr>
+            <th>Present Half</th>
+            <td>@Model.PresentHalfDays</td>
+            <th>WO</th>
+            <td>@Model.WeeklyOffDays</td>
+        </tr>
+        <tr>
+            <th>Absent</th>
+            <td>@Model.AbsentDays</td>
+            <th>Late Marks</th>
+            <td>@Model.LateMarks</td>
+        </tr>
+        <tr>
+            <th>Late > 3</th>
+            <td>@Model.LateMarksOver3</td>
+            <th>Late Ded Days</th>
+            <td>@Model.LateDeductionDays</td>
+        </tr>
+        <tr><th>Paid Days</th><td colspan="3">@Model.PaidDays</td></tr>
+    </table>
+
+    <h4 class="mt-4">Salary Summary</h4>
+    <table class="table table-bordered w-75">
+        <tr><th>Base Salary</th><td>@Model.MonthlySalary.ToString("0.00")</td></tr>
+        <tr><th>Per Day Salary</th><td>@Model.PerDaySalary.ToString("0.00")</td></tr>
+        <tr><th>Gross Salary</th><td>@Model.GrossSalary.ToString("0.00")</td></tr>
+        <tr><th>Professional Tax</th><td>@Model.ProfessionalTax.ToString("0.00")</td></tr>
+        <tr class="table-danger"><th>Total Deductions</th><td>@Model.TotalDeductions.ToString("0.00")</td></tr>
+        <tr class="table-success"><th>NET SALARY</th><td>@Model.NetSalary.ToString("0.00")</td></tr>
+    </table>
+
+</div>

@@ -13,6 +13,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using OfficeOpenXml;
 
 namespace HRMS.Controllers
 {
@@ -417,7 +418,7 @@ namespace HRMS.Controllers
 
             // Total attendance records
             int totalAttendance = await _context.Attendances
-                .CountAsync(a => a.EmpCode == empCode);
+                .CountAsync(a => a.Emp_Code == empCode);
 
             // Today’s attendance
             //var todayRecord = await _context.Attendances
@@ -514,6 +515,43 @@ namespace HRMS.Controllers
 
 
 
+public IActionResult ExportExcel()
+    {
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
+        var employees = _context.Employees.ToList();
+
+        using (var package = new ExcelPackage())
+        {
+            var ws = package.Workbook.Worksheets.Add("Employees");
+
+            // HEADER
+            ws.Cells[1, 1].Value = "Employee Code";
+            ws.Cells[1, 2].Value = "Name";
+            ws.Cells[1, 3].Value = "Email";
+            ws.Cells[1, 4].Value = "Department";
+            ws.Cells[1, 5].Value = "Position";
+
+            int row = 2;
+
+            foreach (var emp in employees)
+            {
+                ws.Cells[row, 1].Value = emp.EmployeeCode;
+                ws.Cells[row, 2].Value = emp.Name;
+                ws.Cells[row, 3].Value = emp.Email;
+                ws.Cells[row, 4].Value = emp.Department;
+                ws.Cells[row, 5].Value = emp.Position;
+
+                row++;
+            }
+
+            var fileBytes = package.GetAsByteArray();
+            return File(fileBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Employees.xlsx");
+        }
     }
+
+
+}
 }

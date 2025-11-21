@@ -5,12 +5,16 @@ namespace HRMS.Models
 {
     public class Attendance
     {
-        [Key]
-        public string EmpCode { get; set; }     // VARCHAR in DB
-        public DateTime Date { get; set; }       // Date column
-        public string Status { get; set; }       // P / A / WO / etc.
-        public DateTime? InTime { get; set; }    // nullable datetime
-        public DateTime? OutTime { get; set; }   // nullable datetime
-        public TimeSpan? TotalHours { get; set; } // time(7) column
+        public string Emp_Code { get; set; }
+        public DateTime Date { get; set; }
+        public string Status { get; set; }
+        public TimeSpan? InTime { get; set; }
+        public TimeSpan? OutTime { get; set; }
+        public decimal? Total_Hours { get; set; }
+
+        // These two properties DO NOT exist in DB but we need them for late logic
+        public bool IsLate { get; set; }
+        public int LateMinutes { get; set; }
     }
+
 }

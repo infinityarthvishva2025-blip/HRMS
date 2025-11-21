@@ -1,12 +1,13 @@
-﻿@model List<HRMS.Models.Attendance>
+﻿@model IEnumerable<HRMS.ViewModels.AttendanceIndexVm>
 
 @{
     ViewData["Title"] = "Attendance Records";
     Layout = "~/Views/Shared/_HrLayout.cshtml";
 
-    // Safely read employee list from ViewBag
+    // Safely get employee list
     List<HRMS.Models.Employee> employees =
-        ViewBag.EmployeeList as List<HRMS.Models.Employee> ?? new List<HRMS.Models.Employee>();
+        ViewBag.EmployeeList as List<HRMS.Models.Employee>
+        ?? new List<HRMS.Models.Employee>();
 }
 
 <div class="container py-4">
@@ -21,7 +22,9 @@
         <!-- Search -->
         <div class="col-md-3">
             <label class="form-label fw-bold">Search</label>
-            <input type="text" name="search" class="form-control"
+            <input type="text"
+                   name="search"
+                   class="form-control"
                    value="@ViewBag.Search"
                    placeholder="Employee name or code" />
         </div>
@@ -29,26 +32,33 @@
         <!-- From Date -->
         <div class="col-md-2">
             <label class="form-label fw-bold">From Date</label>
-            <input type="date" name="fromDate" class="form-control"
+            <input type="date"
+                   name="fromDate"
+                   class="form-control"
                    value="@ViewBag.FromDate" />
         </div>
 
         <!-- To Date -->
         <div class="col-md-2">
             <label class="form-label fw-bold">To Date</label>
-            <input type="date" name="toDate" class="form-control"
+            <input type="date"
+                   name="toDate"
+                   class="form-control"
                    value="@ViewBag.ToDate" />
         </div>
 
-        <!-- Status Filter -->
-        <div class="col-md-2">
-            <label class="form-label fw-bold">Status</label>
-            <select name="status" class="form-select">
+        <!-- Status -->
+       <!-- Status -->
+<div class="col-md-2">
+    <label class="form-label fw-bold">Status</label>
+    <select name="status" class="form-select">
                 <option value="All" selected="@(ViewBag.Status == "All")">All</option>
                 <option value="Completed" selected="@(ViewBag.Status == "Completed")">Completed</option>
                 <option value="NotCheckedOut" selected="@(ViewBag.Status == "NotCheckedOut")">Not Checked Out</option>
-            </select>
-        </div>
+
+    </select>
+</div>
+
 
         <!-- Buttons -->
         <div class="col-md-3 d-flex align-items-end">
@@ -96,7 +106,7 @@
                         {
                             var emp = employees.FirstOrDefault(e => e.EmployeeCode == a.EmpCode);
 
-                            // Calculate total hours (if both InTime & OutTime exist)
+                            // Total Hours
                             string totalHours = "--";
                             if (a.InTime.HasValue && a.OutTime.HasValue)
                             {
@@ -104,21 +114,18 @@
                                 totalHours = $"{diff.Hours}h {diff.Minutes}m";
                             }
 
-                            // Determine Attendance Status
-                            string attStatus;
-                            if (!a.InTime.HasValue)
-                                attStatus = "Absent";
-                            else if (a.OutTime == null)
-                                attStatus = "Not Checked Out";
-                            else
-                                attStatus = "Present";
+                            // Attendance Status
+                            string attStatus =
+                                !a.InTime.HasValue ? "Absent"
+                                : !a.OutTime.HasValue ? "Not Checked Out"
+                                : "Present";
 
                             <tr>
                                 <td>@a.EmpCode</td>
                                 <td>@(emp?.Name ?? "--")</td>
 
-                                <td>@a.InTime?.ToString("dd MMM yyyy, hh:mm tt")</td>
-                                <td>@(a.OutTime?.ToString("dd MMM yyyy, hh:mm tt") ?? "--")</td>
+                                <td>@(a.InTime?.ToString(@"hh\:mm") ?? "--")</td>
+                                <td>@(a.OutTime?.ToString(@"hh\:mm") ?? "--")</td>
 
                                 <td>@totalHours</td>
 

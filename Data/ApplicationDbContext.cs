@@ -29,19 +29,19 @@ namespace HRMS.Data
 
             modelBuilder.Entity<Attendance>(entity =>
             {
-                // Your SQL table ALREADY has PK (Emp_Code + Date)
-                entity.HasKey(a => new { a.EmpCode, a.Date });
+                // Primary key (Emp_Code + Date)
+                entity.HasKey(a => new { a.Emp_Code, a.Date });
 
-                // Prevent EF from altering this table in migrations
-                entity.ToTable("Attendances", t => t.ExcludeFromMigrations());
+                // Map to SQL table name
+                entity.ToTable("Attendances");
 
                 // Column mappings
-                entity.Property(a => a.EmpCode).HasColumnName("Emp_Code");
+                entity.Property(a => a.Emp_Code).HasColumnName("Emp_Code");
                 entity.Property(a => a.Date).HasColumnName("Date");
                 entity.Property(a => a.Status).HasColumnName("Status");
                 entity.Property(a => a.InTime).HasColumnName("InTime");
                 entity.Property(a => a.OutTime).HasColumnName("OutTime");
-                entity.Property(a => a.TotalHours).HasColumnName("Total_Hours");
+                entity.Property(a => a.Total_Hours).HasColumnName("Total_Hours");
             });
 
             // ======================================================
