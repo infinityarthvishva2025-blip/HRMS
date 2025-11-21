@@ -19,11 +19,15 @@
     <PackageReference Include="Newtonsoft.Json" Version="8.0.3" />
     <PackageReference Include="OfficeOpenXml.Core.ExcelPackage" Version="1.0.0" />
     <PackageReference Include="Rotativa.AspNetCore" Version="1.4.0" />
+    <PackageReference Include="Xabe.FFmpeg" Version="6.0.2" />
+    <PackageReference Include="Xabe.FFmpeg.Downloader" Version="6.0.2" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Data\" />
     <Folder Include="Migrations\" />
     <Folder Include="wwwroot\uploads\gurukul\" />
+    <Folder Include="wwwroot\uploads\gurukul-thumbs\" />
     <Folder Include="wwwroot\Videos\" />
     <Folder Include="wwwroot\uploads\proofs\" />
   </ItemGroup>

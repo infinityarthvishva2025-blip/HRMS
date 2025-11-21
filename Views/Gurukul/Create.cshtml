@@ -1,0 +1,48 @@
+﻿@model HRMS.Models.GurukulVideo
+@{
+    Layout = "_HRLayout";
+}
+
+<h2>Add Gurukul Video</h2>
+
+<form asp-action="Create" enctype="multipart/form-data" method="post">
+
+    <!-- MAIN GROUP (Insurance, Company, Department, etc.) -->
+    <div class="mb-3">
+        <label>Main Title Group </label>
+        <input asp-for="TitleGroup" class="form-control"  />
+    </div>
+
+    <!-- SUB CATEGORY (Life, Health, Term, Introduction, etc.) -->
+    <div class="mb-3">
+        <label>Category </label>
+        <input asp-for="Category" class="form-control"  />
+    </div>
+
+    <!-- VIDEO NAME -->
+    <div class="mb-3">
+        <label>Video Title</label>
+        <input asp-for="Title" class="form-control" required placeholder="Enter Video Name" />
+    </div>
+
+    <div class="mb-3">
+        <label>Description</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <!-- VIDEO FILE UPLOAD -->
+    <div class="mb-3">
+        <label>Upload Video (MP4)</label>
+        <input type="file" name="VideoFile" class="form-control" accept="video/*" />
+    </div>
+
+    <!-- YOUTUBE EMBED URL -->
+    <div class="mb-3">
+        <label>External Link (YouTube Embed URL)</label>
+        <input name="ExternalLink" class="form-control" />
+        
+    </div>
+
+    <button class="btn btn-primary">Save</button>
+    <a asp-action="HRList" class="btn btn-secondary">Cancel</a>
+</form>
