@@ -215,12 +215,72 @@ namespace HRMS.Controllers
             var video = await _context.GurukulVideos.FindAsync(id);
             if (video == null) return NotFound();
 
+            var allEmployees = await _context.Employees.OrderBy(e => e.Name).ToListAsync();
+
             var progress = await _context.GurukulProgress
                 .Include(p => p.Employee)
                 .Where(p => p.VideoId == id)
                 .ToListAsync();
 
+            // FIND employees who did NOT start
+            var pendingEmployees = allEmployees
+                .Where(e => !progress.Any(p => p.EmployeeId == e.Id))
+                .Select(e => new GurukulProgress
+                {
+                    EmployeeId = e.Id,
+                    Employee = e,
+                    VideoId = id,
+                    IsCompleted = false,
+                    CompletedOn = null
+                })
+                .ToList();
+
+            // COMBINE
+            var finalList = progress.Concat(pendingEmployees)
+                .OrderBy(p => p.Employee.Name)
+                .ToList();
+
             ViewBag.Video = video;
+            return View(finalList);
+        }
+
+        public async Task<IActionResult> ProgressAll(int? employeeId, string? status)
+        {
+            if (HttpContext.Session.GetString("Role") != "HR")
+                return RedirectToAction("Login", "Account");
+
+            var employees = await _context.Employees
+                .OrderBy(e => e.Name)
+                .ToListAsync();
+
+            var videos = await _context.GurukulVideos
+                .OrderBy(v => v.TitleGroup)
+                .ThenBy(v => v.Category)
+                .ThenBy(v => v.Title)
+                .ToListAsync();
+
+            var progress = await _context.GurukulProgress
+                .Include(p => p.Employee)
+                .Include(p => p.Video)
+                .ToListAsync();
+
+            // FILTERING
+            if (employeeId.HasValue)
+                progress = progress.Where(p => p.EmployeeId == employeeId.Value).ToList();
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                if (status == "completed")
+                    progress = progress.Where(p => p.IsCompleted).ToList();
+                else if (status == "pending")
+                    progress = progress.Where(p => !p.IsCompleted).ToList();
+            }
+
+            ViewBag.Employees = employees;
+            ViewBag.Videos = videos;
+            ViewBag.SelectedEmployee = employeeId;
+            ViewBag.SelectedStatus = status;
+
             return View(progress);
         }
 
