@@ -4,58 +4,93 @@
     ViewData["Title"] = "Gurukul Videos";
     Layout = "_EmployeeLayout";
 
-    // Get grouped data from Controller
-    var groupedData = ViewBag.GroupedData as Dictionary<string, Dictionary<string, List<HRMS.Models.GurukulVideo>>>;
+    var groupedData = ViewBag.GroupedData as
+        Dictionary<string, Dictionary<string, List<HRMS.Models.GurukulVideo>>>;
 }
 
 <style>
-    .square-card {
-        aspect-ratio: 1 / 1;
+    /* ---------------- TITLE GROUP (MAIN HEADER) ---------------- */
+    .titlegroup-header {
+        background: #2563eb;
+        color: white;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 20px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 12px;
+        transition: 0.25s;
+    }
+
+        .titlegroup-header:hover {
+            background: #1e40af;
+        }
+
+    /* ---------------- CATEGORY HEADER ---------------- */
+    .category-header {
+        background: #e2e8f0;
+        padding: 8px 14px;
+        border-radius: 6px;
+        margin-top: 10px;
+        font-size: 18px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: 0.25s;
+    }
+
+        .category-header:hover {
+            background: #cbd5e1;
+        }
+
+    /* ---------------- VIDEO CARD ---------------- */
+    .video-card {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+        height: 200px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+        .video-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+        }
+
+    .video-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .video-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.30), rgba(0,0,0,0.55));
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 10px;
-        transition: 0.3s;
-        cursor: pointer;
-        background: #fff;
-        text-align: center;
-        font-weight: bold;
     }
 
-        .square-card:hover {
-            background: #f2f2f2;
-            transform: scale(1.03);
+        .video-overlay i {
+            font-size: 42px;
+            color: white;
         }
-
-    .titlegroup-header {
-        background: #007bff;
-        color: white;
-        padding: 10px;
-        border-radius: 5px;
-        font-size: 20px;
-        cursor: pointer;
-    }
-
-    .category-header {
-        background: #e7f1ff;
-        padding: 8px;
-        border-left: 4px solid #007bff;
-        cursor: pointer;
-        margin-top: 10px;
-        border-radius: 4px;
-    }
 </style>
 
 <div class="container mt-3">
 
     @foreach (var tg in groupedData)
     {
-        var tgId = "tg_" + Guid.NewGuid();   // unique id
+        var tgId = "tg_" + Guid.NewGuid();
 
         <!-- TITLE GROUP -->
-        <div class="titlegroup-header mb-2"
+        <div class="titlegroup-header"
              data-bs-toggle="collapse"
              data-bs-target="#@tgId">
             @tg.Key
@@ -66,9 +101,9 @@
 
                 @foreach (var cat in tg.Value)
                 {
-                    var catId = "cat_" + Guid.NewGuid();   // unique id
+                    var catId = "cat_" + Guid.NewGuid();
 
-                    <!-- CATEGORY -->
+                    <!-- CATEGORY NAME -->
                     <h5 class="category-header"
                         data-bs-toggle="collapse"
                         data-bs-target="#@catId">
@@ -83,19 +118,32 @@
                             @foreach (var video in cat.Value)
                             {
                                 <div class="col-md-3 mb-3">
-                                    <div class="square-card"
+                                    <div class="video-card"
                                          onclick="location.href='@Url.Action("Details", "Gurukul", new { id = video.Id })'">
-                                        @video.Title
+
+                                        @{
+                                            var thumb = string.IsNullOrEmpty(video.ThumbnailPath)
+                                            ? "/images/default-gurukul-thumb.jpg"
+                                            : video.ThumbnailPath;
+                                        }
+
+                                        <img src="@thumb" class="video-img" />
+
+                                        <div class="video-overlay">
+                                            <i class="fas fa-play-circle"></i>
+                                        </div>
                                     </div>
                                 </div>
                             }
 
                         </div>
+
                     </div>
                 }
 
             </div>
         </div>
+
     }
 
 </div>

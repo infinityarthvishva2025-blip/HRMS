@@ -1,13 +1,14 @@
 ﻿using HRMS.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 public class AutoCheckoutService : BackgroundService
 {
-    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IServiceProvider _serviceProvider;
 
-    public AutoCheckoutService(IServiceScopeFactory scopeFactory)
+    public AutoCheckoutService(IServiceProvider serviceProvider)
     {
-        _scopeFactory = scopeFactory;
+        _serviceProvider = serviceProvider;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -27,9 +28,9 @@ public class AutoCheckoutService : BackgroundService
         }
     }
 
-    private async Task AutoCheckout()
+    public async Task AutoCheckout()
     {
-        using (var scope = _scopeFactory.CreateScope())
+        using (var scope = _serviceProvider.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -40,19 +41,19 @@ public class AutoCheckoutService : BackgroundService
                 .Where(a =>
                     a.Date == yesterday &&
                     a.InTime != null &&
-                    a.OutTime == null
-                )
+                    a.OutTime == null)
                 .ToListAsync();
 
             foreach (var record in pending)
             {
-                // Set automatic checkout time to 11:59 PM yesterday
-                record.OutTime = yesterday.AddHours(23).AddMinutes(59);
+                // Set automatic checkout time to 11:59 PM (time-of-day)
+                record.OutTime = new TimeSpan(23, 59, 0);
 
                 // Calculate total working hours
-                if (record.InTime.HasValue)
+                if (record.InTime.HasValue && record.OutTime.HasValue)
                 {
-                    record.Total_Hours = record.OutTime.Value - record.InTime.Value;
+                    TimeSpan diff = record.OutTime.Value - record.InTime.Value;
+                    record.Total_Hours = (decimal)diff.TotalHours;
                 }
 
                 // Update status (optional)
@@ -63,4 +64,6 @@ public class AutoCheckoutService : BackgroundService
                 await context.SaveChangesAsync();
         }
     }
+
 }
+

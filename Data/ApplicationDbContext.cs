@@ -53,19 +53,27 @@ namespace HRMS.Data
                 .HasNoKey()
                 .ToTable("Attendances"); // 🔥 ensures proper table mapping
 
-            // =============================================
-            // 2️⃣ Map column names EXACTLY as SQL table
-            // =============================================
-            modelBuilder.Entity<Attendance>().Property(a => a.Emp_Code).HasColumnName("Emp_Code");
-            modelBuilder.Entity<Attendance>().Property(a => a.Date).HasColumnName("Date");
-            modelBuilder.Entity<Attendance>().Property(a => a.Status).HasColumnName("Status");
-            modelBuilder.Entity<Attendance>().Property(a => a.InTime).HasColumnName("InTime");
-            modelBuilder.Entity<Attendance>().Property(a => a.OutTime).HasColumnName("OutTime");
-            modelBuilder.Entity<Attendance>().Property(a => a.Total_Hours).HasColumnName("Total_Hours");
+            modelBuilder.Entity<Attendance>(entity =>
+            {
+                // Primary key (Emp_Code + Date)
+                entity.HasKey(a => new { a.Emp_Code, a.Date });
 
-            // =============================================
-            // 3️⃣ Configure Leave foreign key properly
-            // =============================================
+                // Map to SQL table name
+                entity.ToTable("Attendances");
+
+                // Column mappings
+                entity.Property(a => a.Emp_Code).HasColumnName("Emp_Code");
+                entity.Property(a => a.Date).HasColumnName("Date");
+                entity.Property(a => a.Status).HasColumnName("Status");
+                entity.Property(a => a.InTime).HasColumnName("InTime");
+                entity.Property(a => a.OutTime).HasColumnName("OutTime");
+                entity.Property(a => a.Total_Hours).HasColumnName("Total_Hours");
+            });
+
+            // ======================================================
+            // LEAVE FOREIGN KEY MAPPING
+            // ======================================================
+
             modelBuilder.Entity<Leave>()
                 .HasOne(l => l.Employee)
                 .WithMany()

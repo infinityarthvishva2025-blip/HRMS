@@ -1,33 +1,248 @@
 ﻿@model IEnumerable<HRMS.Models.GurukulVideo>
 
-<h2>Gurukul - Admin</h2>
 @{
-Layout = "_HRLayout";
-}
-<p>
-    <a asp-action="Create" class="btn btn-primary">Add Video</a>
-</p>
+    Layout = "_HRLayout";
+    ViewData["Title"] = "Gurukul Admin";
 
-<table class="table table-striped">
-    <thead><tr><th>Title</th><th>Category</th><th>Uploaded</th><th>Progress</th><th>Action</th></tr></thead>
-    <tbody>
-        @foreach (var v in Model)
-        {
-            var totalEmployees = ViewBag.TotalEmployees != null ? (int)ViewBag.TotalEmployees : 0; // optional, fill in controller if desired
-                  <tr>
-                      <td>@v.Title</td>
-                      <td>@v.Category</td>
-                      <td>@v.UploadedOn.ToLocalTime().ToString("dd-MM-yyyy")</td>
-                      <td>
-                          <a asp-action="Progress" asp-route-id="@v.Id" class="btn btn-info btn-sm">View Progress</a>
-                       </td>
-                       <td>
-                          <form asp-action="Delete" method="post" style="display:inline;">
-                              <input type="hidden" name="id" value="@v.Id" />
-                              <button class="btn btn-danger btn-sm" onclick="return confirm('Delete this video?')">Delete</button>
-                          </form>
-                       </td>
-                  </tr>
+    var grouped = Model
+        .GroupBy(v => string.IsNullOrWhiteSpace(v.TitleGroup) ? "General" : v.TitleGroup.Trim())
+        .ToDictionary(
+            tg => tg.Key,
+            tg => tg.GroupBy(v => string.IsNullOrWhiteSpace(v.Category) ? "General" : v.Category.Trim())
+                    .ToDictionary(cat => cat.Key, cat => cat.ToList())
+        );
+}
+
+<!-- ===================== PREMIUM UI STYLE ===================== -->
+<style>
+
+    /* Page Title */
+    .page-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #1a237e;
+        margin-bottom: 25px;
+        letter-spacing: -0.5px;
+    }
+
+    /* Add Button */
+    .btn-add {
+        background: linear-gradient(135deg, #3949ab, #5c6bc0);
+        border: none;
+        padding: 10px 25px;
+        color: #fff;
+        font-weight: 600;
+        border-radius: 10px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+            transition: 0.2s ease;
         }
-    </tbody>
-</table>
+
+
+    /* Main Card */
+    .main-card {
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 18px;
+        border: 1px solid #e6e6e6;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    }
+
+    /* Accordion Styling */
+    .acc-group-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #283593;
+    }
+
+    .accordion-button {
+        background: #f5f7ff;
+        border-radius: 12px !important;
+        color: #1a237e;
+        font-size: 16px;
+        font-weight: 600;
+        padding: 18px 22px;
+        border: 1px solid #d9defc;
+    }
+
+        .accordion-button:not(.collapsed) {
+            background: #e3e8ff;
+            color: #0d1b58;
+            border-color: #c2cbff;
+            box-shadow: none;
+        }
+
+    /* Category accordion */
+    .category-accordion .accordion-button {
+        background: #f9fbff;
+        border-radius: 10px !important;
+        border: 1px solid #e5e9ff;
+        padding: 14px 18px;
+    }
+
+    /* Table */
+    table {
+        border-radius: 12px;
+        overflow: hidden;
+        background: white;
+        margin-top: 10px;
+    }
+
+    th {
+        background: #eef1ff !important;
+        font-weight: 700;
+        color: #1a237e;
+    }
+
+    td {
+        vertical-align: middle;
+        padding: 12px 10px;
+        font-size: 15px;
+    }
+
+    tr:hover {
+        background: #f8f9ff;
+        transition: 0.2s;
+    }
+
+    /* Buttons */
+    .btn-progress {
+        background: #2196f3;
+        color: #fff;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .btn-delete {
+        background: #e53935;
+        color: white;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+        .btn-delete:hover {
+            opacity: 0.9;
+        }
+
+</style>
+
+
+<!-- ===================== PAGE TITLE ===================== -->
+<h2 class="page-title">📚 Gurukul – Admin Panel</h2>
+
+<a asp-action="Create" class="btn btn-add mb-4">➕ Add New Video</a>
+
+
+<!-- ===================== MAIN CARD ===================== -->
+<div class="main-card">
+
+    <div class="accordion" id="mainAccordion">
+
+        @foreach (var tg in grouped)
+        {
+            string tgID = "tg_" + Guid.NewGuid().ToString("N");
+
+            <!-- TITLE GROUP -->
+            <div class="accordion-item mb-3 border-0">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#@tgID">
+                        📁 @tg.Key
+                    </button>
+                </h2>
+
+                <div id="@tgID" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
+                    <div class="accordion-body">
+
+                        <!-- CATEGORY ACCORDION -->
+                        <div class="accordion category-accordion" id="catAcc_@tgID">
+
+                            @foreach (var cat in tg.Value)
+                            {
+                                string catID = "cat_" + Guid.NewGuid().ToString("N");
+
+                                <div class="accordion-item mb-3 border-0">
+
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#@catID">
+                                            📂 @cat.Key
+                                        </button>
+                                    </h2>
+
+                                    <div id="@catID" class="accordion-collapse collapse"
+                                         data-bs-parent="#catAcc_@tgID">
+
+                                        <div class="accordion-body">
+
+                                            <!-- VIDEO TABLE -->
+                                            <table class="table table-hover table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Video Title</th>
+                                                        <th>Uploaded On</th>
+                                                        <th>Progress</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var v in cat.Value)
+                                                    {
+                                                        <tr>
+                                                            <td><b>@v.Title</b></td>
+                                                            <td>@v.UploadedOn.ToLocalTime().ToString("dd MMM yyyy")</td>
+
+                                                            <td>
+                                                                <a asp-action="Progress"
+                                                                   asp-route-id="@v.Id"
+                                                                   class="btn-progress">
+                                                                    View Progress
+                                                                </a>
+                                                            </td>
+
+                                                            <td>
+                                                                <form asp-action="Delete" method="post" class="d-inline">
+                                                                    <input type="hidden" name="id" value="@v.Id" />
+                                                                    <button class="btn-delete"
+                                                                            onclick="return confirm('Delete this video?');">
+                                                                        Delete
+                                                                    </button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+                            }
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

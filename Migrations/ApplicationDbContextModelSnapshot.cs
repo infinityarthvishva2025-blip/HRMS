@@ -24,20 +24,26 @@ namespace HRMS.Migrations
 
             modelBuilder.Entity("HRMS.Models.Attendance", b =>
                 {
+                    b.Property<string>("Emp_Code")
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("Emp_Code");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2")
                         .HasColumnName("Date");
 
-                    b.Property<string>("EmpCode")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Emp_Code");
-
-                    b.Property<DateTime?>("InTime")
-                        .HasColumnType("datetime2")
+                    b.Property<TimeSpan?>("InTime")
+                        .HasColumnType("time")
                         .HasColumnName("InTime");
 
-                    b.Property<DateTime?>("OutTime")
-                        .HasColumnType("datetime2")
+                    b.Property<bool>("IsLate")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LateMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan?>("OutTime")
+                        .HasColumnType("time")
                         .HasColumnName("OutTime");
 
                     b.Property<string>("Status")
@@ -45,9 +51,11 @@ namespace HRMS.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("Status");
 
-                    b.Property<TimeSpan?>("TotalHours")
-                        .HasColumnType("time")
+                    b.Property<decimal?>("Total_Hours")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("Total_Hours");
+
+                    b.HasKey("Emp_Code", "Date");
 
                     b.ToTable("Attendances", (string)null);
                 });
@@ -322,6 +330,77 @@ namespace HRMS.Migrations
                     b.ToTable("GeoTags");
                 });
 
+            modelBuilder.Entity("HRMS.Models.GurukulProgress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("VideoId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("VideoId");
+
+                    b.ToTable("GurukulProgress");
+                });
+
+            modelBuilder.Entity("HRMS.Models.GurukulVideo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsExternal")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ThumbnailPath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TitleGroup")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UploadedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VideoPath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GurukulVideos");
+                });
+
             modelBuilder.Entity("HRMS.Models.Hr", b =>
                 {
                     b.Property<int>("Id")
@@ -368,6 +447,7 @@ namespace HRMS.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CurrentApproverRole")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DirectorRemark")
@@ -391,6 +471,9 @@ namespace HRMS.Migrations
 
                     b.Property<string>("HrStatus")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LeaveType")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ManagerRemark")
@@ -419,6 +502,12 @@ namespace HRMS.Migrations
 
                     b.Property<double>("TotalDays")
                         .HasColumnType("float");
+
+                    b.Property<string>("VpRemark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VpStatus")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -542,6 +631,25 @@ namespace HRMS.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("HRMS.Models.GurukulProgress", b =>
+                {
+                    b.HasOne("HRMS.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Models.GurukulVideo", "Video")
+                        .WithMany()
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Video");
                 });
 
             modelBuilder.Entity("HRMS.Models.Leave", b =>

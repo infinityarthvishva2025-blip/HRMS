@@ -1,31 +1,192 @@
 ﻿@model IEnumerable<HRMS.Models.GurukulProgress>
+
 @{
     var video = (HRMS.Models.GurukulVideo?)ViewBag.Video;
     Layout = "_HRLayout";
-
 }
-<h2>Progress for @video?.Title</h2>
 
-<table class="table">
-    <thead><tr><th>Employee</th><th>Completed</th><th>Date</th></tr></thead>
-    <tbody>
-        @foreach (var p in Model)
-        {
+<!-- ===================== STYLES ===================== -->
+<style>
+
+    /* Page Title */
+    .page-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #1a237e;
+        margin-bottom: 25px;
+    }
+
+    /* Filter Box */
+    .filter-card {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 5px 18px rgba(0,0,0,0.07);
+        border: 1px solid #e3e6f3;
+        margin-bottom: 25px;
+    }
+
+    .filter-title {
+        font-weight: 700;
+        font-size: 17px;
+        margin-bottom: 12px;
+        color: #283593;
+    }
+
+    /* Table Card */
+    .table-card {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 0;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e0e4f5;
+    }
+
+    table thead {
+        background: #eef1ff;
+        color: #1a237e;
+        font-weight: 700;
+    }
+
+    table tbody tr:hover {
+        background: #f7f8ff;
+        transition: 0.18s ease;
+    }
+
+    td {
+        font-size: 15px;
+        padding: 14px;
+        vertical-align: middle;
+    }
+
+    th {
+        padding: 14px;
+    }
+
+    /* Beautiful Badges */
+    .badge-success {
+        background: #43a047 !important;
+        padding: 7px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .badge-warning {
+        background: #fb8c00 !important;
+        padding: 7px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff !important;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background: #3949ab !important;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 18px;
+    }
+
+    .btn-secondary {
+        border-radius: 8px;
+        padding: 8px 18px;
+        font-weight: 600;
+    }
+</style>
+
+
+<!-- ===================== PAGE TITLE ===================== -->
+<h2 class="page-title">📊 Progress Report – @video?.Title</h2>
+
+
+<!-- ===================== FILTER SECTION ===================== -->
+<div class="filter-card">
+
+    <div class="filter-title">🔍 Filter Results</div>
+
+    <form method="get" asp-action="Progress">
+        <input type="hidden" name="id" value="@video?.Id" />
+
+        <div class="row">
+
+            <!-- STATUS FILTER -->
+            <div class="col-md-3 mb-3">
+                <label class="fw-semibold">Status</label>
+                <select name="status" class="form-control">
+                    <option value="" selected="@((string)ViewBag.SelectedStatus == "")">All</option>
+                    <option value="completed" selected="@((string)ViewBag.SelectedStatus == "completed")">Completed</option>
+                    <option value="pending" selected="@((string)ViewBag.SelectedStatus == "pending")">Pending</option>
+                </select>
+            </div>
+
+            <!-- SEARCH -->
+            <div class="col-md-4 mb-3">
+                <label class="fw-semibold">Search Employee</label>
+                <input type="text"
+                       name="search"
+                       value="@ViewBag.Search"
+                       class="form-control"
+                       placeholder="Enter employee name..." />
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="col-md-5 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Apply Filters</button>
+                <a asp-action="Progress" asp-route-id="@video?.Id" class="btn btn-secondary">Clear</a>
+            </div>
+
+        </div>
+    </form>
+
+</div>
+
+
+<!-- ===================== TABLE SECTION ===================== -->
+<div class="table-card">
+
+    <table class="table table-hover mb-0">
+        <thead>
             <tr>
-                <td>@p.Employee?.Name</td>
-                <td>
-                    @if (p.IsCompleted)
-                    {
-                        <span class="badge bg-success">Yes</span>
-                    }
-                    else
-                    {
-
-                        <span class="badge bg-warning">No</span>
-                    }
-                </td>
-                <td>@p.CompletedOn?.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</td>
+                <th>Employee</th>
+                <th>Status</th>
+                <th>Completed On</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td><strong>@p.Employee?.Name</strong></td>
+
+                    <td>
+                        @if (p.IsCompleted)
+                        {
+                            <span class="badge badge-success">Completed</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-warning">Pending</span>
+                        }
+                    </td>
+
+                    <td>
+                        @if (p.CompletedOn != null)
+                        {
+                            @p.CompletedOn.Value.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+
+</div>
