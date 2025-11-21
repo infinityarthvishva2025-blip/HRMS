@@ -1,8 +1,12 @@
-﻿
+﻿@model List<HRMS.Models.Attendance>
 
 @{
     ViewData["Title"] = "Attendance Records";
     Layout = "~/Views/Shared/_HrLayout.cshtml";
+
+    // Safely read employee list from ViewBag
+    List<HRMS.Models.Employee> employees =
+        ViewBag.EmployeeList as List<HRMS.Models.Employee> ?? new List<HRMS.Models.Employee>();
 }
 
 <div class="container py-4">
@@ -40,50 +44,23 @@
         <div class="col-md-2">
             <label class="form-label fw-bold">Status</label>
             <select name="status" class="form-select">
-
-                @if (ViewBag.Status == "All")
-                {
-                    <option value="All" selected>All</option>
-                }
-                else
-                {
-                    <option value="All">All</option>
-                }
-
-                @if (ViewBag.Status == "Completed")
-                {
-                    <option value="Completed" selected>Completed</option>
-                }
-                else
-                {
-                    <option value="Completed">Completed</option>
-                }
-
-                @if (ViewBag.Status == "NotCheckedOut")
-                {
-                    <option value="NotCheckedOut" selected>Not Checked Out</option>
-                }
-                else
-                {
-                    <option value="NotCheckedOut">Not Checked Out</option>
-                }
-
+                <option value="All" selected="@(ViewBag.Status == "All")">All</option>
+                <option value="Completed" selected="@(ViewBag.Status == "Completed")">Completed</option>
+                <option value="NotCheckedOut" selected="@(ViewBag.Status == "NotCheckedOut")">Not Checked Out</option>
             </select>
         </div>
 
         <!-- Buttons -->
         <div class="col-md-3 d-flex align-items-end">
-
             <button class="btn btn-primary w-50 me-2">
                 <i class="fa-solid fa-search me-1"></i> Apply
             </button>
+
             <button formaction="/Attendance/ExportFiltered"
                     formmethod="get"
                     class="btn btn-success w-50">
                 <i class="fa-solid fa-file-excel me-1"></i> Export
             </button>
-
-
         </div>
 
     </form>
@@ -99,6 +76,7 @@
                         <th>Name</th>
                         <th>Check In</th>
                         <th>Check Out</th>
+                        <th>Total Hours</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -107,7 +85,7 @@
                     @if (Model == null || !Model.Any())
                     {
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-danger fw-bold">
+                            <td colspan="6" class="text-center py-4 text-danger fw-bold">
                                 No records found...
                             </td>
                         </tr>
@@ -116,28 +94,53 @@
                     {
                         foreach (var a in Model)
                         {
+                            var emp = employees.FirstOrDefault(e => e.EmployeeCode == a.EmpCode);
+
+                            // Calculate total hours (if both InTime & OutTime exist)
+                            string totalHours = "--";
+                            if (a.InTime.HasValue && a.OutTime.HasValue)
+                            {
+                                var diff = a.OutTime.Value - a.InTime.Value;
+                                totalHours = $"{diff.Hours}h {diff.Minutes}m";
+                            }
+
+                            // Determine Attendance Status
+                            string attStatus;
+                            if (!a.InTime.HasValue)
+                                attStatus = "Absent";
+                            else if (a.OutTime == null)
+                                attStatus = "Not Checked Out";
+                            else
+                                attStatus = "Present";
+
                             <tr>
-                                <td>@a.Employee.EmployeeCode</td>
-                                <td>@a.Employee.Name</td>
+                                <td>@a.EmpCode</td>
+                                <td>@(emp?.Name ?? "--")</td>
 
-                                <td>@a.CheckInTime?.ToString("dd MMM yyyy, hh:mm tt")</td>
+                                <td>@a.InTime?.ToString("dd MMM yyyy, hh:mm tt")</td>
+                                <td>@(a.OutTime?.ToString("dd MMM yyyy, hh:mm tt") ?? "--")</td>
 
-                                <td>@(a.CheckOutTime?.ToString("dd MMM yyyy, hh:mm tt") ?? "--")</td>
+                                <td>@totalHours</td>
 
                                 <td>
-                                    @if (a.CheckOutTime == null)
+                                    @if (attStatus == "Absent")
+                                    {
+                                        <span class="badge bg-danger">Absent</span>
+                                    }
+                                    else if (attStatus == "Not Checked Out")
                                     {
                                         <span class="badge bg-warning text-dark">Not Checked Out</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-success">Completed</span>
+                                        <span class="badge bg-success">Present</span>
                                     }
                                 </td>
                             </tr>
                         }
                     }
                 </tbody>
+
             </table>
 
         </div>

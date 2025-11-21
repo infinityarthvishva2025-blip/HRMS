@@ -52,7 +52,7 @@ public class AutoCheckoutService : BackgroundService
                 // Calculate total working hours
                 if (record.InTime.HasValue)
                 {
-                    record.Total_Hours = record.OutTime.Value - record.InTime.Value;
+                    record.TotalHours = record.OutTime.Value - record.InTime.Value;
                 }
 
                 // Update status (optional)
