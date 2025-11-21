@@ -28,7 +28,8 @@ namespace HRMS.Controllers
             { "HR",        new List<string> { "HR Executive", "HR Manager" } },
             { "Finance",   new List<string> { "Accountant", "Finance Manager" } },
             { "Marketing", new List<string> { "Marketing Executive", "Marketing Manager" } },
-            { "Accounting",new List<string> { "Junior Accountant", "Senior Accountant" } }
+            { "Accounting",new List<string> { "Junior Accountant", "Senior Accountant" } },
+            { "Ganeral Manager",new List<string> { "Ganeral Manager", "Senior Ganeral Manager" } }
         };
 
         public EmployeesController(ApplicationDbContext context, IWebHostEnvironment env)
@@ -377,7 +378,7 @@ namespace HRMS.Controllers
                 .FirstOrDefault();
 
             if (last == null)
-                return "IA0001";
+                return "IA00001";
 
             int num = int.Parse(last.Substring(2)) + 1;
             return $"IA{num:0000}";
@@ -476,6 +477,40 @@ namespace HRMS.Controllers
 
             // 3️⃣ Return the profile view
             return View(employee);
+        }
+
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == id);
+            if (employee == null) return NotFound();
+
+            return View(employee);   // You need Delete.cshtml view
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == id);
+            if (employee == null)
+                return NotFound();
+
+            // EMPLOYEE FOLDER PATH
+            string empFolder = Path.Combine(_env.WebRootPath, "uploads/employees", employee.EmployeeCode);
+
+            // DELETE EMPLOYEE FROM DATABASE
+            _context.Employees.Remove(employee);
+            await _context.SaveChangesAsync();
+
+            // DELETE EMPLOYEE FOLDER AND FILES
+            if (Directory.Exists(empFolder))
+            {
+                Directory.Delete(empFolder, true);   // true = delete all files & subfolders
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
 

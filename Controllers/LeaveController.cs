@@ -66,14 +66,14 @@ namespace HRMS.Controllers
             };
             return View(model);
         }
-
         [HttpPost]
-        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Leave model)
         {
             var empId = GetCurrentEmployeeId();
             if (empId == null)
                 return RedirectToAction("Login", "Account");
+
+            var employee = await _context.Employees.FindAsync(empId);
 
             model.EmployeeId = empId.Value;
 
@@ -84,34 +84,89 @@ namespace HRMS.Controllers
             if (model.EndDate.HasValue)
                 model.EndDate = model.EndDate.Value.Date;
 
-            // simple total days for now
             if (!model.EndDate.HasValue || model.EndDate < model.StartDate)
                 model.EndDate = model.StartDate;
+
             model.TotalDays = (model.EndDate.Value - model.StartDate).TotalDays + 1;
 
-            model.CurrentApproverRole = "Employee";
-            model.NextApproverRole = await _workflow.GetNextApproverRoleAsync("Employee");
-
-          
-
-            model.ManagerStatus = "Pending";
-            model.HrStatus = "Pending";
-            model.DirectorStatus = "Pending";
-            model.OverallStatus = "Pending";
             model.CreatedOn = DateTime.Now;
 
-            model.CurrentApproverRole = "Employee";   // created by employee
-            model.NextApproverRole = "Manager";       // first approver
+            // default all pending
+            model.ManagerStatus = "Pending";
+            model.HrStatus = "Pending";
+            model.VpStatus = "Pending";
+            model.DirectorStatus = "Pending";
+            model.OverallStatus = "Pending";
+
+            model.ReportingManagerId = employee.ManagerId;
+
+            // -----------------------------------------
+            // ROLE-BASED WORKFLOW LOGIC (FINAL VERSION)
+            // -----------------------------------------
+            switch (employee.Role)
+            {
+                // ---------------- EMPLOYEE ----------------
+                case "Employee":
+                    model.CurrentApproverRole = "Employee";
+                    model.NextApproverRole = "Manager";
+                    break;
+
+                // ---------------- HR ----------------
+                case "HR":
+                    // HR skips Manager (self)
+                    model.ManagerStatus = "Approved";     // Skip Manager
+                    model.HrStatus = "Pending";           // HR role itself is first approver?
+                    model.VpStatus = "Pending";
+                    model.DirectorStatus = "Pending";
+
+                    model.CurrentApproverRole = "HR";
+                    model.NextApproverRole = "GM";        // GM approves HR leave
+                    break;
+
+                // ---------------- GM ----------------
+                case "GM":
+                    model.ManagerStatus = "Approved";
+                    model.HrStatus = "Approved";
+                    model.VpStatus = "Approved";
+
+                    model.CurrentApproverRole = "GM";
+                    model.NextApproverRole = "Director";
+                    break;
+
+                // ---------------- VP ----------------
+                case "VP":
+                    model.ManagerStatus = "Approved";
+                    model.HrStatus = "Approved";
+
+                    model.CurrentApproverRole = "VP";
+                    model.NextApproverRole = "Director";
+                    break;
+
+                // ---------------- DIRECTOR ----------------
+                case "Director":
+                    model.ManagerStatus = "Approved";
+                    model.HrStatus = "Approved";
+                    model.VpStatus = "Approved";
+                    model.DirectorStatus = "Approved";
+
+                    model.OverallStatus = "Approved";
+                    model.CurrentApproverRole = "Director";
+                    model.NextApproverRole = "Completed";
+                    break;
+
+                default:
+                    model.CurrentApproverRole = "Employee";
+                    model.NextApproverRole = "Manager";
+                    break;
+            }
 
             _context.Leaves.Add(model);
             await _context.SaveChangesAsync();
 
-            await _notification.NotifyLeaveCreatedAsync(model);
-
             return RedirectToAction("MyLeaves");
         }
 
-        // -------------------- my leaves --------------------
+        
 
         public async Task<IActionResult> MyLeaves()
         {
@@ -183,36 +238,32 @@ namespace HRMS.Controllers
 
             return View("ApprovalList", pending);
         }
-      
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> HrApprove(int id, bool approve, string? remark)
-        //{
-        //    var leave = await _context.Leaves
-        //        .Include(l => l.Employee)
-        //        .FirstOrDefaultAsync(l => l.Id == id);
 
-        //    if (leave == null) return NotFound();
+        // -------------------- VICE PRESIDENT APPROVAL --------------------
+        public async Task<IActionResult> VpApprovalList()
+        {
+            var pending = await _context.Leaves
+                .Include(l => l.Employee)
+                .Where(l => l.ManagerStatus == "Approved" &&
+                            l.HrStatus == "Approved" &&
+                            l.VpStatus == "Pending" &&
+                            l.DirectorStatus == "Pending")
+                .OrderByDescending(l => l.CreatedOn)
+                .ToListAsync();
 
-        //    leave.HrStatus = approve ? "Approved" : "Rejected";
-        //    leave.HrRemark = remark;
+            ViewData["ApproverRole"] = "VP";
+            ViewData["ApproveAction"] = "VpApprove";
 
-        //    UpdateOverallStatus(leave);
-        //    await _context.SaveChangesAsync();
+            return View("ApprovalList", pending);
+        }
 
-        //    await _notification.NotifyLeaveStatusChangedAsync(leave, "HR", approve);
-
-        //    return RedirectToAction("HrApprovalList");
-        //}
-
-        // -------------------- DIRECTOR APPROVAL --------------------
-        //[AuthorizeRole("Director")]
         public async Task<IActionResult> DirectorApprovalList()
         {
             var pending = await _context.Leaves
                 .Include(l => l.Employee)
                 .Where(l => l.ManagerStatus == "Approved" &&
                             l.HrStatus == "Approved" &&
+                             l.VpStatus  == "Approved" &&
                             l.DirectorStatus == "Pending")
                 .OrderBy(l => l.CreatedOn)
                 .OrderByDescending(l => l.CreatedOn)
@@ -224,33 +275,7 @@ namespace HRMS.Controllers
             return View("ApprovalList", pending);
         }
        
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> DirectorApprove(int id, bool approve, string? remark)
-        //{
-        //    var leave = await _context.Leaves
-        //        .Include(l => l.Employee)
-        //        .FirstOrDefaultAsync(l => l.Id == id);
-
-        //    if (leave == null) return NotFound();
-
-        //    leave.DirectorStatus = approve ? "Approved" : "Rejected";
-        //    leave.DirectorRemark = remark;
-
-        //    UpdateOverallStatus(leave);
-        //    await _context.SaveChangesAsync();
-
-        //    await _notification.NotifyLeaveStatusChangedAsync(leave, "Director", approve);
-
-        //    return RedirectToAction("DirectorApprovalList");
-        //}
-
-        // -------------------- LEAVE REPORT CHART --------------------
-
-        //public IActionResult LeaveReport()
-        //{
-        //    return View();
-        //}
+        
 
         [HttpGet]
         public async Task<IActionResult> GetLeaveStatusSummary()
@@ -423,12 +448,12 @@ namespace HRMS.Controllers
             });
         }
 
-        private async Task ProcessApproval(int id, string role, bool approve, string? remark)
+        private async Task ProcessApproval(int id, string NextApproverRole, bool approve, string? remark)
         {
             var leave = await _context.Leaves.FirstOrDefaultAsync(l => l.Id == id);
             if (leave == null) return;
 
-            switch (role)
+            switch (NextApproverRole)
             {
                 case "Manager":
                     leave.ManagerStatus = approve ? "Approved" : "Rejected";
@@ -438,6 +463,11 @@ namespace HRMS.Controllers
                 case "HR":
                     leave.HrStatus = approve ? "Approved" : "Rejected";
                     leave.HrRemark = remark;
+                    break;
+
+                case "VP":
+                    leave.VpStatus  = approve ? "Approved" : "Rejected";
+                    leave.VpRemark  = remark;
                     break;
 
                 case "Director":
@@ -453,8 +483,8 @@ namespace HRMS.Controllers
             }
             else
             {
-                leave.CurrentApproverRole = role;
-                leave.NextApproverRole = await _workflow.GetNextApproverRoleAsync(role);
+                leave.CurrentApproverRole = NextApproverRole;
+                leave.NextApproverRole = await _workflow.GetNextApproverRoleAsync(NextApproverRole);
 
                 if (leave.NextApproverRole == "Completed")
                     leave.OverallStatus = "Approved";
@@ -476,13 +506,85 @@ namespace HRMS.Controllers
             await ProcessApproval(id, "HR", approve, remark);
             return RedirectToAction("HrApprovalList");
         }
-
+       
+        public async Task<IActionResult> VpApprove(int id, bool approve, string? remark)
+        {
+            await ProcessApproval(id, "VP", approve, remark);
+            return RedirectToAction("VpApprovalList");
+        }
         // -------------------- DIRECTOR APPROVAL --------------------
         public async Task<IActionResult> DirectorApprove(int id, bool approve, string? remark)
         {
             await ProcessApproval(id, "Director", approve, remark);
             return RedirectToAction("DirectorApprovalList");
         }
+        public async Task<IActionResult> ApprovalDashboard()
+        {
+            var empId = GetCurrentEmployeeId();
+            if (empId == null)
+                return RedirectToAction("Login", "Account");
+
+            var employee = await _context.Employees.FindAsync(empId);
+
+            if (employee == null)
+                return RedirectToAction("Login", "Account");
+
+            // Decide which approval list to show based on role
+            return employee.Role switch
+            {
+                
+                "HR" => RedirectToAction("HrApprovalList"),
+                "GM" => RedirectToAction("ManagerApprovalList"),
+                "VP" => RedirectToAction("VpApprovalList"),
+                "Director" => RedirectToAction("DirectorApprovalList"),
+                _ => RedirectToAction("LeaveReport") // Employee → No approval dashboard
+            };
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPendingCount()
+        {
+            var empId = GetCurrentEmployeeId();
+            if (empId == null) return Json(0);
+
+            var emp = await _context.Employees.FindAsync(empId);
+
+            int count = emp.Role switch
+            {
+                "Manager" => await _context.Leaves.CountAsync(l => l.ManagerStatus == "Pending" && l.ReportingManagerId == empId),
+                "HR" => await _context.Leaves.CountAsync(l => l.ManagerStatus == "Approved" && l.HrStatus == "Pending"),
+                "VP" => await _context.Leaves.CountAsync(l => l.ManagerStatus == "Approved" && l.HrStatus == "Approved" && l.VpStatus == "Pending"),
+                "Director" => await _context.Leaves.CountAsync(l =>
+                                l.ManagerStatus == "Approved" &&
+                                l.HrStatus == "Approved" &&
+                                l.VpStatus == "Approved" &&
+                                l.DirectorStatus == "Pending"),
+                _ => 0
+            };
+
+            return Json(count);
+        }
+        public async Task<IActionResult> Dashboard()
+        {
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            var emp = await _context.Employees.FindAsync(empId);
+
+            // Pass user role to view
+            ViewBag.UserRole = emp.Role;
+
+            // Pass pending counts
+            ViewBag.ManagerPending = await _context.Leaves.CountAsync(l => l.ManagerStatus == "Pending");
+            ViewBag.HrPending = await _context.Leaves.CountAsync(l => l.ManagerStatus == "Approved" && l.HrStatus == "Pending");
+            ViewBag.VpPending = await _context.Leaves.CountAsync(l => l.ManagerStatus == "Approved" && l.HrStatus == "Approved" && l.VpStatus == "Pending");
+            ViewBag.DirectorPending = await _context.Leaves.CountAsync(l =>
+                                l.ManagerStatus == "Approved" &&
+                                l.HrStatus == "Approved" &&
+                                l.VpStatus == "Approved" &&
+                                l.DirectorStatus == "Pending");
+
+            return View();
+        }
+
 
     }
 }

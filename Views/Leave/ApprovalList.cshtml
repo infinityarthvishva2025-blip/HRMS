@@ -9,7 +9,7 @@
 <hr />
 
 <div id="approval-table-container">
-    @Html.Partial("_ApprovalTablePartial", Model)
+    @await Html.PartialAsync("_ApprovalTablePartial", Model)
 </div>
 
 @* @model IEnumerable<Leave>

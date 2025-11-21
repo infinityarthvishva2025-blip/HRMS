@@ -38,8 +38,8 @@ namespace HRMS.Models
         // EarlyGoing / LateComing time
         public TimeSpan? TimeValue { get; set; }
 
-        [Required]
-        public string Reason { get; set; }
+        //[Required]
+        //public string Reason { get; set; }
 
         public string? ContactDuringLeave { get; set; }
         public string? AddressDuringLeave { get; set; }
@@ -63,7 +63,14 @@ namespace HRMS.Models
         public string? HrRemark { get; set; }
         public string? VpRemark { get; set; }
         public string? DirectorRemark { get; set; }
+     
+        public string Reason { get; set; } = string.Empty;
+
+       // public string Role { get; set; } = string.Empty;
+
+        public int? ReportingManagerId { get; set; } // FIXED
     }
+
 }
 
 //using System;

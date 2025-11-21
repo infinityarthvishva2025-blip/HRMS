@@ -6,13 +6,14 @@ using OfficeOpenXml;   // EPPlus
 var builder = WebApplication.CreateBuilder(args);
 
 // =================== EPPLUS LICENSE ===================
-ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+//ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 // =================== SERVICES ===================
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    
+options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<INotificationService, EmailNotificationService>();

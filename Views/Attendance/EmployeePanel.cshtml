@@ -1,54 +1,23 @@
-﻿namespace HRMS.Models
-
+﻿@model HRMS.Models.Attendance
 @{
-    ViewData["Title"] = "My Attendance";
+
     Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
 }
+@if (Model == null)
+{
+    <p>You have not checked in today.</p>
+    <a asp-action="CheckIn" class="btn btn-success">Check In</a>
+}
+else
+{
+    <p><strong>Check-In:</strong> @Model.InTime?.ToString("dd MMM yyyy, hh:mm tt")</p>
 
-<div class="container py-4">
-    <h2 class="fw-bold text-primary mb-3">
-        <i class="fa-solid fa-calendar-check me-2"></i> My Attendance
-    </h2>
-
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body text-center">
-
-            @if (Model == null)
-            {
-                <p class="mb-3">You have not checked in for today.</p>
-
-                <a asp-action="CheckIn" class="btn btn-success btn-lg px-5">
-                    <i class="fa-solid fa-play me-2"></i> Check In
-                </a>
-            }
-            else
-            {
-                <p class="mb-1">
-                    <strong>Check-In:</strong> @Model.CheckInTime?.ToString("dd MMM yyyy, hh:mm tt")
-                </p>
-
-                @if (Model.CheckOutTime == null)
-                {
-                    <p class="text-warning mb-3">You are currently checked in.</p>
-
-                    <a asp-action="CheckOut" class="btn btn-danger btn-lg px-5">
-                        <i class="fa-solid fa-stop me-2"></i> Check Out
-                    </a>
-                }
-                else
-                {
-                    <p class="mb-1">
-                        <strong>Check-Out:</strong> @Model.CheckOutTime?.ToString("dd MMM yyyy, hh:mm tt")
-                    </p>
-                    <p class="text-success mb-3">Today's attendance is completed.</p>
-                }
-            }
-
-            <hr />
-
-            <a asp-action="MySummary" class="btn btn-primary mt-2">
-                <i class="fa-solid fa-chart-line me-2"></i> View My Attendance Summary
-            </a>
-        </div>
-    </div>
-</div>
+    @if (Model.OutTime == null)
+    {
+        <a asp-action="CheckOut" class="btn btn-danger">Check Out</a>
+    }
+    else
+    {
+        <p><strong>Check-Out:</strong> @Model.OutTime?.ToString("dd MMM yyyy, hh:mm tt")</p>
+    }
+}

@@ -1,4 +1,50 @@
 ﻿@model IEnumerable<HRMS.Models.Leave>
+@{
+    var userRole = ViewBag.UserRole as string;
+}
+<div class="row mt-4">
+   
+    @if (userRole == "Manager")
+    {
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm">
+                <h6>Pending Approvals</h6>
+                <h3 class="text-primary">@ViewBag.ManagerPending</h3>
+            </div>
+        </div>
+    }
+
+    @if (userRole == "HR")
+    {
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm">
+                <h6>HR Pending</h6>
+                <h3 class="text-warning">@ViewBag.HrPending</h3>
+            </div>
+        </div>
+    }
+
+    @if (userRole == "VP")
+    {
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm">
+                <h6>VP Pending</h6>
+                <h3 class="text-info">@ViewBag.VpPending</h3>
+            </div>
+        </div>
+    }
+
+    @if (userRole == "Director")
+    {
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm">
+                <h6>Director Pending</h6>
+                <h3 class="text-danger">@ViewBag.DirectorPending</h3>
+            </div>
+        </div>
+    }
+
+</div>
 
 <table class="table table-bordered table-hover">
     <thead class="table-light">
@@ -48,7 +94,21 @@
         }
     </tbody>
 </table>
+<script >
+        document.getElementById("sidebarToggle").addEventListener("click", function () {
+        const sidebar = document.getElementById("sidebar-wrapper");
 
+        if (window.innerWidth <= 768) {
+            sidebar.classList.toggle("open");
+        } else {
+            sidebar.classList.toggle("collapsed");
+        }
+    });
+
+
+      
+
+</script>
 
 @* 
 @model IEnumerable<Leave>

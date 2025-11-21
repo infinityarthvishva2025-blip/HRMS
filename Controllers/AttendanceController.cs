@@ -18,14 +18,13 @@ namespace HRMS.Controllers
             _context = context;
         }
 
-        // =====================================================================
+        // =========================================================
         // EMPLOYEE PANEL
-        // =====================================================================
-
+        // =========================================================
         public IActionResult EmployeePanel()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
-            if (empCode == null)
+            if (string.IsNullOrEmpty(empCode))
                 return RedirectToAction("Login", "Account");
 
             var today = DateTime.Today;
@@ -36,10 +35,9 @@ namespace HRMS.Controllers
             return View(attendance);
         }
 
-        // =====================================================================
-        // CHECK-IN
-        // =====================================================================
-
+        // =========================================================
+        // CHECK IN
+        // =========================================================
         public IActionResult CheckIn()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
@@ -70,10 +68,9 @@ namespace HRMS.Controllers
             return RedirectToAction(nameof(EmployeePanel));
         }
 
-        // =====================================================================
-        // CHECK-OUT
-        // =====================================================================
-
+        // =========================================================
+        // CHECK OUT
+        // =========================================================
         public IActionResult CheckOut()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
@@ -94,25 +91,29 @@ namespace HRMS.Controllers
                     attendance.Total_Hours = attendance.OutTime.Value - attendance.InTime.Value;
                 }
 
+
                 _context.SaveChanges();
             }
 
             return RedirectToAction(nameof(EmployeePanel));
         }
 
-        // =====================================================================
-        // EMPLOYEE SUMMARY
-        // =====================================================================
-
+        // =========================================================
+        // SUMMARY REDIRECT
+        // =========================================================
         public IActionResult MySummary()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
+
             if (empCode == null)
                 return RedirectToAction("Login", "Account");
 
             return RedirectToAction(nameof(EmployeeSummary), new { empCode });
         }
 
+        // =========================================================
+        // EMPLOYEE SUMMARY PAGE
+        // =========================================================
         public IActionResult EmployeeSummary(string empCode, DateTime? fromDate, DateTime? toDate)
         {
             if (empCode == null)
@@ -127,18 +128,21 @@ namespace HRMS.Controllers
                     a.Date >= start &&
                     a.Date <= end
                 )
+
                 .OrderBy(a => a.Date)
                 .ToList();
 
             return View(attendance);
         }
 
-        // =====================================================================
+        // =========================================================
         // HR LIST PAGE (FILTER + SEARCH)
-        // =====================================================================
-
+        // =========================================================
         public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate)
         {
+            // Load employees for name mapping
+            ViewBag.EmployeeList = _context.Employees.ToList();
+
             var data = _context.Attendances.AsQueryable();
 
             if (fromDate.HasValue)
@@ -155,19 +159,20 @@ namespace HRMS.Controllers
             }
 
             var list = data.OrderByDescending(a => a.Date).ToList();
-
             return View(list);
         }
 
-        // =====================================================================
-        // EXPORT TO EXCEL
-        // =====================================================================
+
+
 
         //[HttpGet]
-        //public IActionResult ExportFiltered(string search, DateTime? fromDate, DateTime? toDate)
+        //public IActionResult ExportFiltered(string search, DateTime? fromDate, DateTime? toDate, string status)
         //{
+        //    ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
         //    var data = _context.Attendances.AsQueryable();
 
+        //    // FILTERS
         //    if (fromDate.HasValue)
         //        data = data.Where(a => a.Date >= fromDate.Value.Date);
 
@@ -177,15 +182,25 @@ namespace HRMS.Controllers
         //    if (!string.IsNullOrEmpty(search))
         //        data = data.Where(a => a.EmpCode.Contains(search));
 
+        //    if (!string.IsNullOrEmpty(status) && status != "All")
+        //    {
+        //        if (status == "Completed")
+        //            data = data.Where(a => a.OutTime != null);
+
+        //        if (status == "NotCheckedOut")
+        //            data = data.Where(a => a.OutTime == null);
+        //    }
+
         //    var list = data.OrderBy(a => a.Date).ToList();
 
-        //    ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        //    // Get employee names
+        //    var employees = _context.Employees.ToList();
 
         //    using (var pkg = new ExcelPackage())
         //    {
         //        var ws = pkg.Workbook.Worksheets.Add("Attendance");
 
-        //        ws.Cells[1, 1].Value = "Employee Code";
+        //      ws.Cells[1, 1].Value = "Employee Code";
         //        ws.Cells[1, 2].Value = "Date";
         //        ws.Cells[1, 3].Value = "Status";
         //        ws.Cells[1, 4].Value = "In Time";
@@ -198,17 +213,32 @@ namespace HRMS.Controllers
 
         //        foreach (var a in list)
         //        {
+        //            var emp = employees.FirstOrDefault(e => e.EmployeeCode == a.EmpCode);
+
         //            ws.Cells[row, 1].Value = a.EmpCode;
-        //            ws.Cells[row, 2].Value = a.Date.ToString("dd-MMM-yyyy");
-        //            ws.Cells[row, 3].Value = a.Status;
-        //            ws.Cells[row, 4].Value = a.InTime?.ToString("hh:mm tt");
+        //            ws.Cells[row, 2].Value = emp?.Name ?? "--";
+        //            ws.Cells[row, 3].Value = a.Date.ToString("dd-MMM-yyyy");
+        //            ws.Cells[row, 4].Value = a.InTime?.ToString("hh:mm tt") ?? "--";
         //            ws.Cells[row, 5].Value = a.OutTime?.ToString("hh:mm tt") ?? "--";
-        //            ws.Cells[row, 6].Value = a.TotalHours?.ToString() ?? "--";
+
+        //            // Total Hours calculation
+        //            string totalHours = "--";
+        //            if (a.InTime.HasValue && a.OutTime.HasValue)
+        //            {
+        //                var diff = a.OutTime.Value - a.InTime.Value;
+        //                totalHours = $"{diff.Hours}h {diff.Minutes}m";
+        //            }
+
+        //            ws.Cells[row, 6].Value = totalHours;
+
+        //            ws.Cells[row, 7].Value = a.OutTime == null ? "Not Checked Out" : "Completed";
+
         //            row++;
         //        }
 
         //        ws.Cells.AutoFitColumns();
 
+        //        // DOWNLOAD
         //        return File(
         //            pkg.GetAsByteArray(),
         //            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -216,5 +246,6 @@ namespace HRMS.Controllers
         //        );
         //    }
         //}
+
     }
 }
