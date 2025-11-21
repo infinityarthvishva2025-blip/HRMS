@@ -1,4 +1,56 @@
-﻿
+﻿@model IEnumerable<HRMS.Models.Leave>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
+        <tr>
+            <th>Employee</th>
+            <th>Category</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Days</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Remark</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var l in Model)
+        {
+            <tr>
+                <td>@l.Employee?.Name</td>
+                <td>@l.Category</td>
+                <td>@l.StartDate.ToShortDateString()</td>
+                <td>@l.EndDate?.ToShortDateString()</td>
+                <td>@l.TotalDays</td>
+                <td>@l.Reason</td>
+
+                <td>
+                    M: @l.ManagerStatus <br />
+                    HR: @l.HrStatus <br />
+                    VP: @l.VpStatus <br />
+                    Dir: @l.DirectorStatus
+                </td>
+
+                <td>
+                    <input class="form-control" id="remark-@l.Id" />
+                </td>
+
+                <td>
+                    <a href="/Leave/@ViewBag.ApproveAction?id=@l.Id&approve=true&remark="
+                       class="btn btn-success btn-sm">Approve</a>
+
+                    <a href="/Leave/@ViewBag.ApproveAction?id=@l.Id&approve=false&remark="
+                       class="btn btn-danger btn-sm">Reject</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+@* 
 @model IEnumerable<Leave>
 
 @foreach (var item in Model)
@@ -41,3 +93,4 @@
         </td>
     </tr>
 }
+ *@

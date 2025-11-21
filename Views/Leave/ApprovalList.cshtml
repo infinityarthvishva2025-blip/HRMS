@@ -1,4 +1,18 @@
-﻿@model IEnumerable<Leave>
+﻿@model IEnumerable<HRMS.Models.Leave>
+
+@{
+    ViewData["Title"] = "Leave Approvals";
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+}
+
+<h3>Leave Approval</h3>
+<hr />
+
+<div id="approval-table-container">
+    @Html.Partial("_ApprovalTablePartial", Model)
+</div>
+
+@* @model IEnumerable<Leave>
 
 @{
     var role = ViewData["ApproverRole"] as string ?? "Manager";
@@ -85,7 +99,7 @@
                     </tr>
                 </thead>
                 <tbody id="approvalTableBody">
-                    @* Initial load using server model (will be overwritten by AJAX after)*@
+                    @* Initial load using server model (will be overwritten by AJAX after)
                     @await Html.PartialAsync("_ApprovalTablePartial", Model)
                 </tbody>
             </table>
@@ -150,3 +164,4 @@
         });
     </script>
 }
+ *@
