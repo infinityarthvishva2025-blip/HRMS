@@ -13,6 +13,8 @@ namespace HRMS.Data
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Leave> Leaves { get; set; }
+        public DbSet<GurukulVideo> GurukulVideos { get; set; }
+        public DbSet<GurukulProgress> GurukulProgress {  get; set; }
         public DbSet<Expenses> Expenses { get; set; }
         public DbSet<Payroll> Payrolls { get; set; }
         public DbSet<LeaveApprovalRoute> LeaveApprovalRoutes { get; set; }
