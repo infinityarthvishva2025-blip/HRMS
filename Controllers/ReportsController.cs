@@ -50,23 +50,23 @@ namespace HRMS.Controllers
             return Json(data);
         }
 
-        // ------------------------------  
-        // PAYROLL REPORT API  
-        // ------------------------------  
-        [HttpGet]
-        public IActionResult GetPayrollReport()
-        {
-            var data = _context.Payrolls
-                .GroupBy(p => p.MonthYear)
-                .Select(g => new
-                {
-                    Month = g.Key,
-                    Total = g.Sum(x => x.NetPay)
-                })
-                .ToList();
+        //// ------------------------------  
+        //// PAYROLL REPORT API  
+        //// ------------------------------  
+        //[HttpGet]
+        //public IActionResult GetPayrollReport()
+        //{
+        //    var data = _context.Payrolls
+        //        .GroupBy(p => p.MonthYear)
+        //        .Select(g => new
+        //        {
+        //            Month = g.Key,
+        //            Total = g.Sum(x => x.NetPay)
+        //        })
+        //        .ToList();
 
-            return Json(data);
-        }
+        //    return Json(data);
+        //}
     }
 }
 

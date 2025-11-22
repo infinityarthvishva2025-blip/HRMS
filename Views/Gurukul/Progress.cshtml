@@ -7,8 +7,6 @@
 
 <!-- ===================== STYLES ===================== -->
 <style>
-
-    /* Page Title */
     .page-title {
         font-size: 28px;
         font-weight: 800;
@@ -16,7 +14,6 @@
         margin-bottom: 25px;
     }
 
-    /* Filter Box */
     .filter-card {
         background: #ffffff;
         border-radius: 14px;
@@ -33,7 +30,6 @@
         color: #283593;
     }
 
-    /* Table Card */
     .table-card {
         background: #ffffff;
         border-radius: 14px;
@@ -63,7 +59,6 @@
         padding: 14px;
     }
 
-    /* Beautiful Badges */
     .badge-success {
         background: #43a047 !important;
         padding: 7px 14px;
@@ -81,7 +76,6 @@
         color: #fff !important;
     }
 
-    /* Buttons */
     .btn-primary {
         background: #3949ab !important;
         font-weight: 600;
@@ -104,7 +98,6 @@
 
 <!-- ===================== FILTER SECTION ===================== -->
 <div class="filter-card">
-
     <div class="filter-title">🔍 Filter Results</div>
 
     <form method="get" asp-action="Progress">
@@ -116,41 +109,84 @@
             <div class="col-md-3 mb-3">
                 <label class="fw-semibold">Status</label>
                 <select name="status" class="form-control">
-                    <option value="" selected="@((string)ViewBag.SelectedStatus == "")">All</option>
-                    <option value="completed" selected="@((string)ViewBag.SelectedStatus == "completed")">Completed</option>
-                    <option value="pending" selected="@((string)ViewBag.SelectedStatus == "pending")">Pending</option>
+
+                    @if ((string)ViewBag.SelectedStatus == "" || ViewBag.SelectedStatus == null)
+                    {
+                        <option value="" selected>All</option>
+                    }
+                    else
+                    {
+                        <option value="">All</option>
+                    }
+
+                    @if ((string)ViewBag.SelectedStatus == "completed")
+                    {
+                        <option value="completed" selected>Completed</option>
+                    }
+                    else
+                    {
+                        <option value="completed">Completed</option>
+                    }
+
+                    @if ((string)ViewBag.SelectedStatus == "pending")
+                    {
+                        <option value="pending" selected>Pending</option>
+                    }
+                    else
+                    {
+                        <option value="pending">Pending</option>
+                    }
+
                 </select>
             </div>
 
-            <!-- SEARCH -->
-            <div class="col-md-4 mb-3">
+            <!-- DEPARTMENT FILTER -->
+            <!-- DEPARTMENT FILTER -->
+            <div class="col-md-3 mb-3">
+                <label class="fw-semibold">Department</label>
+                <select name="department" class="form-control">
+                    <option value="ALL" selected="@("ALL" == (string)ViewBag.SelectedDepartment)">All Departments</option>
+
+                    @foreach (var d in ViewBag.DepartmentList as List<string>)
+                    {
+                        <option value="@d" selected="@(ViewBag.SelectedDepartment == d)">
+                            @d
+                        </option>
+                    }
+                </select>
+            </div>
+
+
+            <!-- SEARCH FILTER -->
+            <div class="col-md-3 mb-3">
                 <label class="fw-semibold">Search Employee</label>
                 <input type="text"
                        name="search"
                        value="@ViewBag.Search"
                        class="form-control"
-                       placeholder="Enter employee name..." />
+                       placeholder="Employee name..." />
             </div>
 
             <!-- BUTTONS -->
-            <div class="col-md-5 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary me-2">Apply Filters</button>
-                <a asp-action="Progress" asp-route-id="@video?.Id" class="btn btn-secondary">Clear</a>
+            <div class="col-md-3 d-flex align-items-end mb-3">
+                <button type="submit" class="btn btn-primary me-2">Apply Filter</button>
+                <a asp-action="Progress"
+                   asp-route-id="@video?.Id"
+                   class="btn btn-secondary">Clear</a>
             </div>
 
         </div>
     </form>
-
 </div>
 
 
 <!-- ===================== TABLE SECTION ===================== -->
 <div class="table-card">
-
     <table class="table table-hover mb-0">
         <thead>
             <tr>
                 <th>Employee</th>
+                <th>Department</th>
                 <th>Status</th>
                 <th>Completed On</th>
             </tr>
@@ -161,6 +197,8 @@
             {
                 <tr>
                     <td><strong>@p.Employee?.Name</strong></td>
+
+                    <td>@p.Employee?.Department</td>
 
                     <td>
                         @if (p.IsCompleted)
@@ -186,7 +224,5 @@
                 </tr>
             }
         </tbody>
-
     </table>
-
 </div>
