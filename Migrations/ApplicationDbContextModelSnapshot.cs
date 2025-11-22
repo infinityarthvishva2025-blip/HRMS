@@ -24,7 +24,7 @@ namespace HRMS.Migrations
 
             modelBuilder.Entity("HRMS.Models.Attendance", b =>
                 {
-                    b.Property<string>("EmpCode")
+                    b.Property<string>("Emp_Code")
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("Emp_Code");
 
@@ -32,12 +32,18 @@ namespace HRMS.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("Date");
 
-                    b.Property<DateTime?>("InTime")
-                        .HasColumnType("datetime2")
+                    b.Property<TimeSpan?>("InTime")
+                        .HasColumnType("time")
                         .HasColumnName("InTime");
 
-                    b.Property<DateTime?>("OutTime")
-                        .HasColumnType("datetime2")
+                    b.Property<bool>("IsLate")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LateMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan?>("OutTime")
+                        .HasColumnType("time")
                         .HasColumnName("OutTime");
 
                     b.Property<string>("Status")
@@ -45,16 +51,13 @@ namespace HRMS.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("Status");
 
-                    b.Property<TimeSpan?>("TotalHours")
-                        .HasColumnType("time")
+                    b.Property<decimal?>("Total_Hours")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("Total_Hours");
 
-                    b.HasKey("EmpCode", "Date");
+                    b.HasKey("Emp_Code", "Date");
 
-                    b.ToTable("Attendances", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("Attendances", (string)null);
                 });
 
             modelBuilder.Entity("HRMS.Models.Employee", b =>

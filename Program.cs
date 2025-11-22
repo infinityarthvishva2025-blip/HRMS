@@ -1,22 +1,27 @@
 ﻿using HRMS.Data;
 using HRMS.Services;
 using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;   // EPPlus
-using Xabe.FFmpeg;
-
-
-
+using OfficeOpenXml;          // EPPlus
+using Rotativa.AspNetCore;    // Rotativa for PDF
 
 var builder = WebApplication.CreateBuilder(args);
 
 // =================== EPPLUS LICENSE ===================
-//ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+// =================== GET HOST ENVIRONMENT ===================
+var env = builder.Environment;
+
+// =================== ROTATIVA CONFIG ===================
+// Rotativa needs the *physical path* to wwwroot and the Rotativa folder name
+//RotativaConfiguration.Setup(env.WebRootPath, "Rotativa");
 
 // =================== SERVICES ===================
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    
+options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<INotificationService, EmailNotificationService>();
@@ -43,10 +48,9 @@ app.UseRouting();
 // SESSION must be BEFORE Authorization
 app.UseSession();
 app.UseAuthentication();
-
 app.UseAuthorization();
 
-// =================== ROUTING ===================  
+// =================== ROUTING ===================
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");

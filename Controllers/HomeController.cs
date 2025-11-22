@@ -41,7 +41,7 @@ namespace HRMS.Controllers
                 .Where(a => a.Date == today)
                 .ToList();
 
-            ViewBag.PresentToday = todaysAtt.Select(a => a.EmpCode).Distinct().Count();
+            ViewBag.PresentToday = todaysAtt.Select(a => a.Emp_Code).Distinct().Count();
             ViewBag.AbsentToday = employees.Count - ViewBag.PresentToday;
             ViewBag.NotCheckedOutToday = todaysAtt.Count(a => a.OutTime == null);
 
@@ -55,7 +55,7 @@ namespace HRMS.Controllers
                 .Select(emp => new RecentEmployeeViewModel
                 {
                     Employee = emp,
-                    Attendance = todaysAtt.FirstOrDefault(a => a.EmpCode == emp.EmployeeCode)
+                    Attendance = todaysAtt.FirstOrDefault(a => a.Emp_Code == emp.EmployeeCode)
                 })
                 .ToList();
 

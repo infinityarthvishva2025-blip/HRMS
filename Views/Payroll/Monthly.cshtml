@@ -1,0 +1,79 @@
+﻿@model IEnumerable<HRMS.Models.ViewModels.PayrollSummaryVm>
+
+@{
+    ViewData["Title"] = "Monthly Payroll";
+    Layout = "~/Views/Shared/_HrLayout.cshtml";
+
+    int year = ViewBag.Year;
+    int month = ViewBag.Month;
+}
+
+<div class="container py-4">
+
+    <h2 class="fw-bold text-primary mb-4">Monthly Payroll - @month/@year</h2>
+
+    <form method="get" class="row g-3 bg-white shadow-sm p-3 rounded mb-4">
+        <div class="col-md-2">
+            <label>Year</label>
+            <input type="number" name="year" class="form-control" value="@year" min="2000" />
+        </div>
+
+        <div class="col-md-2">
+            <label>Month</label>
+            <input type="number" name="month" class="form-control" value="@month" min="1" max="12" />
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+            <button class="btn btn-primary">Show</button>
+        </div>
+    </form>
+
+    <table class="table table-bordered table-striped shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Emp Code</th>
+                <th>Name</th>
+                <th>Working</th>
+                <th>Full</th>
+                <th>Half</th>
+                <th>WO</th>
+                <th>Absent</th>
+                <th>Late</th>
+                <th>Late >3</th>
+                <th>Late Ded</th>
+                <th>Paid</th>
+                <th>Base</th>
+                <th>Per Day</th>
+                <th>Net</th>
+                <th>Slip</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.EmpCode</td>
+                    <td>@p.EmpName</td>
+                    <td>@p.TotalDaysInMonth</td>
+                    <td>@p.PresentFullDays</td>
+                    <td>@p.PresentHalfDays</td>
+                    <td>@p.WeeklyOffDays</td>
+                    <td>@p.AbsentDays</td>
+                    <td>@p.LateMarks</td>
+                    <td>@p.LateMarksOver3</td>
+                    <td>@p.LateDeductionDays</td>
+                    <td>@p.PaidDays</td>
+                    <td>@p.MonthlySalary.ToString("0.00")</td>
+                    <td>@p.PerDaySalary.ToString("0.00")</td>
+                    <td class="fw-bold text-success">@p.NetSalary.ToString("0.00")</td>
+                    <td>
+                        <a class="btn btn-success btn-sm"
+                           href="@Url.Action("Payslip", "Payroll", new { empCode = p.EmpCode, year = p.Year, month = p.Month })">
+                            Slip
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

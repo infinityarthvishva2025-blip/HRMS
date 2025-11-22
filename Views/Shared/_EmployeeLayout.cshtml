@@ -143,6 +143,11 @@
             box-shadow: 0 3px 12px rgba(0,0,0,0.05);
         }
 
+        .active-menu {
+            background: #eef2ff !important;
+            border-color: #c7d2fe !important;
+            transform: translateX(8px);
+        }
     </style>
 </head>
 
@@ -177,7 +182,14 @@
             <a asp-controller="Leave" asp-action="LeaveReport" class="menu-item">
                 <i class="fa-solid fa-list-check"></i><span>My Leaves</span>
             </a>
-
+            <a asp-controller="Leave" asp-action="ApprovalDashboard" class="menu-item">
+                <i class="fa-solid fa-check-to-slot"></i>
+                <span>Leave Approvals</span>
+                <span id="approvalBubble"
+                      class="position-absolute top-0 end-0 translate-middle p-1 bg-danger rounded-circle"
+                      style="display:none; width:12px; height:12px;">
+                </span>
+            </a>
             <a asp-controller="Expenses" asp-action="Create" class="menu-item">
                 <i class="fa-solid fa-graduation-cap"></i><span>Expenses</span>
             </a>
@@ -215,8 +227,23 @@
         document.getElementById("sidebarToggle").addEventListener("click", function () {
             document.getElementById("sidebar-wrapper").classList.toggle("collapsed");
         });
+
+            fetch('/Leave/GetPendingCount')
+        .then(res => res.json())
+        .then(count => {
+            const bubble = document.getElementById('approvalBubble');
+            if (count > 0) bubble.style.display = 'block';
+        });
+
+                document.querySelectorAll('.menu-item').forEach(item => {
+            if (item.href === window.location.href) {
+                item.classList.add('active-menu');
+            }
+        });
     </script>
 
     @RenderSection("Scripts", required: false)
+
+
 </body>
 </html>

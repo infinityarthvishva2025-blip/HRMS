@@ -76,6 +76,10 @@ namespace HRMS.Models
         public string? Position { get; set; }
         public decimal? Salary { get; set; }
         public string? ReportingManager { get; set; }
+        public int ManagerId { get; set; }
+
+        public string Role { get; set; } = string.Empty;
+       
         public string? Address { get; set; }   // Present Address
         public string? PermanentAddress { get; set; }
 
@@ -152,6 +156,6 @@ namespace HRMS.Models
         // ====================================
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string? Status { get; set; }
-        public string Role { get; set; }
+       
     }
 }
