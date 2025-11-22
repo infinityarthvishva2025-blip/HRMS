@@ -107,11 +107,11 @@
                             var emp = employees.FirstOrDefault(e => e.EmployeeCode == a.Emp_Code);
 
                             // Total Hours
-                            string totalHours = "--";
+                            string total_Hours = "--";
                             if (a.InTime.HasValue && a.OutTime.HasValue)
                             {
                                 var diff = a.OutTime.Value - a.InTime.Value;
-                                totalHours = $"{diff.Hours}h {diff.Minutes}m";
+                                total_Hours = $"{diff.Hours}h {diff.Minutes}m";
                             }
 
                             // Attendance Status
@@ -127,7 +127,7 @@
                                 <td>@(a.InTime?.ToString(@"hh\:mm") ?? "--")</td>
                                 <td>@(a.OutTime?.ToString(@"hh\:mm") ?? "--")</td>
 
-                                <td>@totalHours</td>
+                                <td>@total_Hours</td>
 
                                 <td>
                                     @if (attStatus == "Absent")

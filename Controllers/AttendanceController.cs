@@ -194,7 +194,7 @@ namespace HRMS.Controllers
                 .AsEnumerable()   // safe after filtering
                 .Select(x => new AttendanceIndexVm
                 {
-                    EmpCode = x.e?.EmployeeCode,
+                    Emp_Code = x.e?.EmployeeCode,
                     EmpName = x.e?.Name,
                     AttDate = x.a.Date,
                     Status = x.a.Status,

@@ -3,7 +3,7 @@
 
     public class AttendanceIndexVm
     {
-        public string EmpCode { get; set; }
+        public string Emp_Code { get; set; }
         public string EmpName { get; set; }
         public DateTime AttDate { get; set; }
         public string DayName => AttDate.ToString("ddd");
