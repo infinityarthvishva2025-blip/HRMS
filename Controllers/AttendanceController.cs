@@ -36,7 +36,7 @@ namespace HRMS.Controllers
             var record = _context.Attendances
                 .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
 
-            return View(attendance);
+            return View(record);
         }
 
         // =========================================================
@@ -45,7 +45,7 @@ namespace HRMS.Controllers
         public IActionResult CheckIn()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
-            if (empCode == null)
+            if (string.IsNullOrEmpty(empCode))
                 return RedirectToAction("Login", "Account");
 
             var today = DateTime.Today;
@@ -53,7 +53,7 @@ namespace HRMS.Controllers
             bool exists = _context.Attendances
                 .Any(a => a.Emp_Code == empCode && a.Date == today);
 
-            if (!alreadyCheckedIn)
+            if (!exists)
             {
                 var rec = new Attendance
                 {
@@ -87,23 +87,17 @@ namespace HRMS.Controllers
             var rec = _context.Attendances
                 .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
 
-            if (attendance != null && attendance.OutTime == null)
+            if (rec != null && rec.OutTime == null)
             {
-                attendance.OutTime = DateTime.Now;
                 // Out time (TimeSpan)
                 rec.OutTime = DateTime.Now.TimeOfDay;
 
-                if (attendance.InTime.HasValue)
-                {
-                    attendance.Total_Hours = attendance.OutTime.Value - attendance.InTime.Value;
-                }
                 // Total Hours = difference between InTime and OutTime
                 if (rec.InTime.HasValue && rec.OutTime.HasValue)
                 {
                     TimeSpan diff = rec.OutTime.Value - rec.InTime.Value;
                     rec.Total_Hours = (decimal)diff.TotalHours;
                 }
-
 
                 _context.SaveChanges();
             }
@@ -119,7 +113,7 @@ namespace HRMS.Controllers
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
 
-            if (empCode == null)
+            if (string.IsNullOrEmpty(empCode))
                 return RedirectToAction("Login", "Account");
 
             return RedirectToAction(nameof(EmployeeSummary), new { empCode });
@@ -128,27 +122,20 @@ namespace HRMS.Controllers
         // =========================================================
         // EMPLOYEE SUMMARY PAGE
         // =========================================================
-        public IActionResult EmployeeSummary(string empCode, DateTime? fromDate, DateTime? toDate)
+        public IActionResult EmployeeSummary(string empCode, DateTime? from, DateTime? to)
         {
             if (empCode == null)
                 return BadRequest();
 
-            DateTime start = (fromDate ?? new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1)).Date;
-            DateTime end = (toDate ?? start.AddMonths(1).AddDays(-1)).Date;
-
-            var attendance = _context.Attendances
-                .Where(a =>
-                    a.Emp_Code == empCode &&
-                    a.Date >= start &&
-                    a.Date <= end
-                )
+            DateTime start = (from ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1)).Date;
+            DateTime end = (to ?? start.AddMonths(1).AddDays(-1)).Date;
 
             var list = _context.Attendances
                 .Where(a => a.Emp_Code == empCode && a.Date >= start && a.Date <= end)
                 .OrderBy(a => a.Date)
                 .ToList();
 
-            return View(attendance);
+            return View(list);
         }
 
         // =========================================================
