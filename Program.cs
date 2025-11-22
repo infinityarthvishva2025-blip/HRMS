@@ -2,7 +2,7 @@
 using HRMS.Services;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;          // EPPlus
-using Rotativa.AspNetCore;    // Rotativa for PDF
+    // Rotativa for PDF
 
 var builder = WebApplication.CreateBuilder(args);
 
