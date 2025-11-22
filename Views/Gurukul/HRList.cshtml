@@ -16,7 +16,6 @@
 <!-- ===================== PREMIUM UI STYLE ===================== -->
 <style>
 
-    /* Page Title */
     .page-title {
         font-size: 28px;
         font-weight: 800;
@@ -25,7 +24,6 @@
         letter-spacing: -0.5px;
     }
 
-    /* Add Button */
     .btn-add {
         background: linear-gradient(135deg, #3949ab, #5c6bc0);
         border: none;
@@ -42,21 +40,12 @@
             transition: 0.2s ease;
         }
 
-
-    /* Main Card */
     .main-card {
         background: #ffffff;
         padding: 30px;
         border-radius: 18px;
         border: 1px solid #e6e6e6;
         box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-    }
-
-    /* Accordion Styling */
-    .acc-group-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #283593;
     }
 
     .accordion-button {
@@ -76,7 +65,6 @@
             box-shadow: none;
         }
 
-    /* Category accordion */
     .category-accordion .accordion-button {
         background: #f9fbff;
         border-radius: 10px !important;
@@ -84,7 +72,6 @@
         padding: 14px 18px;
     }
 
-    /* Table */
     table {
         border-radius: 12px;
         overflow: hidden;
@@ -104,12 +91,28 @@
         font-size: 15px;
     }
 
-    tr:hover {
-        background: #f8f9ff;
-        transition: 0.2s;
+    .visibility-badge {
+        font-size: 13px;
+        font-weight: 600;
+        padding: 5px 10px;
+        border-radius: 8px;
     }
 
-    /* Buttons */
+    .vis-all {
+        background: #e8f5e9;
+        color: #1b5e20;
+    }
+
+    .vis-dept {
+        background: #fff8e1;
+        color: #ff6f00;
+    }
+
+    .vis-emp {
+        background: #e3f2fd;
+        color: #0d47a1;
+    }
+
     .btn-progress {
         background: #2196f3;
         color: #fff;
@@ -152,7 +155,6 @@
         {
             string tgID = "tg_" + Guid.NewGuid().ToString("N");
 
-            <!-- TITLE GROUP -->
             <div class="accordion-item mb-3 border-0">
                 <h2 class="accordion-header">
                     <button class="accordion-button collapsed"
@@ -165,7 +167,6 @@
                 <div id="@tgID" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
                     <div class="accordion-body">
 
-                        <!-- CATEGORY ACCORDION -->
                         <div class="accordion category-accordion" id="catAcc_@tgID">
 
                             @foreach (var cat in tg.Value)
@@ -182,27 +183,55 @@
                                         </button>
                                     </h2>
 
-                                    <div id="@catID" class="accordion-collapse collapse"
+                                    <div id="@catID"
+                                         class="accordion-collapse collapse"
                                          data-bs-parent="#catAcc_@tgID">
 
                                         <div class="accordion-body">
 
-                                            <!-- VIDEO TABLE -->
                                             <table class="table table-hover table-striped">
                                                 <thead>
                                                     <tr>
                                                         <th>Video Title</th>
                                                         <th>Uploaded On</th>
+                                                        <th>Visibility</th>
                                                         <th>Progress</th>
                                                         <th>Action</th>
                                                     </tr>
                                                 </thead>
+
                                                 <tbody>
                                                     @foreach (var v in cat.Value)
                                                     {
+                                                        string visibilityText;
+                                                        string cssClass;
+
+                                                        if (v.AllowedEmployeeId != null)
+                                                        {
+                                                            visibilityText = $"Only: {v.AllowedEmployee?.Name ?? "Employee #" + v.AllowedEmployeeId}";
+                                                            cssClass = "vis-emp visibility-badge";
+                                                        }
+                                                        else if (!string.IsNullOrWhiteSpace(v.AllowedDepartment))
+                                                        {
+                                                            visibilityText = $"Dept: {v.AllowedDepartment}";
+                                                            cssClass = "vis-dept visibility-badge";
+                                                        }
+                                                        else
+                                                        {
+                                                            visibilityText = "All Employees";
+                                                            cssClass = "vis-all visibility-badge";
+                                                        }
+
                                                         <tr>
                                                             <td><b>@v.Title</b></td>
-                                                            <td>@v.UploadedOn.ToLocalTime().ToString("dd MMM yyyy")</td>
+
+                                                            <td>
+                                                                @v.UploadedOn.ToLocalTime().ToString("dd MMM yyyy")
+                                                            </td>
+
+                                                            <td>
+                                                                <span class="@cssClass">@visibilityText</span>
+                                                            </td>
 
                                                             <td>
                                                                 <a asp-action="Progress"
@@ -213,7 +242,9 @@
                                                             </td>
 
                                                             <td>
-                                                                <form asp-action="Delete" method="post" class="d-inline">
+                                                                <form asp-action="Delete"
+                                                                      method="post"
+                                                                      class="d-inline">
                                                                     <input type="hidden" name="id" value="@v.Id" />
                                                                     <button class="btn-delete"
                                                                             onclick="return confirm('Delete this video?');">
@@ -224,12 +255,15 @@
                                                         </tr>
                                                     }
                                                 </tbody>
+
                                             </table>
 
                                         </div>
+
                                     </div>
 
                                 </div>
+
                             }
 
                         </div>
@@ -243,6 +277,5 @@
     </div>
 
 </div>
-
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

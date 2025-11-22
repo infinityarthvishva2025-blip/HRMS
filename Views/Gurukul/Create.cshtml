@@ -1,48 +1,199 @@
 ﻿@model HRMS.Models.GurukulVideo
+@using Microsoft.AspNetCore.Mvc.Rendering
+
 @{
     Layout = "_HRLayout";
 }
 
-<h2>Add Gurukul Video</h2>
+<!-- =================== STYLING =================== -->
+<style>
 
-<form asp-action="Create" enctype="multipart/form-data" method="post">
+    .page-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #283593;
+        margin-bottom: 25px;
+        letter-spacing: -.5px;
+    }
 
-    <!-- MAIN GROUP (Insurance, Company, Department, etc.) -->
+    /* Main Form Card */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 18px;
+        padding: 30px;
+        border: 1px solid rgba(200, 200, 255, 0.4);
+        box-shadow: 0 10px 35px rgba(0,0,0,0.08);
+        backdrop-filter: blur(6px);
+    }
+
+    /* Section Headings */
+    .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1a237e;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+        .section-title i {
+            margin-right: 8px;
+            color: #3949ab;
+        }
+
+    /* Form Input Styling */
+    .form-label {
+        font-weight: 600;
+        color: #1a237e;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        padding: 12px 14px;
+        border: 1px solid #ccd4ff;
+        transition: .2s;
+    }
+
+        .form-control:focus {
+            border-color: #5c6bc0;
+            box-shadow: 0 0 0 0.15rem rgba(92, 107, 192, .25);
+        }
+
+    /* Permission Box */
+    .permission-box {
+        background: #f7f8ff;
+        border-radius: 14px;
+        padding: 20px;
+        border: 1px solid #e2e5ff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    /* Buttons */
+    .btn-save {
+        background: linear-gradient(135deg, #3949ab, #5c6bc0);
+        padding: 10px 28px;
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        font-weight: 700;
+        font-size: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        transition: 0.25s;
+    }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+        }
+
+    .btn-cancel {
+        background: #e0e0e0;
+        border: none;
+        padding: 10px 25px;
+        font-weight: 600;
+        border-radius: 10px;
+        color: #424242;
+    }
+
+    hr {
+        border-color: #e3e6ff;
+    }
+
+</style>
+
+
+
+<!-- =================== PAGE TITLE =================== -->
+<h2 class="page-title">🎬 Add Gurukul Video</h2>
+
+
+
+<!-- =================== MAIN FORM =================== -->
+<form asp-action="Create" enctype="multipart/form-data" method="post" class="glass-card">
+
+    <!-- BASIC INFORMATION -->
+    <div class="section-title"><i class="fas fa-folder-open"></i>Basic Information</div>
+
     <div class="mb-3">
-        <label>Main Title Group </label>
+        <label class="form-label">Main Title Group</label>
         <input asp-for="TitleGroup" class="form-control"  />
     </div>
 
-    <!-- SUB CATEGORY (Life, Health, Term, Introduction, etc.) -->
     <div class="mb-3">
-        <label>Category </label>
+        <label class="form-label">Category</label>
         <input asp-for="Category" class="form-control"  />
     </div>
 
-    <!-- VIDEO NAME -->
     <div class="mb-3">
-        <label>Video Title</label>
-        <input asp-for="Title" class="form-control" required placeholder="Enter Video Name" />
+        <label class="form-label">Video Title</label>
+        <input asp-for="Title" class="form-control" required placeholder="Enter video title" />
     </div>
 
     <div class="mb-3">
-        <label>Description</label>
-        <textarea asp-for="Description" class="form-control"></textarea>
+        <label class="form-label">Description</label>
+        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Short description"></textarea>
     </div>
 
-    <!-- VIDEO FILE UPLOAD -->
+
+
+
+    <!-- =================== PERMISSIONS =================== -->
+    <div class="section-title"><i class="fas fa-user-shield"></i>Visibility / Permissions</div>
+
+    <div class="permission-box mb-4">
+
+        <div class="row">
+            <!-- Department Dropdown -->
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Limit to Department</label>
+                <select asp-for="AllowedDepartment"
+                        class="form-control"
+                        asp-items="(IEnumerable<SelectListItem>)ViewBag.DepartmentItems">
+                </select>
+                <small class="text-muted">Leave as <strong>All Departments</strong> for full visibility.</small>
+            </div>
+
+            <!-- Employee Dropdown -->
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Limit to Specific Employee</label>
+                <select asp-for="AllowedEmployeeId"
+                        class="form-control"
+                        asp-items="(IEnumerable<SelectListItem>)ViewBag.EmployeeItems">
+                </select>
+                <small class="text-muted">If an employee is selected, only <strong>that person</strong> can view this video.</small>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+    <!-- =================== VIDEO UPLOAD =================== -->
+    <div class="section-title"><i class="fas fa-video"></i>Upload Video</div>
+
     <div class="mb-3">
-        <label>Upload Video (MP4)</label>
+        <label class="form-label">Upload MP4 File</label>
         <input type="file" name="VideoFile" class="form-control" accept="video/*" />
+        <small class="text-muted">Upload a local MP4 file, or use external link below.</small>
     </div>
 
-    <!-- YOUTUBE EMBED URL -->
     <div class="mb-3">
-        <label>External Link (YouTube Embed URL)</label>
-        <input name="ExternalLink" class="form-control" />
-        
+        <label class="form-label">External Link (YouTube / Vimeo / Drive)</label>
+        <input name="ExternalLink" class="form-control" placeholder="Paste embed URL" />
     </div>
 
-    <button class="btn btn-primary">Save</button>
-    <a asp-action="HRList" class="btn btn-secondary">Cancel</a>
+
+
+    <!-- =================== ACTION BUTTONS =================== -->
+    <div class="mt-4">
+        <button class="btn-save me-2">Save Video</button>
+        <a asp-action="HRList" class="btn-cancel">Cancel</a>
+    </div>
+
 </form>
+
+
+<!-- FONT AWESOME -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>

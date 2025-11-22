@@ -364,8 +364,13 @@ namespace HRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AllowedDepartment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("AllowedEmployeeId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Category")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
@@ -383,7 +388,6 @@ namespace HRMS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TitleGroup")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UploadedOn")
@@ -394,6 +398,8 @@ namespace HRMS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AllowedEmployeeId");
 
                     b.ToTable("GurukulVideos");
                 });
@@ -537,88 +543,6 @@ namespace HRMS.Migrations
                     b.ToTable("LeaveApprovalRoutes");
                 });
 
-            modelBuilder.Entity("HRMS.Models.Payroll", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BankAccountNumber")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("BankName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("BaseSalary")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateOfJoining")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DaysAttended")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("DeductionForLateMarks")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("DeductionForLeaves")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Designation")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmployeeCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmployeeName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MonthYear")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("NetPay")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("OtherAllowances")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("PAN")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<decimal>("PerformanceAllowance")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("ProfessionalTax")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("TotalDeductions")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("TotalEarning")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("TotalLeavesTaken")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalWorkingDays")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Payrolls");
-                });
-
             modelBuilder.Entity("HRMS.Models.Expenses", b =>
                 {
                     b.HasOne("HRMS.Models.Employee", "Employee")
@@ -647,6 +571,15 @@ namespace HRMS.Migrations
                     b.Navigation("Employee");
 
                     b.Navigation("Video");
+                });
+
+            modelBuilder.Entity("HRMS.Models.GurukulVideo", b =>
+                {
+                    b.HasOne("HRMS.Models.Employee", "AllowedEmployee")
+                        .WithMany()
+                        .HasForeignKey("AllowedEmployeeId");
+
+                    b.Navigation("AllowedEmployee");
                 });
 
             modelBuilder.Entity("HRMS.Models.Leave", b =>
