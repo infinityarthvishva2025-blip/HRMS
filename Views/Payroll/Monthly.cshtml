@@ -12,6 +12,7 @@
 
     <h2 class="fw-bold text-primary mb-4">Monthly Payroll - @month/@year</h2>
 
+    <!-- Filter Section -->
     <form method="get" class="row g-3 bg-white shadow-sm p-3 rounded mb-4">
         <div class="col-md-2">
             <label>Year</label>
@@ -28,50 +29,60 @@
         </div>
     </form>
 
+    <!-- Payroll Table -->
     <table class="table table-bordered table-striped shadow-sm">
-        <thead class="table-dark">
+        <thead class="table-dark text-center align-middle">
             <tr>
                 <th>Emp Code</th>
                 <th>Name</th>
-                <th>Working</th>
-                <th>Full</th>
-                <th>Half</th>
+                <th>Working Days</th>
+                <th>Half Days</th>
                 <th>WO</th>
                 <th>Absent</th>
-                <th>Late</th>
-                <th>Late >3</th>
-                <th>Late Ded</th>
-                <th>Paid</th>
-                <th>Base</th>
+                <th>Late Marks</th>
+                <th>Late Deduction</th>
+                <th>Paid Days</th>
+                <th>Base Salary</th>
                 <th>Per Day</th>
+                <th>Gross</th>
+                <th>Deductions</th>
                 <th>Net</th>
-                <th>Slip</th>
+                <th>Payslip</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var p in Model)
+            @if (Model != null && Model.Any())
+            {
+                foreach (var p in Model)
+                {
+                    <tr>
+                        <td>@p.EmpCode</td>
+                        <td>@p.EmpName</td>
+                        <td class="text-center">@p.TotalDaysInMonth</td>
+                        <td class="text-center">@p.PresentHalfDays</td>
+                        <td class="text-center">@p.WeeklyOffDays</td>
+                        <td class="text-center">@p.AbsentDays</td>
+                        <td class="text-center">@p.LateMarks</td>
+                        <td class="text-center">@p.LateDeductionDays</td>
+                        <td class="text-center fw-bold">@p.PaidDays</td>
+                        <td>@p.MonthlySalary.ToString("0.00")</td>
+                        <td>@p.PerDaySalary.ToString("0.00")</td>
+                        <td>@p.GrossSalary?.ToString("0.00")</td>
+                        <td class="text-danger">@p.TotalDeductions?.ToString("0.00")</td>
+                        <td class="fw-bold text-success">@p.NetSalary?.ToString("0.00")</td>
+                        <td class="text-center">
+                            <a class="btn btn-success btn-sm"
+                               href="@Url.Action("Payslip", "Payroll", new { empCode = p.EmpCode, year = p.Year, month = p.Month })">
+                                Slip
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
             {
                 <tr>
-                    <td>@p.EmpCode</td>
-                    <td>@p.EmpName</td>
-                    <td>@p.TotalDaysInMonth</td>
-                    <td>@p.PresentFullDays</td>
-                    <td>@p.PresentHalfDays</td>
-                    <td>@p.WeeklyOffDays</td>
-                    <td>@p.AbsentDays</td>
-                    <td>@p.LateMarks</td>
-                    <td>@p.LateMarksOver3</td>
-                    <td>@p.LateDeductionDays</td>
-                    <td>@p.PaidDays</td>
-                    <td>@p.MonthlySalary.ToString("0.00")</td>
-                    <td>@p.PerDaySalary.ToString("0.00")</td>
-                    <td class="fw-bold text-success">@p.NetSalary.ToString("0.00")</td>
-                    <td>
-                        <a class="btn btn-success btn-sm"
-                           href="@Url.Action("Payslip", "Payroll", new { empCode = p.EmpCode, year = p.Year, month = p.Month })">
-                            Slip
-                        </a>
-                    </td>
+                    <td colspan="15" class="text-center text-muted">No payroll data found for the selected month.</td>
                 </tr>
             }
         </tbody>

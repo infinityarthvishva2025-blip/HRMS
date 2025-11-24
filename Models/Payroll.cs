@@ -1,54 +1,75 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace HRMS.Models
+[Table("Payroll")]
+public class Payroll
 {
-    public class Payroll
-    {
-        [Key]
-        public int Id { get; set; }
+    [Key]
+    public int Id { get; set; }
 
-        // ================= EMPLOYEE DETAILS =================
-        [Required]
-        public string EmployeeCode { get; set; }
+    [Column("emp_code")]
+    public string EmployeeCode { get; set; }
 
-        [Required]
-        public string EmployeeName { get; set; }
+    [Column("name")]
+    public string Name { get; set; }
 
-        // Stored as "04-2025"
-        [Required]
-        public string MonthYear { get; set; }
+    [Column("working_days")]
+    public int WorkingDays { get; set; }
 
-        // ================= ATTENDANCE DETAILS =================
-        public int TotalWorkingDays { get; set; }
-        public int DaysAttended { get; set; }
-        public int TotalLeavesTaken { get; set; }
+    [Column("leaves_taken")]
+    public decimal LeavesTaken { get; set; }
 
-        public int LateMarks { get; set; }
-        public int LateMarksOver3 { get; set; }
+    [Column("late_marks")]
+    public int LateMarks { get; set; }
 
-        // EXCEL shows float values like 2.5, 3.5 etc
-        public decimal LateDeductionDays { get; set; }
+    [Column("late_gt_3")]
+    public int LateGt3 { get; set; }
 
-        public decimal PaidDays { get; set; }
+    [Column("late_deduction_days")]
+    public decimal LateDeductionDays { get; set; }
 
-        // ================= SALARY + ALLOWANCES =================
-        public decimal BaseSalary { get; set; }
+    [Column("day_presented")]
+    public decimal PaidDays { get; set; }
 
-        public decimal PerformanceAllowance { get; set; }
-        public decimal OtherAllowances { get; set; }
-        public decimal PetrolAllowance { get; set; }
-        public decimal Reimbursement { get; set; }
+    [Column("base_salary")]
+    public decimal BaseSalary { get; set; }
 
-        // ================= DEDUCTIONS =================
-        public decimal ProfessionalTax { get; set; }
+    [Column("perf_allowance")]
+    public decimal? PerfAllowance { get; set; }
 
-        public decimal TotalEarning { get; set; }        // gross before deductions
-        public decimal TotalDeductions { get; set; }
+    [Column("other_allowance")]
+    public decimal? OtherAllowance { get; set; }
 
-        public decimal NetPay { get; set; }
+    [Column("petrol_allowance")]
+    public decimal? PetrolAllowance { get; set; }
 
-        // ================= SYSTEM FIELDS =================
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
-    }
+    [Column("reimbursement")]
+    public decimal? Reimbursement { get; set; }
+
+    [Column("employee_ctc")]
+    public decimal? EmployeeCTC { get; set; }
+
+    [Column("gross_salary")]
+    public decimal? GrossSalary { get; set; }
+
+    [Column("prof_tax")]
+    public decimal? ProfTax { get; set; }
+
+    [Column("paid_days")]
+    public decimal? PaidDaysDecimal { get; set; }
+
+    [Column("per_day_salary")]
+    public decimal? PerDaySalary { get; set; }
+
+    [Column("net_salary")]
+    public decimal? NetSalary { get; set; }
+
+    [Column("total_deduction")]
+    public decimal? TotalDeduction { get; set; }
+
+    [Column("total_pay")]
+    public decimal? TotalPay { get; set; }
+
+    [Column("month")]
+    public string Month { get; set; }
 }

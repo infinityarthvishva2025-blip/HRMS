@@ -17,7 +17,7 @@ namespace HRMS.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.21")
+                .HasAnnotation("ProductVersion", "8.0.22")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -31,6 +31,9 @@ namespace HRMS.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2")
                         .HasColumnName("Date");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
 
                     b.Property<TimeSpan?>("InTime")
                         .HasColumnType("time")
@@ -178,6 +181,9 @@ namespace HRMS.Migrations
 
                     b.Property<string>("LastCompanyName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ManagerId")
+                        .HasColumnType("int");
 
                     b.Property<string>("MaritalStatus")
                         .HasColumnType("nvarchar(max)");
@@ -500,6 +506,9 @@ namespace HRMS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ReportingManagerId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
@@ -519,7 +528,7 @@ namespace HRMS.Migrations
 
                     b.HasIndex("EmployeeId");
 
-                    b.ToTable("Leaves");
+                    b.ToTable("Leaves", (string)null);
                 });
 
             modelBuilder.Entity("HRMS.Models.LeaveApprovalRoute", b =>
@@ -544,6 +553,85 @@ namespace HRMS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("LeaveApprovalRoutes");
+                });
+
+            modelBuilder.Entity("HRMS.Models.Payroll", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BaseSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DaysAttended")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EmployeeCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmployeeName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("LateDeductionDays")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("LateMarks")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LateMarksOver3")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Month")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("NetPay")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("OtherAllowances")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PaidDays")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PerformanceAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PetrolAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ProfessionalTax")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Reimbursement")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalDeductions")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalEarning")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("TotalLeavesTaken")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalWorkingDays")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Payroll");
                 });
 
             modelBuilder.Entity("HRMS.Models.Expenses", b =>
