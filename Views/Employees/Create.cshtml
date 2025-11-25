@@ -603,17 +603,17 @@
                 : "";
         }
 
-        // Experience show/hide
-        const expType = document.getElementById("ExperienceType");
-        const expSection = document.getElementById("experience-section");
+            // Experience show/hide
+            const expType = document.getElementById("ExperienceType");
+            const expSection = document.getElementById("experience-section");
 
-        expType.addEventListener("change", () => {
-            if (expType.value === "Experienced") {
-                expSection.classList.remove("d-none");
-            } else {
-                expSection.classList.add("d-none");
-            }
-        });
+            expType.addEventListener("change", () => {
+                if (expType.value === "Experienced") {
+                    expSection.classList.remove("d-none");
+                } else {
+                    expSection.classList.add("d-none");
+                }
+            });
 
         // Show/hide disease section based on dropdown
         const diseaseDropdown = document.getElementById("HasDisease");

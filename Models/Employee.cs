@@ -87,6 +87,7 @@ namespace HRMS.Models
         // ====================================
         // EDUCATION
         // ====================================
+    
         public decimal? HSCPercent { get; set; }
         public string? GraduationCourse { get; set; }
         public decimal? GraduationPercent { get; set; }

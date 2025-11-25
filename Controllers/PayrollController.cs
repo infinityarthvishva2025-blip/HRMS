@@ -1,21 +1,25 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
-using HRMS.Data;
+﻿using HRMS.Data;
 using HRMS.Models;
 using HRMS.Models.ViewModels;
 using HRMS.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace HRMS.Controllers
 {
+  
     public class PayrollController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public PayrollController(ApplicationDbContext context)
+        public PayrollController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         // ================= MONTHLY PAYROLL SCREEN =================
@@ -97,26 +101,97 @@ namespace HRMS.Controllers
         // ================= PAYSLIP =================
         public IActionResult Payslip(string empCode, int year, int month)
         {
-            var emp = _context.Employees
-                .FirstOrDefault(e => e.EmployeeCode == empCode);
+            var emp = _context.Employees.FirstOrDefault(e => e.EmployeeCode == empCode);
 
             if (emp == null)
                 return NotFound("Employee not found.");
 
             var rows = _context.Attendances
-                .Where(a =>
-                    a.Emp_Code == empCode &&
-                    a.Date.Year == year &&
-                    a.Date.Month == month)
+                .Where(a => a.Emp_Code == empCode && a.Date.Year == year && a.Date.Month == month)
                 .ToList();
 
+            // ✅ If no attendance data, try pulling from Payroll table
             if (!rows.Any())
-                return NotFound("No attendance data available.");
+            {
+                var saved = _context.Payroll
+                    .FirstOrDefault(p => p.EmployeeCode == empCode &&
+                     p.Month.ToUpper() == new DateTime(year, month, 1).ToString("MMMM").ToUpper());
 
+
+                if (saved == null)
+                    return NotFound("No attendance or payroll data available.");
+
+                var vm = new PayrollSummaryVm
+                {
+                    EmpCode = emp?.EmployeeCode ?? string.Empty,
+                    EmpName = emp?.Name ?? string.Empty,
+                    Department = emp?.Department ?? string.Empty,
+                    Designation = emp?.Position ?? string.Empty,
+                    BankName = emp?.BankName ?? string.Empty,
+                    AccountNumber = emp?.AccountNumber ?? string.Empty,
+                    IFSCCode = emp?.IFSC ?? string.Empty,
+                    BankBranch = emp?.Branch ?? string.Empty,
+
+                    Year = year,
+                    Month = month,
+                    TotalDaysInMonth = saved.WorkingDays,
+                    AbsentDays = saved.LeavesTaken,
+                    LateMarks = saved.LateMarks,
+                    LateDeductionDays = saved.LateDeductionDays,
+                    PaidDays = saved.PaidDays,
+                    MonthlySalary = saved.BaseSalary,
+                    PerDaySalary = saved.PerDaySalary ?? 0,
+                    GrossSalary = saved.GrossSalary ?? 0,
+                    PerformanceAllowance = saved.PerfAllowance ?? 0,
+                    OtherAllowances = saved.OtherAllowance ?? 0,
+                    PetrolAllowance = saved.PetrolAllowance ?? 0,
+                    Reimbursement = saved.Reimbursement ?? 0,
+                    ProfessionalTax = saved.ProfTax ?? 0,
+                    TotalDeductions = saved.TotalDeduction ?? 0,
+                    NetSalary = saved.NetSalary ?? 0
+                };
+
+
+                return View(vm);
+            }
+
+            // ✅ If attendance exists, calculate payroll normally
             var service = new PayrollService();
             var summary = service.CalculatePayroll(emp, rows, year, month);
 
+            // Add Employee Info
+            summary.Department = emp.Department;
+            summary.Designation = emp.Position;
+
+            // ✅ Add Bank Info
+            summary.BankName = emp.BankName;
+            summary.AccountNumber = emp.AccountNumber;
+            summary.IFSCCode = emp.IFSC;
+            summary.BankBranch = emp.Branch;
+
             return View(summary);
         }
+
+        [HttpGet]
+        public IActionResult DownloadSalarySlip(int month, int year)
+        {
+            // Get the logged-in user’s employee record
+            var employee = _context.Employees.FirstOrDefault(e => e.Email == User.Identity.Name);
+            if (employee == null)
+                return NotFound("Employee not found.");
+
+            // Example file name format: EMP001_4_2025.pdf
+            var fileName = $"{employee.EmployeeCode}_{month}_{year}.pdf";
+            var filePath = Path.Combine(_env.WebRootPath, "SalarySlips", fileName);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound($"Salary slip for {month}/{year} not found.");
+            }
+
+            // Return the PDF file to the browser
+            return PhysicalFile(filePath, "application/pdf", fileName);
+        }
+
     }
 }

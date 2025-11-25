@@ -4,8 +4,11 @@ namespace HRMS.Models.ViewModels
 {
     public class PayrollSummaryVm
     {
-        public string EmpCode { get; set; }
-        public string EmpName { get; set; }
+        public string EmpCode { get; set; } = string.Empty;
+        public string EmpName { get; set; } = string.Empty;
+        public string? FatherName { get; set; }
+        public string? MotherName { get; set; }
+        public DateTime? DOB_Date { get; set; }
 
         public int Year { get; set; }
         public int Month { get; set; }
@@ -32,5 +35,14 @@ namespace HRMS.Models.ViewModels
         public decimal? ProfessionalTax { get; set; }
         public decimal? TotalDeductions { get; set; }
         public decimal? NetSalary { get; set; }
+
+        //Bank details
+        public string Department { get; set; } = string.Empty;
+        public string Designation { get; set; } = string.Empty;
+        public string BankName { get; set; } = string.Empty;
+        public string AccountNumber { get; set; } = string.Empty;
+        public string IFSCCode { get; set; } = string.Empty;
+        public string BankBranch { get; set; } = string.Empty;
+
     }
 }

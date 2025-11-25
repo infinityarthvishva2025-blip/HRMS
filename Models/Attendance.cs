@@ -8,7 +8,7 @@ namespace HRMS.Models
 
 
         [Key]
-        public int Id { get; set; }   // Should have identity key
+        public int? Id { get; set; } // Should have identity key
 
         public string Emp_Code { get; set; }
         public DateTime Date { get; set; }
@@ -21,6 +21,7 @@ namespace HRMS.Models
        
         public bool IsLate { get; set; }
         public int LateMinutes { get; set; }
+        public DateTime? Att_Date { get; set; }
     }
 
 }
