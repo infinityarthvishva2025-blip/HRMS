@@ -48,17 +48,14 @@
         </div>
 
         <!-- Status -->
-       <!-- Status -->
-<div class="col-md-2">
-    <label class="form-label fw-bold">Status</label>
-    <select name="status" class="form-select">
+        <div class="col-md-2">
+            <label class="form-label fw-bold">Status</label>
+            <select name="status" class="form-select">
                 <option value="All" selected="@(ViewBag.Status == "All")">All</option>
                 <option value="Completed" selected="@(ViewBag.Status == "Completed")">Completed</option>
                 <option value="NotCheckedOut" selected="@(ViewBag.Status == "NotCheckedOut")">Not Checked Out</option>
-
-    </select>
-</div>
-
+            </select>
+        </div>
 
         <!-- Buttons -->
         <div class="col-md-3 d-flex align-items-end">
@@ -84,6 +81,7 @@
                     <tr>
                         <th>Employee Code</th>
                         <th>Name</th>
+                        <th>Date</th>
                         <th>Check In</th>
                         <th>Check Out</th>
                         <th>Total Hours</th>
@@ -95,7 +93,7 @@
                     @if (Model == null || !Model.Any())
                     {
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-danger fw-bold">
+                            <td colspan="7" class="text-center py-4 text-danger fw-bold">
                                 No records found...
                             </td>
                         </tr>
@@ -116,16 +114,21 @@
 
                             // Attendance Status
                             string attStatus =
-                                !a.InTime.HasValue ? "Absent"
-                                : !a.OutTime.HasValue ? "Not Checked Out"
-                                : "Present";
+                            !a.InTime.HasValue ? "Absent"
+                            : !a.OutTime.HasValue ? "Not Checked Out"
+                            : "Present";
 
                             <tr>
                                 <td>@a.Emp_Code</td>
+
                                 <td>@(emp?.Name ?? "--")</td>
 
-                                <td>@(a.InTime?.ToString(@"hh\:mm") ?? "--")</td>
-                                <td>@(a.OutTime?.ToString(@"hh\:mm") ?? "--")</td>
+                                <!-- Correct Date Format: yyyy-MM-dd -->
+                                <td>@a.AttDate.ToString("yyyy-MM-dd")</td>
+
+                                <!-- Correct Time Format for TimeSpan -->
+                                <td>@(a.InTime.HasValue? a.InTime.Value.ToString(@"hh\:mm") : "--")</td>
+                                <td>@(a.OutTime.HasValue? a.OutTime.Value.ToString(@"hh\:mm") : "--")</td>
 
                                 <td>@total_Hours</td>
 

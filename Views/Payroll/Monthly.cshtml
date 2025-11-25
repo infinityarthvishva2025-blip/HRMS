@@ -50,6 +50,7 @@
                 <th>Payslip</th>
             </tr>
         </thead>
+
         <tbody>
             @if (Model != null && Model.Any())
             {
@@ -58,26 +59,32 @@
                     <tr>
                         <td>@p.EmpCode</td>
                         <td>@p.EmpName</td>
+
                         <td class="text-center">@p.TotalDaysInMonth</td>
                         <td class="text-center">@p.PresentHalfDays</td>
                         <td class="text-center">@p.WeeklyOffDays</td>
                         <td class="text-center">@p.AbsentDays</td>
                         <td class="text-center">@p.LateMarks</td>
                         <td class="text-center">@p.LateDeductionDays</td>
+
                         <td class="text-center fw-bold">@p.PaidDays</td>
+
                         <td>@p.MonthlySalary.ToString("0.00")</td>
                         <td>@p.PerDaySalary.ToString("0.00")</td>
-                        <td>@p.GrossSalary?.ToString("0.00")</td>
-                        <td class="text-danger">@p.TotalDeductions?.ToString("0.00")</td>
-                        <td class="fw-bold text-success">@p.NetSalary?.ToString("0.00")</td>
+                        <td>@p.GrossSalary.ToString("0.00")</td>
+
+                        <td class="text-danger">@p.TotalDeductions.ToString("0.00")</td>
+                        <td class="fw-bold text-success">@p.NetSalary.ToString("0.00")</td>
+
                         <td class="text-center">
                             <a class="btn btn-success btn-sm"
-                               href="@Url.Action("Payslip", "Payroll", new { empCode = p.EmpCode, year = p.Year, month = p.Month })">
-                                Slip
-                            </a>
-                        </td>
-                    </tr>
-                }
+                               href="@Url.Action("Payslip", "Payroll",
+                                                                           new { empCode = p.EmpCode, year = p.Year, month = p.Month })">
+                        Slip
+                    </a>
+                </td>
+            </tr>
+                        }
             }
             else
             {

@@ -1,11 +1,11 @@
 ﻿@model HRMS.ViewModels.EmployeeEditVm
-
 @{
     ViewData["Title"] = "Edit Employee";
     Layout = "~/Views/Shared/_HrLayout.cshtml";
 }
 
 <div class="container py-4">
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold text-primary">
             <i class="fa-solid fa-user-pen me-2"></i> Edit Employee
@@ -15,48 +15,63 @@
         </a>
     </div>
 
+    <!-- SUCCESS MESSAGE -->
+    @if (TempData["success"] != null)
+    {
+        <div class="alert alert-success">@TempData["success"]</div>
+    }
+
     <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
         @Html.HiddenFor(m => m.Id)
         @Html.HiddenFor(m => m.EmployeeCode)
 
-        <div asp-validation-summary="All" class="text-danger mb-3"></div>
-
         <div class="card shadow-sm border-0 p-4">
 
-            <!-- BASIC DETAILS -->
+            <!-- ============= BASIC DETAILS ============= -->
             <h5 class="fw-bold text-secondary mb-3">Basic Details</h5>
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label asp-for="EmployeeCode" class="form-label">Employee Code</label>
+                    <label asp-for="EmployeeCode">Employee Code</label>
                     <input asp-for="EmployeeCode" class="form-control" readonly />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="Name" class="form-label">Full Name</label>
-                    <input asp-for="Name" class="form-control" required />
+                    <label asp-for="Name">Full Name</label>
+                    <input asp-for="Name" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="Email" class="form-label">Email</label>
-                    <input asp-for="Email" type="email" class="form-control" required />
+                    <label asp-for="Email">Email</label>
+                    <input asp-for="Email" type="email" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="MobileNumber">Mobile Number</label>
-                    <input asp-for="MobileNumber" class="form-control" required />
+                    <input asp-for="MobileNumber"
+                           class="form-control"
+                           maxlength="10" minlength="10"
+                           pattern="[0-9]{10}"
+                           title="Enter a valid 10-digit mobile number" />
+
                 </div>
 
                 <div class="col-md-4">
-                    <label>Alternate Mobile Number</label>
-                    <input asp-for="AlternateMobileNumber" class="form-control" />
+                    <label asp-for="AlternateMobileNumber">Alternate Mobile Number</label>
+                    <input asp-for="AlternateMobileNumber"
+                           class="form-control"
+                           maxlength="10" minlength="10"
+                           pattern="[0-9]{10}"
+                           title="Enter a valid 10-digit mobile number" />
                 </div>
 
                 <div class="col-md-4">
                     <label>New Password (optional)</label>
                     <div class="input-group">
-                        <input asp-for="Password" type="password" id="Password" class="form-control" placeholder="Leave blank to keep existing" />
-                        <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('Password', this)">
+                        <input asp-for="Password" type="password" class="form-control"
+                               placeholder="Leave blank to keep existing" />
+                        <button type="button" class="btn btn-outline-secondary"
+                                onclick="togglePassword('Password', this)">
                             <i class="fa fa-eye"></i>
                         </button>
                     </div>
@@ -65,20 +80,22 @@
                 <div class="col-md-4">
                     <label>Confirm Password (optional)</label>
                     <div class="input-group">
-                        <input asp-for="ConfirmPassword" type="password" id="ConfirmPassword" class="form-control" placeholder="Repeat new password" oninput="validatePasswordMatchOptional()" />
-                        <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('ConfirmPassword', this)">
+                        <input asp-for="ConfirmPassword" type="password" class="form-control"
+                               placeholder="Repeat new password" />
+                        <button type="button" class="btn btn-outline-secondary"
+                                onclick="togglePassword('ConfirmPassword', this)">
                             <i class="fa fa-eye"></i>
                         </button>
                     </div>
-                    <span class="text-danger" id="passwordError"></span>
                 </div>
             </div>
 
             <hr />
 
-            <!-- PERSONAL DETAILS -->
+            <!-- ============= PERSONAL DETAILS ============= -->
             <h5 class="fw-bold text-secondary mb-3">Personal Details</h5>
             <div class="row g-3">
+
                 <div class="col-md-3">
                     <label asp-for="Gender"></label>
                     <select asp-for="Gender" class="form-select">
@@ -90,12 +107,12 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label>Father Name</label>
+                    <label asp-for="FatherName"></label>
                     <input asp-for="FatherName" class="form-control" />
                 </div>
 
                 <div class="col-md-3">
-                    <label>Mother Name</label>
+                    <label asp-for="MotherName"></label>
                     <input asp-for="MotherName" class="form-control" />
                 </div>
 
@@ -119,7 +136,7 @@
                     <label>Profile Photo</label>
                     @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
                     {
-                        var url = Url.Content("~/uploads/employees/" + Model.EmployeeCode + "/" + Model.ProfileImagePath);
+                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.ProfileImagePath}");
                         <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
                     }
                     <input type="file" name="ProfilePhoto" class="form-control" accept="image/*" />
@@ -139,15 +156,17 @@
                     <label asp-for="PermanentAddress">Permanent Address</label>
                     <textarea asp-for="PermanentAddress" id="PermanentAddress" class="form-control" rows="2"></textarea>
                 </div>
+
             </div>
 
             <hr />
 
-            <!-- EXPERIENCE -->
+            <!-- ============= EXPERIENCE ============= -->
             <h5 class="fw-bold text-secondary mb-3">Experience Details</h5>
+
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label>Experience Type</label>
+                    <label asp-for="ExperienceType"></label>
                     <select asp-for="ExperienceType" id="ExperienceType" class="form-select">
                         <option value="">-- Select --</option>
                         <option>Fresher</option>
@@ -157,61 +176,113 @@
 
                 <div class="col-md-8">
                     <label>Experience Certificates</label>
+
                     @if (!string.IsNullOrEmpty(Model.ExperienceCertificateFilePath))
                     {
-                        var files = Model.ExperienceCertificateFilePath.Split(',', StringSplitOptions.RemoveEmptyEntries);
                         <div class="row g-2">
-                            @foreach (var file in files)
-                            {
-                                var path = Url.Content("~/uploads/employees/" + Model.EmployeeCode + "/" + file);
-                                var ext = System.IO.Path.GetExtension(file).ToLower();
-                                <div class="col-md-4 text-center">
-                                    @if (ext.Contains("jpg") || ext.Contains("png") || ext.Contains("jpeg"))
-                                    {
-                                        <img src="@path" class="img-fluid img-thumbnail mb-1" style="max-height:120px;" />
-                                    }
-                                    <a href="@path" target="_blank" class="btn btn-outline-secondary btn-sm w-100 mt-1">View / Download</a>
-                                </div>
+                            @{
+                                var files = Model.ExperienceCertificateFilePath.Split(',');
+                                foreach (var f in files)
+                                {
+                                    var fUrl = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{f}");
+                                    var ext = System.IO.Path.GetExtension(f).ToLower();
+
+                                    <div class="col-md-3 text-center">
+                                        @if (ext.Contains("jpg") || ext.Contains("png") || ext.Contains("jpeg"))
+                                        {
+                                            <img src="@fUrl" class="img-thumbnail mb-1" style="max-height:120px;" />
+                                        }
+                                        <a href="@fUrl" class="btn btn-sm btn-outline-secondary w-100" target="_blank">View</a>
+                                    </div>
+                                }
                             }
                         </div>
                     }
-                    <input type="file" name="ExperienceCertificateFiles" class="form-control mt-2" accept=".pdf,image/*" multiple />
+
+                    <input type="file" name="ExperienceCertificateFiles" class="form-control mt-2" multiple />
+                </div>
+            </div>
+
+            <!-- Auto-show old experience block -->
+            <div id="experience-section"
+                 class="row g-3 mt-3 @(Model.ExperienceType == "Experienced" ? "" : "d-none")">
+
+                <div class="col-md-4">
+                    <label asp-for="TotalExperienceYears"></label>
+                    <input asp-for="TotalExperienceYears" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="LastCompanyName"></label>
+                    <input asp-for="LastCompanyName" class="form-control" />
                 </div>
             </div>
 
             <hr />
 
-            <!-- HEALTH -->
+            <!-- ============= HEALTH ============= -->
             <h5 class="fw-bold text-secondary mb-3">Health Information</h5>
+
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label>Pre-existing Disease</label>
+                    <label asp-for="HasDisease">Any Pre-existing Disease?</label>
                     <select asp-for="HasDisease" id="HasDisease" class="form-select">
                         <option value="">-- Select --</option>
                         <option>No</option>
                         <option>Yes</option>
                     </select>
                 </div>
+            </div>
+
+            <div id="DiseaseSection"
+                 class="row g-3 mt-3 @(Model.HasDisease == "Yes" ? "" : "d-none")">
 
                 <div class="col-md-4">
-                    <label>Disease Name</label>
+                    <label asp-for="DiseaseName"></label>
                     <input asp-for="DiseaseName" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label>Disease Since</label>
-                    <input asp-for="DiseaseSince" class="form-control" placeholder="MM/YYYY" />
+                    <label asp-for="DiseaseSince"></label>
+                    <input asp-for="DiseaseSince" class="form-control" />
                 </div>
+
+                <div class="col-md-4">
+                    <label asp-for="MedicinesRequired"></label>
+                    <input asp-for="MedicinesRequired" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="DoctorName"></label>
+                    <input asp-for="DoctorName" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="DoctorContact"></label>
+                    <input asp-for="DoctorContact" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label>Medical Document</label>
+                    @if (!string.IsNullOrEmpty(Model.MedicalDocumentFilePath))
+                    {
+                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.MedicalDocumentFilePath}");
+                        <a class="btn btn-outline-secondary d-block mb-2" href="@url" target="_blank">View Previous File</a>
+                    }
+                    <input type="file" name="MedicalDocumentFile" class="form-control" />
+                </div>
+
             </div>
 
             <hr />
 
-            <!-- JOB DETAILS -->
+            <!-- ============= JOB DETAILS ============= -->
             <h5 class="fw-bold text-secondary mb-3">Job Details</h5>
+
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label>Department</label>
-                    <select asp-for="Department" id="Department" class="form-select">
+                    <label asp-for="Department">Department</label>
+                    <select asp-for="Department" class="form-select">
                         <option value="">-- Select --</option>
                         <option>IT</option>
                         <option>HR</option>
@@ -223,14 +294,14 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label>Position</label>
-                    <select asp-for="Position" id="Position" class="form-select">
+                    <label asp-for="Position">Position</label>
+                    <select asp-for="Position" class="form-select">
                         <option value="">-- Select Position --</option>
                     </select>
                 </div>
 
                 <div class="col-md-4">
-                    <label>Role</label>
+                    <label asp-for="Role"></label>
                     <select asp-for="Role" class="form-select">
                         <option value="">-- Select Role --</option>
                         <option>Intern</option>
@@ -242,130 +313,271 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label>Salary</label>
+                    <label asp-for="Salary">Salary</label>
                     <input asp-for="Salary" type="number" class="form-control" />
                 </div>
             </div>
 
             <hr />
+            <hr class="my-4" />
 
-            <!-- ID PROOFS -->
-            <h5 class="fw-bold text-secondary mb-3">ID Proofs</h5>
+            <!-- EDUCATION -->
+            <h5 class="fw-bold text-secondary mb-3">Education</h5>
             <div class="row g-3">
+
+                <!-- 10th -->
+               
+
+                <!-- 12th -->
                 <div class="col-md-4">
-                    <label>Aadhaar Number</label>
-                    <input asp-for="AadhaarNumber" class="form-control" />
+                    <label asp-for="HSCPercent">12th %</label>
+                    <input asp-for="HSCPercent" class="form-control" type="number" min="35" max="100" />
+                </div>
+
+                <div class="col-md-6">
+                    <label>12th Marksheet</label>
+                    @if (!string.IsNullOrEmpty(Model.TwelfthMarksheetFilePath))
+                    {
+                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.TwelfthMarksheetFilePath}");
+                        <a href="@url" target="_blank">
+                            <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
+                        </a>
+                    }
+                    <input type="file" name="TwelfthMarksheetFile" class="form-control" accept=".pdf,image/*" />
+                </div>
+
+                <!-- Graduation -->
+                <div class="col-md-4">
+                    <label asp-for="GraduationCourse">Graduation</label>
+                    <select asp-for="GraduationCourse" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option>BCA</option>
+                        <option>BCS</option>
+                        <option>BBA</option>
+                        <option>B.Com</option>
+                        <option>BA</option>
+                        <option>B.Sc</option>
+                        <option>BE</option>
+                        <option>B.Tech</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="GraduationPercent">Graduation %</label>
+                    <input asp-for="GraduationPercent" type="number" min="35" max="100" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label>Graduation Marksheet</label>
+                    @if (!string.IsNullOrEmpty(Model.GraduationMarksheetFilePath))
+                    {
+                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.GraduationMarksheetFilePath}");
+                        <a href="@url" target="_blank">
+                            <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
+                        </a>
+                    }
+                    <input type="file" name="GraduationMarksheetFile" class="form-control" accept=".pdf,image/*" />
+                </div>
+
+                <!-- Post Graduation -->
+                <div class="col-md-4">
+                    <label asp-for="PostGraduationCourse">Post Graduation</label>
+                    <select asp-for="PostGraduationCourse" class="form-select">
+                        <option value="">-- Select PG --</option>
+                        <option>MCA</option>
+                        <option>MBA</option>
+                        <option>M.Com</option>
+                        <option>M.Sc</option>
+                        <option>ME</option>
+                        <option>M.Tech</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="PostGraduationPercent">Post Graduation %</label>
+                    <input asp-for="PostGraduationPercent" type="number"  class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label>PG Marksheet</label>
+                    @if (!string.IsNullOrEmpty(Model.PostGraduationMarksheetFilePath))
+                    {
+                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.PostGraduationMarksheetFilePath}");
+                        <a href="@url" target="_blank">
+                            <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
+                        </a>
+                    }
+                    <input type="file" name="PostGraduationMarksheetFile" class="form-control" accept=".pdf,image/*" />
+                </div>
+
+            </div>
+
+            <!-- ============= ID PROOFS ============= -->
+            <h5 class="fw-bold text-secondary mb-3">ID Proofs</h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <label asp-for="AadhaarNumber"></label>
+                    <input asp-for="AadhaarNumber"
+                           class="form-control"
+                           pattern="[0-9]{12}"
+                           maxlength="12" minlength="12"
+                           title="Aadhaar number must be exactly 12 digits" />
                 </div>
 
                 <div class="col-md-6">
                     <label>Aadhaar Card</label>
+
                     @if (!string.IsNullOrEmpty(Model.AadhaarFilePath))
                     {
-                        var url = Url.Content("~/uploads/employees/" + Model.EmployeeCode + "/" + Model.AadhaarFilePath);
-                        <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
+                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.AadhaarFilePath}");
+                        <a href="@url" target="_blank">
+                            <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
+                        </a>
                     }
-                    <input type="file" name="AadhaarFile" class="form-control" accept=".pdf,image/*" />
+
+                    <input type="file" name="AadhaarFile" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label>PAN Number</label>
-                    <input asp-for="PanNumber" class="form-control" />
+                    <label asp-for="PanNumber">PAN</label>
+                    <input asp-for="PanNumber"
+                           class="form-control"
+                           pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
+                           title="Enter valid PAN e.g. ABCDE1234F"
+                           style="text-transform: uppercase;" />
                 </div>
 
                 <div class="col-md-6">
                     <label>PAN Card</label>
                     @if (!string.IsNullOrEmpty(Model.PanFilePath))
                     {
-                        var url = Url.Content("~/uploads/employees/" + Model.EmployeeCode + "/" + Model.PanFilePath);
-                        <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
+                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.PanFilePath}");
+                        <a href="@url" target="_blank">
+                            <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
+                        </a>
                     }
-                    <input type="file" name="PanFile" class="form-control" accept=".pdf,image/*" />
+                    <input type="file" name="PanFile" class="form-control" />
                 </div>
+
             </div>
 
             <hr />
 
-            <!-- BANK DETAILS -->
+            <!-- ============= BANK DETAILS ============= -->
             <h5 class="fw-bold text-secondary mb-3">Bank Details</h5>
+
             <div class="row g-3">
+
                 <div class="col-md-6">
-                    <label>Account Holder Name</label>
+                    <label asp-for="AccountHolderName"></label>
                     <input asp-for="AccountHolderName" class="form-control" />
                 </div>
 
                 <div class="col-md-6">
-                    <label>Bank Name</label>
+                    <label asp-for="BankName"></label>
                     <input asp-for="BankName" class="form-control" />
                 </div>
 
                 <div class="col-md-6">
-                    <label>Account Number</label>
+                    <label asp-for="AccountNumber"></label>
                     <input asp-for="AccountNumber" class="form-control" />
                 </div>
 
                 <div class="col-md-6">
-                    <label>IFSC</label>
+                    <label asp-for="IFSC"></label>
                     <input asp-for="IFSC" class="form-control" />
                 </div>
 
                 <div class="col-md-6">
-                    <label>Branch</label>
+                    <label asp-for="Branch"></label>
                     <input asp-for="Branch" class="form-control" />
                 </div>
 
                 <div class="col-md-6">
-                    <label>Passbook File</label>
+                    <label>Passbook</label>
                     @if (!string.IsNullOrEmpty(Model.PassbookFilePath))
                     {
-                        var url = Url.Content("~/uploads/employees/" + Model.EmployeeCode + "/" + Model.PassbookFilePath);
-                        <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
+                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.PassbookFilePath}");
+                        <a href="@url" target="_blank">
+                            <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
+                        </a>
                     }
-                    <input type="file" name="PassbookFile" class="form-control" accept=".pdf,image/*" />
+                    <input type="file" name="PassbookFile" class="form-control" />
                 </div>
+
             </div>
 
             <hr />
 
-            <!-- EMERGENCY CONTACT -->
+            <!-- ============= EMERGENCY CONTACT ============= -->
             <h5 class="fw-bold text-secondary mb-3">Emergency Contact Details</h5>
+
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label>Name</label>
+                    <label asp-for="EmergencyContactName"></label>
                     <input asp-for="EmergencyContactName" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label>Relationship</label>
+                    <label asp-for="EmergencyContactRelationship"></label>
                     <input asp-for="EmergencyContactRelationship" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label>Mobile</label>
+                    <label asp-for="EmergencyContactMobile"></label>
                     <input asp-for="EmergencyContactMobile" class="form-control" />
                 </div>
 
                 <div class="col-md-12">
-                    <label>Address</label>
+                    <label asp-for="EmergencyContactAddress"></label>
                     <textarea asp-for="EmergencyContactAddress" class="form-control" rows="2"></textarea>
                 </div>
             </div>
 
-            <div class="mt-4 text-end">
+            <div class="text-end mt-4">
                 <button type="submit" class="btn btn-success px-5">
-                    <i class="fa-solid fa-check me-1"></i> Save Changes
+                    Save Changes
                 </button>
             </div>
+
         </div>
+
     </form>
+
 </div>
+
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        function togglePassword(fieldId, btn) {
-            const input = document.getElementById(fieldId);
+
+
+
+        // Position loading
+        const dept = document.getElementById("Department");
+        const pos = document.getElementById("Position");
+
+        dept.addEventListener("change", function () {
+            pos.innerHTML = "";
+            fetch(`/Employees/GetPositions?department=${this.value}`)
+                .then(r => r.json())
+                .then(list => {
+                    pos.innerHTML = '<option value="">-- Select Position --</option>';
+                    list.forEach(item => {
+                        pos.innerHTML += `<option value="${item}">${item}</option>`;
+                    });
+                });
+        });
+        //Show password buttton 
+        function togglePassword(field, btn) {
+            const input = document.getElementById(field);
             const icon = btn.querySelector("i");
+
             if (input.type === "password") {
                 input.type = "text";
                 icon.classList.replace("fa-eye", "fa-eye-slash");
@@ -375,49 +587,42 @@
             }
         }
 
-        function validatePasswordMatchOptional() {
-            const pwd = document.getElementById("Password");
-            const conf = document.getElementById("ConfirmPassword");
-            const err = document.getElementById("passwordError");
-            if (pwd.value === "" && conf.value === "") {
-                err.textContent = "";
-                return;
-            }
-            err.textContent = (pwd.value !== conf.value) ? "Passwords do not match." : "";
-        }
+        // Experience Show/Hide
+        document.getElementById("ExperienceType").addEventListener("change", function () {
+            document.getElementById("experience-section").classList.toggle("d-none", this.value !== "Experienced");
+        });
 
-        // Sync address
-        const sameAddressCheckbox = document.getElementById("SameAddressCheckbox");
-        const currentAddress = document.getElementById("CurrentAddress");
-        const permanentAddress = document.getElementById("PermanentAddress");
-        const permanentSection = document.getElementById("PermanentAddressSection");
+        // Disease Show/Hide
+        document.getElementById("HasDisease").addEventListener("change", function () {
+            document.getElementById("DiseaseSection").classList.toggle("d-none", this.value !== "Yes");
+        });
 
-        sameAddressCheckbox.addEventListener("change", () => {
-            if (sameAddressCheckbox.checked) {
-                permanentAddress.value = currentAddress.value;
-                permanentSection.classList.add("d-none");
+        // Address Sync
+        const sameAdd = document.getElementById("SameAddressCheckbox");
+        const curr = document.getElementById("CurrentAddress");
+        const perm = document.getElementById("PermanentAddress");
+        const permSec = document.getElementById("PermanentAddressSection");
+
+        sameAdd.addEventListener("change", () => {
+            if (sameAdd.checked) {
+                perm.value = curr.value;
+                permSec.classList.add("d-none");
             } else {
-                permanentSection.classList.remove("d-none");
+                permSec.classList.remove("d-none");
             }
         });
 
-        currentAddress.addEventListener("input", () => {
-            if (sameAddressCheckbox.checked) {
-                permanentAddress.value = currentAddress.value;
+        curr.addEventListener("input", () => {
+            if (sameAdd.checked) perm.value = curr.value;
+        });
+
+
+
+             document.addEventListener("input", function (e) {
+            if (e.target.tagName === "INPUT" && e.target.type === "text") {
+                e.target.value = e.target.value.toUpperCase();
             }
         });
 
-        // Department -> Position loader
-        const dept = document.getElementById("Department");
-        const pos = document.getElementById("Position");
-
-        dept.addEventListener("change", function () {
-            fetch(`/Employees/GetPositions?department=${this.value}`)
-                .then(r => r.json())
-                .then(list => {
-                    pos.innerHTML = '<option value="">-- Select Position --</option>';
-                    list.forEach(item => pos.innerHTML += `<option value="${item}">${item}</option>`);
-                });
-        });
     </script>
 }
