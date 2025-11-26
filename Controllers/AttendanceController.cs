@@ -9,7 +9,6 @@ using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System;
 using System.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HRMS.Controllers
 {
@@ -57,12 +56,12 @@ namespace HRMS.Controllers
             {
                 var rec = new Attendance
                 {
-                    Emp_Code = empCode,                // correct property name
-                    Date = today,                      // correct date field
-                    Status = "P",                      // present
-                    InTime = DateTime.Now.TimeOfDay,   // convert to TimeSpan
+                    Emp_Code = empCode,
+                    Date = today,
+                    Status = "P",
+                    InTime = DateTime.Now.TimeOfDay,
                     OutTime = null,
-                    Total_Hours = 0                    // or TimeSpan.Zero if you change type
+                    Total_Hours = 0
                 };
 
                 _context.Attendances.Add(rec);
@@ -89,20 +88,28 @@ namespace HRMS.Controllers
 
             if (rec != null && rec.OutTime == null)
             {
-                // Out time (TimeSpan)
                 rec.OutTime = DateTime.Now.TimeOfDay;
 
-                // Total Hours = difference between InTime and OutTime
-                if (rec.InTime.HasValue && rec.OutTime.HasValue)
-                {
-                    TimeSpan diff = rec.OutTime.Value - rec.InTime.Value;
-                    rec.Total_Hours = (decimal)diff.TotalHours;
-                }
+                // TOTAL HOURS
+                rec.Total_Hours = CalculateTotalHours(rec.InTime, rec.OutTime);
 
                 _context.SaveChanges();
             }
 
             return RedirectToAction(nameof(EmployeePanel));
+        }
+
+        private decimal CalculateTotalHours(TimeSpan? inTime, TimeSpan? outTime)
+        {
+            if (!inTime.HasValue || !outTime.HasValue)
+                return 0;
+
+            TimeSpan diff = outTime.Value - inTime.Value;
+
+            if (diff.TotalHours < 0)
+                return 0;
+
+            return (decimal)diff.TotalHours;
         }
 
 
@@ -143,56 +150,37 @@ namespace HRMS.Controllers
         // =========================================================
         public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status)
         {
-            // Base query
             var query = from a in _context.Attendances
                         join e in _context.Employees
                              on a.Emp_Code equals e.EmployeeCode into empJoin
                         from e in empJoin.DefaultIfEmpty()
                         select new { a, e };
 
-            // ================================
-            // 1️⃣ SEARCH FILTER (Name or Code)
-            // ================================
             if (!string.IsNullOrWhiteSpace(search))
             {
                 query = query.Where(x =>
-                    (x.e != null && (
-                        x.e.EmployeeCode.Contains(search) ||
-                        x.e.Name.Contains(search))));
+                    x.e != null && (x.e.EmployeeCode.Contains(search) || x.e.Name.Contains(search)));
             }
 
-            // ================================
-            // 2️⃣ DATE RANGE FILTER
-            // ================================
             if (fromDate.HasValue)
-            {
                 query = query.Where(x => x.a.Date >= fromDate.Value);
-            }
 
             if (toDate.HasValue)
-            {
                 query = query.Where(x => x.a.Date <= toDate.Value);
-            }
 
-            // ================================
-            // 3️⃣ STATUS FILTER
-            // ================================
             if (!string.IsNullOrEmpty(status) && status != "All")
             {
-                if (status == "Completed")        // In + Out exists
+                if (status == "Completed")
                     query = query.Where(x => x.a.InTime != null && x.a.OutTime != null);
 
-                else if (status == "NotCheckedOut") // In exists but Out is null
+                else if (status == "NotCheckedOut")
                     query = query.Where(x => x.a.InTime != null && x.a.OutTime == null);
             }
 
-            // ================================
-            // 4️⃣ BUILD VIEW MODEL
-            // ================================
             var model = query
                 .OrderBy(x => x.e.EmployeeCode)
                 .ThenBy(x => x.a.Date)
-                .AsEnumerable()   // safe after filtering
+                .AsEnumerable()
                 .Select(x => new AttendanceIndexVm
                 {
                     Emp_Code = x.e?.EmployeeCode,
@@ -201,21 +189,23 @@ namespace HRMS.Controllers
                     Status = x.a.Status ?? string.Empty,
                     InTime = x.a.InTime ?? TimeSpan.Zero,
                     OutTime = x.a.OutTime ?? TimeSpan.Zero,
-                    IsLate = IsLate(x.a)
+                    IsLate = IsLate(x.a),
+
+                    // ⭐ TOTAL HOURS
+                    TotalHours = (x.a.InTime.HasValue && x.a.OutTime.HasValue)
+                        ? $"{(x.a.OutTime.Value - x.a.InTime.Value).Hours}h {(x.a.OutTime.Value - x.a.InTime.Value).Minutes}m"
+                        : "--"
                 })
                 .ToList();
 
-            // Required to refill dropdowns in view
             ViewBag.Search = search;
             ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
             ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
             ViewBag.Status = status;
-
             ViewBag.EmployeeList = _context.Employees.ToList();
 
             return View(model);
         }
-
 
 
         private bool IsLate(Attendance a)
@@ -228,20 +218,19 @@ namespace HRMS.Controllers
 
             var day = a.Date.DayOfWeek;
 
-            // Sunday = WO (never late)
             if (day == DayOfWeek.Sunday)
                 return false;
 
             TimeSpan cutoff = (day == DayOfWeek.Saturday)
-                              ? new TimeSpan(10, 15, 0)   // Saturday cutoff
-                              : new TimeSpan(9, 45, 0);   // Weekday cutoff
+                ? new TimeSpan(10, 15, 0)
+                : new TimeSpan(9, 45, 0);
 
             return a.InTime.Value > cutoff;
         }
 
-
-
-
+        // =========================================================
+        // EXPORT TO EXCEL
+        // =========================================================
         [HttpGet]
         public IActionResult ExportFiltered(string search, DateTime? fromDate, DateTime? toDate, string status)
         {
@@ -249,7 +238,6 @@ namespace HRMS.Controllers
 
             var data = _context.Attendances.AsQueryable();
 
-            // FILTERS
             if (fromDate.HasValue)
                 data = data.Where(a => a.Date >= fromDate.Value.Date);
 
@@ -269,15 +257,12 @@ namespace HRMS.Controllers
             }
 
             var list = data.OrderBy(a => a.Date).ToList();
-
-            // Get employee names
             var employees = _context.Employees.ToList();
 
             using (var pkg = new ExcelPackage())
             {
                 var ws = pkg.Workbook.Worksheets.Add("Attendance");
 
-                // HEADERS
                 ws.Cells[1, 1].Value = "Employee Code";
                 ws.Cells[1, 2].Value = "Employee Name";
                 ws.Cells[1, 3].Value = "Date";
@@ -300,7 +285,7 @@ namespace HRMS.Controllers
                     ws.Cells[row, 4].Value = a.InTime?.ToString("hh:mm tt") ?? "--";
                     ws.Cells[row, 5].Value = a.OutTime?.ToString("hh:mm tt") ?? "--";
 
-                    // Total Hours calculation
+                    // ⭐ TOTAL HOURS
                     string totalHours = "--";
                     if (a.InTime.HasValue && a.OutTime.HasValue)
                     {
@@ -309,7 +294,6 @@ namespace HRMS.Controllers
                     }
 
                     ws.Cells[row, 6].Value = totalHours;
-
                     ws.Cells[row, 7].Value = a.OutTime == null ? "Not Checked Out" : "Completed";
 
                     row++;
@@ -317,7 +301,6 @@ namespace HRMS.Controllers
 
                 ws.Cells.AutoFitColumns();
 
-                // DOWNLOAD
                 return File(
                     pkg.GetAsByteArray(),
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

@@ -1,173 +1,235 @@
 ﻿@model HRMS.Models.ViewModels.PayrollSummaryVm
+
 @{
+    ViewData["Title"] = "Salary Slip";
     Layout = "~/Views/Shared/_HrLayout.cshtml";
+
+    var monthName = new DateTime(Model.Year, Model.Month, 1).ToString("MMMM");
 }
 
-<div id="payslip-content" class="container mt-4 bg-white shadow-lg rounded p-5">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-    <!-- Company Header -->
-    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
-        <div class="d-flex align-items-center">
-            <img src="~/images/infinity-logo.png" style="height:80px; margin-right:15px;">
-            <div>
-                <h3 class="fw-bold text-primary mb-0">Infinity Arthvishva</h3>
-                <small class="text-muted">Empowering Finance & Innovation</small>
+<div class="container py-4 salary-slip-container">
+
+    <!-- HEADER -->
+    <!-- HEADER -->
+    <div class="row align-items-center mb-4 salary-header">
+
+        <!-- LEFT: LOGO -->
+        <div class="col-4 d-flex justify-content-start">
+            <img src="~/images/infinity-logo.png" alt="Infinity Arthvishva Logo" class="company-logo" />
+        </div>
+
+        <!-- CENTER: COMPANY NAME -->
+        <div class="col-4 text-center">
+            <h2 class="fw-bold text-primary mb-0">Infinity Arthvishva</h2>
+            <div class="text-muted small">Empowering Finance & Innovation</div>
+        </div>
+
+        <!-- RIGHT: DOWNLOAD BUTTON -->
+        <div class="col-4 d-flex justify-content-end">
+            <a asp-action="DownloadSalarySlip"
+               asp-route-empCode="@Model.EmpCode"
+               asp-route-month="@Model.Month"
+               asp-route-year="@Model.Year"
+               class="btn btn-primary px-4 py-2 shadow-sm d-flex align-items-center gap-2">
+                <i class="fa-solid fa-download"></i>
+                Download Slip
+            </a>
+
+
+
+        </div>
+    </div>
+
+
+
+
+        <!-- EMPLOYEE & BANK DETAILS -->
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h5 class="section-heading">Employee Information</h5>
+                <table class="table table-sm table-striped border">
+                    <tbody>
+                        <tr><th>Employee Code</th> <td>@Model.EmpCode</td></tr>
+                        <tr><th>Name</th> <td>@Model.EmpName</td></tr>
+                        <tr><th>Department</th> <td>@Model.Department</td></tr>
+                        <tr><th>Designation</th> <td>@Model.Designation</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="col-md-6">
+                <h5 class="section-heading">Bank Information</h5>
+                <table class="table table-sm table-striped border">
+                    <tbody>
+                        <tr><th>Bank Name</th> <td>@Model.BankName</td></tr>
+                        <tr><th>Account No.</th> <td>@Model.AccountNumber</td></tr>
+                        <tr><th>IFSC Code</th> <td>@Model.IFSCCode</td></tr>
+                        <tr><th>Branch</th> <td>@Model.BankBranch</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <div class="text-end">
-            <button class="fancy-download-btn" onclick="downloadPayslip()">
-                <i class="bi bi-download me-2"></i> Download Salary Slip
-                <span class="shine"></span>
-            </button>
+        <!-- ATTENDANCE SUMMARY -->
+        <h5 class="section-heading mt-4">Attendance Summary</h5>
+        <table class="table table-bordered text-center align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Working Days</th>
+                    <th>Half Days</th>
+                    <th>Weekly Off</th>
+                    <th>Saturday (WOP)</th>
+                    <th>Absent</th>
+                    <th>Paid Days</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>@Model.TotalDaysInMonth</td>
+                    <td>@Model.PresentHalfDays</td>
+                    <td>@Model.WeeklyOffDays</td>
+                    <td>@Model.TotalSaturdayPaid</td>
+                    <td>@Model.AbsentDays</td>
+                    <td class="fw-bold">@Model.PaidDays.ToString("0.##")</td>
+                </tr>
+            </tbody>
+        </table>
 
-            <h4 class="fw-bold text-success mb-1 mt-2">Salary Slip</h4>
-            <span class="text-secondary">@Model.Month / @Model.Year</span>
+        <!-- SALARY DETAILS -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h5 class="section-heading">Earnings</h5>
+                <table class="table table-striped border">
+                    <tbody>
+                        <tr><th>Base Salary</th> <td class="text-end">@Model.MonthlySalary.ToString("0.00")</td></tr>
+                        <tr><th>Per Day Salary</th> <td class="text-end">@Model.PerDaySalary.ToString("0.00")</td></tr>
+                        <tr><th>Performance Allowance</th> <td class="text-end">@Model.PerformanceAllowance.ToString("0.00")</td></tr>
+                        <tr><th>Other Allowances</th> <td class="text-end">@Model.OtherAllowances.ToString("0.00")</td></tr>
+                        <tr><th>Petrol Allowance</th> <td class="text-end">@Model.PetrolAllowance.ToString("0.00")</td></tr>
+                        <tr><th>Reimbursement</th> <td class="text-end">@Model.Reimbursement.ToString("0.00")</td></tr>
+                        <tr class="table-primary">
+                            <th>Gross Salary</th>
+                            <td class="text-end fw-bold">@Model.GrossSalary.ToString("0.00")</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="col-md-6">
+                <h5 class="section-heading">Deductions</h5>
+                <table class="table table-striped border">
+                    <tbody>
+                        <tr><th>Professional Tax</th> <td class="text-end">@Model.ProfessionalTax.ToString("0.00")</td></tr>
+                        <tr><th>Other Deductions</th> <td class="text-end">@(@Model.TotalDeductions - @Model.ProfessionalTax).ToString("0.00")</td></tr>
+                        <tr class="table-danger">
+                            <th>Total Deductions</th>
+                            <td class="text-end fw-bold">@Model.TotalDeductions.ToString("0.00")</td>
+                        </tr>
+                        <tr class="table-success">
+                            <th>Net Salary</th>
+                            <td class="text-end fw-bold text-success">@Model.NetSalary.ToString("0.00")</td>
+                        </tr>
+                        <tr class="table-success">
+                            <th>Total Payable</th>
+                            <td class="text-end fw-bold text-success">@Model.TotalPay.ToString("0.00")</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
 
+        <!-- FOOTER -->
+        <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+            <div class="small text-muted">
+                *This is a system-generated salary slip and does not require a signature.
+            </div>
 
-    <!-- Employee & Bank Details -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <h5 class="fw-semibold text-primary">Employee Details</h5>
-            <table class="table table-sm table-bordered mb-3">
-                <tr><th>Employee Code</th><td>@Model.EmpCode</td></tr>
-                <tr><th>Name</th><td>@Model.EmpName</td></tr>
-                <tr><th>Department</th><td>@Model.Department</td></tr>
-                <tr><th>Designation</th><td>@Model.Designation</td></tr>
-            </table>
+            <div class="text-end">
+                <div class="signature-box"></div>
+                <div class="small text-muted">Authorized Signatory</div>
+            </div>
         </div>
-
-        <div class="col-md-6">
-            <h5 class="fw-semibold text-primary">Bank Details</h5>
-            <table class="table table-sm table-bordered mb-3">
-                <tr><th>Bank Name</th><td>@Model.BankName</td></tr>
-                <tr><th>Account No.</th><td>@Model.AccountNumber</td></tr>
-                <tr><th>IFSC Code</th><td>@Model.IFSCCode</td></tr>
-                <tr><th>Branch</th><td>@Model.BankBranch</td></tr>
-            </table>
-        </div>
-    </div>
-
-
-    <!-- Attendance Summary -->
-    <h5 class="fw-semibold text-primary mt-4">Attendance Summary</h5>
-    <table class="table table-bordered table-striped w-100 mb-4">
-        <thead class="table-light">
-            <tr class="text-center fw-semibold">
-                <th>Working Days</th>
-                <th>Absent</th>
-                <th>Late Marks</th>
-                <th>Late Deduction Days</th>
-                <th>Paid Days</th>
-            </tr>
-        </thead>
-        <tbody class="text-center">
-            <tr>
-                <td>@Model.TotalDaysInMonth</td>
-                <td>@Model.AbsentDays</td>
-                <td>@Model.LateMarks</td>
-                <td>@Model.LateDeductionDays</td>
-                <td class="fw-bold">@Model.PaidDays</td>
-            </tr>
-        </tbody>
-    </table>
-
-
-    <!-- Salary Summary -->
-    <h5 class="fw-semibold text-primary mt-4">Salary Summary</h5>
-    <table class="table table-bordered table-hover w-100 mb-4">
-        <tbody>
-            <tr><th>Base Salary</th><td>@Model.MonthlySalary.ToString("0.00")</td></tr>
-            <tr><th>Per Day Salary</th><td>@Model.PerDaySalary.ToString("0.00")</td></tr>
-            <tr><th>Gross Salary</th><td>@Model.GrossSalary.ToString("0.00")</td></tr>
-            <tr><th>Performance Allowance</th><td>@Model.PerformanceAllowance.ToString("0.00")</td></tr>
-            <tr><th>Other Allowances</th><td>@Model.OtherAllowances.ToString("0.00")</td></tr>
-            <tr><th>Petrol Allowance</th><td>@Model.PetrolAllowance.ToString("0.00")</td></tr>
-            <tr><th>Reimbursement</th><td>@Model.Reimbursement.ToString("0.00")</td></tr>
-            <tr><th>Professional Tax</th><td>@Model.ProfessionalTax.ToString("0.00")</td></tr>
-
-            <tr class="table-danger">
-                <th>Total Deductions</th>
-                <td>@Model.TotalDeductions.ToString("0.00")</td>
-            </tr>
-
-            <tr class="table-success fw-bold fs-5">
-                <th>NET SALARY</th>
-                <td>@Model.NetSalary.ToString("0.00")</td>
-            </tr>
-        </tbody>
-    </table>
-
-
-    <!-- Footer -->
-    <div class="mt-5 text-center border-top pt-3">
-        <p class="fw-semibold mb-0">This is a computer-generated payslip and does not require a signature.</p>
-        <small class="text-muted">© @DateTime.Now.Year Infinity Arthvishva | All Rights Reserved</small>
     </div>
 </div>
 
-
-<script>
-    function downloadPayslip() {
-        const oldTitle = document.title;
-        document.title = `SalarySlip_@Model.EmpCode@Model.Month@Model.Year`;
-        window.print();
-        setTimeout(() => { document.title = oldTitle; }, 1500);
-    }
-</script>
-
 <style>
     body {
-        background: #f5f7fa;
-        font-family: "Segoe UI";
+        font-family: 'Poppins', sans-serif !important;
     }
 
-    th {
-        width: 40%;
-        background: #f2f6ff;
+    .salary-slip-container h2 {
+        color: #2F3D88;
     }
 
-    h5 {
-        border-left: 4px solid #007bff;
-        padding-left: 8px;
-    }
-
-    .fancy-download-btn {
-        background: linear-gradient(135deg,#007bff,#00c6ff);
-        border: none;
-        color: white;
-        padding: 10px 18px;
-        border-radius: 6px;
-        cursor: pointer;
-        position: relative;
+    .section-heading {
+        font-size: 1.05rem;
         font-weight: 600;
-        overflow: hidden;
+        color: #2F3D88;
+        margin-bottom: 8px;
     }
 
-        .fancy-download-btn:hover {
-            transform: scale(1.05);
-        }
+    .signature-box {
+        width: 180px;
+        height: 40px;
+        border-bottom: 1px solid #555;
+        margin-bottom: 3px;
+    }
 
     @@media print {
-        body * {
-            visibility: hidden !important;
-        }
-
-        #payslip-content, #payslip-content * {
-            visibility: visible !important;
-        }
-
-        .fancy-download-btn {
+        .salary-slip-container .btn,
+        nav,
+        .sidebar,
+        .navbar {
             display: none !important;
         }
 
-        #payslip-content {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+        .card {
+            border: none !important;
+            box-shadow: none !important;
         }
     }
+
+
+    .company-logo {
+        height: 80px;
+        width: auto;
+    }
+
+    .salary-header h2 {
+        font-size: 1.7rem;
+    }
+
+    .salary-header .btn {
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    @@media (max-width: 768px) {
+
+        .salary-header .col-4 {
+            text-align: center !important;
+            margin-bottom: 10px;
+        }
+
+        .salary-header {
+            text-align: center;
+        }
+
+        .company-logo {
+            height: 65px;
+        }
+    }
+
+    @@media print {
+        .salary-header,
+        .btn,
+        nav,
+        .navbar,
+        .sidebar {
+            display: none !important;
+        }
+    }
+
 </style>

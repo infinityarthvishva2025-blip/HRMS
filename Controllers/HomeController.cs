@@ -26,15 +26,37 @@ namespace HRMS.Controllers
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
 
-            // Celebration Model
             var model = new CelebrationViewModel
             {
                 TotalEmployees = employees.Count,
-                TodaysBirthdays = employees.Where(e => e.DOB_Date?.Date == today).ToList(),
-                TomorrowsBirthdays = employees.Where(e => e.DOB_Date?.Date == tomorrow).ToList(),
-                TodaysAnniversaries = employees.Where(e => e.JoiningDate?.Date == today).ToList(),
-                TomorrowsAnniversaries = employees.Where(e => e.JoiningDate?.Date == tomorrow).ToList()
+
+                // Birthdays
+                TodaysBirthdays = employees
+                    .Where(e => e.DOB_Date.HasValue &&
+                                e.DOB_Date.Value.Month == today.Month &&
+                                e.DOB_Date.Value.Day == today.Day)
+                    .ToList(),
+
+                TomorrowsBirthdays = employees
+                    .Where(e => e.DOB_Date.HasValue &&
+                                e.DOB_Date.Value.Month == tomorrow.Month &&
+                                e.DOB_Date.Value.Day == tomorrow.Day)
+                    .ToList(),
+
+                // Anniversaries
+                TodaysAnniversaries = employees
+                    .Where(e => e.JoiningDate.HasValue &&
+                                e.JoiningDate.Value.Month == today.Month &&
+                                e.JoiningDate.Value.Day == today.Day)
+                    .ToList(),
+
+                TomorrowsAnniversaries = employees
+                    .Where(e => e.JoiningDate.HasValue &&
+                                e.JoiningDate.Value.Month == tomorrow.Month &&
+                                e.JoiningDate.Value.Day == tomorrow.Day)
+                    .ToList()
             };
+
 
             // Today Attendance
             var todaysAtt = _context.Attendances

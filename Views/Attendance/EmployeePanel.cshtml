@@ -2,6 +2,26 @@
 @{
     ViewData["Title"] = "Attendance";
     Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+
+    // ---- SAFE FORMATTER FOR INTIME ----
+    string FormatTime(object time)
+    {
+        if (time == null) return "—";
+
+        // If value is DateTime
+        if (time is DateTime dt)
+            return dt.ToString("dd MMM yyyy, hh:mm tt");
+
+        // If value is TimeSpan
+        if (time is TimeSpan ts)
+            return DateTime.Today.Add(ts).ToString("dd MMM yyyy, hh:mm tt");
+
+        // If string → try parsing
+        if (DateTime.TryParse(time.ToString(), out DateTime parsed))
+            return parsed.ToString("dd MMM yyyy, hh:mm tt");
+
+        return "—";
+    }
 }
 
 <div class="container py-5">
@@ -29,7 +49,7 @@
                         <div class="p-3 bg-light border rounded-3 shadow-sm w-auto">
                             <i class="fa-solid fa-sign-in-alt text-success me-2"></i>
                             <strong>Check-In:</strong>
-                            <span class="text-dark">@Model.InTime?.ToString("dd MMM yyyy, hh:mm tt")</span>
+                            <span class="text-dark">@FormatTime(Model.InTime)</span>
                         </div>
 
                         @if (Model.OutTime != null)
@@ -37,7 +57,7 @@
                             <div class="p-3 bg-light border rounded-3 shadow-sm w-auto">
                                 <i class="fa-solid fa-sign-out-alt text-danger me-2"></i>
                                 <strong>Check-Out:</strong>
-                                <span class="text-dark">@Model.OutTime?.ToString("dd MMM yyyy, hh:mm tt")</span>
+                                <span class="text-dark">@FormatTime(Model.OutTime)</span>
                             </div>
                         }
                     </div>
