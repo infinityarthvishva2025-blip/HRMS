@@ -156,8 +156,9 @@ namespace HRMS.Controllers
             if (!string.IsNullOrWhiteSpace(search))
             {
                 query = query.Where(x =>
-                    x.e.EmployeeCode.Contains(search) ||
-                    x.e.Name.Contains(search));
+                    (x.e != null && (
+                        x.e.EmployeeCode.Contains(search) ||
+                        x.e.Name.Contains(search))));
             }
 
             // ================================
@@ -195,11 +196,11 @@ namespace HRMS.Controllers
                 .Select(x => new AttendanceIndexVm
                 {
                     Emp_Code = x.e?.EmployeeCode,
-                    EmpName = x.e?.Name,
+                    EmpName = x.e?.Name ?? string.Empty,
                     AttDate = x.a.Date,
-                    Status = x.a.Status,
-                    InTime = x.a.InTime,
-                    OutTime = x.a.OutTime,
+                    Status = x.a.Status ?? string.Empty,
+                    InTime = x.a.InTime ?? TimeSpan.Zero,
+                    OutTime = x.a.OutTime ?? TimeSpan.Zero,
                     IsLate = IsLate(x.a)
                 })
                 .ToList();

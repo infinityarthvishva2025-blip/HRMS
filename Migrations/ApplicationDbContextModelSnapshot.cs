@@ -17,7 +17,7 @@ namespace HRMS.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.21")
+                .HasAnnotation("ProductVersion", "8.0.22")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -31,6 +31,12 @@ namespace HRMS.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2")
                         .HasColumnName("Date");
+
+                    b.Property<DateTime?>("Att_Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("Id")
+                        .HasColumnType("int");
 
                     b.Property<TimeSpan?>("InTime")
                         .HasColumnType("time")
@@ -178,6 +184,9 @@ namespace HRMS.Migrations
 
                     b.Property<string>("LastCompanyName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ManagerId")
+                        .HasColumnType("int");
 
                     b.Property<string>("MaritalStatus")
                         .HasColumnType("nvarchar(max)");
@@ -500,6 +509,9 @@ namespace HRMS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ReportingManagerId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
@@ -519,7 +531,7 @@ namespace HRMS.Migrations
 
                     b.HasIndex("EmployeeId");
 
-                    b.ToTable("Leaves");
+                    b.ToTable("Leaves", (string)null);
                 });
 
             modelBuilder.Entity("HRMS.Models.LeaveApprovalRoute", b =>
@@ -544,6 +556,110 @@ namespace HRMS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("LeaveApprovalRoutes");
+                });
+
+            modelBuilder.Entity("Payroll", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BaseSalary")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("base_salary");
+
+                    b.Property<decimal?>("EmployeeCTC")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("employee_ctc");
+
+                    b.Property<string>("EmployeeCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("emp_code");
+
+                    b.Property<decimal?>("GrossSalary")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("gross_salary");
+
+                    b.Property<decimal>("LateDeductionDays")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("late_deduction_days");
+
+                    b.Property<int>("LateGt3")
+                        .HasColumnType("int")
+                        .HasColumnName("late_gt_3");
+
+                    b.Property<int>("LateMarks")
+                        .HasColumnType("int")
+                        .HasColumnName("late_marks");
+
+                    b.Property<decimal>("LeavesTaken")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("leaves_taken");
+
+                    b.Property<string>("Month")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("month");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<decimal?>("NetSalary")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("net_salary");
+
+                    b.Property<decimal?>("OtherAllowance")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("other_allowance");
+
+                    b.Property<decimal>("PaidDays")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("day_presented");
+
+                    b.Property<decimal?>("PaidDaysDecimal")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("paid_days");
+
+                    b.Property<decimal?>("PerDaySalary")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("per_day_salary");
+
+                    b.Property<decimal?>("PerfAllowance")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("perf_allowance");
+
+                    b.Property<decimal?>("PetrolAllowance")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("petrol_allowance");
+
+                    b.Property<decimal?>("ProfTax")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("prof_tax");
+
+                    b.Property<decimal?>("Reimbursement")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("reimbursement");
+
+                    b.Property<decimal?>("TotalDeduction")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("total_deduction");
+
+                    b.Property<decimal?>("TotalPay")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("total_pay");
+
+                    b.Property<int>("WorkingDays")
+                        .HasColumnType("int")
+                        .HasColumnName("working_days");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Payroll");
                 });
 
             modelBuilder.Entity("HRMS.Models.Expenses", b =>

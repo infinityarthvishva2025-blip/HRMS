@@ -60,6 +60,8 @@ namespace HRMS.Controllers
             }
 
             // Save employee login session
+            HttpContext.Session.SetString("EmployeeCode", emp.EmployeeCode);
+
             HttpContext.Session.SetString("Role", "Employee");
             HttpContext.Session.SetInt32("EmployeeId", emp.Id);
             HttpContext.Session.SetString("EmployeeName", emp.Name);

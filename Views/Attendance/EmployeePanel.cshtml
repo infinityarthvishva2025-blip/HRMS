@@ -1,23 +1,62 @@
 ﻿@model HRMS.Models.Attendance
 @{
-
+    ViewData["Title"] = "Attendance";
     Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
 }
-@if (Model == null)
-{
-    <p>You have not checked in today.</p>
-    <a asp-action="CheckIn" class="btn btn-success">Check In</a>
-}
-else
-{
-    <p><strong>Check-In:</strong> @Model.InTime?.ToString("dd MMM yyyy, hh:mm tt")</p>
 
-    @if (Model.OutTime == null)
-    {
-        <a asp-action="CheckOut" class="btn btn-danger">Check Out</a>
-    }
-    else
-    {
-        <p><strong>Check-Out:</strong> @Model.OutTime?.ToString("dd MMM yyyy, hh:mm tt")</p>
-    }
-}
+<div class="container py-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5 text-center">
+            <h3 class="fw-bold text-primary mb-4">
+                <i class="fa-solid fa-clock me-2"></i> Attendance Panel
+            </h3>
+
+            @if (Model == null)
+            {
+                <div class="py-4">
+                    <p class="fs-5 text-muted mb-3">
+                        You haven't checked in yet today.
+                    </p>
+                    <a asp-action="CheckIn" class="btn btn-success btn-lg px-5 rounded-pill shadow-sm">
+                        <i class="fa-solid fa-play me-2"></i> Check In
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="mt-4">
+                    <div class="d-flex justify-content-center gap-4 flex-wrap mb-4">
+                        <div class="p-3 bg-light border rounded-3 shadow-sm w-auto">
+                            <i class="fa-solid fa-sign-in-alt text-success me-2"></i>
+                            <strong>Check-In:</strong>
+                            <span class="text-dark">@Model.InTime?.ToString("dd MMM yyyy, hh:mm tt")</span>
+                        </div>
+
+                        @if (Model.OutTime != null)
+                        {
+                            <div class="p-3 bg-light border rounded-3 shadow-sm w-auto">
+                                <i class="fa-solid fa-sign-out-alt text-danger me-2"></i>
+                                <strong>Check-Out:</strong>
+                                <span class="text-dark">@Model.OutTime?.ToString("dd MMM yyyy, hh:mm tt")</span>
+                            </div>
+                        }
+                    </div>
+
+                    @if (Model.OutTime == null)
+                    {
+                        <a asp-action="CheckOut" class="btn btn-danger btn-lg px-5 rounded-pill shadow-sm">
+                            <i class="fa-solid fa-stop me-2"></i> Check Out
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success mt-4 shadow-sm rounded-3">
+                            <i class="fa-solid fa-circle-check me-2"></i>
+                            You have successfully checked out today.
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

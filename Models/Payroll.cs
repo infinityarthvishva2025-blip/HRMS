@@ -1,54 +1,26 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-
-namespace HRMS.Models
+﻿public class Payroll
 {
-    public class Payroll
-    {
-        [Key]
-        public int Id { get; set; }
-
-        // ================= EMPLOYEE DETAILS =================
-        [Required]
-        public string EmployeeCode { get; set; }
-
-        [Required]
-        public string EmployeeName { get; set; }
-
-        // Stored as "04-2025"
-        [Required]
-        public string MonthYear { get; set; }
-
-        // ================= ATTENDANCE DETAILS =================
-        public int TotalWorkingDays { get; set; }
-        public int DaysAttended { get; set; }
-        public int TotalLeavesTaken { get; set; }
-
-        public int LateMarks { get; set; }
-        public int LateMarksOver3 { get; set; }
-
-        // EXCEL shows float values like 2.5, 3.5 etc
-        public decimal LateDeductionDays { get; set; }
-
-        public decimal PaidDays { get; set; }
-
-        // ================= SALARY + ALLOWANCES =================
-        public decimal BaseSalary { get; set; }
-
-        public decimal PerformanceAllowance { get; set; }
-        public decimal OtherAllowances { get; set; }
-        public decimal PetrolAllowance { get; set; }
-        public decimal Reimbursement { get; set; }
-
-        // ================= DEDUCTIONS =================
-        public decimal ProfessionalTax { get; set; }
-
-        public decimal TotalEarning { get; set; }        // gross before deductions
-        public decimal TotalDeductions { get; set; }
-
-        public decimal NetPay { get; set; }
-
-        // ================= SYSTEM FIELDS =================
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
-    }
+    public int Id { get; set; }
+    public string emp_code { get; set; }
+    public string name { get; set; }
+    public int? working_days { get; set; }
+    public decimal? leaves_taken { get; set; }
+    public int? late_marks { get; set; }
+    public int? late_gt_3 { get; set; }
+    public decimal? late_deduction_days { get; set; }
+    public decimal? day_presented { get; set; }
+    public decimal? base_salary { get; set; }
+    public decimal? perf_allowance { get; set; }
+    public decimal? other_allowance { get; set; }
+    public decimal? petrol_allowance { get; set; }
+    public decimal? reimbursement { get; set; }
+    public decimal? employee_ctc { get; set; }
+    public decimal? gross_salary { get; set; }
+    public decimal? prof_tax { get; set; }
+    public decimal? paid_days { get; set; }
+    public decimal? per_day_salary { get; set; }
+    public decimal? net_salary { get; set; }
+    public decimal? total_deduction { get; set; }
+    public decimal? total_pay { get; set; }
+    public string month { get; set; }
 }

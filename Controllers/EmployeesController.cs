@@ -1,11 +1,14 @@
 ﻿using HRMS.Data;
 using HRMS.Models;
 using HRMS.Models.ViewModels;
+using HRMS.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +16,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using OfficeOpenXml;
 
 namespace HRMS.Controllers
 {
@@ -25,7 +27,7 @@ namespace HRMS.Controllers
         private static readonly Dictionary<string, List<string>> DepartmentPositions =
              new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
         {
-            { "IT",        new List<string> { "Developer", "Senior Developer", "Tester", "Team Lead" } },
+            { "IT",        new List<string> { "Software Developer", "Senior Developer", "Tester", "Team Lead" } },
             { "HR",        new List<string> { "HR Executive", "HR Manager" } },
             { "Finance",   new List<string> { "Accountant", "Finance Manager" } },
             { "Marketing", new List<string> { "Marketing Executive", "Marketing Manager" } },
@@ -171,183 +173,202 @@ namespace HRMS.Controllers
         // ================================
         // EDIT (GET)
         // ================================
-        public async Task<IActionResult> Edit(int id)
+        public IActionResult Edit(int id)
         {
-            var employee = await _context.Employees.FindAsync(id);
+            var emp = _context.Employees.Find(id);
+            if (emp == null) return NotFound();
 
-            if (employee == null)
-                return NotFound();
+            var vm = new EmployeeEditVm
+            {
+                Id = emp.Id,
+                EmployeeCode = emp.EmployeeCode,
+                Name = emp.Name,
+                Email = emp.Email,
+                MobileNumber = emp.MobileNumber,
+                AlternateMobileNumber = emp.AlternateMobileNumber,
+                Gender = emp.Gender,
+                FatherName = emp.FatherName,
+                MotherName = emp.MotherName,
+                DOB_Date = emp.DOB_Date,
+                MaritalStatus = emp.MaritalStatus,
+                Address = emp.Address,
+                PermanentAddress = emp.PermanentAddress,
+                ExperienceType = emp.ExperienceType,
+                TotalExperienceYears = emp.TotalExperienceYears,
+                LastCompanyName = emp.LastCompanyName,
+                HasDisease = emp.HasDisease,
+                DiseaseName = emp.DiseaseName,
+                DiseaseSince = emp.DiseaseSince,
+                MedicinesRequired = emp.MedicinesRequired,
+                DoctorName = emp.DoctorName,
+                DoctorContact = emp.DoctorContact,
+               
+                JoiningDate = emp.JoiningDate,
+                Department = emp.Department,
+                Position = emp.Position,
+                Role = emp.Role,
+                Salary = emp.Salary,
+                HSCPercent = emp.HSCPercent,
+                GraduationCourse = emp.GraduationCourse,
+                GraduationPercent = emp.GraduationPercent,
+                PostGraduationCourse = emp.PostGraduationCourse,
+                PostGraduationPercent = emp.PostGraduationPercent,
+                AadhaarNumber = emp.AadhaarNumber,
+                PanNumber = emp.PanNumber,
+                AccountHolderName = emp.AccountHolderName,
+                BankName = emp.BankName,
+                AccountNumber = emp.AccountNumber,
+                IFSC = emp.IFSC,
+                Branch = emp.Branch,
+                EmergencyContactName = emp.EmergencyContactName,
+                EmergencyContactRelationship = emp.EmergencyContactRelationship,
+                EmergencyContactMobile = emp.EmergencyContactMobile,
+                EmergencyContactAddress = emp.EmergencyContactAddress,
 
-            return View(employee);
+                ProfileImagePath = emp.ProfileImagePath,
+                ExperienceCertificateFilePath = emp.ExperienceCertificateFilePath,
+                MedicalDocumentFilePath = emp.MedicalDocumentFilePath,
+                TenthMarksheetFilePath = emp.TenthMarksheetFilePath,
+                TwelfthMarksheetFilePath = emp.TwelfthMarksheetFilePath,
+                GraduationMarksheetFilePath = emp.GraduationMarksheetFilePath,
+                PostGraduationMarksheetFilePath = emp.PostGraduationMarksheetFilePath,
+                AadhaarFilePath = emp.AadhaarFilePath,
+                PanFilePath = emp.PanFilePath,
+                PassbookFilePath = emp.PassbookFilePath
+            };
+
+            return View(vm);
         }
 
 
+            
         // ================================
         // EDIT (POST)
-        // Supports updating new education docs
         // ================================
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Employee model,
-     IFormFile ProfilePhoto,
-     IFormFile AadhaarFile,
-     IFormFile PanFile,
-     IFormFile PassbookFile,
-     IFormFile MedicalDocumentFile,
-     IFormFile TenthMarksheetFile,
-     IFormFile TwelfthMarksheetFile,
-     IFormFile GraduationMarksheetFile,
-     IFormFile PostGraduationMarksheetFile,
-     List<IFormFile> ExperienceCertificateFiles)
+        public async Task<IActionResult> Edit(EmployeeEditVm model)
         {
-            if (!ModelState.IsValid)
-                return View(model);
-
-            var emp = await _context.Employees.FindAsync(id);
+            var emp = _context.Employees.FirstOrDefault(x => x.Id == model.Id);
             if (emp == null)
                 return NotFound();
 
-            string empFolder = Path.Combine(_env.WebRootPath, "uploads/employees", emp.EmployeeCode);
-            Directory.CreateDirectory(empFolder);
+            // BASIC
+            emp.Name = model.Name ?? emp.Name;
+            emp.Email = model.Email ?? emp.Email;
+            emp.MobileNumber = model.MobileNumber ?? emp.MobileNumber;
+            emp.AlternateMobileNumber = model.AlternateMobileNumber ?? emp.AlternateMobileNumber;
 
-            // *************** FILE UPLOAD HANDLING ***************
+            // PASSWORD (only if entered)
+            if (!string.IsNullOrWhiteSpace(model.Password))
+                if (!string.IsNullOrEmpty(model.Password))
+                {
+                    emp.Password = model.Password;   // store plain text
+                }
 
-            emp.ProfileImagePath =
-                await SaveEmployeeFile(ProfilePhoto, empFolder, "profile", emp.ProfileImagePath);
 
-            emp.AadhaarFilePath =
-                await SaveEmployeeFile(AadhaarFile, empFolder, "aadhaar", emp.AadhaarFilePath);
+            // PERSONAL
+            emp.Gender = model.Gender ?? emp.Gender;
+            emp.FatherName = model.FatherName ?? emp.FatherName;
+            emp.MotherName = model.MotherName ?? emp.MotherName;
+            emp.DOB_Date = model.DOB_Date ?? emp.DOB_Date;
+            emp.MaritalStatus = model.MaritalStatus ?? emp.MaritalStatus;
+            emp.Address = model.Address ?? emp.Address;
+            emp.PermanentAddress = model.PermanentAddress ?? emp.PermanentAddress;
 
-            emp.PanFilePath =
-                await SaveEmployeeFile(PanFile, empFolder, "pan", emp.PanFilePath);
+            // EXPERIENCE
+            emp.ExperienceType = model.ExperienceType ?? emp.ExperienceType;
+            emp.TotalExperienceYears = model.TotalExperienceYears ?? emp.TotalExperienceYears;
+            emp.LastCompanyName = model.LastCompanyName ?? emp.LastCompanyName;
 
-            emp.PassbookFilePath =
-                await SaveEmployeeFile(PassbookFile, empFolder, "passbook", emp.PassbookFilePath);
+            // HEALTH
+            emp.HasDisease = model.HasDisease ?? emp.HasDisease;
+            emp.DiseaseName = model.DiseaseName ?? emp.DiseaseName;
+            emp.DiseaseSince = model.DiseaseSince ?? emp.DiseaseSince;
+            emp.MedicinesRequired = model.MedicinesRequired ?? emp.MedicinesRequired;
+            emp.DoctorName = model.DoctorName ?? emp.DoctorName;
+            emp.DoctorContact = model.DoctorContact ?? emp.DoctorContact;
+            
 
-            emp.MedicalDocumentFilePath =
-                await SaveEmployeeFile(MedicalDocumentFile, empFolder, "medical_document", emp.MedicalDocumentFilePath);
+            // JOB
+            emp.JoiningDate = model.JoiningDate ?? emp.JoiningDate;
+            emp.Department = model.Department ?? emp.Department;
+            emp.Position = model.Position ?? emp.Position;
+            emp.Role = model.Role ?? emp.Role;
+            emp.Salary = model.Salary ?? emp.Salary;
 
-            emp.TenthMarksheetFilePath =
-                await SaveEmployeeFile(TenthMarksheetFile, empFolder, "10th", emp.TenthMarksheetFilePath);
+            // EDUCATION
+            emp.HSCPercent = model.HSCPercent ?? emp.HSCPercent;
+            emp.GraduationCourse = model.GraduationCourse ?? emp.GraduationCourse;
+            emp.GraduationPercent = model.GraduationPercent ?? emp.GraduationPercent;
+            emp.PostGraduationCourse = model.PostGraduationCourse ?? emp.PostGraduationCourse;
+            emp.PostGraduationPercent = model.PostGraduationPercent ?? emp.PostGraduationPercent;
 
-            emp.TwelfthMarksheetFilePath =
-                await SaveEmployeeFile(TwelfthMarksheetFile, empFolder, "12th", emp.TwelfthMarksheetFilePath);
+            // IDs
+            emp.AadhaarNumber = model.AadhaarNumber ?? emp.AadhaarNumber;
+            emp.PanNumber = model.PanNumber ?? emp.PanNumber;
 
-            emp.GraduationMarksheetFilePath =
-                await SaveEmployeeFile(GraduationMarksheetFile, empFolder, "grad", emp.GraduationMarksheetFilePath);
+            // BANK
+            emp.AccountHolderName = model.AccountHolderName ?? emp.AccountHolderName;
+            emp.BankName = model.BankName ?? emp.BankName;
+            emp.AccountNumber = model.AccountNumber ?? emp.AccountNumber;
+            emp.IFSC = model.IFSC ?? emp.IFSC;
+            emp.Branch = model.Branch ?? emp.Branch;
+            // Emergency Contact
+            emp.EmergencyContactName = model.EmergencyContactName ?? emp.EmergencyContactName;
+            emp.EmergencyContactRelationship = model.EmergencyContactRelationship ?? emp.EmergencyContactRelationship;
+            emp.EmergencyContactMobile = model.EmergencyContactMobile ?? emp.EmergencyContactMobile;
+            emp.EmergencyContactAddress = model.EmergencyContactAddress ?? emp.EmergencyContactAddress;
 
-            emp.PostGraduationMarksheetFilePath =
-                await SaveEmployeeFile(PostGraduationMarksheetFile, empFolder, "pg", emp.PostGraduationMarksheetFilePath);
 
-            // *************** EXPERIENCE CERTIFICATES (MULTIPLE FILES) ***************
-            if (ExperienceCertificateFiles != null && ExperienceCertificateFiles.Count > 0)
+            // FILE UPLOADS
+            emp.ProfileImagePath = await SaveEmployeeFile(model.ProfilePhoto, emp.EmployeeCode, "Profile", emp.ProfileImagePath);
+            emp.AadhaarFilePath = await SaveEmployeeFile(model.AadhaarFile, emp.EmployeeCode, "Aadhaar", emp.AadhaarFilePath);
+            emp.PanFilePath = await SaveEmployeeFile(model.PanFile, emp.EmployeeCode, "Pan", emp.PanFilePath);
+            emp.PassbookFilePath = await SaveEmployeeFile(model.PassbookFile, emp.EmployeeCode, "Passbook", emp.PassbookFilePath);
+            emp.MedicalDocumentFilePath = await SaveEmployeeFile(model.MedicalDocumentFile, emp.EmployeeCode, "Medical", emp.MedicalDocumentFilePath);
+
+            emp.TenthMarksheetFilePath = await SaveEmployeeFile(model.TenthMarksheetFile, emp.EmployeeCode, "Tenth", emp.TenthMarksheetFilePath);
+            emp.TwelfthMarksheetFilePath = await SaveEmployeeFile(model.TwelfthMarksheetFile, emp.EmployeeCode, "Twelfth", emp.TwelfthMarksheetFilePath);
+            emp.GraduationMarksheetFilePath = await SaveEmployeeFile(model.GraduationMarksheetFile, emp.EmployeeCode, "Graduation", emp.GraduationMarksheetFilePath);
+            emp.PostGraduationMarksheetFilePath = await SaveEmployeeFile(model.PostGraduationMarksheetFile, emp.EmployeeCode, "PG", emp.PostGraduationMarksheetFilePath);
+
+            //EMERGENCY DETAILS
+
+           
+
+
+
+            // MULTIPLE EXPERIENCE FILES
+            if (model.ExperienceCertificateFiles != null && model.ExperienceCertificateFiles.Count > 0)
             {
-                List<string> uploadedFiles = new List<string>();
+                List<string> certFiles = new();
 
-                foreach (var file in ExperienceCertificateFiles)
+                foreach (var file in model.ExperienceCertificateFiles)
                 {
-                    if (file != null && file.Length > 0)
-                    {
-                        var ext = Path.GetExtension(file.FileName);
-                        var fileName = $"exp_{Guid.NewGuid()}{ext}";
-                        var filePath = Path.Combine(empFolder, fileName);
-
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(stream);
-                        }
-
-                        uploadedFiles.Add(fileName);
-                    }
+                    var saved = await SaveEmployeeFile(file, emp.EmployeeCode, "Experience", null);
+                    certFiles.Add(saved);
                 }
 
-                // Append new files with existing
-                if (!string.IsNullOrEmpty(emp.ExperienceCertificateFilePath))
-                {
-                    emp.ExperienceCertificateFilePath += "," + string.Join(",", uploadedFiles);
-                }
-                else
-                {
-                    emp.ExperienceCertificateFilePath = string.Join(",", uploadedFiles);
-                }
+                emp.ExperienceCertificateFilePath = string.Join(",", certFiles);
             }
-
-
-
-            // *************** OPTIONAL PASSWORD UPDATE ***************
-            if (!string.IsNullOrEmpty(model.Password))
-            {
-                emp.Password = model.Password;
-            }
-
-            // *************** UPDATE ALL OTHER NORMAL FIELDS ***************
-            emp.Name = model.Name;
-            emp.Email = model.Email;
-            emp.MobileNumber = model.MobileNumber;
-            emp.AlternateMobileNumber = model.AlternateMobileNumber;
-            emp.Gender = model.Gender;
-            emp.FatherName = model.FatherName;
-            emp.MotherName = model.MotherName;
-            emp.DOB_Date = model.DOB_Date;
-            emp.MaritalStatus = model.MaritalStatus;
-
-            emp.Address = model.Address;
-            emp.PermanentAddress = model.PermanentAddress;
-
-            emp.ExperienceType = model.ExperienceType;
-            emp.TotalExperienceYears = model.TotalExperienceYears;
-            emp.LastCompanyName = model.LastCompanyName;
-
-            emp.HasDisease = model.HasDisease;
-            emp.DiseaseName = model.DiseaseName;
-            emp.DiseaseSince = model.DiseaseSince;
-            emp.MedicinesRequired = model.MedicinesRequired;
-            emp.DoctorName = model.DoctorName;
-            emp.DoctorContact = model.DoctorContact;
-            emp.LastAffectedDate = model.LastAffectedDate;
-
-            emp.JoiningDate = model.JoiningDate;
-            emp.Department = model.Department;
-            emp.Position = model.Position;
-            emp.Role = model.Role;
-            emp.Salary = model.Salary;
-
-            emp.AadhaarNumber = model.AadhaarNumber;
-            emp.PanNumber = model.PanNumber;
-
-            emp.AccountHolderName = model.AccountHolderName;
-            emp.BankName = model.BankName;
-            emp.AccountNumber = model.AccountNumber;
-            emp.IFSC = model.IFSC;
-            emp.Branch = model.Branch;
-
-            emp.EmergencyContactName = model.EmergencyContactName;
-            emp.EmergencyContactRelationship = model.EmergencyContactRelationship;
-            emp.EmergencyContactMobile = model.EmergencyContactMobile;
-            emp.EmergencyContactAddress = model.EmergencyContactAddress;
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Index");
+            TempData["success"] = "Employee details updated successfully!";
+            return RedirectToAction("Edit", new { id = emp.Id });
         }
 
-
-        // ==========================================================
-        // FILE SAVE METHOD
-        // ==========================================================
-        private async Task<string> SaveEmployeeFile(IFormFile file, string folder, string name, string existing = null)
+        // your existing helper
+        private async Task<string> SaveEmployeeFile(IFormFile file, string empCode, string name, string existing = null)
         {
-            // No new file → keep old file
-            if (file == null || file.Length == 0)
-                return existing;
+            if (file == null) return existing;
 
-            // Ensure folder exists
-            if (!Directory.Exists(folder))
-                Directory.CreateDirectory(folder);
+            var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "employees", empCode);
+            if (!Directory.Exists(uploadDir))
+                Directory.CreateDirectory(uploadDir);
 
-            string ext = Path.GetExtension(file.FileName);
-            string fileName = $"{name}{ext}";
-            string filePath = Path.Combine(folder, fileName);
+            var fileName = $"{name}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(uploadDir, fileName);
 
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
@@ -356,7 +377,6 @@ namespace HRMS.Controllers
 
             return fileName;
         }
-
 
 
         // ==========================================================
@@ -553,6 +573,34 @@ public IActionResult ExportExcel()
         }
     }
 
+        [Authorize]
+        public IActionResult MySalarySlip()
+        {
+            var employee = _context.Employees
+                .FirstOrDefault(e => e.Email == User.Identity.Name);
 
-}
+            if (employee == null) return NotFound();
+
+            // Fetch the salary slip PDF path or generate it
+            var slipPath = $"~/uploads/salaryslips/{employee.EmployeeCode}.pdf";
+            if (!System.IO.File.Exists(Path.Combine(_env.WebRootPath, "uploads/salaryslips", $"{employee.EmployeeCode}.pdf")))
+                return View("NoSlip");
+
+            return File(slipPath, "application/pdf");
+        }
+
+        public IActionResult DownloadSalarySlip(int month, int year)
+        {
+            var emp = _context.Employees.FirstOrDefault(e => e.Email == User.Identity.Name);
+            if (emp == null) return NotFound();
+
+            var filePath = Path.Combine(_env.WebRootPath, "SalarySlips", $"{emp.EmployeeCode}_{month}_{year}.pdf");
+            if (!System.IO.File.Exists(filePath))
+                return Content("Salary slip not found for selected month and year.");
+
+            return PhysicalFile(filePath, "application/pdf", $"{emp.EmployeeCode}_{month}_{year}.pdf");
+        }
+
+
+    }
 }

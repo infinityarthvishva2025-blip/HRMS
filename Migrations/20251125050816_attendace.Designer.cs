@@ -12,53 +12,61 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251118122518_RemoveSubCategoryName")]
-    partial class RemoveSubCategoryName
+    [Migration("20251125050816_attendace")]
+    partial class attendace
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.21")
+                .HasAnnotation("ProductVersion", "8.0.22")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("HRMS.Models.Attendance", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("Emp_Code")
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("Emp_Code");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("Date");
 
-                    b.Property<DateTime?>("CheckInTime")
+                    b.Property<DateTime?>("Att_Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("CheckOutTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CheckoutStatus")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("EmployeeId")
+                    b.Property<int?>("Id")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsEarlyLeave")
-                        .HasColumnType("bit");
+                    b.Property<TimeSpan?>("InTime")
+                        .HasColumnType("time")
+                        .HasColumnName("InTime");
 
                     b.Property<bool>("IsLate")
                         .HasColumnType("bit");
 
-                    b.Property<double>("WorkingHours")
-                        .HasColumnType("float");
+                    b.Property<int>("LateMinutes")
+                        .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.Property<TimeSpan?>("OutTime")
+                        .HasColumnType("time")
+                        .HasColumnName("OutTime");
 
-                    b.HasIndex("EmployeeId");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Status");
 
-                    b.ToTable("Attendances");
+                    b.Property<decimal?>("Total_Hours")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("Total_Hours");
+
+                    b.HasKey("Emp_Code", "Date");
+
+                    b.ToTable("Attendances", (string)null);
                 });
 
             modelBuilder.Entity("HRMS.Models.Employee", b =>
@@ -84,6 +92,11 @@ namespace HRMS.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("AlternateMobileNumber")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
                     b.Property<string>("BankName")
                         .HasColumnType("nvarchar(max)");
 
@@ -99,15 +112,45 @@ namespace HRMS.Migrations
                     b.Property<string>("Department")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DiseaseName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DiseaseSince")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DiseaseType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DoctorContact")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DoctorName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<string>("EmergencyContactAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmergencyContactMobile")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmergencyContactName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmergencyContactRelationship")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("EmployeeCode")
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("ExperienceCertificateFilePath")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ExperienceType")
                         .HasColumnType("nvarchar(max)");
@@ -121,11 +164,17 @@ namespace HRMS.Migrations
                     b.Property<string>("GraduationCourse")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("GraduationMarksheetFilePath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal?>("GraduationPercent")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("HSCPercent")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("HasDisease")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("IFSC")
                         .HasColumnType("nvarchar(max)");
@@ -133,13 +182,22 @@ namespace HRMS.Migrations
                     b.Property<DateTime?>("JoiningDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("LastAffectedDate")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("LastCompanyName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ManagerId")
+                        .HasColumnType("int");
 
                     b.Property<string>("MaritalStatus")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("MarksheetFilePath")
+                    b.Property<string>("MedicalDocumentFilePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MedicinesRequired")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MobileNumber")
@@ -169,10 +227,16 @@ namespace HRMS.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("PermanentAddress")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Position")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PostGraduationCourse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PostGraduationMarksheetFilePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("PostGraduationPercent")
@@ -194,8 +258,14 @@ namespace HRMS.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("TenthMarksheetFilePath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("TotalExperienceYears")
                         .HasColumnType("int");
+
+                    b.Property<string>("TwelfthMarksheetFilePath")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -309,8 +379,13 @@ namespace HRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AllowedDepartment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("AllowedEmployeeId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Category")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
@@ -320,12 +395,14 @@ namespace HRMS.Migrations
                     b.Property<bool>("IsExternal")
                         .HasColumnType("bit");
 
+                    b.Property<string>("ThumbnailPath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TitleGroup")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UploadedOn")
@@ -336,6 +413,8 @@ namespace HRMS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AllowedEmployeeId");
 
                     b.ToTable("GurukulVideos");
                 });
@@ -386,6 +465,7 @@ namespace HRMS.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CurrentApproverRole")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DirectorRemark")
@@ -411,6 +491,9 @@ namespace HRMS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("LeaveType")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ManagerRemark")
                         .HasColumnType("nvarchar(max)");
 
@@ -429,6 +512,9 @@ namespace HRMS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ReportingManagerId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
@@ -438,11 +524,17 @@ namespace HRMS.Migrations
                     b.Property<double>("TotalDays")
                         .HasColumnType("float");
 
+                    b.Property<string>("VpRemark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VpStatus")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
 
-                    b.ToTable("Leaves");
+                    b.ToTable("Leaves", (string)null);
                 });
 
             modelBuilder.Entity("HRMS.Models.LeaveApprovalRoute", b =>
@@ -469,7 +561,7 @@ namespace HRMS.Migrations
                     b.ToTable("LeaveApprovalRoutes");
                 });
 
-            modelBuilder.Entity("HRMS.Models.Payroll", b =>
+            modelBuilder.Entity("Payroll", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -477,89 +569,100 @@ namespace HRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BankAccountNumber")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("BankName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<decimal>("BaseSalary")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("base_salary");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateOfJoining")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DaysAttended")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("DeductionForLateMarks")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("DeductionForLeaves")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Designation")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<decimal?>("EmployeeCTC")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("employee_ctc");
 
                     b.Property<string>("EmployeeCode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("emp_code");
 
-                    b.Property<string>("EmployeeName")
+                    b.Property<decimal?>("GrossSalary")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("gross_salary");
+
+                    b.Property<decimal>("LateDeductionDays")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("late_deduction_days");
+
+                    b.Property<int>("LateGt3")
+                        .HasColumnType("int")
+                        .HasColumnName("late_gt_3");
+
+                    b.Property<int>("LateMarks")
+                        .HasColumnType("int")
+                        .HasColumnName("late_marks");
+
+                    b.Property<decimal>("LeavesTaken")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("leaves_taken");
+
+                    b.Property<string>("Month")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("month");
 
-                    b.Property<string>("MonthYear")
+                    b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
 
-                    b.Property<decimal>("NetPay")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("NetSalary")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("net_salary");
 
-                    b.Property<decimal>("OtherAllowances")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("OtherAllowance")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("other_allowance");
 
-                    b.Property<string>("PAN")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                    b.Property<decimal>("PaidDays")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("day_presented");
 
-                    b.Property<decimal>("PerformanceAllowance")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("PaidDaysDecimal")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("paid_days");
 
-                    b.Property<decimal>("ProfessionalTax")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("PerDaySalary")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("per_day_salary");
 
-                    b.Property<decimal>("TotalDeductions")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("PerfAllowance")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("perf_allowance");
 
-                    b.Property<decimal>("TotalEarning")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("PetrolAllowance")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("petrol_allowance");
 
-                    b.Property<int>("TotalLeavesTaken")
-                        .HasColumnType("int");
+                    b.Property<decimal?>("ProfTax")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("prof_tax");
 
-                    b.Property<int>("TotalWorkingDays")
-                        .HasColumnType("int");
+                    b.Property<decimal?>("Reimbursement")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("reimbursement");
+
+                    b.Property<decimal?>("TotalDeduction")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("total_deduction");
+
+                    b.Property<decimal?>("TotalPay")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("total_pay");
+
+                    b.Property<int>("WorkingDays")
+                        .HasColumnType("int")
+                        .HasColumnName("working_days");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Payrolls");
-                });
-
-            modelBuilder.Entity("HRMS.Models.Attendance", b =>
-                {
-                    b.HasOne("HRMS.Models.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
+                    b.ToTable("Payroll");
                 });
 
             modelBuilder.Entity("HRMS.Models.Expenses", b =>
@@ -590,6 +693,15 @@ namespace HRMS.Migrations
                     b.Navigation("Employee");
 
                     b.Navigation("Video");
+                });
+
+            modelBuilder.Entity("HRMS.Models.GurukulVideo", b =>
+                {
+                    b.HasOne("HRMS.Models.Employee", "AllowedEmployee")
+                        .WithMany()
+                        .HasForeignKey("AllowedEmployeeId");
+
+                    b.Navigation("AllowedEmployee");
                 });
 
             modelBuilder.Entity("HRMS.Models.Leave", b =>

@@ -278,11 +278,7 @@
                         <span asp-validation-for="DoctorContact" class="text-danger"></span>
                     </div>
 
-                    <div class="col-md-4">
-                        <label>Last Time You Were Affected</label>
-                        <input asp-for="LastAffectedDate" type="date" class="form-control" />
-                        <span asp-validation-for="LastAffectedDate" class="text-danger"></span>
-                    </div>
+                 
 
                     <div class="col-md-6">
                         <label>Medical Document (PDF/Image) (Optional)</label>
@@ -603,17 +599,17 @@
                 : "";
         }
 
-        // Experience show/hide
-        const expType = document.getElementById("ExperienceType");
-        const expSection = document.getElementById("experience-section");
+            // Experience show/hide
+            const expType = document.getElementById("ExperienceType");
+            const expSection = document.getElementById("experience-section");
 
-        expType.addEventListener("change", () => {
-            if (expType.value === "Experienced") {
-                expSection.classList.remove("d-none");
-            } else {
-                expSection.classList.add("d-none");
-            }
-        });
+            expType.addEventListener("change", () => {
+                if (expType.value === "Experienced") {
+                    expSection.classList.remove("d-none");
+                } else {
+                    expSection.classList.add("d-none");
+                }
+            });
 
         // Show/hide disease section based on dropdown
         const diseaseDropdown = document.getElementById("HasDisease");
@@ -680,6 +676,14 @@
         currentAddress.addEventListener("input", function () {
             if (sameAddressCheckbox.checked) {
                 permanentAddress.value = currentAddress.value;
+            }
+        });
+
+
+        //FOR AUTO-CAPITAL
+          document.addEventListener("input", function (e) {
+            if (e.target.tagName === "INPUT" && e.target.type === "text") {
+                e.target.value = e.target.value.toUpperCase();
             }
         });
     </script>

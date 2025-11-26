@@ -4,24 +4,22 @@ namespace HRMS.Models.ViewModels
 {
     public class PayrollSummaryVm
     {
+        // Employee
         public string EmpCode { get; set; }
         public string EmpName { get; set; }
 
+        // Period
         public int Year { get; set; }
         public int Month { get; set; }
 
+        // Attendance
         public int TotalDaysInMonth { get; set; }
-        public int PresentFullDays { get; set; }
-        public int PresentHalfDays { get; set; }
-        public int WeeklyOffDays { get; set; }
-        public int AbsentDays { get; set; }
-
+        public decimal AbsentDays { get; set; }
         public int LateMarks { get; set; }
-        public int LateMarksOver3 { get; set; }
         public decimal LateDeductionDays { get; set; }
-
         public decimal PaidDays { get; set; }
 
+        // Salary Structure
         public decimal MonthlySalary { get; set; }
         public decimal PerDaySalary { get; set; }
         public decimal GrossSalary { get; set; }
@@ -31,9 +29,26 @@ namespace HRMS.Models.ViewModels
         public decimal PetrolAllowance { get; set; }
         public decimal Reimbursement { get; set; }
 
+        // Deductions
         public decimal ProfessionalTax { get; set; }
         public decimal TotalDeductions { get; set; }
 
+        // Final Salary
         public decimal NetSalary { get; set; }
+        public decimal TotalPay { get; set; }
+
+        // Optional additional items to avoid errors
+        public int PresentHalfDays { get; set; }
+        public int WeeklyOffDays { get; set; }
+
+        // Bank Details
+        public string BankName { get; set; }
+        public string AccountNumber { get; set; }
+        public string IFSCCode { get; set; }
+        public string BankBranch { get; set; }
+
+        // Job details
+        public string Department { get; set; }
+        public string Designation { get; set; }
     }
 }
