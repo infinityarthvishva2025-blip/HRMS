@@ -10,7 +10,6 @@
 }
 
 <style>
-
     .page-title {
         font-size: 28px;
         font-weight: 800;
@@ -32,8 +31,6 @@
         border-radius: 12px;
         border: 1px solid #e3e6fb;
         margin-bottom: 20px;
-        font-size: 15px;
-        line-height: 22px;
     }
 
     .custom-select {
@@ -41,91 +38,99 @@
         padding: 10px 14px;
         border: 1px solid #cfd3ef;
         background: #f8f9ff;
-        font-size: 15px;
     }
 
     .video-wrapper {
         border-radius: 16px;
         overflow: hidden;
         box-shadow: 0 8px 22px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
     }
 
-    .status-wrap {
-        margin-top: 15px;
+    .controls-bar {
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 12px;
+        background: #1a237e;
+        padding: 10px 15px;
+        border-bottom-left-radius: 16px;
+        border-bottom-right-radius: 16px;
     }
 
-    .btn-closevideo:disabled {
-        background-color: #8c8c8c !important;
-        border-color: #8c8c8c !important;
-        cursor: not-allowed;
+    .btn-control {
+        background: green;
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
     }
 
     .btn-closevideo {
-        border-radius: 8px;
-        padding: 8px 18px;
-        font-weight: 600;
-        background: #3949ab;
-        border: none;
+        background: red;
         color: white;
+        border-radius: 8px;
+        padding: 8px 16px;
+        border: none;
+        font-weight: bold;
     }
 
+    video {
+        pointer-events: auto !important;
+    }
 </style>
 
 
 <div class="container mt-3">
-
     <div class="video-card">
 
         <h2 class="page-title">@Model.Title</h2>
 
         @if (!string.IsNullOrEmpty(Model.Description))
         {
-            <div class="description-box">
-                @Model.Description
-            </div>
+            <div class="description-box">@Model.Description</div>
         }
 
+        <!-- Video Selector -->
         <label class="fw-semibold">Select Video</label>
         <select class="form-control custom-select mb-3"
                 onchange="location.href='/Gurukul/Details/' + this.value;">
-
             @foreach (var v in videoList)
             {
-                var isSelected = v.Id == Model.Id ? "selected" : "";
-
-                <option value="@v.Id" selected="@isSelected">
-                    @v.Title
-                </option>
+                <option value="@v.Id" selected="@(v.Id == Model.Id)"> @v.Title </option>
             }
-
         </select>
 
+        <!-- Video Player -->
         <div class="video-wrapper">
-            @if (Model.IsExternal)
+
+            @if (!Model.IsExternal)
             {
-                <div style="position:relative;padding-bottom:56.25%;height:0;">
-                    <iframe id="gurukulIframe"
-                            src="@Model.VideoPath"
-                            style="position:absolute;top:0;left:0;width:100%;height:100%;"
-                            frameborder="0"
-                            allowfullscreen>
-                    </iframe>
-                </div>
+                <video id="gurukulPlayer" width="100%" height="420">
+                    <source src="@Model.VideoPath" type="video/mp4" />
+                </video>
             }
             else
             {
-                <video id="gurukulPlayer" width="100%" controls style="border-radius: 12px;">
-                    <source src="@Model.VideoPath" type="video/mp4" />
-                    Your browser does not support video playback.
-                </video>
+                <iframe id="gurukulIframe"
+                        src="@Model.VideoPath"
+                        width="100%" height="420"
+                        style="border:0;"></iframe>
             }
+
+            <div class="controls-bar">
+                <button class="btn-control" id="playPauseBtn">Play</button>
+                <span id="timeLabel" style="color:white;font-weight:bold;">00:00 / 00:00</span>
+
+                <button class="btn-control" id="fullscreenBtn">Fullscreen</button>
+
+                <button class="btn-control" id="nextBtn">Next ▶</button>
+
+                <button class="btn-closevideo" id="closeBtn">Close</button>
+            </div>
         </div>
 
-        <div class="status-wrap">
+        <div class="mt-3">
             <span id="statusBadge">
                 @if (prog?.IsCompleted == true)
                 {
@@ -136,80 +141,113 @@
                     <span class="badge bg-warning text-dark px-3 py-2">Pending</span>
                 }
             </span>
-
-            <button id="closeBtn" class="btn-closevideo" disabled>
-                Close Video
-            </button>
         </div>
 
     </div>
-
 </div>
 
 
-
-<!-- ===================== SCRIPT ===================== -->
 <script>
 
-    let completed = @((prog != null && prog.IsCompleted).ToString().ToLower());
     const closeBtn = document.getElementById("closeBtn");
+    const playBtn = document.getElementById("playPauseBtn");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const timeLabel = document.getElementById("timeLabel");
 
-    if (completed) closeBtn.disabled = false;
+    const video = document.getElementById("gurukulPlayer");
+    const iframe = document.getElementById("gurukulIframe");
 
+    const completed = @((prog != null && prog.IsCompleted).ToString().ToLower());
+
+
+    /* ----------------------- NEXT BUTTON LOGIC ----------------------- */
+    const videoList = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                videoList.Select((v, idx) => new { v.Id, Index = idx })
+        ));
+
+    let currentVideo = videoList.find(x => x.Id === @Model.Id);
+
+    nextBtn.onclick = function () {
+        if (!currentVideo) return;
+
+        let nextIndex = currentVideo.Index + 1;
+
+        if (nextIndex < videoList.length) {
+            window.location.href = "/Gurukul/Details/" + videoList[nextIndex].Id;
+        }
+    };
+
+
+    /* ----------------------- MARK COMPLETE ----------------------- */
     function markComplete() {
         fetch('@Url.Action("MarkComplete", "Gurukul")', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'videoId=@Model.Id'
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "videoId=@Model.Id"
         })
         .then(r => r.json())
         .then(j => {
             if (j.success) {
                 document.getElementById("statusBadge").innerHTML =
                     '<span class="badge bg-success px-3 py-2">Completed</span>';
-                closeBtn.disabled = false;
             }
         });
     }
 
-    /* =====================================================
-       🛑 BLOCK FORWARDING (Prevent Video Skipping)
-       ===================================================== */
-    const video = document.getElementById("gurukulPlayer");
 
+    /* ---------------- CUSTOM VIDEO PLAYER (INTERNAL MP4) ---------------- */
     if (video) {
+
+        video.controls = false;
         let lastTime = 0;
 
-        video.addEventListener("timeupdate", function () {
-            if (video.currentTime - lastTime > 1.5) {
-                video.currentTime = lastTime;   // block forward
+        playBtn.onclick = () => {
+            if (video.paused) {
+                video.play();
+                playBtn.innerText = "Pause";
+            } else {
+                video.pause();
+                playBtn.innerText = "Play";
             }
+        };
+
+        video.addEventListener("timeupdate", function () {
+            timeLabel.innerText =
+                format(video.currentTime) + " / " + format(video.duration);
+
+            // Prevent forward skipping
+            if (video.currentTime - lastTime > 1.3) {
+                video.currentTime = lastTime;
+            }
+
             lastTime = video.currentTime;
         });
 
-        video.addEventListener("ended", markComplete);
+        video.onended = markComplete;
     }
 
-    /* =====================================================
-       EXTERNAL VIDEO AUTO-COMPLETE (5 sec fallback)
-       ===================================================== */
-    const iframe = document.getElementById("gurukulIframe");
 
-    if (iframe) {
-        iframe.addEventListener("load", function () {
-            if (!completed) {
-                setTimeout(() => markComplete(), 5000);
-            }
-        });
+    /* ---------------- FULLSCREEN BUTTON ---------------- */
+    fullscreenBtn.onclick = () => {
+        if (video) video.requestFullscreen();
+        if (iframe) iframe.requestFullscreen();
+    };
+
+
+    /* ---------------- TIME FORMAT ---------------- */
+    function format(t) {
+        let m = Math.floor(t / 60);
+        let s = Math.floor(t % 60);
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
 
-    /* =====================================================
-       CLOSE BUTTON LOGIC
-       ===================================================== */
-    closeBtn.addEventListener("click", function () {
+
+    /* ---------------- CLOSE BUTTON (NO COMPLETE) ---------------- */
+    closeBtn.onclick = function () {
         if (video) video.pause();
         if (iframe) iframe.src = "";
         window.location.href = '@backUrl';
-    });
+    };
 
 </script>
