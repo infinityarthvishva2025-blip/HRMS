@@ -9,20 +9,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Infinity HRMS</title>
 
+    <!-- Bootstrap + Font Awesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
-        /* --- SAME STYLES YOU PROVIDED --- */
-
+        /* ---------- GLOBAL ---------- */
         body {
             margin: 0;
             font-family: "Segoe UI", sans-serif;
             background: #f3f4f7;
         }
 
+        /* ---------- SIDEBAR ---------- */
         .sidebar {
             width: 250px;
             height: 100vh;
@@ -31,11 +31,11 @@
             top: 0;
             background: #ffffff;
             border-right: 1px solid #e5e7eb;
-            box-shadow: 4px 0 20px rgba(0,0,0,0.05);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
             padding: 25px 0;
             border-radius: 0 20px 20px 0;
             transition: 0.35s ease;
-            z-index: 1000;
+            z-index: 1050;
         }
 
             .sidebar.collapsed {
@@ -98,7 +98,7 @@
             }
 
             .menu-item i {
-                font-size: 22px;
+                font-size: 20px;
                 margin-right: 14px;
             }
 
@@ -130,6 +130,7 @@
             border-color: #fecaca;
         }
 
+        /* ---------- PAGE CONTENT ---------- */
         #page-content {
             margin-left: 250px;
             transition: 0.35s;
@@ -141,14 +142,96 @@
 
         .navbar {
             background: #ffffff;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
             border-bottom: 1px solid #e5e7eb;
         }
-    </style>
 
+            .navbar button {
+                background: none;
+                border: none;
+                font-size: 22px;
+                cursor: pointer;
+                color: #374151;
+            }
+
+            .navbar span {
+                font-size: 16px;
+                color: #1f2937;
+            }
+
+        /* ---------- MOBILE SIDEBAR ---------- */
+        @@media (max-width: 992px) {
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                top: 0;
+                height: 100%;
+                z-index: 2000;
+                border-radius: 0;
+                box-shadow: 6px 0 18px rgba(0, 0, 0, 0.15);
+            }
+
+                .sidebar.active {
+                    left: 0;
+                }
+
+            #page-content {
+                margin-left: 0 !important;
+            }
+
+            .navbar button {
+                font-size: 24px;
+            }
+
+            .sidebar.collapsed {
+                width: 250px;
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1500;
+                display: none;
+            }
+
+                .sidebar-overlay.active {
+                    display: block;
+                }
+        }
+
+        /* ---------- SMALL DEVICES ---------- */
+        @@media (max-width: 576px) {
+            .sidebar-header h4 {
+                font-size: 16px;
+            }
+
+            .menu-item {
+                font-size: 14px;
+                height: 44px;
+            }
+
+                .menu-item i {
+                    font-size: 18px;
+                    margin-right: 10px;
+                }
+
+            .navbar span {
+                font-size: 14px;
+            }
+
+            .container-fluid {
+                padding: 1rem !important;
+            }
+        }
+
+    </style>
 </head>
 
 <body>
+
+    <!-- Sidebar Overlay for Mobile -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
     <!-- HR SIDEBAR -->
     <div id="sidebar-wrapper" class="sidebar">
@@ -171,26 +254,21 @@
             <a asp-controller="Leave" asp-action="LeaveReport" class="menu-item">
                 <i class="fa-solid fa-plane-departure"></i><span>Leave Management</span>
             </a>
-            
             <a asp-controller="Leave" asp-action="ApprovalDashboard" class="menu-item">
-                <i class="fa-solid fa-check-to-slot"></i>
-                <span>Leave Approvals</span>
+                <i class="fa-solid fa-check-to-slot"></i><span>Leave Approvals</span>
             </a>
             <a asp-controller="Payroll" asp-action="Monthly" class="menu-item">
                 <i class="fa-solid fa-wallet"></i><span>Payroll</span>
             </a>
-          
             <a asp-controller="Expenses" asp-action="HRList" class="menu-item">
                 <i class="fa-solid fa-laptop"></i><span>Expenses</span>
             </a>
             <a asp-controller="Gurukul" asp-action="HRList" class="menu-item">
-                <i class="fa-solid fa-graduation-cap"></i>
-                <span>Gurukul (Admin)</span>
+                <i class="fa-solid fa-graduation-cap"></i><span>Gurukul (Admin)</span>
             </a>
             <a asp-controller="Reports" asp-action="Index" class="menu-item">
                 <i class="fa-solid fa-file-alt"></i><span>Reports</span>
             </a>
-          
 
             <div class="logout">
                 <a asp-controller="Account" asp-action="Logout" class="menu-item">
@@ -198,15 +276,14 @@
                     <span>Logout</span>
                 </a>
             </div>
-
         </div>
     </div>
 
     <!-- MAIN CONTENT -->
     <div id="page-content">
-        <nav class="navbar px-4 py-3">
+        <nav class="navbar px-4 py-3 d-flex align-items-center">
             <button id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
-            <span class="ms-auto fw-semibold ">Infinity Arthvishva</span>
+            <span class="ms-auto fw-semibold">Infinity Arthvishva</span>
         </nav>
 
         <div class="container-fluid p-4">
@@ -215,8 +292,32 @@
     </div>
 
     <script>
-        document.getElementById("sidebarToggle").addEventListener("click", () => {
-            document.getElementById("sidebar-wrapper").classList.toggle("collapsed");
+        const sidebar = document.getElementById("sidebar-wrapper");
+        const sidebarToggle = document.getElementById("sidebarToggle");
+        const sidebarOverlay = document.getElementById("sidebar-overlay");
+
+        // Desktop collapse toggle
+        sidebarToggle.addEventListener("click", () => {
+            if (window.innerWidth <= 992) {
+                sidebar.classList.toggle("active");
+                sidebarOverlay.classList.toggle("active");
+            } else {
+                sidebar.classList.toggle("collapsed");
+            }
+        });
+
+        // Close sidebar when overlay clicked
+        sidebarOverlay.addEventListener("click", () => {
+            sidebar.classList.remove("active");
+            sidebarOverlay.classList.remove("active");
+        });
+
+        // Auto close sidebar on resize
+        window.addEventListener("resize", () => {
+            if (window.innerWidth > 992) {
+                sidebar.classList.remove("active");
+                sidebarOverlay.classList.remove("active");
+            }
         });
     </script>
 

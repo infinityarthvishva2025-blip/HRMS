@@ -27,7 +27,7 @@ namespace HRMS.Controllers
         private static readonly Dictionary<string, List<string>> DepartmentPositions =
              new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
         {
-            { "IT",        new List<string> { "Software Developer", "Senior Developer", "Tester", "Team Lead" } },
+            { "IT",        new List<string> { "Software Developer", "Senior Developer", "IT Admin", "Team Lead" } },
             { "HR",        new List<string> { "HR Executive", "HR Manager" } },
             { "Finance",   new List<string> { "Accountant", "Finance Manager" } },
             { "Marketing", new List<string> { "Marketing Executive", "Marketing Manager" } },
@@ -402,7 +402,7 @@ namespace HRMS.Controllers
                 return "IA00001";
 
             int num = int.Parse(last.Substring(2)) + 1;
-            return $"IA{num:0000}";
+            return $"IA{num:00000}";
         }
 
         // ==========================================================

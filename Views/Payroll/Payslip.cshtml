@@ -22,7 +22,11 @@
         </div>
         <div class="col-4 text-center">
             <h2 class="fw-bold text-primary mb-0">Infinity Arthvishva</h2>
-            <div class="text-muted small">Empowering Finance & Innovation</div>
+            <div class="text-muted small mb-1">Empowering Finance & Innovation</div>
+            <!-- Added Month-Year Display -->
+            <div class="salary-month text-secondary fw-semibold">
+                Salary Slip for <span class="text-primary">@monthName @Model.Year</span>
+            </div>
         </div>
         <div class="col-4 d-flex justify-content-end">
             <a asp-action="DownloadSalarySlip"
@@ -162,6 +166,12 @@
 
     .salary-slip-container h2 {
         color: #2F3D88;
+    }
+
+    .salary-month {
+        font-size: 1rem;
+        margin-top: 2px;
+        color: #0E8376;
     }
 
     .section-heading {
