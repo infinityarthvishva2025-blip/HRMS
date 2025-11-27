@@ -19,6 +19,7 @@ namespace HRMS.Models.ViewModels
         public decimal LateDeductionDays { get; set; }
         public decimal PaidDays { get; set; }
         public int TotalSaturdayPaid { get; set; }
+        public decimal OtherDeductions { get; set; }
 
         // Salary Structure
         public decimal MonthlySalary { get; set; }

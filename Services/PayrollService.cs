@@ -17,7 +17,7 @@ namespace HRMS.Services
         }
 
         // ============================
-        // PROFESSIONAL TAX (MAHARASHTRA)
+        // PROFESSIONAL TAX (Maharashtra)
         // ============================
         public decimal CalculatePT(decimal netSalary, string gender, int month)
         {
@@ -33,7 +33,7 @@ namespace HRMS.Services
                     return 0m;
                 return 200m;
             }
-            else   // male
+            else // Male
             {
                 if (netSalary <= 7500)
                     return 0m;
@@ -48,8 +48,7 @@ namespace HRMS.Services
         // ============================
         public PayrollSummaryVm BuildMonthlySummary(string empCode, int year, int month)
         {
-            string monthName = new DateTime(year, month, 1)
-                .ToString("MMMM").ToUpper();
+            string monthName = new DateTime(year, month, 1).ToString("MMMM").ToUpper();
 
             var payroll = _context.Payroll
                 .FirstOrDefault(p =>
@@ -59,36 +58,61 @@ namespace HRMS.Services
             if (payroll == null)
                 return null;
 
-            var emp = _context.Employees
-                .FirstOrDefault(e => e.EmployeeCode == empCode);
+            var emp = _context.Employees.FirstOrDefault(e => e.EmployeeCode == empCode);
 
             // ============================
-            // FETCH ATTENDANCE FOR MONTH
+            // FETCH ATTENDANCE DATA
             // ============================
             var start = new DateTime(year, month, 1);
             var end = start.AddMonths(1).AddDays(-1);
 
             var att = _context.Attendances
-                .Where(a => a.Emp_Code == empCode &&
-                            a.Date >= start &&
-                            a.Date <= end)
+                .Where(a => a.Emp_Code == empCode && a.Date >= start && a.Date <= end)
                 .ToList();
 
-            // ============================
-            // ATTENDANCE RULES
-            // ============================
+            string Clean(string s) => (s ?? "").Trim().ToUpper();
 
-            int fullPresent = att.Count(a => a.Status == "P");
-
-            int halfMorning = att.Count(a => a.Status == "½P");
-            int halfEvening = att.Count(a => a.Status == "P½");
+            // ============================
+            // ATTENDANCE COUNTS
+            // ============================
+            int fullPresent = att.Count(a => Clean(a.Status) == "P");
+            int halfMorning = att.Count(a => Clean(a.Status) == "½P");
+            int halfEvening = att.Count(a => Clean(a.Status) == "P½");
             int totalHalfDays = halfMorning + halfEvening;
 
-            int weekOffPaid = att.Count(a => a.Status == "WO");
-            int saturdayPaid = att.Count(a => a.Status == "WOP");
+            // ✅ Weekly Off (WO / variants) — PAID
+            int weekOffPaid = att.Count(a =>
+                Clean(a.Status) == "WO" ||
+                Clean(a.Status) == "W/O" ||
+                Clean(a.Status) == "WEEKOFF" ||
+                Clean(a.Status) == "WO½P");
 
-            int unpaidLeave = att.Count(a => a.Status == "L"); // PL/CL/SL = unpaid
-            int absent = att.Count(a => a.Status == "A");
+            // ✅ Saturday (WOP / variants) — PAID
+            int saturdayPaid = att.Count(a =>
+                Clean(a.Status) == "WOP" ||
+                Clean(a.Status) == "SATWOP" ||
+                Clean(a.Status) == "SATURDAY" ||
+                Clean(a.Status) == "SAT");
+
+            // Leaves & Absence
+            int unpaidLeave = att.Count(a => Clean(a.Status) == "L");
+            int paidLeave = att.Count(a =>
+                Clean(a.Status) == "PL" ||
+                Clean(a.Status) == "CL" ||
+                Clean(a.Status) == "SL");
+            int absent = att.Count(a => Clean(a.Status) == "A");
+
+            // ============================
+            // LATE MARK DEDUCTION RULE
+            // ============================
+            int totalLateMarks = payroll.late_marks ?? 0;
+            decimal lateDeductionDays = 0m;
+
+            if (totalLateMarks > 3)
+            {
+                int extraLates = totalLateMarks - 3;
+                lateDeductionDays = extraLates * 0.5m; // Each extra late = 0.5 day
+            }
 
             // ============================
             // PAID DAYS CALCULATION
@@ -96,18 +120,41 @@ namespace HRMS.Services
             decimal paidDays =
                 (fullPresent * 1.0m) +
                 (totalHalfDays * 0.5m) +
+                (paidLeave * 1.0m) +
                 (weekOffPaid * 1.0m) +
-                (saturdayPaid * 1.0m) +
-                (unpaidLeave * 0.0m);     // Leave unpaid
-
-            decimal totalAbsent = absent + unpaidLeave;
+                (saturdayPaid * 1.0m) -
+                lateDeductionDays;
 
             // ============================
-            // PROFESSIONAL TAX
+            // ABSENT / LOSS OF PAY DAYS
             // ============================
-            string gender = emp?.Gender ?? "male"; // adjust field name if needed
+            // Only A + unpaid leaves (WO/WOP excluded)
+            decimal totalAbsent = absent + unpaidLeave + lateDeductionDays;
 
-            decimal pt = CalculatePT(payroll.net_salary ?? 0, gender, month);
+            int totalDays = DateTime.DaysInMonth(year, month);
+
+            // ============================
+            // SALARY CALCULATIONS
+            // ============================
+            decimal monthlyBase = payroll.base_salary ?? 0;
+            decimal perDaySalary = monthlyBase / totalDays;
+            decimal grossSalary = perDaySalary * paidDays;
+
+            // Professional Tax
+            string gender = emp?.Gender ?? "male";
+            decimal pt = CalculatePT(grossSalary, gender, month);
+
+            // Deductions
+            decimal otherDeductions = payroll.total_deduction ?? 0;
+            decimal totalDeductions = otherDeductions + pt;
+            decimal netSalary = grossSalary - totalDeductions;
+
+            // ============================
+            // 🔄 AUTO-SYNC Payroll TABLE
+            // ============================
+            payroll.leaves_taken = (decimal)totalAbsent;
+            payroll.day_presented = (decimal)paidDays;
+            _context.SaveChanges();
 
             // ============================
             // BUILD VIEW MODEL
@@ -116,40 +163,44 @@ namespace HRMS.Services
             {
                 EmpCode = payroll.emp_code,
                 EmpName = payroll.name,
-
                 Year = year,
                 Month = month,
 
-                TotalDaysInMonth = payroll.working_days ?? DateTime.DaysInMonth(year, month),
+                // Attendance
+                TotalDaysInMonth = totalDays,
                 AbsentDays = totalAbsent,
                 PresentHalfDays = totalHalfDays,
                 WeeklyOffDays = weekOffPaid,
                 TotalSaturdayPaid = saturdayPaid,
-                LateMarks = payroll.late_marks ?? 0,
-                LateDeductionDays = payroll.late_deduction_days ?? 0,
                 PaidDays = paidDays,
+                LateMarks = totalLateMarks,
+                LateDeductionDays = lateDeductionDays,
 
-                MonthlySalary = payroll.base_salary ?? 0,
-                PerDaySalary = payroll.per_day_salary ?? 0,
-                GrossSalary = payroll.gross_salary ?? 0,
-
+                // Salary
+                MonthlySalary = monthlyBase,
+                PerDaySalary = perDaySalary,
+                GrossSalary = grossSalary,
                 PerformanceAllowance = payroll.perf_allowance ?? 0,
                 OtherAllowances = payroll.other_allowance ?? 0,
                 PetrolAllowance = payroll.petrol_allowance ?? 0,
                 Reimbursement = payroll.reimbursement ?? 0,
 
+                // Deductions
                 ProfessionalTax = pt,
-                TotalDeductions = (payroll.total_deduction ?? 0) + pt,
-                NetSalary = (payroll.gross_salary ?? 0) - ((payroll.total_deduction ?? 0) + pt),
-                TotalPay = payroll.total_pay ?? 0,
+                OtherDeductions = otherDeductions,
+                TotalDeductions = totalDeductions,
+                NetSalary = netSalary,
+                TotalPay = netSalary,
 
+                // Employee Info
+                Department = emp?.Department ?? "-",
+                Designation = emp?.Position ?? "-",
+
+                // Bank Info
                 BankName = emp?.BankName ?? "-",
                 AccountNumber = emp?.AccountNumber ?? "-",
                 IFSCCode = emp?.IFSC ?? "-",
-                BankBranch = emp?.Branch ?? "-",
-
-                Department = emp?.Department ?? "-",
-                Designation = emp?.Position ?? "-"
+                BankBranch = emp?.Branch ?? "-"
             };
         }
 
@@ -158,8 +209,7 @@ namespace HRMS.Services
         // ============================
         public List<PayrollSummaryVm> GetMonthlySummaries(int year, int month)
         {
-            string monthName = new DateTime(year, month, 1)
-                .ToString("MMMM").ToUpper();
+            string monthName = new DateTime(year, month, 1).ToString("MMMM").ToUpper();
 
             var empCodes = _context.Payroll
                 .Where(p => p.month.ToUpper() == monthName)

@@ -9,12 +9,10 @@
 }
 
 <div class="container py-4">
-
     <h2 class="fw-bold text-primary mb-4">Monthly Payroll - @month/@year</h2>
 
-    <!-- Filter Section -->
+    <!-- FILTER -->
     <form method="get" class="row g-3 bg-white shadow-sm p-3 rounded mb-4">
-
         <div class="col-md-2">
             <label class="fw-bold">Year</label>
             <input type="number" name="year" class="form-control" value="@year" min="2000" />
@@ -25,91 +23,126 @@
             <input type="number" name="month" class="form-control" value="@month" min="1" max="12" />
         </div>
 
-        <!-- 🔍 Search -->
         <div class="col-md-3">
             <label class="fw-bold">Search Employee</label>
-            <input type="text"
-                   name="search"
-                   class="form-control"
-                   placeholder="Employee Code or Name"
-                   value="@ViewBag.Search" />
+            <input type="text" name="search" class="form-control" placeholder="Employee Code or Name" value="@ViewBag.Search" />
         </div>
 
         <div class="col-md-2 d-flex align-items-end">
             <button class="btn btn-primary w-100">Search</button>
         </div>
-
     </form>
 
-    <!-- Payroll Table -->
-    <table class="table table-bordered table-striped shadow-sm">
-        <thead class="table-dark text-center align-middle">
-            <tr>
-                <th>Emp Code</th>
-                <th>Name</th>
-                <th>Working Days</th>
-                <th>Half Days</th>
-                <th>WO</th>
-                <th>Sat(WOP)</th>
-                <th>Absent</th>
-                <th>Late Marks</th>
-                <th>Late Deduction</th>
-                <th>Paid Days</th>
-                <th>Base Salary</th>
-                <th>Per Day</th>
-                <th>Gross</th>
-                <th>Deductions</th>
-                <th>Net</th>
-                <th>Payslip</th>
-            </tr>
-        </thead>
+    <!-- PAYROLL TABLE -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped shadow-sm align-middle text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Emp Code</th>
+                    <th>Name</th>
+                    <th>Working Days</th>
+                    <th>Half Days</th>
+                    <th>
+                        Absent
+                        <span class="text-info small fw-normal d-block">Synced with Attendance</span>
+                    </th>
+                    <th>Late Marks</th>
+                    <th>Late Ded (Days)</th>
+                    <th>Paid Days</th>
+                    <th>Per Day</th>
+                    <th>Leave Loss (₹)</th>
+                    <th>Gross (₹)</th>
+                    <th>Deductions (₹)</th>
+                    <th>Net Pay (₹)</th>
+                    <th>Payslip</th>
+                </tr>
+            </thead>
 
-        <tbody>
-            @if (Model != null && Model.Any())
-            {
-                foreach (var p in Model)
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var p in Model)
+                    {
+                        var halfLoss = (p.PresentHalfDays * 0.5m) * p.PerDaySalary;
+                        var absentLoss = p.AbsentDays * p.PerDaySalary;
+                        var leaveLoss = halfLoss + absentLoss;
+
+                        <tr>
+                            <td>@p.EmpCode</td>
+                            <td class="text-start">@p.EmpName</td>
+                            <td>@p.TotalDaysInMonth</td>
+                            <td>@p.PresentHalfDays</td>
+                            <td class="text-danger fw-bold">
+                                @p.AbsentDays.ToString("0.##")
+                            </td>
+                            <td>@p.LateMarks</td>
+                            <td class="text-warning fw-bold">@p.LateDeductionDays.ToString("0.0")</td>
+                            <td class="fw-bold text-primary">@p.PaidDays.ToString("0.0")</td>
+                            <td>@p.PerDaySalary.ToString("0.00")</td>
+                            <td class="text-danger">@leaveLoss.ToString("0.00")</td>
+                            <td class="fw-bold text-primary">@p.GrossSalary.ToString("0.00")</td>
+                            <td class="text-danger">@p.TotalDeductions.ToString("0.00")</td>
+                            <td class="fw-bold text-success">@p.NetSalary.ToString("0.00")</td>
+
+                            <td>
+                                <a asp-action="Payslip"
+                                   asp-route-empCode="@p.EmpCode"
+                                   asp-route-year="@ViewBag.Year"
+                                   asp-route-month="@ViewBag.Month"
+                                   class="btn btn-success btn-sm">
+                                    Slip
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
                 {
                     <tr>
-                        <td>@p.EmpCode</td>
-                        <td>@p.EmpName</td>
-
-                        <td class="text-center">@p.TotalDaysInMonth</td>
-                        <td class="text-center">@p.PresentHalfDays</td>
-                        <td class="text-center">@p.WeeklyOffDays</td>
-                        <td class="text-center">@p.TotalSaturdayPaid</td>
-                        <td class="text-center">@p.AbsentDays</td>
-                        <td class="text-center">@p.LateMarks</td>
-                        <td class="text-center">@p.LateDeductionDays</td>
-
-                        <td class="text-center fw-bold">@p.PaidDays</td>
-
-                        <td>@p.MonthlySalary.ToString("0.00")</td>
-                        <td>@p.PerDaySalary.ToString("0.00")</td>
-                        <td>@p.GrossSalary.ToString("0.00")</td>
-
-                        <td class="text-danger">@p.TotalDeductions.ToString("0.00")</td>
-                        <td class="fw-bold text-success">@p.NetSalary.ToString("0.00")</td>
-
-                        <td class="text-center">
-                            <a asp-action="Payslip"
-                               asp-route-empCode="@p.EmpCode"
-                               asp-route-year="@ViewBag.Year"
-                               asp-route-month="@ViewBag.Month"
-                               class="btn btn-success btn-sm">
-                                Slip
-                            </a>
+                        <td colspan="14" class="text-center text-muted py-3">
+                            No payroll data found for the selected month.
                         </td>
                     </tr>
                 }
-            }
-            else
-            {
-                <tr>
-                    <td colspan="16" class="text-center text-muted py-3">
-                        No payroll data found for the selected search.
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-3 small text-muted">
+        <b>Note:</b> Absent days are <span class="text-info fw-bold">auto-synced from daily attendance</span>.
+        WO (Sunday) and WOP (Saturday) are <span class="text-success fw-bold">paid</span> and included silently in Paid Days.
+    </div>
 </div>
+
+<style>
+    .fw-bold {
+        font-weight: 600 !important;
+    }
+
+    .table td, .table th {
+        vertical-align: middle !important;
+        font-size: 0.9rem;
+    }
+
+    .text-primary {
+        color: #2F3D88 !important;
+    }
+
+    .text-warning {
+        color: #ff9800 !important;
+    }
+
+    .text-info {
+        color: #0288d1 !important;
+    }
+
+    .btn-sm {
+        border-radius: 6px;
+        padding: 4px 10px;
+    }
+
+    .small-note {
+        font-size: 0.8rem;
+        color: #777;
+    }
+</style>
