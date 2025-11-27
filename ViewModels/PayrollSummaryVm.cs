@@ -18,6 +18,7 @@ namespace HRMS.Models.ViewModels
         public int LateMarks { get; set; }
         public decimal LateDeductionDays { get; set; }
         public decimal PaidDays { get; set; }
+        public int TotalSaturdayPaid { get; set; }
 
         // Salary Structure
         public decimal MonthlySalary { get; set; }
@@ -40,6 +41,7 @@ namespace HRMS.Models.ViewModels
         // Optional additional items to avoid errors
         public int PresentHalfDays { get; set; }
         public int WeeklyOffDays { get; set; }
+       
 
         // Bank Details
         public string BankName { get; set; }

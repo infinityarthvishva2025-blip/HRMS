@@ -7,95 +7,79 @@
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_HrLayout.cshtml";
 
-    // SAFE CAST FOR RECENT EMPLOYEES
     var recentEmployees = ViewBag.RecentEmployees as List<RecentEmployeeViewModel>
                           ?? new List<RecentEmployeeViewModel>();
 }
 
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-<h2 class="fw-bold mb-4 text-primary">My Dashboard</h2>
+<h2 class="fw-bold mb-4 page-title">My Dashboard</h2>
 
 <!-- ======================= SUMMARY CARDS ======================= -->
-<div class="row">
-    <div class="col-md-3 mb-3">
-        <div class="card shadow-sm border-0 text-center">
-            <div class="card-body">
-                <i class="fa-solid fa-users fa-2x text-primary mb-2"></i>
-                <h4 class="fw-bold mb-0">@Model.TotalEmployees</h4>
-                <small>Total Employees</small>
-            </div>
+<div class="row g-3">
+
+    <div class="col-md-3">
+        <div class="summary-card">
+            <i class="fa-solid fa-users icon primary"></i>
+            <h4>@Model.TotalEmployees</h4>
+            <span>Total Employees</span>
         </div>
     </div>
 
-    <div class="col-md-3 mb-3">
-        <div class="card shadow-sm border-0 text-center">
-            <div class="card-body">
-                <i class="fa-solid fa-user-check fa-2x text-success mb-2"></i>
-                <h4 class="fw-bold mb-0">@((int?)ViewBag.PresentToday ?? 0)</h4>
-                <small>Today's Present</small>
-            </div>
+    <div class="col-md-3">
+        <div class="summary-card">
+            <i class="fa-solid fa-user-check icon secondary"></i>
+            <h4>@((int?)ViewBag.PresentToday ?? 0)</h4>
+            <span>Today's Present</span>
         </div>
     </div>
 
-    <div class="col-md-3 mb-3">
-        <div class="card shadow-sm border-0 text-center">
-            <div class="card-body">
-                <i class="fa-solid fa-user-xmark fa-2x text-danger mb-2"></i>
-                <h4 class="fw-bold mb-0">@((int?)ViewBag.AbsentToday ?? 0)</h4>
-                <small>Today's Absent</small>
-            </div>
+    <div class="col-md-3">
+        <div class="summary-card">
+            <i class="fa-solid fa-user-xmark icon danger"></i>
+            <h4>@((int?)ViewBag.AbsentToday ?? 0)</h4>
+            <span>Today's Absent</span>
         </div>
     </div>
 
-    <div class="col-md-3 mb-3">
-        <div class="card shadow-sm border-0 text-center">
-            <div class="card-body">
-                <i class="fa-solid fa-clock-rotate-left fa-2x text-warning mb-2"></i>
-                <h4 class="fw-bold mb-0">@((int?)ViewBag.NotCheckedOutToday ?? 0)</h4>
-                <small>Not Checked-Out</small>
-            </div>
+    <div class="col-md-3">
+        <div class="summary-card">
+            <i class="fa-solid fa-clock-rotate-left icon accent"></i>
+            <h4>@((int?)ViewBag.NotCheckedOutToday ?? 0)</h4>
+            <span>Not Checked-Out</span>
         </div>
     </div>
-
 
 </div>
 
+
 <!-- ======================= QUICK ACTIONS ======================= -->
-<div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-white fw-bold border-bottom d-flex align-items-center">
-        <i class="fa-solid fa-bolt text-warning me-2"></i> Quick Actions
+<div class="card custom-card mt-4">
+    <div class="card-header custom-header">
+        <i class="fa-solid fa-bolt me-2 text-accent"></i> Quick Actions
     </div>
 
     <div class="card-body">
-        <div class="d-flex flex-wrap justify-content-center gap-3">
+        <div class="d-flex flex-wrap gap-3">
 
-            <a asp-controller="Employees" asp-action="Create"
-               class="btn btn-primary d-flex align-items-center gap-2 px-4 py-2">
+            <a asp-controller="Employees" asp-action="Create" class="btn custom-btn-primary">
                 <i class="fa-solid fa-user-plus"></i> Add Employee
             </a>
 
-            <a asp-controller="Employees" asp-action="Index"
-               class="btn btn-success d-flex align-items-center gap-2 px-4 py-2">
+            <a asp-controller="Employees" asp-action="Index" class="btn custom-btn-secondary">
                 <i class="fa-solid fa-list"></i> View Employees
             </a>
 
-            <a asp-controller="Attendance" asp-action="Index"
-               class="btn btn-info text-white d-flex align-items-center gap-2 px-4 py-2">
+            <a asp-controller="Attendance" asp-action="Index" class="btn custom-btn-info">
                 <i class="fa-solid fa-calendar-check"></i> Attendance Report
             </a>
 
-          @*   <a asp-controller="Payroll" asp-action="Index"
-               class="btn btn-warning text-dark d-flex align-items-center gap-2 px-4 py-2">
-                <i class="fa-solid fa-file-invoice-dollar"></i> Process Payroll
-            </a> *@
-            <a asp-controller="Leave" asp-action="ManagerApprovalList"
-               class="btn btn-outline-primary d-flex align-items-center justify-content-center gap-2 px-4 py-2">
-                <i class="fa-solid fa-plane-departure"></i>
-                Manage Leaves
+            <a asp-controller="Leave" asp-action="ManagerApprovalList" class="btn custom-btn-outline-primary">
+                <i class="fa-solid fa-plane-departure"></i> Manage Leaves
             </a>
 
-            <a asp-controller="Reports" asp-action="Index"
-               class="btn btn-outline-dark d-flex align-items-center gap-2 px-4 py-2">
+            <a asp-controller="Reports" asp-action="Index" class="btn custom-btn-outline-dark">
                 <i class="fa-solid fa-chart-bar"></i> Reports
             </a>
 
@@ -103,45 +87,46 @@
     </div>
 </div>
 
+
 <!-- ======================= CELEBRATIONS + CHART ======================= -->
-<div class="row mt-4">
+<div class="row mt-4 g-4">
 
     <!-- Celebrations -->
-    <div class="col-lg-6 col-md-12 mb-4">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white fw-bold border-bottom">🎉 Celebrations</div>
+    <div class="col-lg-6 col-md-12">
+        <div class="card custom-card h-100">
+            <div class="card-header custom-header">🎉 Celebrations</div>
             <div class="card-body">
 
                 <div class="row">
 
                     <!-- Today's Celebrations -->
                     <div class="col-md-6 border-end">
-                        <h6 class="fw-bold text-primary mb-3">Today's Celebrations</h6>
+                        <h6 class="section-title primary-text">Today's Celebrations</h6>
 
                         @if ((Model?.TodaysBirthdays?.Any() ?? false) || (Model?.TodaysAnniversaries?.Any() ?? false))
                         {
                             @foreach (var emp in Model.TodaysBirthdays.Take(2))
                             {
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="icon bg-danger-subtle text-danger me-2">
+                                <div class="cele-item">
+                                    <div class="cele-icon bg-danger">
                                         <i class="fa-solid fa-cake-candles"></i>
                                     </div>
                                     <div>
-                                        <strong>@emp.Name</strong><br />
-                                        <small class="text-muted">Birthday Today 🎂</small>
+                                        <strong>@emp.Name</strong>
+                                        <div class="text-muted small">Birthday Today 🎂</div>
                                     </div>
                                 </div>
                             }
 
                             @foreach (var emp in Model.TodaysAnniversaries.Take(2))
                             {
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="icon bg-info-subtle text-info me-2">
+                                <div class="cele-item">
+                                    <div class="cele-icon bg-secondary">
                                         <i class="fa-solid fa-briefcase"></i>
                                     </div>
                                     <div>
-                                        <strong>@emp.Name</strong><br />
-                                        <small class="text-muted">Joining Anniversary 🎉</small>
+                                        <strong>@emp.Name</strong>
+                                        <div class="text-muted small">Joining Anniversary 🎉</div>
                                     </div>
                                 </div>
                             }
@@ -154,32 +139,32 @@
 
                     <!-- Tomorrow Celebrations -->
                     <div class="col-md-6">
-                        <h6 class="fw-bold text-success mb-3">Tomorrow's Celebrations</h6>
+                        <h6 class="section-title secondary-text">Tomorrow's Celebrations</h6>
 
                         @if ((Model?.TomorrowsBirthdays?.Any() ?? false) || (Model?.TomorrowsAnniversaries?.Any() ?? false))
                         {
                             @foreach (var emp in Model.TomorrowsBirthdays.Take(2))
                             {
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="icon bg-danger-subtle text-danger me-2">
+                                <div class="cele-item">
+                                    <div class="cele-icon bg-danger">
                                         <i class="fa-solid fa-cake-candles"></i>
                                     </div>
                                     <div>
-                                        <strong>@emp.Name</strong><br />
-                                        <small class="text-muted">Birthday Tomorrow 🎂</small>
+                                        <strong>@emp.Name</strong>
+                                        <div class="text-muted small">Birthday Tomorrow 🎂</div>
                                     </div>
                                 </div>
                             }
 
                             @foreach (var emp in Model.TomorrowsAnniversaries.Take(2))
                             {
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="icon bg-info-subtle text-info me-2">
+                                <div class="cele-item">
+                                    <div class="cele-icon bg-secondary">
                                         <i class="fa-solid fa-briefcase"></i>
                                     </div>
                                     <div>
-                                        <strong>@emp.Name</strong><br />
-                                        <small class="text-muted">Joining Anniversary 🎊</small>
+                                        <strong>@emp.Name</strong>
+                                        <div class="text-muted small">Joining Anniversary 🎊</div>
                                     </div>
                                 </div>
                             }
@@ -196,11 +181,9 @@
     </div>
 
     <!-- Department Chart -->
-    <div class="col-lg-6 col-md-12 mb-4">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white fw-bold border-bottom">
-                Employee Distribution by Department
-            </div>
+    <div class="col-lg-6 col-md-12">
+        <div class="card custom-card h-100">
+            <div class="card-header custom-header">Employee Distribution by Department</div>
             <div class="card-body d-flex align-items-center justify-content-center">
                 <canvas id="deptChart" height="250"></canvas>
             </div>
@@ -209,26 +192,25 @@
 
 </div>
 
+
 <!-- ======================= RECENT EMPLOYEES ======================= -->
-<div class="card shadow-sm border-0 mt-4">
-    <div class="card-header bg-white fw-bold border-bottom d-flex justify-content-between">
-        <span><i class="fa-solid fa-users me-2 text-primary"></i>Recent Employees</span>
-        <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-primary btn-sm">View All</a>
+<div class="card custom-card mt-4">
+    <div class="card-header custom-header d-flex justify-content-between">
+        <span><i class="fa-solid fa-users me-2 text-primary"></i> Recent Employees</span>
+        <a asp-controller="Employees" asp-action="Index" class="btn custom-btn-outline-primary btn-sm">View All</a>
     </div>
 
     <div class="card-body p-0">
-
-        <table class="table table-striped mb-0">
+        <table class="table table-hover mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>Employee Code</th>
+                    <th>Code</th>
                     <th>Name</th>
                     <th>Department</th>
                     <th>Position</th>
                     <th>Status</th>
                 </tr>
             </thead>
-
             <tbody>
 
                 @if (!recentEmployees.Any())
@@ -272,9 +254,9 @@
 
             </tbody>
         </table>
-
     </div>
 </div>
+
 
 <!-- ======================= CHART JS ======================= -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -288,20 +270,15 @@
         data: {
             labels: departmentLabels,
             datasets: [{
-                label: 'Employees',
                 data: departmentValues,
-                backgroundColor: [
-                    '#1976d2', '#009688', '#9c27b0', '#f44336',
-                    '#ff9800', '#00bfa5', '#795548'
-                ],
+                backgroundColor: ['#2F3D88', '#0E8376', '#F9A826', '#4455AA', '#18A08D'],
                 borderWidth: 2,
                 borderColor: '#fff',
-                hoverOffset: 6
             }]
         },
         options: {
             plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 20, padding: 15 } }
+                legend: { position: 'bottom' }
             },
             cutout: '65%',
             responsive: true
@@ -309,34 +286,134 @@
     });
 </script>
 
-<!-- ======================= STYLES ======================= -->
+
+<!-- ======================= PROFESSIONAL CUSTOM STYLES ======================= -->
 <style>
-    .card {
-        border-radius: 10px;
+
+    body {
+        font-family: 'Poppins', sans-serif !important;
     }
 
-    .card-header {
-        font-size: 1.1rem;
-        background: linear-gradient(to right, #f8f9fa, #ffffff);
+    .page-title {
+        color: #2F3D88;
+        letter-spacing: 0.5px;
     }
 
-    .btn {
-        border-radius: 8px;
-        font-weight: 500;
-        transition: 0.25s;
+    /* Summary Cards */
+    .summary-card {
+        padding: 20px;
+        text-align: center;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+        transition: 0.3s;
     }
 
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        .summary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
         }
 
-    table th, table td {
-        vertical-align: middle;
+        .summary-card .icon {
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+
+    .icon.primary {
+        color: #2F3D88;
     }
 
-    .badge {
-        font-size: 0.85rem;
-        padding: 6px 10px;
+    .icon.secondary {
+        color: #0E8376;
     }
+
+    .icon.accent {
+        color: #F9A826;
+    }
+
+    .icon.danger {
+        color: #e63946;
+    }
+
+    /* Standard Cards */
+    .custom-card {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border: 0;
+    }
+
+    .custom-header {
+        background: #F8FAFC;
+        font-weight: 600;
+        font-size: 1.05rem;
+        padding: 14px 18px;
+    }
+
+    /* Buttons */
+    .btn {
+        border-radius: 10px !important;
+        padding: 10px 20px;
+        transition: all 0.25s ease-in-out;
+    }
+
+    .custom-btn-primary {
+        background: #2F3D88;
+        color: #fff;
+    }
+
+        .custom-btn-primary:hover {
+            background: #25306e;
+        }
+
+    .custom-btn-secondary {
+        background: #0E8376;
+        color: #fff;
+    }
+
+    .custom-btn-info {
+        background: #18A08D;
+        color: #fff;
+    }
+
+    .custom-btn-outline-primary {
+        border: 1px solid #2F3D88;
+        color: #2F3D88;
+    }
+
+        .custom-btn-outline-primary:hover {
+            background: #2F3D88;
+            color: #fff;
+        }
+
+    /* Celebrations */
+    .cele-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        gap: 10px;
+    }
+
+    .cele-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+    }
+
+    .section-title {
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+
+    .primary-text {
+        color: #2F3D88;
+    }
+
+    .secondary-text {
+        color: #0E8376;
+    }
+
 </style>

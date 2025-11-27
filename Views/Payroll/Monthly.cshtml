@@ -14,19 +14,31 @@
 
     <!-- Filter Section -->
     <form method="get" class="row g-3 bg-white shadow-sm p-3 rounded mb-4">
+
         <div class="col-md-2">
-            <label>Year</label>
+            <label class="fw-bold">Year</label>
             <input type="number" name="year" class="form-control" value="@year" min="2000" />
         </div>
 
         <div class="col-md-2">
-            <label>Month</label>
+            <label class="fw-bold">Month</label>
             <input type="number" name="month" class="form-control" value="@month" min="1" max="12" />
         </div>
 
-        <div class="col-md-3 d-flex align-items-end">
-            <button class="btn btn-primary">Show</button>
+        <!-- 🔍 Search -->
+        <div class="col-md-3">
+            <label class="fw-bold">Search Employee</label>
+            <input type="text"
+                   name="search"
+                   class="form-control"
+                   placeholder="Employee Code or Name"
+                   value="@ViewBag.Search" />
         </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-primary w-100">Search</button>
+        </div>
+
     </form>
 
     <!-- Payroll Table -->
@@ -38,6 +50,7 @@
                 <th>Working Days</th>
                 <th>Half Days</th>
                 <th>WO</th>
+                <th>Sat(WOP)</th>
                 <th>Absent</th>
                 <th>Late Marks</th>
                 <th>Late Deduction</th>
@@ -63,6 +76,7 @@
                         <td class="text-center">@p.TotalDaysInMonth</td>
                         <td class="text-center">@p.PresentHalfDays</td>
                         <td class="text-center">@p.WeeklyOffDays</td>
+                        <td class="text-center">@p.TotalSaturdayPaid</td>
                         <td class="text-center">@p.AbsentDays</td>
                         <td class="text-center">@p.LateMarks</td>
                         <td class="text-center">@p.LateDeductionDays</td>
@@ -77,19 +91,23 @@
                         <td class="fw-bold text-success">@p.NetSalary.ToString("0.00")</td>
 
                         <td class="text-center">
-                            <a class="btn btn-success btn-sm"
-                               href="@Url.Action("Payslip", "Payroll",
-                                                                           new { empCode = p.EmpCode, year = p.Year, month = p.Month })">
-                        Slip
-                    </a>
-                </td>
-            </tr>
-                        }
+                            <a asp-action="Payslip"
+                               asp-route-empCode="@p.EmpCode"
+                               asp-route-year="@ViewBag.Year"
+                               asp-route-month="@ViewBag.Month"
+                               class="btn btn-success btn-sm">
+                                Slip
+                            </a>
+                        </td>
+                    </tr>
+                }
             }
             else
             {
                 <tr>
-                    <td colspan="15" class="text-center text-muted">No payroll data found for the selected month.</td>
+                    <td colspan="16" class="text-center text-muted py-3">
+                        No payroll data found for the selected search.
+                    </td>
                 </tr>
             }
         </tbody>

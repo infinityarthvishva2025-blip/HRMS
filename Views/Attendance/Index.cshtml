@@ -123,21 +123,20 @@
 
                                 <td>@(emp?.Name ?? "--")</td>
 
-                                <!-- Correct Date Format: yyyy-MM-dd -->
                                 <td>@a.AttDate.ToString("yyyy-MM-dd")</td>
 
-                                <!-- Correct Time Format for TimeSpan -->
                                 <td>@(a.InTime.HasValue? a.InTime.Value.ToString(@"hh\:mm") : "--")</td>
+
                                 <td>@(a.OutTime.HasValue? a.OutTime.Value.ToString(@"hh\:mm") : "--")</td>
 
-                                <td>@total_Hours</td>
+                                <td>@a.TotalHours</td>
 
                                 <td>
-                                    @if (attStatus == "Absent")
+                                    @if (!a.InTime.HasValue)
                                     {
                                         <span class="badge bg-danger">Absent</span>
                                     }
-                                    else if (attStatus == "Not Checked Out")
+                                    else if (!a.OutTime.HasValue)
                                     {
                                         <span class="badge bg-warning text-dark">Not Checked Out</span>
                                     }
@@ -147,6 +146,7 @@
                                     }
                                 </td>
                             </tr>
+
                         }
                     }
                 </tbody>
