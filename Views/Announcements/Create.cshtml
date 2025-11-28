@@ -2,42 +2,116 @@
     Layout = "_HrLayout";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">📢 Create Announcement</h2>
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+        .page-header h2 {
+            font-weight: 700;
+            color: #1a237e;
+        }
+
+    .card-custom {
+        background: #fff;
+        border-radius: 14px;
+        padding: 25px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    }
+
+    label {
+        font-weight: 600;
+        color: #1a237e;
+        margin-bottom: 6px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    .section-title {
+        font-weight: 700;
+        font-size: 18px;
+        margin-bottom: 15px;
+        color: #3949ab;
+    }
+
+    .btn-primary {
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 10px;
+    }
+
+    .multi-select {
+        height: 150px;
+        border-radius: 10px;
+        padding: 8px;
+    }
+
+    .urgent-badge {
+        background: #ff5252;
+        padding: 3px 10px;
+        color: #fff;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: bold;
+        margin-left: 10px;
+    }
+</style>
+
+
+<div class="page-header">
+    <h2>
+        <i class="fa-solid fa-bullhorn text-primary"></i> Create Announcement
+    </h2>
 
     <a href="/Announcements/List" class="btn btn-outline-primary fw-bold">
-        📋 View All Announcements
+        <i class="fa-solid fa-list"></i> View All Announcements
     </a>
 </div>
 
-<div class="card p-4 shadow">
+
+<div class="card-custom">
     <form method="post">
 
         <input type="hidden" name="targetType" id="targetTypeHidden" value="ALL" />
 
+        <!-- Title -->
         <div class="mb-3">
-            <label>Title</label>
-            <input type="text" name="Title" class="form-control" required />
+            <label><i class="fa-solid fa-heading"></i> Title</label>
+            <input type="text" name="Title" class="form-control" placeholder="Enter announcement title..." required />
         </div>
 
+        <!-- Message -->
         <div class="mb-3">
-            <label>Message</label>
-            <textarea name="Message" class="form-control" rows="4" required></textarea>
+            <label><i class="fa-solid fa-message"></i> Message</label>
+            <textarea name="Message" class="form-control" rows="4" placeholder="Write your announcement details..." required></textarea>
         </div>
 
         <div class="row">
+            <!-- Target Selection -->
             <div class="col-md-4 mb-3">
-                <label>Send To</label>
-                <select class="form-control" id="targetTypeSelect">
+                <label><i class="fa-solid fa-users"></i> Send To</label>
+                <select class="form-select" id="targetTypeSelect">
                     <option value="ALL">All Employees</option>
                     <option value="DEPT">Specific Department(s)</option>
                     <option value="EMP">Specific Employee(s)</option>
                 </select>
             </div>
 
+            <!-- Department Multi Select -->
             <div class="col-md-4 mb-3" id="deptBox" style="display:none;">
-                <label>Select Department(s)</label>
-                <select name="SelectedDepartments" class="form-control" multiple size="5">
+                <label>
+                    <i class="fa-solid fa-building"></i> Select Department(s)
+                </label>
+                <select name="SelectedDepartments" class="form-control multi-select" multiple>
                     @foreach (var d in ViewBag.Departments)
                     {
                         <option value="@d">@d</option>
@@ -45,9 +119,12 @@
                 </select>
             </div>
 
+            <!-- Employee Multi Select -->
             <div class="col-md-4 mb-3" id="empBox" style="display:none;">
-                <label>Select Employee(s)</label>
-                <select name="SelectedEmployees" class="form-control" multiple size="5">
+                <label>
+                    <i class="fa-solid fa-user"></i> Select Employee(s)
+                </label>
+                <select name="SelectedEmployees" class="form-control multi-select" multiple>
                     @foreach (var e in ViewBag.Employees)
                     {
                         <option value="@e.Id">@e.Name</option>
@@ -55,18 +132,24 @@
                 </select>
             </div>
 
+            <!-- Urgent -->
             <div class="col-md-4 mb-3">
-                <label>Urgent?</label>
-                <select class="form-control" name="IsUrgent">
+                <label>
+                    <i class="fa-solid fa-circle-exclamation text-danger"></i> Urgent?
+                </label>
+                <select class="form-select" name="IsUrgent">
                     <option value="false">No</option>
                     <option value="true">Yes</option>
                 </select>
             </div>
         </div>
 
-        <button class="btn btn-primary w-100 fw-bold">Send Announcement</button>
+        <button class="btn btn-primary fw-bold w-100 mt-3">
+            <i class="fa-solid fa-paper-plane"></i> Send Announcement
+        </button>
     </form>
 </div>
+
 
 <script>
     const typeSelect = document.getElementById("targetTypeSelect");

@@ -2,73 +2,118 @@
 @{
     Layout = "_EmployeeLayout";
 
-    int empId = ViewBag.EmployeeId;   // Controller will pass this
+    int empId = ViewBag.EmployeeId;
 
     Func<HRMS.Models.Announcement, bool> isRead = (a) =>
     {
         if (string.IsNullOrEmpty(a.ReadByEmployees))
             return false;
-
         return a.ReadByEmployees.Split(',').Contains(empId.ToString());
     };
 }
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
 <style>
-    .notif-card {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 18px;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        border-left: 6px solid #3949ab;
-        transition: 0.2s ease;
+    /* Page Title */
+    .notif-header {
+        font-weight: 800;
+        color: #1a237e;
+        font-size: 28px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 25px;
     }
 
-        .notif-card.unread {
-            border-left-color: #ff9800;
-            background: #fff7e6;
+    /* Notification Card */
+    .notif-card {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 20px 22px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border-left: 6px solid #1e40af;
+        transition: .25s ease;
+    }
+
+        .notif-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
         }
 
+        .notif-card.unread {
+            background: #fff7e5;
+            border-left-color: #ff9800;
+        }
+
+    /* Title */
     .notif-title {
-        font-size: 18px;
+        font-size: 19px;
         font-weight: 700;
-        color: #1a237e;
+        color: #0f1d63;
         margin-bottom: 6px;
     }
 
+    /* Message */
     .notif-message {
-        font-size: 15px;
+        font-size: 15.5px;
         color: #444;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
+        line-height: 1.5;
     }
 
+    /* Date */
     .notif-date {
-        font-size: 13px;
-        color: #888;
+        font-size: 13.5px;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 
+    /* Mark as Read Button */
     .mark-read-btn {
-        background: #1a73e8;
+        background: #2563eb;
         color: white;
-        border: none;
-        padding: 6px 14px;
+        padding: 7px 16px;
         border-radius: 8px;
         font-size: 13px;
-        float: right;
         text-decoration: none;
+        transition: 0.2s;
+        float: right;
+        margin-top: -35px;
     }
+
+        .mark-read-btn:hover {
+            background: #1e40af;
+            color: white;
+        }
+
+    /* Empty State */
+    .empty-box {
+        background: #eef2ff;
+        padding: 35px;
+        border-radius: 12px;
+        text-align: center;
+        color: #5a5c6c;
+        font-size: 16px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
 </style>
 
 <div class="container mt-4">
 
-    <h3 class="mb-4" style="font-weight:700;color:#1a237e;">
-        🔔 My Notifications
+    <h3 class="notif-header">
+        <i class="fa-solid fa-bell text-warning"></i> My Notifications
     </h3>
 
     @if (!Model.Any())
     {
-        <div class="alert alert-info">
-            No notifications found.
+        <div class="empty-box">
+            <i class="fa-solid fa-circle-info fa-2x mb-2"></i>
+            <p>No notifications found.</p>
         </div>
     }
     else
@@ -84,8 +129,8 @@
                 <div class="notif-message">@a.Message</div>
 
                 <div class="notif-date">
-                     📅 @a.CreatedOn.AddHours(5).AddMinutes(30).ToString("dd MMM yyyy, hh:mm tt")
-
+                    <i class="fa-regular fa-calendar"></i>
+                    @a.CreatedOn.AddHours(5).AddMinutes(30).ToString("dd MMM yyyy, hh:mm tt")
                 </div>
 
                 @if (!alreadyRead)
@@ -94,7 +139,6 @@
                         Mark as Read
                     </a>
                 }
-
             </div>
         }
     }
