@@ -13,45 +13,42 @@
             <i class="fa-solid fa-hand-wave text-warning me-2"></i>
             Welcome, @Model.Employee.Name
         </h2>
-        <p class="lead text-black">Your personalized work summary & attendance panel</p>
+        <p class="lead text-white">Your personalized work summary & attendance panel</p>
 
-        <a href="/Attendance/EmployeePanel" class="btn btn-attendance mt-3 shadow">
-            <i class="fa-solid fa-calendar-check me-2"></i> Mark Attendance
-        </a>
-        <a asp-controller="Attendance" asp-action="EmployeeSummary"
-           asp-route-employeeId="@Model.Employee.Id"
-           class="btn btn-lg btn-outline-secondary shadow-sm ms-3 action-btn-outline">
-            <i class="fa-solid fa-chart-line me-2"></i> Attendance Summary
-        </a>
+        <div class="mt-4 text-center">
 
+            <a href="/Attendance/EmployeePanel"
+               class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold">
+                <i class="fa-solid fa-calendar-check me-2"></i> Mark Attendance
+            </a>
 
-             
-        
-        
-       @*         notification badge 
-        <a href="/Announcements/MyNotifications" class="btn btn-light position-relative">
-            🔔
-            @if (ViewBag.UnreadCount > 0)
-            {
-                <span class="badge bg-danger position-absolute top-0 end-0">
-                    @ViewBag.UnreadCount
-                </span>
-            }
-        </a>  *@
-        
-     
+            <a asp-controller="Attendance" asp-action="EmployeeSummary"
+               asp-route-employeeId="@Model.Employee.Id"
+               class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold">
+                <i class="fa-solid fa-chart-line me-2"></i> Attendance Summary
+            </a>
 
-        <!-- Salary Slip Button -->
-        <button type="button" class="btn btn-salary mt-3 ms-2 shadow" data-bs-toggle="modal" data-bs-target="#salarySlipModal">
-            <i class="fa-solid fa-file-invoice-dollar me-2"></i> View Salary Slip
-        </button>
+            <a asp-controller="Leave" asp-action="Create"
+               class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold">
+                <i class="fa-solid fa-paper-plane me-2"></i> Apply Leave
+            </a>
+
+            <button type="button"
+                    class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold"
+                    data-bs-toggle="modal"
+                    data-bs-target="#salarySlipModal">
+                <i class="fa-solid fa-file-invoice-dollar me-2"></i> View Salary Slip
+            </button>
+
+        </div>
+
     </div>
-
 
     <!-- INFO CARDS -->
     <div class="row g-4 justify-content-center">
+        <!-- Department -->
         <div class="col-md-3 col-sm-6">
-            <div class="info-card shadow-sm p-4 text-center animate-card">
+            <div class="info-card shadow-sm p-4 text-center">
                 <div class="icon-circle bg-primary bg-gradient mb-3">
                     <i class="fa-solid fa-building fa-2x text-white"></i>
                 </div>
@@ -60,8 +57,9 @@
             </div>
         </div>
 
+        <!-- Position -->
         <div class="col-md-3 col-sm-6">
-            <div class="info-card shadow-sm p-4 text-center animate-card">
+            <div class="info-card shadow-sm p-4 text-center">
                 <div class="icon-circle bg-success bg-gradient mb-3">
                     <i class="fa-solid fa-briefcase fa-2x text-white"></i>
                 </div>
@@ -70,8 +68,9 @@
             </div>
         </div>
 
+        <!-- Total Leaves -->
         <div class="col-md-3 col-sm-6">
-            <div class="info-card shadow-sm p-4 text-center animate-card">
+            <div class="info-card shadow-sm p-4 text-center">
                 <div class="icon-circle bg-info bg-gradient mb-3">
                     <i class="fa-solid fa-plane-departure fa-2x text-white"></i>
                 </div>
@@ -80,8 +79,9 @@
             </div>
         </div>
 
+        <!-- Approved Leaves -->
         <div class="col-md-3 col-sm-6">
-            <div class="info-card shadow-sm p-4 text-center animate-card">
+            <div class="info-card shadow-sm p-4 text-center">
                 <div class="icon-circle bg-warning bg-gradient mb-3">
                     <i class="fa-solid fa-circle-check fa-2x text-white"></i>
                 </div>
@@ -90,39 +90,27 @@
             </div>
         </div>
     </div>
-
-    <!-- QUICK ACTIONS -->
-    <div class="quick-actions text-center mt-5">
-        <a asp-controller="Leave" asp-action="Create"
-           class="btn btn-lg btn-outline-secondary shadow-sm ms-3 action-btn-outline">
-            <i class="fa-solid fa-paper-plane me-2"></i> Apply Leave
-        </a>
-
-        <a asp-controller="Leave" asp-action="LeaveReport"
-           class="btn btn-lg btn-outline-secondary shadow-sm ms-3 action-btn-outline">
-            <i class="fa-solid fa-calendar-check me-2"></i> My Leaves
-        </a>
-
-        
-    </div>
 </div>
 
 <!-- ============================= -->
 <!-- SALARY SLIP MODAL -->
 <!-- ============================= -->
-<div class="modal fade" id="salarySlipModal" tabindex="-1" aria-labelledby="salarySlipModalLabel" aria-hidden="true">
+
+<div class="modal fade" id="salarySlipModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-primary text-white rounded-top-4">
-                <h5 class="modal-title" id="salarySlipModalLabel">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
                     <i class="fa-solid fa-file-invoice-dollar me-2"></i> Select Month & Year
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+
             <div class="modal-body p-4">
                 <form id="salarySlipForm">
                     <div class="mb-3">
-                        <label for="month" class="form-label fw-bold">Month</label>
+                        <label class="form-label fw-bold">Month</label>
                         <select id="month" class="form-select" required>
                             <option value="">-- Select Month --</option>
                             @for (int m = 1; m <= 12; m++)
@@ -133,7 +121,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="year" class="form-label fw-bold">Year</label>
+                        <label class="form-label fw-bold">Year</label>
                         <select id="year" class="form-select" required>
                             <option value="">-- Select Year --</option>
                             @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
@@ -151,11 +139,14 @@
                 </form>
             </div>
 
-            <div class="modal-footer text-center d-none" id="salarySlipResult">
-                <a id="downloadSlipBtn" href="#" class="btn btn-gradient-primary px-4 py-2 rounded-pill shadow-sm" target="_blank">
+            <div class="modal-footer justify-content-center d-none" id="salarySlipResult">
+                <a id="downloadSlipBtn"
+                   class="btn btn-gradient-primary px-4 py-2 rounded-pill shadow-sm"
+                   target="_blank">
                     <i class="fa-solid fa-download me-2"></i> Download Salary Slip
                 </a>
             </div>
+
         </div>
     </div>
 </div>
@@ -163,43 +154,28 @@
 <!-- ============================= -->
 <!-- STYLING -->
 <!-- ============================= -->
+
 <style>
     body {
-        background: #f0f4fb;
+        background: #eef3fb;
     }
 
     .dashboard-header {
-        background: linear-gradient(135deg, #0d47a1, #009688);
-        padding: 40px;
-        border-radius: 16px;
+        background: linear-gradient(135deg, #0d47a1, #00897b);
+        padding: 50px 30px;
+        border-radius: 20px;
         color: white;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
     }
-
-    .btn-attendance,
-    .btn-salary {
-        background: white;
-        color: #0d47a1;
-        font-weight: 600;
-        border-radius: 10px;
-        padding: 12px 24px;
-        transition: 0.3s ease;
-    }
-
-        .btn-salary:hover {
-            background: #e3f2fd;
-            transform: translateY(-2px);
-        }
 
     .info-card {
-        background: #fff;
+        background: white;
         border-radius: 15px;
-        transition: all 0.3s ease;
+        transition: all .3s ease;
     }
 
         .info-card:hover {
             transform: translateY(-6px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
         }
 
     .icon-circle {
@@ -209,27 +185,20 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        margin: 0 auto;
-        box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+        margin: auto;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.2);
     }
 
     .btn-gradient-primary {
-        background: linear-gradient(90deg, #0d47a1, #009688);
-        color: #fff;
-        font-weight: 600;
-        transition: all .3s ease;
+        background: linear-gradient(90deg, #0d47a1, #00acc1);
+        color: white !important;
     }
-
-        .btn-gradient-primary:hover {
-            transform: translateY(-2px);
-            opacity: 0.9;
-            color: #fff;
-        }
 </style>
 
 <!-- ============================= -->
-<!-- SCRIPT -->
+<!-- JS -->
 <!-- ============================= -->
+
 <script>
     document.getElementById("salarySlipForm").addEventListener("submit", function (e) {
         e.preventDefault();
@@ -237,13 +206,13 @@
         const month = document.getElementById("month").value;
         const year = document.getElementById("year").value;
 
-        if (!month || !year) return alert("Please select both month and year!");
+        if (!month || !year) {
+            return alert("Please select both month and year!");
+        }
 
-        const downloadLink = `/Payroll/DownloadSalarySlip?month=${month}&year=${year}`;
-        const resultDiv = document.getElementById("salarySlipResult");
         const btn = document.getElementById("downloadSlipBtn");
+        btn.href = `/Payroll/DownloadSalarySlip?month=${month}&year=${year}`;
 
-        btn.href = downloadLink;
-        resultDiv.classList.remove("d-none");
+        document.getElementById("salarySlipResult").classList.remove("d-none");
     });
 </script>
