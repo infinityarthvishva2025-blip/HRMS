@@ -1,15 +1,16 @@
 ﻿using HRMS.Data;
 using HRMS.Models;
+using HRMS.Models.ViewModels;
 using HRMS.Services;
 using HRMS.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System;
 using System.Linq;
-using Newtonsoft.Json;
 
 namespace HRMS.Controllers
 {
@@ -130,21 +131,74 @@ namespace HRMS.Controllers
         // =========================================================
         // EMPLOYEE SUMMARY PAGE
         // =========================================================
-        public IActionResult EmployeeSummary(string empCode, DateTime? from, DateTime? to)
+        [HttpGet]
+        public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
         {
-            if (empCode == null)
-                return BadRequest();
+            if (employeeId <= 0)
+                return BadRequest("Invalid employee ID.");
 
-            DateTime start = (from ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1)).Date;
-            DateTime end = (to ?? start.AddMonths(1).AddDays(-1)).Date;
+            // Get employee record
+            var emp = _context.Employees.FirstOrDefault(e => e.Id == employeeId);
+            if (emp == null)
+                return NotFound("Employee not found.");
 
-            var list = _context.Attendances
-                .Where(a => a.Emp_Code == empCode && a.Date >= start && a.Date <= end)
-                .OrderBy(a => a.Date)
+            string empCode = emp.EmployeeCode;   // IMPORTANT: Attendance table uses Emp_Code
+
+            // ---------------------------------------
+            // DEFAULT DATE RANGE → CURRENT MONTH
+            // ---------------------------------------
+            if (!from.HasValue)
+                from = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+
+            if (!to.HasValue)
+                to = DateTime.Now.Date;
+
+            DateTime startDate = from.Value.Date;
+            DateTime endDate = to.Value.Date.AddDays(1).AddSeconds(-1); // include entire day
+
+            // ---------------------------------------
+            // GET ATTENDANCE RECORDS FOR EMPLOYEE
+            // ---------------------------------------
+            var attendanceRecords = _context.Attendances
+                .Where(a => a.Emp_Code == empCode)     // FIXED 🔥 use Emp_Code
+                .Where(a => a.Date >= startDate && a.Date <= endDate)
+                .OrderByDescending(a => a.Date)
                 .ToList();
 
-            return View(list);
+            // ---------------------------------------
+            // CALCULATE SUMMARY
+            // ---------------------------------------
+            TimeSpan shiftStart = new TimeSpan(9, 30, 0);
+            TimeSpan shiftEnd = new TimeSpan(18, 0, 0);
+
+            var summary = new EmployeeAttendanceSummaryViewModel
+            {
+                Employee = emp,
+                AttendanceRecords = attendanceRecords,
+                FromDate = startDate,
+                ToDate = endDate,
+
+                TotalDays = attendanceRecords.Count,
+
+                TotalLateDays = attendanceRecords.Count(a =>
+                    a.InTime.HasValue && a.InTime.Value > shiftStart),
+
+                TotalEarlyLeaveDays = attendanceRecords.Count(a =>
+                    a.OutTime.HasValue && a.OutTime.Value < shiftEnd),
+
+                AverageWorkingHours = attendanceRecords
+                    .Where(a => a.InTime.HasValue && a.OutTime.HasValue)
+                    .Select(a => (a.OutTime.Value - a.InTime.Value).TotalHours)
+                    .DefaultIfEmpty(0)
+                    .Average()
+                    .ToString("0.0")
+            };
+
+            return View(summary);
         }
+
+
+
 
         // =========================================================
         // HR LIST PAGE (FILTER + SEARCH)

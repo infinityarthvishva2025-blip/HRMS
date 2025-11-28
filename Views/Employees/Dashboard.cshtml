@@ -18,6 +18,12 @@
         <a href="/Attendance/EmployeePanel" class="btn btn-attendance mt-3 shadow">
             <i class="fa-solid fa-calendar-check me-2"></i> Mark Attendance
         </a>
+        <a asp-controller="Attendance" asp-action="EmployeeSummary"
+           asp-route-employeeId="@Model.Employee.Id"
+           class="btn btn-lg btn-outline-secondary shadow-sm ms-3 action-btn-outline">
+            <i class="fa-solid fa-chart-line me-2"></i> Attendance Summary
+        </a>
+
 
         <!-- Salary Slip Button -->
         <button type="button" class="btn btn-salary mt-3 ms-2 shadow" data-bs-toggle="modal" data-bs-target="#salarySlipModal">

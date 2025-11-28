@@ -76,26 +76,37 @@
             </tr>
         </thead>
         <tbody>
-           @*  @foreach (var a in Model.AttendanceRecords)
+            @foreach (var a in Model.AttendanceRecords)
             {
                 var shiftStart = new TimeSpan(9, 30, 0);
                 var shiftEnd = new TimeSpan(18, 0, 0);
-                bool isLate = a.CheckInTime?.TimeOfDay > shiftStart;
-                bool isEarly = a.CheckOutTime.HasValue && a.CheckOutTime.Value.TimeOfDay < shiftEnd;
+
+                bool isLate = a.InTime.HasValue && a.InTime.Value > shiftStart;
+                bool isEarly = a.OutTime.HasValue && a.OutTime.Value < shiftEnd;
 
                 <tr>
-                    <td>@a.CheckInTime?.ToString("dd-MMM-yyyy")</td>
-                    <td>@a.CheckInTime?.ToString("hh:mm tt")</td>
-                    <td>@(a.CheckOutTime?.ToString("hh:mm tt") ?? "--")</td>
+                    <td>@a.Date.ToString("dd-MMM-yyyy")</td>
+
+                    <td>
+                        @(a.InTime.HasValue
+                                            ? DateTime.Today.Add(a.InTime.Value).ToString("hh:mm tt")
+                                            : "--")
+                    </td>
+
+                    <td>
+                        @(a.OutTime.HasValue
+                                            ? DateTime.Today.Add(a.OutTime.Value).ToString("hh:mm tt")
+                                            : "--")
+                    </td>
 
                     <td>
                         @if (isLate)
                         {
-                            <span class="badge bg-danger">Late</span>
+                            <span class="badge bg-danger">Late ❌</span>
                         }
                         else
                         {
-                            <span class="badge bg-success">On Time</span>
+                            <span class="badge bg-success">On Time ✅</span>
                         }
                     </td>
 
@@ -106,13 +117,14 @@
                         }
                         else
                         {
-                            <span class="badge bg-success">OK</span>
+                            <span class="badge bg-success">On Time ✅</span>
                         }
                     </td>
+
                     <td>
-                        @if (a.CheckOutTime.HasValue)
+                        @if (a.InTime.HasValue && a.OutTime.HasValue)
                         {
-                            var diff = a.CheckOutTime.Value - a.CheckInTime.Value;
+                            var diff = a.OutTime.Value - a.InTime.Value;
                             @($"{diff.Hours}h {diff.Minutes}m")
                         }
                         else
@@ -120,10 +132,13 @@
                             @("--")
                         }
                     </td>
-
                 </tr>
-            } *@
+            }
         </tbody>
+
+
+
+      
     </table>
 </div>
 

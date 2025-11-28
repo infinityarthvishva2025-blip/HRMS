@@ -12,7 +12,8 @@ namespace HRMS.Models.ViewModels
         public int TotalDays { get; set; }
         public int TotalLateDays { get; set; }
         public int TotalEarlyLeaveDays { get; set; }
-        public double AverageWorkingHours { get; set; }
+        public string AverageWorkingHours { get; set; }
+
 
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
