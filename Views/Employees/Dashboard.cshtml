@@ -18,6 +18,28 @@
         <a href="/Attendance/EmployeePanel" class="btn btn-attendance mt-3 shadow">
             <i class="fa-solid fa-calendar-check me-2"></i> Mark Attendance
         </a>
+        <a asp-controller="Attendance" asp-action="EmployeeSummary"
+           asp-route-employeeId="@Model.Employee.Id"
+           class="btn btn-lg btn-outline-secondary shadow-sm ms-3 action-btn-outline">
+            <i class="fa-solid fa-chart-line me-2"></i> Attendance Summary
+        </a>
+
+
+             
+        
+        
+       @*         notification badge 
+        <a href="/Announcements/MyNotifications" class="btn btn-light position-relative">
+            🔔
+            @if (ViewBag.UnreadCount > 0)
+            {
+                <span class="badge bg-danger position-absolute top-0 end-0">
+                    @ViewBag.UnreadCount
+                </span>
+            }
+        </a>  *@
+        
+     
 
         <!-- Salary Slip Button -->
         <button type="button" class="btn btn-salary mt-3 ms-2 shadow" data-bs-toggle="modal" data-bs-target="#salarySlipModal">
@@ -81,10 +103,7 @@
             <i class="fa-solid fa-calendar-check me-2"></i> My Leaves
         </a>
 
-        <a asp-controller="Employees" asp-action="Gurukul"
-           class="btn btn-lg btn-outline-secondary shadow-sm ms-3 action-btn-outline">
-            <i class="fa-solid fa-book-open me-2"></i> Gurukul
-        </a>
+        
     </div>
 </div>
 

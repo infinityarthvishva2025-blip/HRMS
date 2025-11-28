@@ -3,101 +3,179 @@
     Layout = "_HrLayout";
 }
 
-<h2 class="mb-3">All Employee Expenses</h2>
+<style>
+    /* Page Title */
+    .page-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #1a237e;
+        margin-bottom: 25px;
+        letter-spacing: -0.5px;
+    }
 
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>Employee</th>
-            <th>Date</th>
-            <th>Title</th>
-            <th>Amount</th>
-            <th>Proof</th>
-            <th>Status</th>
-            <th>HR Comment</th>
-            <th>Action</th>
-        </tr>
-    </thead>
+    /* Main Card */
+    .main-card {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 18px;
+        border: 1px solid #e6e6e6;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    }
 
-    <tbody>
-        @foreach (var e in Model)
-        {
+    /* Table */
+    .table thead {
+        background: #e9ecff;
+        color: #1a237e;
+        font-weight: 700;
+        font-size: 15px;
+    }
+
+    .table tbody tr:hover {
+        background: #f5f7ff;
+        transition: 0.2s ease;
+    }
+
+    .comment-box {
+        width: 180px;
+        border-radius: 8px;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-weight: 600;
+        border-radius: 8px !important;
+    }
+
+    /* Status Badges */
+    .badge-approved {
+        background: #43a047;
+        padding: 7px 14px;
+        font-size: 12px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    .badge-rejected {
+        background: #e53935;
+        padding: 7px 14px;
+        font-size: 12px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    .badge-pending {
+        background: #fb8c00;
+        padding: 7px 14px;
+        font-size: 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        color: #fff;
+    }
+
+</style>
+
+<h2 class="page-title">💼 All Employee Expenses</h2>
+
+<div class="main-card">
+
+    <table class="table table-hover align-middle">
+        <thead>
             <tr>
-                <td>@e.Employee?.Name</td>
-                <td>@e.Date.ToString("dd-MM-yyyy")</td>
-                <td>@e.ExpenseType</td>
-                <td>₹@e.Amount</td>
-
-                <td>
-                    @if (!string.IsNullOrEmpty(e.ProofFilePath))
-                    {
-                        <a href="@e.ProofFilePath" target="_blank" class="btn btn-info btn-sm">View</a>
-                    }
-                    else
-                    {
-                        <span class="text-muted">No File</span>
-                    }
-                </td>
-
-                <td>
-                    @if (e.Status == "Approved")
-                    {
-                        <span class="badge bg-success">Approved</span>
-                    }
-                    else if (e.Status == "Rejected")
-                    {
-                        <span class="badge bg-danger">Rejected</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-warning text-dark">Pending</span>
-                    }
-                </td>
-
-                <!-- 👇 COMBINED COMMENT + BUTTONS IN CENTER -->
-                <td style="vertical-align: middle; text-align:center;">
-                    @if (e.Status == "Pending")
-                    {
-                        <div style="display:flex; justify-content:center; align-items:center; gap:12px;">
-
-                            <!-- HR COMMENT INPUT -->
-                            <input type="text"
-                                   id="comment_@e.Id"
-                                   placeholder="Reason"
-                                   class="form-control"
-                                   style="width:180px;" />
-
-                            <!-- APPROVE BUTTON -->
-                            <form asp-action="Approve" asp-controller="Expenses" method="post" style="display:inline;">
-                                <input type="hidden" name="id" value="@e.Id" />
-                                <input type="hidden" name="comment" id="approveComment_@e.Id" />
-                                <button type="submit"
-                                        class="btn btn-success btn-sm"
-                                        onclick="document.getElementById('approveComment_@e.Id').value = document.getElementById('comment_@e.Id').value;">
-                                    Approve
-                                </button>
-                            </form>
-
-                            <!-- REJECT BUTTON -->
-                            <form asp-action="Reject" asp-controller="Expenses" method="post" style="display:inline;">
-                                <input type="hidden" name="id" value="@e.Id" />
-                                <input type="hidden" name="comment" id="rejectComment_@e.Id" />
-                                <button type="submit"
-                                        class="btn btn-danger btn-sm"
-                                        onclick="document.getElementById('rejectComment_@e.Id').value = document.getElementById('comment_@e.Id').value;">
-                                    Reject
-                                </button>
-                            </form>
-
-                        </div>
-                    }
-                    else
-                    {
-                        <span class="text-muted">Completed</span>
-                    }
-                </td>
-
+                <th>Employee</th>
+                <th>Date</th>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Proof</th>
+                <th>Status</th>
+                <th style="width: 300px; text-align:center;">Actions</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+
+        <tbody>
+            @foreach (var e in Model)
+            {
+                <tr>
+                    <td><b>@e.Employee?.Name</b></td>
+                    <td>@e.Date.ToString("dd MMM yyyy")</td>
+                    <td>@e.ExpenseType</td>
+                    <td><b>₹@e.Amount</b></td>
+
+                    <td>
+                        @if (!string.IsNullOrEmpty(e.ProofFilePath))
+                        {
+                            <a href="@e.ProofFilePath" target="_blank" class="btn btn-info btn-sm">
+                                View File
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No Proof</span>
+                        }
+                    </td>
+
+                    <td>
+                        @if (e.Status == "Approved")
+                        {
+                            <span class="badge-approved">Approved</span>
+                        }
+                        else if (e.Status == "Rejected")
+                        {
+                            <span class="badge-rejected">Rejected</span>
+                        }
+                        else
+                        {
+                            <span class="badge-pending">Pending</span>
+                        }
+                    </td>
+
+                    <!-- ACTION COLUMN -->
+                    <td style="text-align:center;">
+
+                        @if (e.Status == "Pending")
+                        {
+                            <div class="d-flex justify-content-center align-items-center gap-2">
+
+                                <!-- HR COMMENT -->
+                                <input type="text"
+                                       id="comment_@e.Id"
+                                       placeholder="Reason"
+                                       class="form-control comment-box" />
+
+                                <!-- APPROVE BUTTON -->
+                                <form asp-action="Approve" asp-controller="Expenses" method="post">
+                                    <input type="hidden" name="id" value="@e.Id" />
+                                    <input type="hidden" name="comment" id="approveComment_@e.Id" />
+                                    <button type="submit"
+                                            class="btn btn-success btn-sm"
+                                            onclick="document.getElementById('approveComment_@e.Id').value = document.getElementById('comment_@e.Id').value;">
+                                        ✔ Approve
+                                    </button>
+                                </form>
+
+                                <!-- REJECT BUTTON -->
+                                <form asp-action="Reject" asp-controller="Expenses" method="post">
+                                    <input type="hidden" name="id" value="@e.Id" />
+                                    <input type="hidden" name="comment" id="rejectComment_@e.Id" />
+                                    <button type="submit"
+                                            class="btn btn-danger btn-sm"
+                                            onclick="document.getElementById('rejectComment_@e.Id').value = document.getElementById('comment_@e.Id').value;">
+                                        ✖ Reject
+                                    </button>
+                                </form>
+
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">✔ Completed</span>
+                        }
+
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+
+    </table>
+
+</div>

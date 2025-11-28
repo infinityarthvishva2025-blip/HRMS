@@ -106,8 +106,14 @@ namespace HRMS.Controllers
                         (v.AllowedEmployeeId == null && v.AllowedDepartment != null && v.AllowedDepartment == dept)
                     )
                 )
-                .OrderBy(v => v.Title)
                 .ToListAsync();
+
+            // ⭐ FIX: Always sort EXACTLY like Index page so NEXT button works correctly
+            relatedVideos = relatedVideos
+                .OrderBy(v => v.TitleGroup)
+                .ThenBy(v => v.Category)
+                .ThenBy(v => v.Title)
+                .ToList();
 
             ViewBag.VideoList = relatedVideos;
 
@@ -118,6 +124,7 @@ namespace HRMS.Controllers
 
             return View(video);
         }
+
 
         // =====================================================================
         // EMPLOYEE: MARK COMPLETE

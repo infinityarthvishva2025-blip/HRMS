@@ -22,6 +22,45 @@ namespace HRMS.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("HRMS.Models.Announcement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsUrgent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TargetDepartment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("TargetEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Announcements");
+                });
+
             modelBuilder.Entity("HRMS.Models.Attendance", b =>
                 {
                     b.Property<string>("Emp_Code")
@@ -566,96 +605,74 @@ namespace HRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("BaseSalary")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("base_salary");
+                    b.Property<decimal?>("base_salary")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("EmployeeCTC")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("employee_ctc");
+                    b.Property<decimal?>("day_presented")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("EmployeeCode")
+                    b.Property<string>("emp_code")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("emp_code");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal?>("GrossSalary")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("gross_salary");
+                    b.Property<decimal?>("employee_ctc")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("LateDeductionDays")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("late_deduction_days");
+                    b.Property<decimal?>("gross_salary")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("LateGt3")
-                        .HasColumnType("int")
-                        .HasColumnName("late_gt_3");
+                    b.Property<decimal?>("late_deduction_days")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("LateMarks")
-                        .HasColumnType("int")
-                        .HasColumnName("late_marks");
+                    b.Property<int?>("late_gt_3")
+                        .HasColumnType("int");
 
-                    b.Property<decimal>("LeavesTaken")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("leaves_taken");
+                    b.Property<int?>("late_marks")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Month")
+                    b.Property<decimal?>("leaves_taken")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("month")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("month");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("name");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal?>("NetSalary")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("net_salary");
+                    b.Property<decimal?>("net_salary")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("OtherAllowance")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("other_allowance");
+                    b.Property<decimal?>("other_allowance")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("PaidDays")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("day_presented");
+                    b.Property<decimal?>("paid_days")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("PaidDaysDecimal")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("paid_days");
+                    b.Property<decimal?>("per_day_salary")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("PerDaySalary")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("per_day_salary");
+                    b.Property<decimal?>("perf_allowance")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("PerfAllowance")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("perf_allowance");
+                    b.Property<decimal?>("petrol_allowance")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("PetrolAllowance")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("petrol_allowance");
+                    b.Property<decimal?>("prof_tax")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("ProfTax")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("prof_tax");
+                    b.Property<decimal?>("reimbursement")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("Reimbursement")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("reimbursement");
+                    b.Property<decimal?>("total_deduction")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("TotalDeduction")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("total_deduction");
+                    b.Property<decimal?>("total_pay")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("TotalPay")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("total_pay");
-
-                    b.Property<int>("WorkingDays")
-                        .HasColumnType("int")
-                        .HasColumnName("working_days");
+                    b.Property<int?>("working_days")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

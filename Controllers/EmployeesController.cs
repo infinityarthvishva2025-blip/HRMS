@@ -441,20 +441,11 @@ namespace HRMS.Controllers
             int totalAttendance = await _context.Attendances
                 .CountAsync(a => a.Emp_Code == empCode);
 
-            // Today’s attendance
-            //var todayRecord = await _context.Attendances
-            //    .FirstOrDefaultAsync(a =>
-            //        a.Emp_Code == empCode &&
-            //        a.Date == DateTime.Today
-            //    );
-
-           // string todayStatus = todayRecord != null ? "Present" : "Not Marked";
-
             // Total leaves
             int totalLeaves = await _context.Leaves
                 .CountAsync(l => l.EmployeeId == empId);
 
-            // Upcoming birthdays (next 30 days)
+            // Upcoming birthdays
             var upcomingBirthdays = await _context.Employees
                 .Where(e =>
                     e.DOB_Date.HasValue &&
@@ -464,17 +455,37 @@ namespace HRMS.Controllers
                 .Take(5)
                 .ToListAsync();
 
+            // ============================================================
+            // 🔥 UNREAD ANNOUNCEMENTS COUNT FOR NOTIFICATION BELL
+            // ============================================================
+            var allAnnouncements = await _context.Announcements.ToListAsync();
+
+            ViewBag.UnreadCount = allAnnouncements.Count(a =>
+                (
+                    a.IsGlobal ||
+                    (!string.IsNullOrEmpty(a.TargetDepartments) &&
+                        a.TargetDepartments.Split(',').Contains(employee.Department)) ||
+                    (!string.IsNullOrEmpty(a.TargetEmployees) &&
+                        a.TargetEmployees.Split(',').Contains(empId.ToString()))
+                )
+                &&
+                (string.IsNullOrEmpty(a.ReadByEmployees) ||
+                    !a.ReadByEmployees.Split(',').Contains(empId.ToString()))
+            );
+            // ============================================================
+
+
             var vm = new EmployeeDashboardViewModel
             {
                 Employee = employee,
                 TotalAttendance = totalAttendance,
-               // TodayStatus = todayStatus,
                 TotalLeave = totalLeaves,
                 UpcomingBirthdays = upcomingBirthdays
             };
 
             return View(vm);
         }
+
 
 
         public async Task<IActionResult> MyProfile()
@@ -600,6 +611,8 @@ public IActionResult ExportExcel()
 
             return PhysicalFile(filePath, "application/pdf", $"{emp.EmployeeCode}_{month}_{year}.pdf");
         }
+
+        
 
 
     }
