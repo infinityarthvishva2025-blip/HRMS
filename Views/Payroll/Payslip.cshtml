@@ -5,6 +5,10 @@
     Layout = "~/Views/Shared/_HrLayout.cshtml";
 
     var monthName = new DateTime(Model.Year, Model.Month, 1).ToString("MMMM");
+    var halfDayLoss = (Model.PresentHalfDays * 0.5m) * Model.PerDaySalary;
+    var absentLoss = Model.AbsentDays * Model.PerDaySalary;
+    var leaveLoss = halfDayLoss + absentLoss;
+    var totalOtherDeduction = (Model.TotalDeductions - Model.ProfessionalTax);
 }
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -12,21 +16,18 @@
 <div class="container py-4 salary-slip-container">
 
     <!-- HEADER -->
-    <!-- HEADER -->
     <div class="row align-items-center mb-4 salary-header">
-
-        <!-- LEFT: LOGO -->
         <div class="col-4 d-flex justify-content-start">
             <img src="~/images/infinity-logo.png" alt="Infinity Arthvishva Logo" class="company-logo" />
         </div>
-
-        <!-- CENTER: COMPANY NAME -->
         <div class="col-4 text-center">
             <h2 class="fw-bold text-primary mb-0">Infinity Arthvishva</h2>
-            <div class="text-muted small">Empowering Finance & Innovation</div>
+            <div class="text-muted small mb-1">Empowering Finance & Innovation</div>
+            <!-- Added Month-Year Display -->
+            <div class="salary-month text-secondary fw-semibold">
+                Salary Slip for <span class="text-primary">@monthName @Model.Year</span>
+            </div>
         </div>
-
-        <!-- RIGHT: DOWNLOAD BUTTON -->
         <div class="col-4 d-flex justify-content-end">
             <a asp-action="DownloadSalarySlip"
                asp-route-empCode="@Model.EmpCode"
@@ -36,120 +37,124 @@
                 <i class="fa-solid fa-download"></i>
                 Download Slip
             </a>
-
-
-
         </div>
     </div>
 
-
-
-
-        <!-- EMPLOYEE & BANK DETAILS -->
-        <div class="row g-4">
-            <div class="col-md-6">
-                <h5 class="section-heading">Employee Information</h5>
-                <table class="table table-sm table-striped border">
-                    <tbody>
-                        <tr><th>Employee Code</th> <td>@Model.EmpCode</td></tr>
-                        <tr><th>Name</th> <td>@Model.EmpName</td></tr>
-                        <tr><th>Department</th> <td>@Model.Department</td></tr>
-                        <tr><th>Designation</th> <td>@Model.Designation</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="col-md-6">
-                <h5 class="section-heading">Bank Information</h5>
-                <table class="table table-sm table-striped border">
-                    <tbody>
-                        <tr><th>Bank Name</th> <td>@Model.BankName</td></tr>
-                        <tr><th>Account No.</th> <td>@Model.AccountNumber</td></tr>
-                        <tr><th>IFSC Code</th> <td>@Model.IFSCCode</td></tr>
-                        <tr><th>Branch</th> <td>@Model.BankBranch</td></tr>
-                    </tbody>
-                </table>
-            </div>
+    <!-- EMPLOYEE INFO -->
+    <div class="row g-4">
+        <div class="col-md-6">
+            <h5 class="section-heading">Employee Information</h5>
+            <table class="table table-sm table-striped border">
+                <tbody>
+                    <tr><th>Employee Code</th><td>@Model.EmpCode</td></tr>
+                    <tr><th>Name</th><td>@Model.EmpName</td></tr>
+                    <tr><th>Department</th><td>@Model.Department</td></tr>
+                    <tr><th>Designation</th><td>@Model.Designation</td></tr>
+                </tbody>
+            </table>
         </div>
 
-        <!-- ATTENDANCE SUMMARY -->
-        <h5 class="section-heading mt-4">Attendance Summary</h5>
-        <table class="table table-bordered text-center align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Working Days</th>
-                    <th>Half Days</th>
-                    <th>Weekly Off</th>
-                    <th>Saturday (WOP)</th>
-                    <th>Absent</th>
-                    <th>Paid Days</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>@Model.TotalDaysInMonth</td>
-                    <td>@Model.PresentHalfDays</td>
-                    <td>@Model.WeeklyOffDays</td>
-                    <td>@Model.TotalSaturdayPaid</td>
-                    <td>@Model.AbsentDays</td>
-                    <td class="fw-bold">@Model.PaidDays.ToString("0.##")</td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="col-md-6">
+            <h5 class="section-heading">Bank Information</h5>
+            <table class="table table-sm table-striped border">
+                <tbody>
+                    <tr><th>Bank Name</th><td>@Model.BankName</td></tr>
+                    <tr><th>Account No.</th><td>@Model.AccountNumber</td></tr>
+                    <tr><th>IFSC Code</th><td>@Model.IFSCCode</td></tr>
+                    <tr><th>Branch</th><td>@Model.BankBranch</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-        <!-- SALARY DETAILS -->
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <h5 class="section-heading">Earnings</h5>
-                <table class="table table-striped border">
-                    <tbody>
-                        <tr><th>Base Salary</th> <td class="text-end">@Model.MonthlySalary.ToString("0.00")</td></tr>
-                        <tr><th>Per Day Salary</th> <td class="text-end">@Model.PerDaySalary.ToString("0.00")</td></tr>
-                        <tr><th>Performance Allowance</th> <td class="text-end">@Model.PerformanceAllowance.ToString("0.00")</td></tr>
-                        <tr><th>Other Allowances</th> <td class="text-end">@Model.OtherAllowances.ToString("0.00")</td></tr>
-                        <tr><th>Petrol Allowance</th> <td class="text-end">@Model.PetrolAllowance.ToString("0.00")</td></tr>
-                        <tr><th>Reimbursement</th> <td class="text-end">@Model.Reimbursement.ToString("0.00")</td></tr>
-                        <tr class="table-primary">
-                            <th>Gross Salary</th>
-                            <td class="text-end fw-bold">@Model.GrossSalary.ToString("0.00")</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+    <!-- ATTENDANCE SUMMARY -->
+    <h5 class="section-heading mt-4">Attendance Summary</h5>
+    <table class="table table-bordered text-center align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Working Days</th>
+                <th>Half Days</th>
+                <th>Absent</th>
+                <th>Late Marks</th>
+                <th>Late Deduction (Days)</th>
+                <th title="Includes WO + WOP">Paid Days (WO + WOP Included)</th>
+                <th>Leave Loss (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>@Model.TotalDaysInMonth</td>
+                <td>@Model.PresentHalfDays</td>
+                <td class="text-danger fw-bold">@Model.AbsentDays</td>
+                <td>@Model.LateMarks</td>
+                <td class="text-warning fw-bold">@Model.LateDeductionDays.ToString("0.0")</td>
+                <td class="fw-bold" title="Paid Days = Present + WO(@Model.WeeklyOffDays) + WOP(@Model.TotalSaturdayPaid)">
+                    @Model.PaidDays.ToString("0.##")
+                </td>
+                <td class="text-danger fw-bold">@leaveLoss.ToString("0.00")</td>
+            </tr>
+        </tbody>
+    </table>
 
-            <div class="col-md-6">
-                <h5 class="section-heading">Deductions</h5>
-                <table class="table table-striped border">
-                    <tbody>
-                        <tr><th>Professional Tax</th> <td class="text-end">@Model.ProfessionalTax.ToString("0.00")</td></tr>
-                        <tr><th>Other Deductions</th> <td class="text-end">@(@Model.TotalDeductions - @Model.ProfessionalTax).ToString("0.00")</td></tr>
-                        <tr class="table-danger">
-                            <th>Total Deductions</th>
-                            <td class="text-end fw-bold">@Model.TotalDeductions.ToString("0.00")</td>
-                        </tr>
-                        <tr class="table-success">
-                            <th>Net Salary</th>
-                            <td class="text-end fw-bold text-success">@Model.NetSalary.ToString("0.00")</td>
-                        </tr>
-                        <tr class="table-success">
-                            <th>Total Payable</th>
-                            <td class="text-end fw-bold text-success">@Model.TotalPay.ToString("0.00")</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+    <!-- EARNINGS + DEDUCTIONS -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <h5 class="section-heading">Earnings</h5>
+            <table class="table table-striped border">
+                <tbody>
+                    <tr><th>Base Salary</th><td class="text-end">@Model.MonthlySalary.ToString("0.00")</td></tr>
+                    <tr><th>Per Day Salary</th><td class="text-end">@Model.PerDaySalary.ToString("0.00")</td></tr>
+                    <tr><th>Performance Allowance</th><td class="text-end">@Model.PerformanceAllowance.ToString("0.00")</td></tr>
+                    <tr><th>Other Allowances</th><td class="text-end">@Model.OtherAllowances.ToString("0.00")</td></tr>
+                    <tr><th>Petrol Allowance</th><td class="text-end">@Model.PetrolAllowance.ToString("0.00")</td></tr>
+                    <tr><th>Reimbursement</th><td class="text-end">@Model.Reimbursement.ToString("0.00")</td></tr>
+                    <tr class="table-primary">
+                        <th>Gross Salary</th>
+                        <td class="text-end fw-bold">@Model.GrossSalary.ToString("0.00")</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
-        <!-- FOOTER -->
-        <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+        <div class="col-md-6">
+            <h5 class="section-heading">Deductions</h5>
+            <table class="table table-striped border">
+                <tbody>
+                    <tr><th>Professional Tax</th><td class="text-end">@Model.ProfessionalTax.ToString("0.00")</td></tr>
+                    <tr><th>Leave Loss (Absents + Half-Days)</th><td class="text-end text-danger">@leaveLoss.ToString("0.00")</td></tr>
+                    <tr><th>Other Deductions (Misc.)</th><td class="text-end">@totalOtherDeduction.ToString("0.00")</td></tr>
+                    <tr class="table-danger">
+                        <th>Total Deductions</th>
+                        <td class="text-end fw-bold">@Model.TotalDeductions.ToString("0.00")</td>
+                    </tr>
+                    <tr class="table-success">
+                        <th>Net Salary</th>
+                        <td class="text-end fw-bold text-success">@Model.NetSalary.ToString("0.00")</td>
+                    </tr>
+                    <tr class="table-success">
+                        <th>Total Payable</th>
+                        <td class="text-end fw-bold text-success">@Model.TotalPay.ToString("0.00")</td>
+                    </tr>
+                </tbody>
+            </table>
+
             <div class="small text-muted">
-                *This is a system-generated salary slip and does not require a signature.
+                <b>Note:</b> <br />
+                • <b>Weekly Off (WO)</b> and <b>Saturday (WOP)</b> are <b>paid</b> days and included in Paid Days. <br />
+                • From the 4th late mark onward, each late = <b>0.5-day deduction</b>. <br />
+                • Leave loss = (Absents + Half Days × 0.5) × Per Day Salary.
             </div>
+        </div>
+    </div>
 
-            <div class="text-end">
-                <div class="signature-box"></div>
-                <div class="small text-muted">Authorized Signatory</div>
-            </div>
+    <!-- FOOTER -->
+    <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+        <div class="small text-muted">
+            *This is a system-generated salary slip and does not require a signature.
+        </div>
+        <div class="text-end">
+            <div class="signature-box"></div>
+            <div class="small text-muted">Authorized Signatory</div>
         </div>
     </div>
 </div>
@@ -161,6 +166,12 @@
 
     .salary-slip-container h2 {
         color: #2F3D88;
+    }
+
+    .salary-month {
+        font-size: 1rem;
+        margin-top: 2px;
+        color: #0E8376;
     }
 
     .section-heading {
@@ -177,21 +188,6 @@
         margin-bottom: 3px;
     }
 
-    @@media print {
-        .salary-slip-container .btn,
-        nav,
-        .sidebar,
-        .navbar {
-            display: none !important;
-        }
-
-        .card {
-            border: none !important;
-            box-shadow: none !important;
-        }
-    }
-
-
     .company-logo {
         height: 80px;
         width: auto;
@@ -206,8 +202,11 @@
         font-weight: 500;
     }
 
-    @@media (max-width: 768px) {
+    .text-warning {
+        color: #ff9800 !important;
+    }
 
+    @@media (max-width: 768px) {
         .salary-header .col-4 {
             text-align: center !important;
             margin-bottom: 10px;
@@ -223,13 +222,13 @@
     }
 
     @@media print {
-        .salary-header,
-        .btn,
-        nav,
-        .navbar,
-        .sidebar {
+        .salary-header, .btn, nav, .navbar, .sidebar {
             display: none !important;
         }
-    }
 
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+    }
 </style>

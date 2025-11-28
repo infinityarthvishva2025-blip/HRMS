@@ -18,6 +18,13 @@
         <a href="/Attendance/EmployeePanel" class="btn btn-attendance mt-3 shadow">
             <i class="fa-solid fa-calendar-check me-2"></i> Mark Attendance
         </a>
+        <a asp-controller="Attendance" asp-action="EmployeeSummary"
+           asp-route-employeeId="@Model.Employee.Id"
+           class="btn btn-lg btn-outline-secondary shadow-sm ms-3 action-btn-outline">
+            <i class="fa-solid fa-chart-line me-2"></i> Attendance Summary
+        </a>
+
+
              
         
         

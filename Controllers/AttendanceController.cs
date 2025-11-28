@@ -1,10 +1,12 @@
 ﻿using HRMS.Data;
 using HRMS.Models;
+using HRMS.Models.ViewModels;
 using HRMS.Services;
 using HRMS.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System;
@@ -129,83 +131,132 @@ namespace HRMS.Controllers
         // =========================================================
         // EMPLOYEE SUMMARY PAGE
         // =========================================================
-        public IActionResult EmployeeSummary(string empCode, DateTime? from, DateTime? to)
+        [HttpGet]
+        public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
         {
-            if (empCode == null)
-                return BadRequest();
+            if (employeeId <= 0)
+                return BadRequest("Invalid employee ID.");
 
-            DateTime start = (from ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1)).Date;
-            DateTime end = (to ?? start.AddMonths(1).AddDays(-1)).Date;
+            // Get employee record
+            var emp = _context.Employees.FirstOrDefault(e => e.Id == employeeId);
+            if (emp == null)
+                return NotFound("Employee not found.");
 
-            var list = _context.Attendances
-                .Where(a => a.Emp_Code == empCode && a.Date >= start && a.Date <= end)
-                .OrderBy(a => a.Date)
+            string empCode = emp.EmployeeCode;   // IMPORTANT: Attendance table uses Emp_Code
+
+            // ---------------------------------------
+            // DEFAULT DATE RANGE → CURRENT MONTH
+            // ---------------------------------------
+            if (!from.HasValue)
+                from = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+
+            if (!to.HasValue)
+                to = DateTime.Now.Date;
+
+            DateTime startDate = from.Value.Date;
+            DateTime endDate = to.Value.Date.AddDays(1).AddSeconds(-1); // include entire day
+
+            // ---------------------------------------
+            // GET ATTENDANCE RECORDS FOR EMPLOYEE
+            // ---------------------------------------
+            var attendanceRecords = _context.Attendances
+                .Where(a => a.Emp_Code == empCode)     // FIXED 🔥 use Emp_Code
+                .Where(a => a.Date >= startDate && a.Date <= endDate)
+                .OrderByDescending(a => a.Date)
                 .ToList();
 
-            return View(list);
+            // ---------------------------------------
+            // CALCULATE SUMMARY
+            // ---------------------------------------
+            TimeSpan shiftStart = new TimeSpan(9, 30, 0);
+            TimeSpan shiftEnd = new TimeSpan(18, 0, 0);
+
+            var summary = new EmployeeAttendanceSummaryViewModel
+            {
+                Employee = emp,
+                AttendanceRecords = attendanceRecords,
+                FromDate = startDate,
+                ToDate = endDate,
+
+                TotalDays = attendanceRecords.Count,
+
+                TotalLateDays = attendanceRecords.Count(a =>
+                    a.InTime.HasValue && a.InTime.Value > shiftStart),
+
+                TotalEarlyLeaveDays = attendanceRecords.Count(a =>
+                    a.OutTime.HasValue && a.OutTime.Value < shiftEnd),
+
+                AverageWorkingHours = attendanceRecords
+                    .Where(a => a.InTime.HasValue && a.OutTime.HasValue)
+                    .Select(a => (a.OutTime.Value - a.InTime.Value).TotalHours)
+                    .DefaultIfEmpty(0)
+                    .Average()
+                    .ToString("0.0")
+            };
+
+            return View(summary);
         }
+
+
+
 
         // =========================================================
         // HR LIST PAGE (FILTER + SEARCH)
         // =========================================================
-        public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status)
+        public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status = "All")
         {
-            var query = from a in _context.Attendances
-                        join e in _context.Employees
-                             on a.Emp_Code equals e.EmployeeCode into empJoin
-                        from e in empJoin.DefaultIfEmpty()
-                        select new { a, e };
+            var attendance = _context.AttendanceRecords.AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(search))
+            // 🟢 Default: current month
+            if (!fromDate.HasValue && !toDate.HasValue)
             {
-                query = query.Where(x =>
-                    x.e != null && (x.e.EmployeeCode.Contains(search) || x.e.Name.Contains(search)));
+                var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                var lastDay = firstDay.AddMonths(1).AddDays(-1);
+
+                fromDate = firstDay;
+                toDate = lastDay;
             }
 
-            if (fromDate.HasValue)
-                query = query.Where(x => x.a.Date >= fromDate.Value);
+            // 🧭 Apply date range
+            attendance = attendance.Where(a => a.Date >= fromDate && a.Date <= toDate);
 
-            if (toDate.HasValue)
-                query = query.Where(x => x.a.Date <= toDate.Value);
+            // 🔍 Search filter
+            if (!string.IsNullOrEmpty(search))
+                attendance = attendance.Where(a => a.Emp_Code.Contains(search));
 
-            if (!string.IsNullOrEmpty(status) && status != "All")
-            {
-                if (status == "Completed")
-                    query = query.Where(x => x.a.InTime != null && x.a.OutTime != null);
+            // 📋 Status filter
+            if (status == "NotCheckedOut")
+                attendance = attendance.Where(a => a.InTime != null && a.OutTime == null);
+            else if (status == "Completed")
+                attendance = attendance.Where(a => a.InTime != null && a.OutTime != null);
 
-                else if (status == "NotCheckedOut")
-                    query = query.Where(x => x.a.InTime != null && x.a.OutTime == null);
-            }
+            // 🌐 ViewBag for form prefill
+            ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
+            ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
+            ViewBag.Search = search;
+            ViewBag.Status = status;
 
-            var model = query
-                .OrderBy(x => x.e.EmployeeCode)
-                .ThenBy(x => x.a.Date)
-                .AsEnumerable()
-                .Select(x => new AttendanceIndexVm
+            // 📊 Projection to ViewModel
+            var list = attendance
+                .OrderByDescending(a => a.Date)
+                .Select(a => new AttendanceIndexVm
                 {
-                    Emp_Code = x.e?.EmployeeCode,
-                    EmpName = x.e?.Name ?? string.Empty,
-                    AttDate = x.a.Date,
-                    Status = x.a.Status ?? string.Empty,
-                    InTime = x.a.InTime ?? TimeSpan.Zero,
-                    OutTime = x.a.OutTime ?? TimeSpan.Zero,
-                    IsLate = IsLate(x.a),
-
-                    // ⭐ TOTAL HOURS
-                    TotalHours = (x.a.InTime.HasValue && x.a.OutTime.HasValue)
-                        ? $"{(x.a.OutTime.Value - x.a.InTime.Value).Hours}h {(x.a.OutTime.Value - x.a.InTime.Value).Minutes}m"
+                    Emp_Code = a.Emp_Code,
+                    AttDate = a.Date,
+                    InTime = a.InTime,
+                    OutTime = a.OutTime,
+                    TotalHours = (a.InTime != null && a.OutTime != null)
+                        ? (a.OutTime.Value - a.InTime.Value).ToString(@"hh\:mm")
                         : "--"
                 })
                 .ToList();
 
-            ViewBag.Search = search;
-            ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
-            ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
-            ViewBag.Status = status;
+            // 👥 Load employees for name display
             ViewBag.EmployeeList = _context.Employees.ToList();
 
-            return View(model);
+            return View(list);
         }
+
 
 
         private bool IsLate(Attendance a)
@@ -282,8 +333,8 @@ namespace HRMS.Controllers
                     ws.Cells[row, 1].Value = a.Emp_Code;
                     ws.Cells[row, 2].Value = emp?.Name ?? "--";
                     ws.Cells[row, 3].Value = a.Date.ToString("dd-MMM-yyyy");
-                    ws.Cells[row, 4].Value = a.InTime?.ToString("hh:mm tt") ?? "--";
-                    ws.Cells[row, 5].Value = a.OutTime?.ToString("hh:mm tt") ?? "--";
+                    ws.Cells[row, 4].Value = a.InTime.HasValue ? a.InTime.Value.ToString(@"hh\:mm") : "--";
+                    ws.Cells[row, 5].Value = a.OutTime.HasValue? a.OutTime.Value.ToString(@"hh\:mm") : "--";
 
                     // ⭐ TOTAL HOURS
                     string totalHours = "--";
@@ -307,6 +358,26 @@ namespace HRMS.Controllers
                     "Attendance.xlsx"
                 );
             }
+        }
+
+
+        public IActionResult CalendarView()
+        {
+            var data = _context.AttendanceRecords
+                .Select(a => new
+                {
+                    title = a.Emp_Code + " - " +
+                        (!a.InTime.HasValue ? "Absent" :
+                        (a.OutTime.HasValue ? "Present" : "Not Checked Out")),
+                    start = a.Date.ToString("yyyy-MM-dd"),
+                    color = !a.InTime.HasValue ? "#dc3545" :
+                            (a.OutTime.HasValue ? "#28a745" : "#ffc107")
+                })
+                .ToList();
+
+            ViewBag.AttendanceJson = JsonConvert.SerializeObject(data);
+
+            return View();
         }
 
     }
