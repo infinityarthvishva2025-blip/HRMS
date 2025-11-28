@@ -18,12 +18,7 @@ namespace HRMS.Controllers
             _notification = notification;
             _workflow = workflow;
         }
-        //public LeaveController(ApplicationDbContext context, INotificationService notification)
-        //{
-        //    _context = context;
-        //    _notification = notification;
-        //}
-
+       
         // -------------------- helpers --------------------
         private int? GetCurrentEmployeeId()
         {
@@ -71,7 +66,7 @@ namespace HRMS.Controllers
         {
             var empId = GetCurrentEmployeeId();
             if (empId == null)
-                return RedirectToAction("Login", "Account");
+               return RedirectToAction("Login", "Account");
 
             var employee = await _context.Employees.FindAsync(empId);
 
@@ -108,13 +103,13 @@ namespace HRMS.Controllers
                 // ---------------- EMPLOYEE ----------------
                 case "Employee":
                     model.CurrentApproverRole = "Employee";
-                    model.NextApproverRole = "Manager";
+                    model.NextApproverRole = "HR";
                     break;
 
                 // ---------------- HR ----------------
                 case "HR":
                     // HR skips Manager (self)
-                    model.ManagerStatus = "Approved";     // Skip Manager
+                    model.ManagerStatus = "Pending";     // Skip Manager
                     model.HrStatus = "Pending";           // HR role itself is first approver?
                     model.VpStatus = "Pending";
                     model.DirectorStatus = "Pending";
@@ -156,7 +151,7 @@ namespace HRMS.Controllers
 
                 default:
                     model.CurrentApproverRole = "Employee";
-                    model.NextApproverRole = "Manager";
+                    model.NextApproverRole = "HR";
                     break;
             }
 
@@ -200,29 +195,7 @@ namespace HRMS.Controllers
             return View("ApprovalList", pending);
         }
        
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> ManagerApprove(int id, bool approve, string? remark)
-        //{
-        //    var leave = await _context.Leaves
-        //        .Include(l => l.Employee)
-        //        .FirstOrDefaultAsync(l => l.Id == id);
-
-        //    if (leave == null) return NotFound();
-
-        //    leave.ManagerStatus = approve ? "Approved" : "Rejected";
-        //    leave.ManagerRemark = remark;
-
-        //    UpdateOverallStatus(leave);
-        //    await _context.SaveChangesAsync();
-
-        //    await _notification.NotifyLeaveStatusChangedAsync(leave, "Manager", approve);
-
-        //    return RedirectToAction("ManagerApprovalList");
-        //}
-
-        // -------------------- HR APPROVAL --------------------
-       // [AuthorizeRole("HR")]
+        
         public async Task<IActionResult> HrApprovalList()
         {
             var pending = await _context.Leaves
@@ -308,11 +281,11 @@ namespace HRMS.Controllers
             // Role-based base filter
             switch (role)
             {
-                case "Manager":
+                case "HR":
                     // show all for manager (you can restrict to team if you have ManagerId)
                     break;
 
-                case "HR":
+                case "Manager":
                     query = query.Where(l => l.ManagerStatus == "Approved");
                     break;
 
@@ -359,9 +332,9 @@ namespace HRMS.Controllers
             var now = DateTime.Today;
             var startOfMonth = new DateTime(now.Year, now.Month, 1);
 
-            var pendingManager = await _context.Leaves.CountAsync(l => l.ManagerStatus == "Pending");
-            var pendingHr = await _context.Leaves.CountAsync(l => l.ManagerStatus == "Approved" &&
-                                                                   l.HrStatus == "Pending");
+            var pendingHr = await _context.Leaves.CountAsync(l => l.HrStatus == "Pending");
+            var pendingManager  = await _context.Leaves.CountAsync(l => l.HrStatus  == "Approved" &&
+                                                                   l.ManagerStatus == "Pending");
             var pendingDirector = await _context.Leaves.CountAsync(l => l.ManagerStatus == "Approved" &&
                                                                          l.HrStatus == "Approved" &&
                                                                          l.DirectorStatus == "Pending");
@@ -429,15 +402,15 @@ namespace HRMS.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPendingCounts()
         {
-            var manager = await _context.Leaves.CountAsync(l => l.ManagerStatus == "Pending");
+            var hr = await _context.Leaves.CountAsync(l => l.HrStatus == "Pending");
 
-            var hr = await _context.Leaves.CountAsync(l =>
-                l.ManagerStatus == "Approved" &&
-                l.HrStatus == "Pending");
+            var manager = await _context.Leaves.CountAsync(l =>
+               l.HrStatus == "Approved" &&
+                l.ManagerStatus == "Pending");
 
             var director = await _context.Leaves.CountAsync(l =>
-                l.ManagerStatus == "Approved" &&
-                l.HrStatus == "Approved" &&
+            l.HrStatus == "Approved" &&
+            l.ManagerStatus == "Approved" &&  
                 l.DirectorStatus == "Pending");
 
             return Json(new
@@ -447,12 +420,12 @@ namespace HRMS.Controllers
                 directorPending = director
             });
         }
-
         private async Task ProcessApproval(int id, string NextApproverRole, bool approve, string? remark)
         {
             var leave = await _context.Leaves.FirstOrDefaultAsync(l => l.Id == id);
             if (leave == null) return;
 
+            // UPDATE STATUS
             switch (NextApproverRole)
             {
                 case "Manager":
@@ -466,8 +439,8 @@ namespace HRMS.Controllers
                     break;
 
                 case "VP":
-                    leave.VpStatus  = approve ? "Approved" : "Rejected";
-                    leave.VpRemark  = remark;
+                    leave.VpStatus = approve ? "Approved" : "Rejected";
+                    leave.VpRemark = remark;
                     break;
 
                 case "Director":
@@ -476,22 +449,247 @@ namespace HRMS.Controllers
                     break;
             }
 
+            // IF REJECTED → DELETE ATTENDANCE
             if (!approve)
             {
                 leave.OverallStatus = "Rejected";
                 leave.NextApproverRole = "Completed";
-            }
-            else
-            {
-                leave.CurrentApproverRole = NextApproverRole;
-                leave.NextApproverRole = await _workflow.GetNextApproverRoleAsync(NextApproverRole);
 
-                if (leave.NextApproverRole == "Completed")
-                    leave.OverallStatus = "Approved";
+                await DeleteLeaveFromAttendance(leave);
+                await _context.SaveChangesAsync();
+                return;
+            }
+
+            // IF APPROVED → CONTINUE WORKFLOW
+            leave.CurrentApproverRole = NextApproverRole;
+            leave.NextApproverRole = await _workflow.GetNextApproverRoleAsync(NextApproverRole);
+
+            // FINAL APPROVAL
+            if (leave.NextApproverRole == "Completed")
+            {
+                leave.OverallStatus = "Approved";
+
+                // 🟢 ATTENDANCE UPDATE HERE
+                await SyncLeaveToAttendance(leave);
             }
 
             await _context.SaveChangesAsync();
         }
+        private async Task SyncLeaveToAttendance(Leave leave)
+        {
+            var employee = await _context.Employees.FindAsync(leave.EmployeeId);
+            if (employee == null) return;
+
+            string empCode = employee.EmployeeCode;
+
+            for (var date = leave.StartDate.Date; date <= leave.EndDate.Value.Date; date = date.AddDays(1))
+            {
+                var record = await _context.Attendances
+                    .FirstOrDefaultAsync(a => a.Emp_Code == empCode && a.Date == date);
+
+                if (record == null)
+                {
+                    record = new Attendance
+                    {
+                        Emp_Code = empCode,
+                        Date = date,
+                        Status = "L",   // Mark as Leave
+                        InTime = null,
+                        OutTime = null,
+                        Total_Hours = 0
+                    };
+                    _context.Attendances.Add(record);
+                }
+                else
+                {
+                    record.Status = "L";
+                    record.InTime = null;
+                    record.OutTime = null;
+                    record.Total_Hours = 0;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
+        private async Task DeleteLeaveFromAttendance(Leave leave)
+        {
+            var employee = await _context.Employees.FindAsync(leave.EmployeeId);
+            if (employee == null) return;
+
+            string empCode = employee.EmployeeCode;
+
+            var records = _context.Attendances
+                .Where(a => a.Emp_Code == empCode &&
+                            a.Date >= leave.StartDate &&
+                            a.Date <= leave.EndDate);
+
+            _context.Attendances.RemoveRange(records);
+            await _context.SaveChangesAsync();
+        }
+
+        //private async Task ProcessApproval(int id, string NextApproverRole, bool approve, string? remark)
+        //{
+        //    var leave = await _context.Leaves.FirstOrDefaultAsync(l => l.Id == id);
+        //    if (leave == null) return;
+
+        //    switch (NextApproverRole)
+        //    {
+        //        case "Manager":
+        //            leave.ManagerStatus = approve ? "Approved" : "Rejected";
+        //            leave.ManagerRemark = remark;
+        //            break;
+
+        //        case "HR":
+        //            leave.HrStatus = approve ? "Approved" : "Rejected";
+        //            leave.HrRemark = remark;
+        //            break;
+
+        //        case "VP":
+        //            leave.VpStatus = approve ? "Approved" : "Rejected";
+        //            leave.VpRemark = remark;
+        //            break;
+
+        //        case "Director":
+        //            leave.DirectorStatus = approve ? "Approved" : "Rejected";
+        //            leave.DirectorRemark = remark;
+        //            break;
+        //    }
+
+        //    // If REJECTED
+        //    if (!approve)
+        //    {
+        //        leave.OverallStatus = "Rejected";
+        //        leave.NextApproverRole = "Completed";
+
+        //        // 🔴 Remove attendance rows
+        //        await DeleteLeaveFromAttendance(leave);
+
+        //        await _context.SaveChangesAsync();
+        //        return;
+        //    }
+
+        //    // If APPROVED
+        //    leave.CurrentApproverRole = NextApproverRole;
+        //    leave.NextApproverRole = await _workflow.GetNextApproverRoleAsync(NextApproverRole);
+
+        //    // Fully approved
+        //    if (leave.NextApproverRole == "Completed")
+        //    {
+        //        leave.OverallStatus = "Approved";
+
+        //        // 🟢 Sync leave to attendance
+        //        await SyncLeaveToAttendance(leave);
+        //    }
+
+        //    await _context.SaveChangesAsync();
+        //}
+        // =======================================================
+        // 🟢 INSERT / UPDATE ATTENDANCE WHEN LEAVE IS APPROVED
+        // =======================================================
+        //private async Task SyncLeaveToAttendance(Leave leave)
+        //{
+        //    var employee = await _context.Employees.FindAsync(leave.EmployeeId);
+        //    if (employee == null) return;
+
+        //    string empCode = employee.EmployeeCode;
+
+        //    for (var date = leave.StartDate.Date; date <= leave.EndDate.Value.Date; date = date.AddDays(1))
+        //    {
+        //        var record = await _context.Attendances
+        //            .FirstOrDefaultAsync(a => a.Emp_Code == empCode && a.Date == date);
+
+        //        if (record == null)
+        //        {
+        //            // Create leave entry
+        //            record = new Attendance
+        //            {
+        //                Emp_Code = empCode,
+        //                Date = date,
+        //                Status = "L",
+        //                InTime = null,
+        //                OutTime = null,
+        //                Total_Hours = 0
+        //            };
+        //            _context.Attendances.Add(record);
+        //        }
+        //        else
+        //        {
+        //            // Update existing row to Leave
+        //            record.Status = "L";
+        //            record.InTime = null;
+        //            record.OutTime = null;
+        //            record.Total_Hours = 0;
+        //        }
+        //    }
+
+        //    await _context.SaveChangesAsync();
+        //}
+
+
+        // =======================================================
+        // 🔴 DELETE ATTENDANCE WHEN LEAVE IS REJECTED
+        // =======================================================
+        //private async Task DeleteLeaveFromAttendance(Leave leave)
+        //{
+        //    var employee = await _context.Employees.FindAsync(leave.EmployeeId);
+        //    if (employee == null) return;
+
+        //    string empCode = employee.EmployeeCode;
+
+        //    var records = _context.Attendances
+        //        .Where(a => a.Emp_Code == empCode &&
+        //                    a.Date >= leave.StartDate &&
+        //                    a.Date <= leave.EndDate);
+
+        //    _context.Attendances.RemoveRange(records);
+
+        //    await _context.SaveChangesAsync();
+        //}
+
+        //private async Task ProcessApproval(int id, string NextApproverRole, bool approve, string? remark)
+        //{
+        //    var leave = await _context.Leaves.FirstOrDefaultAsync(l => l.Id == id);
+        //    if (leave == null) return;
+
+        //    switch (NextApproverRole)
+        //    {
+        //        case "Manager":
+        //            leave.ManagerStatus = approve ? "Approved" : "Rejected";
+        //            leave.ManagerRemark = remark;
+        //            break;
+
+        //        case "HR":
+        //            leave.HrStatus = approve ? "Approved" : "Rejected";
+        //            leave.HrRemark = remark;
+        //            break;
+
+        //        case "VP":
+        //            leave.VpStatus  = approve ? "Approved" : "Rejected";
+        //            leave.VpRemark  = remark;
+        //            break;
+
+        //        case "Director":
+        //            leave.DirectorStatus = approve ? "Approved" : "Rejected";
+        //            leave.DirectorRemark = remark;
+        //            break;
+        //    }
+
+        //    if (!approve)
+        //    {
+        //        leave.OverallStatus = "Rejected";
+        //        leave.NextApproverRole = "Completed";
+        //    }
+        //    else
+        //    {
+        //        leave.CurrentApproverRole = NextApproverRole;
+        //        leave.NextApproverRole = await _workflow.GetNextApproverRoleAsync(NextApproverRole);
+
+        //        if (leave.NextApproverRole == "Completed")
+        //            leave.OverallStatus = "Approved";
+        //    }
+
+        //    await _context.SaveChangesAsync();
+        //}
 
         // -------------------- MANAGER APPROVAL --------------------
         public async Task<IActionResult> ManagerApprove(int id, bool approve, string? remark)

@@ -149,7 +149,7 @@ namespace HRMS.Controllers
         // =========================================================
         // HR LIST PAGE (FILTER + SEARCH)
         // =========================================================
-        public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status = "All")
+        public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status )
         {
             var attendance = _context.AttendanceRecords.AsQueryable();
 
@@ -191,6 +191,7 @@ namespace HRMS.Controllers
                     AttDate = a.Date,
                     InTime = a.InTime,
                     OutTime = a.OutTime,
+                    Status=a.Status,
                     TotalHours = (a.InTime != null && a.OutTime != null)
                         ? (a.OutTime.Value - a.InTime.Value).ToString(@"hh\:mm")
                         : "--"

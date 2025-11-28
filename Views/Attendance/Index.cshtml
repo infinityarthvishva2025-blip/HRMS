@@ -120,7 +120,48 @@
                                     <td class="text-nowrap">@((a.OutTime.HasValue) ? a.OutTime.Value.ToString(@"hh\:mm") : "--")</td>
                                     <td class="text-nowrap">@a.TotalHours</td>
                                     <td class="text-nowrap">
-                                        @if (!a.InTime.HasValue)
+                                        @if (a.Status == "L")
+                                        {
+                                            <span class="badge bg-info text-dark pill-badge">Leave</span>
+                                        }
+                                        @*   else if (a.Status == "WOP" || a.Status == "WO")
+                                        {
+                                            <span class="badge bg-secondary pill-badge">Weekly Off</span>
+                                        } *@
+                                        @* Weekly Off – WOP *@
+                                        else if (a.Status == "WOP")
+                                        {
+                                            <span class="badge bg-success pill-badge">Present</span>
+                                        }
+
+                                        @* Weekly Off – WO *@
+                                        else if (a.Status == "WO")
+                                        {
+                                            <span class="badge bg-secondary pill-badge">Weekly Off</span>
+                                        }
+                                        else if (a.InTime.HasValue && !a.OutTime.HasValue)
+                                        {
+                                            <span class="badge bg-warning text-dark pill-badge">Not Checked Out</span>
+                                        }
+
+
+                                        else if (a.Status == "A")
+                                        {
+                                            <span class="badge bg-danger pill-badge">Absent</span>
+                                        }
+                                        else if (a.Status == "P")
+                                        {
+                                            <span class="badge bg-success pill-badge">Present</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger pill-badge">Absent</span>
+                                        }
+                                    </td>
+                                    @* <td class="text-nowrap">
+                                       
+                                        @* ---- Normal Attendance ---- 
+                                        else if (!a.InTime.HasValue)
                                         {
                                             <span class="badge bg-danger pill-badge">Absent</span>
                                         }
@@ -128,11 +169,19 @@
                                         {
                                             <span class="badge bg-warning text-dark pill-badge">Not Checked Out</span>
                                         }
+                                       // else if (!a.InTime.HasValue)|| (!a.OutTime.HasValue)
+                                        else if (a.InTime == null && a.OutTime == null)
+                                        {
+                                            <span class="badge bg-danger pill-badge">Leave</span>
+                                        }
                                         else
                                         {
                                             <span class="badge bg-success pill-badge">Present</span>
                                         }
+
                                     </td>
+ *@
+
                                 </tr>
                             }
                         }
@@ -169,6 +218,7 @@
             font-size: 1.4rem;
         }
     }
+
     @@media (max-width: 768px) {
         /* Make buttons full-width and stacked */
         .d-grid.d-md-flex .btn {
@@ -183,6 +233,7 @@
             font-size: .92rem;
         }
     }
+
     @@media (max-width: 480px) {
         .page-title {
             font-size: 1.2rem;
