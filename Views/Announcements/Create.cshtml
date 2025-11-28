@@ -1,0 +1,86 @@
+﻿@{
+    Layout = "_HrLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">📢 Create Announcement</h2>
+
+    <a href="/Announcements/List" class="btn btn-outline-primary fw-bold">
+        📋 View All Announcements
+    </a>
+</div>
+
+<div class="card p-4 shadow">
+    <form method="post">
+
+        <input type="hidden" name="targetType" id="targetTypeHidden" value="ALL" />
+
+        <div class="mb-3">
+            <label>Title</label>
+            <input type="text" name="Title" class="form-control" required />
+        </div>
+
+        <div class="mb-3">
+            <label>Message</label>
+            <textarea name="Message" class="form-control" rows="4" required></textarea>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label>Send To</label>
+                <select class="form-control" id="targetTypeSelect">
+                    <option value="ALL">All Employees</option>
+                    <option value="DEPT">Specific Department(s)</option>
+                    <option value="EMP">Specific Employee(s)</option>
+                </select>
+            </div>
+
+            <div class="col-md-4 mb-3" id="deptBox" style="display:none;">
+                <label>Select Department(s)</label>
+                <select name="SelectedDepartments" class="form-control" multiple size="5">
+                    @foreach (var d in ViewBag.Departments)
+                    {
+                        <option value="@d">@d</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4 mb-3" id="empBox" style="display:none;">
+                <label>Select Employee(s)</label>
+                <select name="SelectedEmployees" class="form-control" multiple size="5">
+                    @foreach (var e in ViewBag.Employees)
+                    {
+                        <option value="@e.Id">@e.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label>Urgent?</label>
+                <select class="form-control" name="IsUrgent">
+                    <option value="false">No</option>
+                    <option value="true">Yes</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn btn-primary w-100 fw-bold">Send Announcement</button>
+    </form>
+</div>
+
+<script>
+    const typeSelect = document.getElementById("targetTypeSelect");
+    const hidden = document.getElementById("targetTypeHidden");
+    const dept = document.getElementById("deptBox");
+    const emp = document.getElementById("empBox");
+
+    typeSelect.addEventListener("change", () => {
+        hidden.value = typeSelect.value;
+
+        dept.style.display = "none";
+        emp.style.display = "none";
+
+        if (typeSelect.value === "DEPT") dept.style.display = "block";
+        if (typeSelect.value === "EMP") emp.style.display = "block";
+    });
+</script>

@@ -37,6 +37,8 @@ namespace HRMS.Data
         public DbSet<GurukulProgress> GurukulProgress {  get; set; }
         public DbSet<Expenses> Expenses { get; set; }
 
+        public DbSet<Announcement> Announcements { get; set; }
+
         public DbSet<Payroll> Payroll { get; set; }
         public DbSet<LeaveApprovalRoute> LeaveApprovalRoutes { get; set; }
         public DbSet<Hr> Hrs { get; set; }

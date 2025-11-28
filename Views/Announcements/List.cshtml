@@ -1,0 +1,90 @@
+﻿@model IEnumerable<HRMS.Models.Announcement>
+@{
+    Layout = "_HrLayout";
+}
+
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .back-btn {
+        background: #3949ab;
+        color: #fff;
+        padding: 8px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+        text-decoration: none;
+    }
+
+        .back-btn:hover {
+            background: #303f9f;
+            color: white;
+        }
+</style>
+
+<div class="page-header">
+    <h2 class="mb-0">📢 All Announcements</h2>
+
+    <!-- BACK BUTTON -->
+    <a href="/Announcements/Create" class="back-btn">
+        ← Back to Create
+    </a>
+</div>
+
+<div class="d-flex justify-content-end mb-2">
+    <a href="/Announcements/DeleteAll"
+       onclick="return confirm('Are you sure you want to delete ALL announcements?')"
+       class="btn btn-danger">
+        🗑 Delete All
+    </a>
+</div>
+
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Title</th>
+            <th>Message</th>
+            <th>Created On</th>
+            <th>Actions</th>
+
+        </tr>
+    </thead>
+
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="3" class="text-center text-muted py-4">
+                    No announcements found.
+                </td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td>@a.Title</td>
+                    <td>@a.Message</td>
+                    <td>
+                        @a.CreatedOn.AddHours(5).AddMinutes(30).ToString("dd-MM-yyyy hh:mm tt")
+
+                    </td>
+                    <td>
+                        <a href="/Announcements/Delete/@a.Id"
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('Delete this announcement?')">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
