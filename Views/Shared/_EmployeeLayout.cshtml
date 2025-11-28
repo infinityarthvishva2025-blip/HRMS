@@ -245,7 +245,7 @@
                     <span>Logout</span>
                 </a>
             </div>
-            int? employeeId = HttpContext.Session.GetInt32("EmployeeId"); ViewBag.UnreadCount = _context.Announcements .Where(a => a.EmployeeId == employeeId && !a.IsRead) .Count();
+           
         </div>
     </div>
 
