@@ -1,5 +1,13 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Http.Features
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Http;
+
+@inject IHttpContextAccessor HttpContextAccessor
+@{
     Layout = null;
+    var empId = Context.Session.GetInt32("EmployeeId"); // SAFE: Works on all pages
 }
 
 <!DOCTYPE html>
@@ -12,12 +20,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
     <style>
-
         body {
             margin: 0;
-            font-family: "Segoe UI", sans-serif;
+            font-family: "Poppins", "Segoe UI", sans-serif;
             background: #f3f4f7;
         }
 
@@ -77,27 +85,28 @@
         /* =============================== */
 
         .menu-item {
-            margin: 12px 15px;
+            margin: 10px 15px;
             padding: 12px 18px;
             border-radius: 12px;
             display: flex;
             align-items: center;
-            color: #374151;
+            color: #111827;
             font-weight: 600;
             border: 1px solid #e5e7eb;
             background: #ffffff;
             text-decoration: none;
             transition: 0.25s ease-in-out;
+            position: relative;
         }
 
             .menu-item i {
                 margin-right: 14px;
-                font-size: 20px;
-                color: #4f46e5;
+                font-size: 18px;
+                color: #2F3D88;
             }
 
             .menu-item:hover {
-                background: #eef2ff;
+                background: #f0f5ff;
                 transform: translateX(6px);
                 border-color: #c7d2fe;
             }
@@ -115,12 +124,90 @@
                 margin: 0;
             }
 
+        .submenu-toggle {
+            cursor: pointer;
+        }
+
+            .submenu-toggle .toggle-icon {
+                margin-left: auto;
+                font-size: 14px;
+                color: #9ca3af;
+                transition: transform .3s ease;
+            }
+
+        .submenu-open .toggle-icon {
+            transform: rotate(180deg);
+            color: #2F3D88;
+        }
+
+        /* Active menu */
+        .active-menu {
+            background: #2F3D88 !important;
+            border-color: #2F3D88 !important;
+            color: #ffffff !important;
+            transform: translateX(8px);
+        }
+
+            .active-menu i {
+                color: #ffffff !important;
+            }
+
         /* Logout Button */
         .logout .menu-item {
             background: #fee2e2 !important;
             color: #b91c1c !important;
             border-color: #fecaca !important;
         }
+
+            .logout .menu-item i {
+                color: #b91c1c !important;
+            }
+
+        /* =============================== */
+        /*              SUBMENUS           */
+        /* =============================== */
+
+        .submenu {
+            display: none;
+            flex-direction: column;
+            margin: 0 15px 5px 35px;
+        }
+
+        .submenu-item {
+            padding: 9px 16px;
+            margin: 4px 0;
+            font-size: 14px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #2F3D88;
+            background: #eef2ff;
+            border: 1px solid #d6dafc;
+            transition: .25s;
+        }
+
+            .submenu-item i {
+                margin-right: 10px;
+                font-size: 14px;
+                color: #0E8376;
+            }
+
+            .submenu-item:hover {
+                background: rgba(249, 168, 38, 0.12);
+                border-color: #F9A826;
+                transform: translateX(6px);
+            }
+
+        .active-submenu {
+            background: #2F3D88;
+            color: #ffffff;
+            border-color: #2F3D88;
+        }
+
+            .active-submenu i {
+                color: #ffffff;
+            }
 
         /* =============================== */
         /*           PAGE CONTENT          */
@@ -141,15 +228,15 @@
             padding: 14px 25px;
             border-bottom: 1px solid #e5e7eb;
             box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+            border-radius: 12px;
         }
 
-        .active-menu {
-            background: #eef2ff !important;
-            border-color: #c7d2fe !important;
-            transform: translateX(8px);
-        }
+            .topbar span.fw-bold {
+                color: #2F3D88;
+                letter-spacing: .5px;
+            }
 
-        /* Bell animation when unread notifications exist */
+        /* Bell animation */
         .bell-icon {
             font-size: 22px;
             transition: 0.3s ease;
@@ -159,7 +246,6 @@
             animation: shake 0.8s infinite;
         }
 
-        /* Keyframes for shaking effect */
         @@keyframes shake {
             0% {
                 transform: rotate(0deg);
@@ -185,7 +271,6 @@
                 transform: rotate(0deg);
             }
         }
-
     </style>
 </head>
 
@@ -201,58 +286,116 @@
 
         <div class="sidebar-menu">
 
+            <!-- Dashboard -->
             <a asp-controller="Employees" asp-action="Dashboard" class="menu-item">
                 <i class="fa-solid fa-gauge"></i><span>Dashboard</span>
             </a>
 
+            <!-- Profile -->
             <a asp-controller="Employees" asp-action="MyProfile" class="menu-item">
                 <i class="fa-solid fa-id-card"></i><span>My Profile</span>
             </a>
 
-            <a asp-controller="Attendance" asp-action="EmployeePanel" class="menu-item">
-                <i class="fa-solid fa-calendar-check"></i><span>My Attendance</span>
-            </a>
+            <!-- Attendance -->
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('attendanceMenu')">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>My Attendance</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
 
-            <a asp-controller="Leave" asp-action="Create" class="menu-item">
-                <i class="fa-solid fa-plane"></i><span>Apply Leave</span>
-            </a>
+            <div id="attendanceMenu" class="submenu">
+                <a asp-controller="Attendance" asp-action="EmployeePanel" class="submenu-item">
+                    <i class="fa-solid fa-check-circle"></i>Mark Attendance
+                </a>
 
-            <a asp-controller="Leave" asp-action="LeaveReport" class="menu-item">
-                <i class="fa-solid fa-list-check"></i><span>My Leaves</span>
-            </a>
-            <a asp-controller="Leave" asp-action="ApprovalDashboard" class="menu-item">
-                <i class="fa-solid fa-check-to-slot"></i>
-                <span>Leave Approvals</span>
-                <span id="approvalBubble"
-                      class="position-absolute top-0 end-0 translate-middle p-1 bg-danger rounded-circle"
-                      style="display:none; width:12px; height:12px;">
-                </span>
-            </a>
-            <a asp-controller="Expenses" asp-action="Create" class="menu-item">
-                <i class="fa-solid fa-graduation-cap"></i><span>Expenses</span>
-            </a>
-            <a asp-controller="Gurukul" asp-action="Index" class="menu-item">
+                <a asp-controller="Attendance"
+                   asp-action="EmployeeSummary"
+                   asp-route-employeeId="@empId"
+                   class="submenu-item">
+                    <i class="fa-solid fa-chart-line"></i>Attendance Summary
+                </a>
+            </div>
+
+            <!-- Leaves -->
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('leaveMenu')">
+                <i class="fa-solid fa-plane"></i>
+                <span>Leaves</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="leaveMenu" class="submenu">
+                <a asp-controller="Leave" asp-action="Create" class="submenu-item">
+                    <i class="fa-solid fa-paper-plane"></i>Apply Leave
+                </a>
+
+                <a asp-controller="Leave" asp-action="LeaveReport" class="submenu-item">
+                    <i class="fa-solid fa-list-check"></i>My Leaves
+                </a>
+
+                <a asp-controller="Leave" asp-action="ApprovalDashboard" class="submenu-item position-relative">
+                    <i class="fa-solid fa-check-to-slot"></i>Leave Approvals
+                    <span id="approvalBubble"
+                          class="position-absolute top-0 end-0 translate-middle p-1 bg-danger rounded-circle"
+                          style="display:none; width:12px; height:12px;"></span>
+                </a>
+            </div>
+
+            <!-- Expenses -->
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('expenseMenu')">
+                <i class="fa-solid fa-wallet"></i>
+                <span>Expenses</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="expenseMenu" class="submenu">
+                <a asp-controller="Expenses" asp-action="Create" class="submenu-item">
+                    <i class="fa-solid fa-plus-circle"></i>Add Expense
+                </a>
+            </div>
+
+            <!-- Gurukul -->
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('gurukulMenu')">
                 <i class="fa-solid fa-graduation-cap"></i>
                 <span>Gurukul</span>
-            </a>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
 
-            <a asp-controller="Announcements" asp-action="MyNotifications" class="menu-item">
-                <i class="fa-solid fa-notification">📢</i><span>Announcements</span>
-            </a>
+            <div id="gurukulMenu" class="submenu">
+                <a asp-controller="Gurukul" asp-action="Index" class="submenu-item">
+                    <i class="fa-solid fa-book-open"></i>Gurukul Home
+                </a>
+            </div>
+
+            <!-- Announcements -->
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('announcementMenu')">
+                <i class="fa-solid fa-bullhorn"></i>
+                <span>Announcements</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="announcementMenu" class="submenu">
+                <a asp-controller="Announcements" asp-action="MyNotifications" class="submenu-item">
+                    <i class="fa-solid fa-bell"></i>My Notifications
+                </a>
+            </div>
+
+            <!-- Logout -->
             <div class="logout">
                 <a asp-controller="Account" asp-action="Logout" class="menu-item">
                     <i class="fa-solid fa-right-from-bracket"></i>
                     <span>Logout</span>
                 </a>
             </div>
-            int? employeeId = HttpContext.Session.GetInt32("EmployeeId"); ViewBag.UnreadCount = _context.Announcements .Where(a => a.EmployeeId == employeeId && !a.IsRead) .Count();
+
         </div>
     </div>
 
     <!-- PAGE CONTENT -->
     <div id="page-content">
-        <div class="topbar d-flex justify-content-between align-items-center">
-            <button id="sidebarToggle" class="btn btn-primary btn-sm px-3">
+        <div class="topbar d-flex justify-content-between align-items-center mb-4">
+            <button id="sidebarToggle"
+                    class="btn btn-sm px-3"
+                    style="background:#2F3D88; color:white; border-radius:999px;">
                 <i class="fa-solid fa-bars"></i>
             </button>
 
@@ -260,8 +403,6 @@
 
             <a href="/Announcements/MyNotifications"
                class="btn btn-secondary position-relative bell-icon @(ViewBag.UnreadCount > 0 ? "blink" : "")">
-               
- 
                 <i class="fa-solid fa-bell text-white"></i>
 
                 @if (ViewBag.UnreadCount > 0)
@@ -271,51 +412,55 @@
                         @ViewBag.UnreadCount
                     </span>
                 }
-            </a> 
-           
-
-
+            </a>
         </div>
-
 
         @RenderBody()
     </div>
 
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            var unread = parseInt('@ViewBag.UnreadAnnouncements');
-
-            if (unread > 0) {
-                document.querySelector(".bell-icon").classList.add("blink");
-            }
-        });
-    </script>
-
+    <!-- ====================== SCRIPTS ====================== -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        document.getElementById("sidebarToggle").addEventListener("click", function () {
+        document.getElementById("sidebarToggle").addEventListener("click", () => {
             document.getElementById("sidebar-wrapper").classList.toggle("collapsed");
         });
 
-            fetch('/Leave/GetPendingCount')
-        .then(res => res.json())
-        .then(count => {
-            const bubble = document.getElementById('approvalBubble');
-            if (count > 0) bubble.style.display = 'block';
-        });
+        fetch('/Leave/GetPendingCount')
+            .then(res => res.json())
+            .then(count => {
+                if (count > 0) document.getElementById('approvalBubble').style.display = 'block';
+            });
 
-                document.querySelectorAll('.menu-item').forEach(item => {
-            if (item.href === window.location.href) {
-                item.classList.add('active-menu');
-            }
-        });
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id);
+            const open = submenu.style.display === "flex";
+            submenu.style.display = open ? "none" : "flex";
+
+            const parent = submenu.previousElementSibling;
+            parent.classList.toggle("submenu-open", !open);
+        }
+
+        // highlight active page
+        (function () {
+            const url = window.location.href;
+
+            document.querySelectorAll('a.menu-item').forEach(item => {
+                if (item.href === url) item.classList.add("active-menu");
+            });
+
+            document.querySelectorAll('.submenu-item').forEach(item => {
+                if (item.href === url) {
+                    item.classList.add("active-submenu");
+                    const submenu = item.closest(".submenu");
+                    submenu.style.display = "flex";
+                    submenu.previousElementSibling.classList.add("submenu-open");
+                }
+            });
+        })();
     </script>
 
     @RenderSection("Scripts", required: false)
-
-
 </body>
 </html>
