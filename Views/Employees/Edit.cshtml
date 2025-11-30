@@ -618,8 +618,12 @@
 
 
 
-             document.addEventListener("input", function (e) {
-            if (e.target.tagName === "INPUT" && e.target.type === "text") {
+               // AUTO-CAPITAL for INPUT and TEXTAREA
+        document.addEventListener("input", function (e) {
+            if (
+                (e.target.tagName === "INPUT" && e.target.type === "text") ||
+                (e.target.tagName === "TEXTAREA")
+            ) {
                 e.target.value = e.target.value.toUpperCase();
             }
         });
