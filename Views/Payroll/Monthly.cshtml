@@ -1,6 +1,8 @@
 ﻿@model IEnumerable<HRMS.Models.ViewModels.PayrollSummaryVm>
 
 @{
+
+    decimal totalNetPay = Model?.Sum(x => x.NetSalary) ?? 0;
     ViewData["Title"] = "Monthly Payroll";
     Layout = "~/Views/Shared/_HrLayout.cshtml";
 
@@ -83,6 +85,7 @@
                             <td class="fw-bold text-primary">@p.GrossSalary.ToString("0.00")</td>
                             <td class="text-danger">@p.TotalDeductions.ToString("0.00")</td>
                             <td class="fw-bold text-success">@p.NetSalary.ToString("0.00")</td>
+                            
 
                             <td>
                                 <a asp-action="Payslip"
@@ -93,7 +96,9 @@
                                     Slip
                                 </a>
                             </td>
+                           
                         </tr>
+                       
                     }
                 }
                 else
@@ -103,17 +108,26 @@
                             No payroll data found for the selected month.
                         </td>
                     </tr>
+                    
                 }
+               
             </tbody>
         </table>
     </div>
-
+    <div class="alert alert-info fw-bold mt-3">
+        Total Net Pay of All Employees: ₹ @totalNetPay.ToString("0.00")
+    </div>
     <div class="mt-3 small text-muted">
         <b>Note:</b> Absent days are <span class="text-info fw-bold">auto-synced from daily attendance</span>.
         WO (Sunday) and WOP (Saturday) are <span class="text-success fw-bold">paid</span> and included silently in Paid Days.
     </div>
 </div>
 
+  @*  total net pay *@
+@* <div class="alert alert-info fw-bold mt-3">
+    Total Net Pay of All Employees: ₹ @totalNetPay.ToString("0.00")
+</div>
+ *@
 <style>
     .fw-bold {
         font-weight: 600 !important;
