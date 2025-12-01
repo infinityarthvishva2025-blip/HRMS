@@ -14,6 +14,11 @@
         public bool IsLate { get; set; }      // calculated, not from DB
 
         public string Date => AttDate.ToString("dd-mm-yyyy");
+
+        public bool CorrectionRequested { get; set; }
+        public string CorrectionStatus { get; set; }
+        public int Id { get; set; }
+
     }
 }
 

@@ -1,0 +1,17 @@
+﻿@model HRMS.Models.Attendance
+
+<form method="post" asp-action="RequestCorrection" asp-controller="Attendance">
+
+    <!-- IMPORTANT: lowercase 'id' -->
+    <input type="hidden" name="id" value="@Model.Id" />
+
+    <input type="hidden" name="employeeId" value="@ViewBag.EmployeeId" />
+
+    <div class="mb-3">
+        <label class="fw-bold">Why do you want correction?</label>
+        <textarea name="CorrectionRemark" class="form-control" required></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-2">Submit Request</button>
+
+</form>

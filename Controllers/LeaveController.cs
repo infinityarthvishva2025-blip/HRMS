@@ -91,6 +91,8 @@ namespace HRMS.Controllers
             model.HrStatus = "Pending";
             model.VpStatus = "Pending";
             model.DirectorStatus = "Pending";
+
+
             model.OverallStatus = "Pending";
 
             model.ReportingManagerId = employee.ManagerId;
@@ -184,7 +186,9 @@ namespace HRMS.Controllers
             // You can filter by manager's team here if you store ManagerId
             var pending = await _context.Leaves
                 .Include(l => l.Employee)
-                .Where(l => l.ManagerStatus == "Pending")
+                 .Where(l => l.HrStatus  == "Approved" &&
+                            l.ManagerStatus == "Pending")
+                
                 .OrderByDescending(l => l.CreatedOn)
                 .OrderBy(l => l.CreatedOn)
                 .ToListAsync();
@@ -200,8 +204,7 @@ namespace HRMS.Controllers
         {
             var pending = await _context.Leaves
                 .Include(l => l.Employee)
-                .Where(l => l.ManagerStatus == "Approved" &&
-                            l.HrStatus == "Pending")
+               .Where(l => l.HrStatus == "Pending")
                 .OrderBy(l => l.CreatedOn)
                  .OrderByDescending(l => l.CreatedOn)
                 .ToListAsync();
@@ -219,8 +222,7 @@ namespace HRMS.Controllers
                 .Include(l => l.Employee)
                 .Where(l => l.ManagerStatus == "Approved" &&
                             l.HrStatus == "Approved" &&
-                            l.VpStatus == "Pending" &&
-                            l.DirectorStatus == "Pending")
+                            l.VpStatus == "Pending" )
                 .OrderByDescending(l => l.CreatedOn)
                 .ToListAsync();
 
@@ -482,35 +484,109 @@ namespace HRMS.Controllers
 
             string empCode = employee.EmployeeCode;
 
-            for (var date = leave.StartDate.Date; date <= leave.EndDate.Value.Date; date = date.AddDays(1))
-            {
-                var record = await _context.Attendances
-                    .FirstOrDefaultAsync(a => a.Emp_Code == empCode && a.Date == date);
+            // MAIN LEAVE RANGE
+            DateTime start = leave.StartDate.Date;
+            DateTime end = leave.EndDate?.Date ?? leave.StartDate.Date;
 
-                if (record == null)
+            // FIRST APPLY DIRECT LEAVE DAYS
+            for (var date = start; date <= end; date = date.AddDays(1))
+            {
+                await MarkLeave(empCode, date);
+            }
+
+            // 🟦 SANDWICH RULE: Check days BEFORE the leave
+            DateTime dayBefore = start.AddDays(-1);
+            if (await IsWeeklyOff(dayBefore))
+            {
+                // Find the closest working day before
+                var previousWorkingDay = await FindPreviousWorkingDay(empCode, dayBefore);
+
+                if (previousWorkingDay != null)
                 {
-                    record = new Attendance
+                    var attendancePrev = await _context.Attendances
+                        .FirstOrDefaultAsync(a => a.Emp_Code == empCode && a.Date == previousWorkingDay);
+
+                    // If previous working day is Leave → sandwich before applies
+                    if (attendancePrev != null && attendancePrev.Status == "L")
                     {
-                        Emp_Code = empCode,
-                        Date = date,
-                        Status = "L",   // Mark as Leave
-                        InTime = null,
-                        OutTime = null,
-                        Total_Hours = 0
-                    };
-                    _context.Attendances.Add(record);
+                        await MarkLeave(empCode, dayBefore);
+                    }
                 }
-                else
+            }
+
+            // 🟦 SANDWICH RULE: Check days AFTER the leave
+            DateTime dayAfter = end.AddDays(1);
+            if (await IsWeeklyOff(dayAfter))
+            {
+                // Find next working day after
+                var nextWorkingDay = await FindNextWorkingDay(empCode, dayAfter);
+
+                var attendanceNext = await _context.Attendances
+                    .FirstOrDefaultAsync(a => a.Emp_Code == empCode && a.Date == nextWorkingDay);
+
+                if (attendanceNext != null && attendanceNext.Status == "L")
                 {
-                    record.Status = "L";
-                    record.InTime = null;
-                    record.OutTime = null;
-                    record.Total_Hours = 0;
+                    await MarkLeave(empCode, dayAfter);
                 }
             }
 
             await _context.SaveChangesAsync();
         }
+        private async Task MarkLeave(string empCode, DateTime date)
+        {
+            var record = await _context.Attendances
+                .FirstOrDefaultAsync(a => a.Emp_Code == empCode && a.Date == date);
+
+            if (record == null)
+            {
+                record = new Attendance
+                {
+                    Emp_Code = empCode,
+                    Date = date,
+                    Status = "L",
+                    InTime = null,
+                    OutTime = null,
+                    Total_Hours = 0
+                };
+                _context.Attendances.Add(record);
+            }
+            else
+            {
+                record.Status = "L";
+                record.InTime = null;
+                record.OutTime = null;
+                record.Total_Hours = 0;
+            }
+        }
+        private async Task<DateTime> FindNextWorkingDay(string empCode, DateTime from)
+        {
+            for (var d = from.AddDays(1); d <= from.AddDays(7); d = d.AddDays(1))
+            {
+                if (!await IsWeeklyOff(d))
+                    return d;
+            }
+            return from;
+        }
+
+        private async Task<DateTime?> FindPreviousWorkingDay(string empCode, DateTime from)
+        {
+            for (var d = from.AddDays(-1); d >= from.AddDays(-7); d = d.AddDays(-1))
+            {
+                if (!await IsWeeklyOff(d))
+                    return d;
+            }
+            return null;
+        }
+
+        private Task<bool> IsWeeklyOff(DateTime date)
+        {
+            return Task.FromResult(
+                date.DayOfWeek == DayOfWeek.Sunday
+            // OR include Saturday:
+            // || date.DayOfWeek == DayOfWeek.Saturday
+            );
+        }
+
         private async Task DeleteLeaveFromAttendance(Leave leave)
         {
             var employee = await _context.Employees.FindAsync(leave.EmployeeId);
@@ -749,8 +825,8 @@ namespace HRMS.Controllers
 
             int count = emp.Role switch
             {
-                "Manager" => await _context.Leaves.CountAsync(l => l.ManagerStatus == "Pending" && l.ReportingManagerId == empId),
-                "HR" => await _context.Leaves.CountAsync(l => l.ManagerStatus == "Approved" && l.HrStatus == "Pending"),
+                "HR" => await _context.Leaves.CountAsync(l => l.HrStatus == "Pending"  && l.CurrentApproverRole == emp.Role),
+                "Manager" => await _context.Leaves.CountAsync(l => l.ManagerStatus == "Pending" && l.HrStatus == "Approved"),
                 "VP" => await _context.Leaves.CountAsync(l => l.ManagerStatus == "Approved" && l.HrStatus == "Approved" && l.VpStatus == "Pending"),
                 "Director" => await _context.Leaves.CountAsync(l =>
                                 l.ManagerStatus == "Approved" &&
