@@ -13,50 +13,213 @@
     }
 }
 
-<div class="container py-5">
-    <div class="card text-center p-4 p-md-5">
-        <h3 class="fw-bold mb-4 page-title">
-            <i class="fa-solid fa-clock text-warning me-2"></i> Attendance Panel
-        </h3>
+<div class="att-container">
 
-        @if (Model == null)
+    <h2 class="att-title">
+        <i class="fa-solid fa-clock text-warning me-2"></i>
+        Attendance Panel
+    </h2>
+
+    @if (Model == null)
+    {
+        <p class="att-subtext">You haven't checked in yet today.</p>
+
+        <a asp-action="CheckIn" class="att-btn att-btn-checkin">
+            <i class="fa-solid fa-play me-2"></i> Check In
+        </a>
+    }
+    else
+    {
+        <div class="att-card neon-card">
+            <div class="att-entry">
+                <i class="fa-solid fa-sign-in-alt text-success att-icon"></i>
+                <div>
+                    <div class="att-label">CHECK-IN</div>
+                    <div class="att-value">@FormatTime(Model.InTime)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Countdown -->
+        <div id="countdownContainer" class="att-card countdown-card neon-card">
+            <div class="att-label">
+                <i class="fa-solid fa-hourglass-half me-2 text-warning"></i>
+                Time Remaining
+            </div>
+            <div id="countdown" class="countdown-digits">00:00:00</div>
+        </div>
+
+        @if (Model.OutTime == null)
         {
-            <p class="fs-5 text-muted mb-3">You haven't checked in yet today.</p>
-            <a asp-action="CheckIn" class="btn btn-primary btn-lg px-5 rounded-pill shadow-soft">
-                <i class="fa-solid fa-play me-2"></i> Check In
+            <a asp-action="CheckOut" class="att-btn att-btn-checkout">
+                <i class="fa-solid fa-stop me-2"></i> Check Out
             </a>
         }
         else
         {
-            <div class="mt-4">
-                <div class="d-flex flex-wrap justify-content-center gap-4 mb-4">
-                    <div class="p-3 bg-light border rounded-3 shadow-soft">
-                        <i class="fa-solid fa-sign-in-alt text-success me-2"></i>
-                        <strong>Check-In:</strong> @FormatTime(Model.InTime)
-                    </div>
-
-                    @if (Model.OutTime != null)
-                    {
-                        <div class="p-3 bg-light border rounded-3 shadow-soft">
-                            <i class="fa-solid fa-sign-out-alt text-danger me-2"></i>
-                            <strong>Check-Out:</strong> @FormatTime(Model.OutTime)
-                        </div>
-                    }
-                </div>
-
-                @if (Model.OutTime == null)
-                {
-                    <a asp-action="CheckOut" class="btn btn-danger btn-lg px-5 rounded-pill shadow-soft">
-                        <i class="fa-solid fa-stop me-2"></i> Check Out
-                    </a>
-                }
-                else
-                {
-                    <div class="alert alert-success mt-4 shadow-soft rounded-3">
-                        <i class="fa-solid fa-circle-check me-2"></i> You have successfully checked out today.
-                    </div>
-                }
+            <div class="success-card neon-card">
+                <i class="fa-solid fa-circle-check text-success me-2"></i>
+                You have successfully checked out today.
             </div>
         }
-    </div>
+    }
 </div>
+
+
+<!-- COUNTDOWN SCRIPT (Your original JS kept same, only moved) -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        var inTime = "@(Model?.InTime?.ToString() ?? "")";
+
+        if (inTime && inTime.length > 0) {
+            var today = new Date();
+            var dateStr = today.getFullYear() + "-" +
+                          String(today.getMonth() + 1).padStart(2, '0') + "-" +
+                          String(today.getDate()).padStart(2, '0') + " " + inTime;
+
+            var startTime = new Date(dateStr);
+
+            if (isNaN(startTime.getTime())) {
+                document.getElementById("countdownContainer").style.display = "none";
+                return;
+            }
+
+            var endTime = new Date(startTime.getTime() + (8 * 60 * 60 * 1000));
+
+            function updateCountdown() {
+                var now = new Date();
+                var diff = endTime - now;
+
+                if (diff <= 0) {
+                    document.getElementById("countdown").innerHTML = "00:00:00";
+                    return;
+                }
+
+                var hours = Math.floor(diff / (1000 * 60 * 60));
+                var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                document.getElementById("countdown").innerHTML =
+                    String(hours).padStart(2, '0') + ":" +
+                    String(minutes).padStart(2, '0') + ":" +
+                    String(seconds).padStart(2, '0');
+            }
+
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        }
+        else {
+            document.getElementById("countdownContainer").style.display = "none";
+        }
+    });
+</script>
+
+<style>
+/* ---------- Layout Wrapper ---------- */
+.att-container {
+    max-width: 650px;
+    margin: 40px auto;
+    text-align: center;
+}
+
+/* ---------- Title ---------- */
+.att-title {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.att-subtext {
+    font-size: 18px;
+    color: #666;
+}
+
+/* ---------- Neon Glass Cards ---------- */
+.neon-card {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 18px 25px;
+    border-radius: 15px;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    margin-top: 18px;
+}
+
+/* ---------- Check-in/out info ---------- */
+.att-entry {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.att-icon {
+    font-size: 30px;
+}
+
+.att-label {
+    font-size: 14px;
+    text-transform: uppercase;
+    color: #555;
+    letter-spacing: 1px;
+}
+
+.att-value {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* ---------- Countdown ---------- */
+.countdown-digits {
+    font-size: 38px;
+    margin-top: 8px;
+    font-weight: bold;
+    color: #d9534f;
+    letter-spacing: 3px;
+    animation: glowPulse 1.5s infinite alternate;
+}
+
+@@keyframes glowPulse {
+    from { text-shadow: 0 0 6px #ffb3b3; }
+    to   { text-shadow: 0 0 15px #ff4d4d; }
+}
+
+/* ---------- Buttons ---------- */
+.att-btn {
+    display: block;
+    width: 100%;
+    max-width: 260px;
+    margin: 25px auto;
+    padding: 14px;
+    font-size: 20px;
+    border-radius: 50px;
+    color: #fff;
+    text-decoration: none;
+    transition: 0.25s;
+}
+
+.att-btn-checkin {
+    background: linear-gradient(135deg, #0d6efd, #00b4ff);
+    box-shadow: 0 6px 15px rgba(33,150,243,0.4);
+}
+
+.att-btn-checkout {
+    background: linear-gradient(135deg, #d9534f, #b52b27);
+    box-shadow: 0 6px 15px rgba(217,83,79,0.4);
+}
+
+.att-btn:hover {
+    transform: translateY(-3px);
+    opacity: 0.9;
+}
+
+/* ---------- Success Card ---------- */
+.success-card {
+    margin-top: 20px;
+    font-size: 18px;
+    padding: 18px;
+    background: #e8fff0;
+    border-left: 4px solid #28a745;
+    border-radius: 10px;
+}
+</style>
