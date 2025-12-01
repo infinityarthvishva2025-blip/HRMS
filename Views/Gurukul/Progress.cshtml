@@ -89,6 +89,100 @@
         padding: 8px 18px;
         font-weight: 600;
     }
+
+
+    /* ==========================================================
+           RESPONSIVE DESIGN (NO CODE CHANGES)
+           ========================================================== */
+
+    /* Tablet adjustments */
+    @@media (max-width: 992px) {
+        .page-title {
+            font-size: 24px;
+        }
+
+        .filter-card {
+            padding: 18px;
+        }
+
+        th, td {
+            font-size: 14px;
+        }
+    }
+
+    /* Mobile adjustments */
+    @@media (max-width: 768px) {
+
+        .page-title {
+            font-size: 22px;
+            text-align: center;
+        }
+
+        .filter-card {
+            padding: 15px;
+        }
+
+        .filter-title {
+            font-size: 16px;
+        }
+
+        .row > div {
+            width: 100%;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        /* Make table scrollable on mobile */
+        .table-card {
+            overflow-x: auto;
+        }
+
+        table {
+            min-width: 600px;
+        }
+
+        th, td {
+            font-size: 13px;
+            padding: 10px;
+        }
+    }
+
+    /* Small Mobile adjustments */
+    @@media (max-width: 480px) {
+
+        .page-title {
+            font-size: 20px;
+        }
+
+        .filter-title {
+            font-size: 15px;
+        }
+
+        th, td {
+            font-size: 12px;
+        }
+
+        .badge-success,
+        .badge-warning {
+            font-size: 11px;
+            padding: 5px 10px;
+        }
+    }
+
+    /* Ultra Small Devices */
+    @@media (max-width: 360px) {
+        .page-title {
+            font-size: 18px;
+        }
+
+        th, td {
+            font-size: 11px;
+        }
+    }
+
 </style>
 
 
@@ -109,7 +203,6 @@
             <div class="col-md-3 mb-3">
                 <label class="fw-semibold">Status</label>
                 <select name="status" class="form-control">
-
                     @if ((string)ViewBag.SelectedStatus == "" || ViewBag.SelectedStatus == null)
                     {
                         <option value="" selected>All</option>
@@ -136,11 +229,9 @@
                     {
                         <option value="pending">Pending</option>
                     }
-
                 </select>
             </div>
 
-            <!-- DEPARTMENT FILTER -->
             <!-- DEPARTMENT FILTER -->
             <div class="col-md-3 mb-3">
                 <label class="fw-semibold">Department</label>
@@ -226,3 +317,4 @@
         </tbody>
     </table>
 </div>
+@* ////////   Responsive Page   ////////*@
