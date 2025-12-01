@@ -4,7 +4,6 @@
     ViewData["Title"] = "Attendance Records";
     Layout = "~/Views/Shared/_HrLayout.cshtml";
 
-    // Safely get employee list
     List<HRMS.Models.Employee> employees =
         ViewBag.EmployeeList as List<HRMS.Models.Employee>
         ?? new List<HRMS.Models.Employee>();
@@ -22,35 +21,24 @@
     <!-- FILTER FORM -->
     <form method="get" class="row g-3 shadow-sm bg-white p-4 rounded mb-4">
 
-        <!-- Search -->
         <div class="col-12 col-md-6 col-lg-3">
             <label class="form-label fw-semibold">Search</label>
-            <input type="text"
-                   name="search"
-                   class="form-control"
-                   value="@ViewBag.Search"
-                   placeholder="Employee name or code" />
+            <input type="text" name="search" class="form-control"
+                   value="@ViewBag.Search" placeholder="Employee name or code" />
         </div>
 
-        <!-- From Date -->
         <div class="col-6 col-lg-2">
             <label class="form-label fw-semibold">From Date</label>
-            <input type="date"
-                   name="fromDate"
-                   class="form-control"
+            <input type="date" name="fromDate" class="form-control"
                    value="@ViewBag.FromDate" />
         </div>
 
-        <!-- To Date -->
         <div class="col-6 col-lg-2">
             <label class="form-label fw-semibold">To Date</label>
-            <input type="date"
-                   name="toDate"
-                   class="form-control"
+            <input type="date" name="toDate" class="form-control"
                    value="@ViewBag.ToDate" />
         </div>
 
-        <!-- Status -->
         <div class="col-12 col-md-6 col-lg-2">
             <label class="form-label fw-semibold">Status</label>
             <select name="status" class="form-select">
@@ -60,14 +48,10 @@
             </select>
         </div>
 
-        <!-- Buttons -->
         <div class="col-12 col-lg-3 d-grid d-md-flex align-items-end gap-2">
-            <button class="btn btn-primary">
-                <i class="fa-solid fa-search me-1"></i> Apply
-            </button>
+            <button class="btn btn-primary"><i class="fa-solid fa-search me-1"></i> Apply</button>
 
-            <button formaction="/Attendance/ExportFiltered"
-                    formmethod="get"
+            <button formaction="/Attendance/ExportFiltered" formmethod="get"
                     class="btn btn-success">
                 <i class="fa-solid fa-file-excel me-1"></i> Export
             </button>
@@ -94,6 +78,7 @@
                             <th class="text-nowrap">Check Out</th>
                             <th class="text-nowrap">Total Hours</th>
                             <th class="text-nowrap">Status</th>
+                            <th class="text-nowrap">Ticket</th>   <!-- NEW -->
                         </tr>
                     </thead>
 
@@ -101,7 +86,7 @@
                         @if (Model == null || !Model.Any())
                         {
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-danger fw-bold">
+                                <td colspan="8" class="text-center py-4 text-danger fw-bold">
                                     No records found...
                                 </td>
                             </tr>
@@ -119,69 +104,61 @@
                                     <td class="text-nowrap">@((a.InTime.HasValue) ? a.InTime.Value.ToString(@"hh\:mm") : "--")</td>
                                     <td class="text-nowrap">@((a.OutTime.HasValue) ? a.OutTime.Value.ToString(@"hh\:mm") : "--")</td>
                                     <td class="text-nowrap">@a.TotalHours</td>
+
                                     <td class="text-nowrap">
                                         @if (a.Status == "L")
                                         {
-                                            <span class="badge bg-info text-dark pill-badge">Leave</span>
+                                            <span class="badge bg-info">Leave</span>
                                         }
-                                        @*   else if (a.Status == "WOP" || a.Status == "WO")
-                                        {
-                                            <span class="badge bg-secondary pill-badge">Weekly Off</span>
-                                        } *@
-                                        @* Weekly Off – WOP *@
                                         else if (a.Status == "WOP")
                                         {
-                                            <span class="badge bg-success pill-badge">Present</span>
+                                            <span class="badge bg-success">Present</span>
                                         }
-
-                                        @* Weekly Off – WO *@
                                         else if (a.Status == "WO")
                                         {
-                                            <span class="badge bg-secondary pill-badge">Weekly Off</span>
+                                            <span class="badge bg-secondary">Weekly Off</span>
                                         }
                                         else if (a.InTime.HasValue && !a.OutTime.HasValue)
                                         {
-                                            <span class="badge bg-warning text-dark pill-badge">Not Checked Out</span>
+                                            <span class="badge bg-warning text-dark">Not Checked Out</span>
                                         }
-
-
                                         else if (a.Status == "A")
                                         {
-                                            <span class="badge bg-danger pill-badge">Absent</span>
+                                            <span class="badge bg-danger">Absent</span>
                                         }
                                         else if (a.Status == "P")
                                         {
-                                            <span class="badge bg-success pill-badge">Present</span>
+                                            <span class="badge bg-success">Present</span>
+                                        }
+                                    </td>
+
+                                    <!-- NEW TICKET COLUMN -->
+                                    <td class="text-nowrap">
+                                        @if (a.CorrectionRequested)
+                                        {
+                                            if (a.CorrectionStatus == "Pending")
+                                            {
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            }
+                                            else if (a.CorrectionStatus == "Approved")
+                                            {
+                                                <span class="badge bg-success">Approved</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Rejected</span>
+                                            }
+
+                                            <a href="/Attendance/ResolveCorrection?id=@a.Id"
+                                               class="btn btn-sm btn-primary ms-2">
+                                                Resolve
+                                            </a>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-danger pill-badge">Absent</span>
+                                            <span class="badge bg-secondary">No Ticket</span>
                                         }
                                     </td>
-                                    @* <td class="text-nowrap">
-                                       
-                                        @* ---- Normal Attendance ---- 
-                                        else if (!a.InTime.HasValue)
-                                        {
-                                            <span class="badge bg-danger pill-badge">Absent</span>
-                                        }
-                                        else if (!a.OutTime.HasValue)
-                                        {
-                                            <span class="badge bg-warning text-dark pill-badge">Not Checked Out</span>
-                                        }
-                                       // else if (!a.InTime.HasValue)|| (!a.OutTime.HasValue)
-                                        else if (a.InTime == null && a.OutTime == null)
-                                        {
-                                            <span class="badge bg-danger pill-badge">Leave</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-success pill-badge">Present</span>
-                                        }
-
-                                    </td>
- *@
-
                                 </tr>
                             }
                         }
@@ -195,14 +172,12 @@
 </div>
 
 <style>
-    /* Compact, readable badges */
     .pill-badge {
         padding: 6px 10px;
         font-size: .85rem;
         border-radius: 999px;
     }
 
-    /* Make sticky header look clean when table scrolls horizontally */
     .table-responsive {
         overflow-x: auto;
     }
@@ -210,39 +185,6 @@
     thead.sticky-top th {
         top: 0;
         z-index: 2;
-    }
-
-    /* Mobile tweaks */
-    @@media (max-width: 992px) {
-        .page-title {
-            font-size: 1.4rem;
-        }
-    }
-
-    @@media (max-width: 768px) {
-        /* Make buttons full-width and stacked */
-        .d-grid.d-md-flex .btn {
-            width: 100%;
-        }
-        /* Reduce padding inside cards on phones */
-        .card .card-body {
-            padding: .75rem !important;
-        }
-        /* Reduce font a bit for table cells */
-        .table td, .table th {
-            font-size: .92rem;
-        }
-    }
-
-    @@media (max-width: 480px) {
-        .page-title {
-            font-size: 1.2rem;
-            text-align: center;
-        }
-
-        .form-label {
-            font-size: .9rem;
-        }
     }
 </style>
    @*  ////////    Responsive Page   //////// *@

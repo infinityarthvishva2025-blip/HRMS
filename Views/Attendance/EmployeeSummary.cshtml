@@ -72,8 +72,10 @@
                 <th>Check Out</th>
                
                 <th>Working Hours</th>
+                <th>Ticket</th>  <!-- NEW -->
             </tr>
         </thead>
+
         <tbody>
             @foreach (var a in Model.AttendanceRecords)
             {
@@ -111,6 +113,35 @@
                         else
                         {
                             @("--")
+                        }
+                    </td>
+
+                    <!-- NEW TICKET BUTTON -->
+                    <td>
+                        @if (!a.CorrectionRequested)
+                        {
+                            <!-- Request Button -->
+                            <a href="/Attendance/RequestCorrection?id=@a.Id&employeeId=@Model.Employee.Id"
+                               class="btn btn-warning btn-sm">Request</a>
+
+
+
+                        }
+                        else
+                        {
+                            <!-- Status Pill -->
+                            @if (a.CorrectionStatus == "Pending")
+                            {
+                                <span class="badge bg-info">Pending</span>
+                            }
+                            else if (a.CorrectionStatus == "Approved")
+                            {
+                                <span class="badge bg-success">Approved</span>
+                            }
+                            else if (a.CorrectionStatus == "Rejected")
+                            {
+                                <span class="badge bg-danger">Rejected</span>
+                            }
                         }
                     </td>
                 </tr>

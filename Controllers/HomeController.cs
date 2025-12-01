@@ -19,6 +19,11 @@ namespace HRMS.Controllers
 
         public IActionResult Index()
         {
+            var empCode = HttpContext.Session.GetString("EmpCode");
+
+            var loggedEmployee = _context.Employees
+                .FirstOrDefault(e => e.EmployeeCode == empCode);
+
             var employees = _context.Employees
                 .AsNoTracking()
                 .ToList();
@@ -28,9 +33,10 @@ namespace HRMS.Controllers
 
             var model = new CelebrationViewModel
             {
+                Employee = loggedEmployee,   // ← Add this
+
                 TotalEmployees = employees.Count,
 
-                // Birthdays
                 TodaysBirthdays = employees
                     .Where(e => e.DOB_Date.HasValue &&
                                 e.DOB_Date.Value.Month == today.Month &&
@@ -43,7 +49,6 @@ namespace HRMS.Controllers
                                 e.DOB_Date.Value.Day == tomorrow.Day)
                     .ToList(),
 
-                // Anniversaries
                 TodaysAnniversaries = employees
                     .Where(e => e.JoiningDate.HasValue &&
                                 e.JoiningDate.Value.Month == today.Month &&
@@ -54,9 +59,8 @@ namespace HRMS.Controllers
                     .Where(e => e.JoiningDate.HasValue &&
                                 e.JoiningDate.Value.Month == tomorrow.Month &&
                                 e.JoiningDate.Value.Day == tomorrow.Day)
-                    .ToList()
+                    .ToList(),
             };
-
 
             // Today Attendance
             var todaysAtt = _context.Attendances

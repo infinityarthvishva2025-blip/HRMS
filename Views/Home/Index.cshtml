@@ -12,9 +12,43 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-<h2 class="fw-bold mb-4 page-title">My Dashboard</h2>
+<h2 class="fw-bold mb-4 page-title">HR Dashboard</h2>
 
+<div class="dashboard-header text-center mb-5">
+    <h2 class="welcome-title mb-2">
+        <i class="fa-solid fa-hand-wave text-warning me-2"></i>
+        Welcome, @Model.Employee.Name
+    </h2>
+    <p class="lead text-white">Your personalized work summary & attendance panel</p>
 
+    <div class="mt-4 text-center">
+
+        <a href="/Attendance/EmployeePanel"
+           class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold">
+            <i class="fa-solid fa-calendar-check me-2"></i> Mark Attendance
+        </a>
+
+        <a asp-controller="Attendance" asp-action="EmployeeSummary"
+           asp-route-employeeId="@Model.Employee.Id"
+           class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold">
+            <i class="fa-solid fa-chart-line me-2"></i> Attendance Summary
+        </a>
+
+        <a asp-controller="Leave" asp-action="Create"
+           class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold">
+            <i class="fa-solid fa-paper-plane me-2"></i> Apply Leave
+        </a>
+
+        <button type="button"
+                class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold"
+                data-bs-toggle="modal"
+                data-bs-target="#salarySlipModal">
+            <i class="fa-solid fa-file-invoice-dollar me-2"></i> View Salary Slip
+        </button>
+
+    </div>
+
+</div>
 <!-- ======================= SUMMARY CARDS ======================= -->
 <div class="row g-3">
     @* Total Employees *@
@@ -536,4 +570,43 @@
         }
     }
 
+</style>
+<style>
+    body {
+        background: #eef3fb;
+    }
+
+    .dashboard-header {
+        background: linear-gradient(135deg, #0d47a1, #00897b);
+        padding: 50px 30px;
+        border-radius: 20px;
+        color: white;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        transition: all .3s ease;
+    }
+
+        .info-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+        }
+
+    .icon-circle {
+        width: 75px;
+        height: 75px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: auto;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    }
+
+    .btn-gradient-primary {
+        background: linear-gradient(90deg, #0d47a1, #00acc1);
+        color: white !important;
+    }
 </style>
