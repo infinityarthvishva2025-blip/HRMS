@@ -5,10 +5,43 @@
     Layout = "~/Views/Shared/_HrLayout.cshtml";
 }
 
+<style>
+    /* Make table responsive on small screens */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Reduce button spacing on mobile */
+    @@media (max-width: 768px) {
+        .btn-group-mobile {
+            text-align: center !important;
+        }
+
+            .btn-group-mobile a {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+
+        h2 {
+            font-size: 20px !important;
+            text-align: center;
+        }
+    }
+
+    /* Small phones */
+    @@media (max-width: 480px) {
+        #employeeSearch {
+            margin-bottom: 12px;
+        }
+    }
+</style>
+
+
 <div class="container py-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h2 class="fw-bold text-primary mb-2">
             <i class="fa-solid fa-users me-2"></i> Employee Directory
         </h2>
     </div>
@@ -16,16 +49,17 @@
     <!-- Search + Buttons Row -->
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
+
             <div class="row g-3 align-items-center">
 
                 <!-- Search Bar -->
-                <div class="col-md-6">
+                <div class="col-12 col-md-6">
                     <input type="text" id="employeeSearch" class="form-control"
                            placeholder="Search by name, code, email..." />
                 </div>
 
                 <!-- Right Side Buttons -->
-                <div class="col-md-6 text-end">
+                <div class="col-12 col-md-6 text-end btn-group-mobile">
                     <a class="btn btn-success me-2 px-4" asp-action="Create">
                         <i class="fa-solid fa-user-plus me-1"></i> Add New Employee
                     </a>
@@ -36,6 +70,7 @@
                 </div>
 
             </div>
+
         </div>
     </div>
 
@@ -43,56 +78,62 @@
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
 
-            <table id="employeeTable" class="table table-striped table-bordered">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Employee Code</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Department</th>
-                        <th>Position</th>
-                        <th style="width:180px" class="text-center">Actions</th>
-                    </tr>
-                </thead>
+            <!-- MAKE TABLE RESPONSIVE WRAPPER -->
+            <div class="table-responsive">
 
-                <tbody>
-                    @foreach (var emp in Model)
-                    {
+                <table id="employeeTable" class="table table-striped table-bordered mb-0">
+                    <thead class="table-dark">
                         <tr>
-                            <td>@emp.EmployeeCode</td>
-                            <td>@emp.Name</td>
-                            <td>@emp.Email</td>
-                            <td>@emp.Department</td>
-                            <td>@emp.Position</td>
-
-                            <td class="text-center">
-
-                                <a class="btn btn-sm btn-primary me-1"
-                                   asp-action="Details" asp-route-id="@emp.Id">
-                                    <i class="fa-solid fa-eye"></i>
-                                </a>
-
-                                <a class="btn btn-sm btn-warning me-1"
-                                   asp-action="Edit" asp-route-id="@emp.Id">
-                                    <i class="fa-solid fa-pen"></i>
-                                </a>
-
-                                <a class="btn btn-sm btn-danger"
-                                   asp-action="Delete" asp-route-id="@emp.Id"
-                                   onclick="return confirm('Are you sure you want to delete this employee?');">
-                                    <i class="fa-solid fa-trash"></i>
-                                </a>
-
-                            </td>
+                            <th>Employee Code</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Position</th>
+                            <th style="width:180px" class="text-center">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var emp in Model)
+                        {
+                            <tr>
+                                <td>@emp.EmployeeCode</td>
+                                <td>@emp.Name</td>
+                                <td>@emp.Email</td>
+                                <td>@emp.Department</td>
+                                <td>@emp.Position</td>
+
+                                <td class="text-center">
+
+                                    <a class="btn btn-sm btn-primary me-1"
+                                       asp-action="Details" asp-route-id="@emp.Id">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+
+                                    <a class="btn btn-sm btn-warning me-1"
+                                       asp-action="Edit" asp-route-id="@emp.Id">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+
+                                    <a class="btn btn-sm btn-danger"
+                                       asp-action="Delete" asp-route-id="@emp.Id"
+                                       onclick="return confirm('Are you sure you want to delete this employee?');">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+            </div>
 
         </div>
     </div>
 
 </div>
+
 
 @section Scripts {
     <script>
@@ -107,3 +148,4 @@
         });
     </script>
 }
+@* ///////  Responsive Page //////// *@

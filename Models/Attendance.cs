@@ -16,12 +16,17 @@ namespace HRMS.Models
         public TimeSpan? InTime { get; set; }
         public TimeSpan? OutTime { get; set; }
         public decimal? Total_Hours { get; set; }
-      
+ 
+
         //public decimal? Total_Hours { get; set; }
-       
+
         public bool IsLate { get; set; }
         public int LateMinutes { get; set; }
         public DateTime? Att_Date { get; set; }
+        public bool CorrectionRequested { get; set; } = false;
+        public string? CorrectionRemark { get; set; }
+        public string CorrectionStatus { get; set; } = "None"; // None, Pending, Approved, Rejected
+
     }
 
 }

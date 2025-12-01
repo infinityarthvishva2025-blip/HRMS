@@ -45,8 +45,18 @@ namespace HRMS.Controllers
                 return View(model);
             }
 
+
+            // Normalize Role
+            string role = (emp.Role ?? "").Trim().ToLower();
+
+            if (role == "hr" || role == "admin")
+                role = "HR";
+            else
+                role = "Employee";
+
+
             // Store session
-            HttpContext.Session.SetString("Role", emp.Role);
+            HttpContext.Session.SetString("Role", role);
             HttpContext.Session.SetInt32("EmployeeId", emp.Id);
             HttpContext.Session.SetString("EmployeeName", emp.Name);
             HttpContext.Session.SetString("EmpCode", emp.EmployeeCode);

@@ -1,0 +1,63 @@
+﻿@model HRMS.Models.Attendance
+
+@{
+    ViewData["Title"] = "Resolve Correction";
+    Layout = "_HrLayout";
+}
+
+<div class="container py-4">
+
+    <h3 class="fw-bold mb-4">
+        Resolve Correction — @Model.Emp_Code (@Model.Date.ToString("dd-MMM-yyyy"))
+    </h3>
+
+    <form method="post" class="card p-4 shadow-sm">
+
+        <input type="hidden" name="id" value="@Model.Id" />
+
+        <div class="mb-3">
+            <label class="fw-bold">Employee Code</label>
+            <input type="text" class="form-control" value="@Model.Emp_Code" disabled />
+        </div>
+
+        <div class="mb-3">
+            <label class="fw-bold">Date</label>
+            <input type="text" class="form-control" value="@Model.Date.ToString("dd-MMM-yyyy")" disabled />
+        </div>
+
+        <div class="mb-3">
+            <label class="fw-bold">Reason Provided</label>
+            <textarea class="form-control" disabled>@Model.CorrectionRemark</textarea>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="fw-bold">Corrected Check-In</label>
+                <input type="time" name="InTime" class="form-control"
+                       value="@(Model.InTime?.ToString(@"hh\:mm"))" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="fw-bold">Corrected Check-Out</label>
+                <input type="time" name="OutTime" class="form-control"
+                       value="@(Model.OutTime?.ToString(@"hh\:mm"))" />
+            </div>
+        </div>
+
+        <div class="d-flex gap-3 mt-3">
+            <button name="actionType" value="Approve" class="btn btn-success">
+                <i class="fa-solid fa-check me-1"></i> Approve
+            </button>
+
+            <button name="actionType" value="Reject" class="btn btn-danger">
+                <i class="fa-solid fa-xmark me-1"></i> Reject
+            </button>
+
+            <a href="/Attendance/CorrectionRequests" class="btn btn-secondary ms-auto">
+                Back
+            </a>
+        </div>
+
+    </form>
+
+</div>

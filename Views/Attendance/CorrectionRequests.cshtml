@@ -1,0 +1,74 @@
+﻿@model IEnumerable<HRMS.Models.Attendance>
+
+@{
+    ViewData["Title"] = "Attendance Correction Requests";
+    Layout = "_HrLayout";
+}
+
+<div class="container py-4">
+    <h2 class="fw-bold mb-4">
+        <i class="fa-solid fa-ticket me-2 text-primary"></i>
+        Attendance Correction Requests
+    </h2>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+
+            <table class="table table-bordered table-striped mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Employee Code</th>
+                        <th>Date</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-danger fw-bold">
+                                No pending requests.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var a in Model)
+                        {
+                            <tr>
+                                <td>@a.Emp_Code</td>
+                                <td>@a.Date.ToString("dd-MMM-yyyy")</td>
+                                <td>@a.CorrectionRemark</td>
+                                <td>
+                                    @if (a.CorrectionStatus == "Pending")
+                                    {
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    }
+                                    else if (a.CorrectionStatus == "Approved")
+                                    {
+                                        <span class="badge bg-success">Approved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Rejected</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <a href="/Attendance/ResolveCorrection?id=@a.Id"
+                                       class="btn btn-primary btn-sm">
+                                        Resolve
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+</div>

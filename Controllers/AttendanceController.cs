@@ -149,7 +149,9 @@ namespace HRMS.Controllers
         // EMPLOYEE SUMMARY PAGE
         // =========================================================
         [HttpGet]
-        public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
+       public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
+
+
         {
             if (employeeId <= 0)
                 return BadRequest("Invalid employee ID.");
@@ -355,5 +357,92 @@ namespace HRMS.Controllers
 
             return View();
         }
+
+
+        public IActionResult RequestCorrection(int id, int employeeId)
+        {
+            var att = _context.Attendances.FirstOrDefault(a => a.Id == id);
+
+            if (att == null)
+                return RedirectToAction("EmployeeSummary", new { employeeId });
+
+            ViewBag.EmployeeId = employeeId;
+
+            return View(att);
+        }
+
+
+        [HttpPost]
+        public IActionResult RequestCorrection(int Id, string CorrectionRemark, int employeeId)
+        {
+            var att = _context.Attendances.FirstOrDefault(a => a.Id == Id);
+
+            att.CorrectionRequested = true;
+            att.CorrectionRemark = CorrectionRemark;
+            att.CorrectionStatus = "Pending";
+
+            _context.SaveChanges();
+
+            return RedirectToAction("EmployeeSummary", new { employeeId = employeeId });
+        }
+
+
+
+        public IActionResult ResolveCorrection(int id)
+        {
+            var att = _context.Attendances.FirstOrDefault(x => x.Id == id);
+            if (att == null)
+                return NotFound();
+
+            return View(att);
+        }
+
+
+
+        [HttpPost]
+        public IActionResult ResolveCorrection(int id, TimeSpan? InTime, TimeSpan? OutTime, string actionType)
+        {
+            var att = _context.Attendances.FirstOrDefault(x => x.Id == id);
+            if (att == null)
+                return NotFound();
+
+            if (actionType == "Approve")
+            {
+                att.InTime = InTime;
+                att.OutTime = OutTime;
+
+                if (InTime.HasValue && OutTime.HasValue)
+                {
+                    var diff = OutTime.Value - InTime.Value;
+                    att.Total_Hours = (decimal)diff.TotalHours;
+                }
+
+                att.CorrectionStatus = "Approved";
+            }
+            else
+            {
+                att.CorrectionStatus = "Rejected";
+            }
+
+            att.CorrectionRequested = false;
+            _context.SaveChanges();
+
+            return RedirectToAction("CorrectionRequests");
+        }
+
+
+
+        public IActionResult CorrectionRequests()
+        {
+            var pending = _context.Attendances
+                .Where(a => a.CorrectionRequested)
+                .OrderByDescending(a => a.Date)
+                .ToList();
+
+            return View(pending);
+        }
+
+
+
     }
 }

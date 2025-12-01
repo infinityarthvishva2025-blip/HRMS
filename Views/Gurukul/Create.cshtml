@@ -100,6 +100,120 @@
         border-color: #e3e6ff;
     }
 
+
+
+    /* ===================================================================
+           FULL RESPONSIVE OPTIMIZATION (NO CHANGES TO YOUR ORIGINAL CODE)
+           =================================================================== */
+
+    /* Tablets + large mobiles */
+    @@media (max-width: 1024px) {
+        .glass-card {
+            padding: 25px;
+        }
+    }
+
+    /* Normal mobile screens */
+    @@media (max-width: 768px) {
+
+        .page-title {
+            font-size: 22px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .glass-card {
+            padding: 20px;
+            border-radius: 14px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .form-label {
+            font-size: 14px;
+        }
+
+        .form-control {
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+
+        .permission-box {
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .btn-save,
+        .btn-cancel {
+            width: 100%;
+            margin-bottom: 10px;
+            font-size: 14px;
+            padding: 12px;
+        }
+
+        .row > div {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+    }
+
+    /* Small mobile screens (Galaxy S, iPhone Mini) */
+    @@media (max-width: 480px) {
+
+        .page-title {
+            font-size: 20px;
+        }
+
+        .glass-card {
+            padding: 16px;
+        }
+
+        .section-title {
+            font-size: 15px;
+        }
+
+        .form-control {
+            font-size: 13px;
+            padding: 10px;
+        }
+
+        .btn-save,
+        .btn-cancel {
+            font-size: 13px;
+            padding: 11px;
+        }
+    }
+
+    /* Ultra-small screens (older iPhones, 320px width) */
+    @@media (max-width: 360px) {
+
+        .page-title {
+            font-size: 18px;
+        }
+
+        .form-control {
+            font-size: 12px;
+        }
+
+        .section-title {
+            font-size: 14px;
+        }
+
+        .glass-card {
+            padding: 12px;
+        }
+
+        .btn-save,
+        .btn-cancel {
+            font-size: 12px;
+            padding: 10px;
+        }
+    }
+
 </style>
 
 
@@ -117,12 +231,12 @@
 
     <div class="mb-3">
         <label class="form-label">Main Title Group</label>
-        <input asp-for="TitleGroup" class="form-control"  />
+        <input asp-for="TitleGroup" class="form-control" />
     </div>
 
     <div class="mb-3">
         <label class="form-label">Category</label>
-        <input asp-for="Category" class="form-control"  />
+        <input asp-for="Category" class="form-control" />
     </div>
 
     <div class="mb-3">
@@ -197,3 +311,4 @@
 
 <!-- FONT AWESOME -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+@* ////////   Responsive Page   ////////*@
