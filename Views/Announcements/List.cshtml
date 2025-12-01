@@ -11,6 +11,7 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 25px;
+        flex-wrap: wrap; /* FIX FOR MOBILE */
     }
 
         .page-header h2 {
@@ -19,6 +20,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            margin-bottom: 10px; /* FIX SPACING ON MOBILE */
         }
 
     .btn-create {
@@ -29,6 +31,7 @@
         font-weight: 600;
         text-decoration: none;
         transition: 0.2s;
+        white-space: nowrap;
     }
 
         .btn-create:hover {
@@ -36,7 +39,6 @@
             color: #fff;
         }
 
-    /* Card Container */
     .card-container {
         background: #ffffff;
         padding: 25px;
@@ -44,11 +46,17 @@
         box-shadow: 0 4px 18px rgba(0,0,0,0.08);
     }
 
-    /* Table Styling */
+    /* Responsive scrollable table */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
     table {
         width: 100%;
         border-collapse: separate !important;
         border-spacing: 0 10px;
+        min-width: 650px; /* AVOID SQUEEZING */
     }
 
     thead tr {
@@ -61,6 +69,7 @@
         font-size: 15px;
         font-weight: 600;
         border: none;
+        white-space: nowrap;
     }
 
     tbody tr {
@@ -90,6 +99,7 @@
         font-size: 13px;
         text-decoration: none;
         transition: 0.2s;
+        white-space: nowrap;
     }
 
         .delete-btn:hover {
@@ -105,20 +115,58 @@
         font-weight: 600;
         text-decoration: none;
         transition: 0.2s;
+        white-space: nowrap;
     }
 
         .delete-all-btn:hover {
             background: #b71c1c;
         }
 
-    /* Empty message */
     .empty-box {
         text-align: center;
         padding: 40px;
         font-size: 16px;
         color: #777;
     }
+
+    /* ================= MOBILE RESPONSIVE FIXES ================= */
+
+    @@media (max-width: 768px) {
+
+        .page-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 10px;
+        }
+
+        .delete-all-btn {
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-create {
+            width: 100%;
+            text-align: center;
+            margin-top: 5px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+
+        .card-container {
+            padding: 15px;
+        }
+
+        .page-header h2 {
+            font-size: 20px;
+        }
+
+        tbody td {
+            font-size: 14px;
+        }
+    }
 </style>
+
 
 <div class="page-header">
     <h2>
@@ -149,38 +197,43 @@
     }
     else
     {
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 20%;">Title</th>
-                    <th style="width: 45%;">Message</th>
-                    <th style="width: 20%;">Created On</th>
-                    <th style="width: 15%;">Actions</th>
-                </tr>
-            </thead>
+        <div class="table-responsive">
 
-            <tbody>
-                @foreach (var a in Model)
-                {
+            <table>
+                <thead>
                     <tr>
-                        <td>@a.Title</td>
-
-                        <td>@a.Message</td>
-
-                        <td>
-                            @a.CreatedOn.ToString("dd-MM-yyyy hh:mm tt")
-                        </td>
-
-                        <td>
-                            <a href="/Announcements/Delete/@a.Id"
-                               class="delete-btn"
-                               onclick="return confirm('Delete this announcement?')">
-                                <i class="fa-solid fa-trash"></i> Delete
-                            </a>
-                        </td>
+                        <th style="width: 20%;">Title</th>
+                        <th style="width: 45%;">Message</th>
+                        <th style="width: 20%;">Created On</th>
+                        <th style="width: 15%;">Actions</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                    @foreach (var a in Model)
+                    {
+                        <tr>
+                            <td>@a.Title</td>
+
+                            <td>@a.Message</td>
+
+                            <td>
+                                @a.CreatedOn.ToString("dd-MM-yyyy hh:mm tt")
+                            </td>
+
+                            <td>
+                                <a href="/Announcements/Delete/@a.Id"
+                                   class="delete-btn"
+                                   onclick="return confirm('Delete this announcement?')">
+                                    <i class="fa-solid fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        </div>
     }
 </div>
+  @*  ///////  Responsive Page  ////////  *@

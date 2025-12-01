@@ -9,7 +9,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Infinity Arthvishva | HRMS Login</title>
-    <link rel="stylesheet" href="~/css/site.css" />
 
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
@@ -19,99 +18,102 @@
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #2076C7, #1CADA3);
+            min-height: 100vh;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
         }
 
+        /* MAIN WRAPPER */
         .login-wrapper {
-            display: flex;
+            width: 100%;
+            max-width: 900px;
             background: white;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            max-width: 900px;
-            width: 90%;
+            display: flex;
+            flex-direction: row;
         }
 
-        /* Left Side */
+        /* LEFT PANEL */
         .login-left {
             flex: 1;
             background: #ffffff;
-            color: #003366;
+            text-align: center;
+            padding: 40px 20px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            text-align: center;
-            padding: 40px 30px;
-            position: relative;
         }
 
         .company-logo {
-            width: 220px;
-            margin-bottom: 25px;
-            filter: drop-shadow(0 3px 8px rgba(0,0,0,0.2));
+            width: 200px;
+            max-width: 70%;
+            margin-bottom: 15px;
         }
 
         .login-left h1 {
             font-size: 26px;
-            margin-top: 10px;
             color: #0077c2;
+            margin-bottom: 10px;
         }
 
         .login-left p {
-            color: #444;
             font-size: 14px;
-            line-height: 1.6;
+            color: #444;
+            margin: 0 auto;
+            max-width: 260px;
+            line-height: 1.5;
         }
 
-        /* Right Side */
+        .login-left small {
+            color: #333 !important;
+            font-weight: 600;
+            margin-top: 20px;
+            display: block;
+        }
+
+        /* RIGHT PANEL */
         .login-right {
             flex: 1;
-            padding: 40px 30px;
+            padding: 30px 20px;
+            background: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #ffffff;
         }
 
+        /* CARD AROUND FIELDS – FIXES “COLUMN NOT PROPER” */
         .login-box {
             width: 100%;
-            max-width: 340px;
+            max-width: 360px;
+            background: #f8fbff;
+            border-radius: 14px;
+            padding: 22px 20px 26px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
         }
 
             .login-box h2 {
                 text-align: center;
                 color: #0d47a1;
-                margin-bottom: 25px;
+                margin-bottom: 20px;
                 font-weight: bold;
             }
 
-        .logo-round {
-            background: #0d47a1;
-            color: white;
-            border-radius: 50%;
-            padding: 6px 12px;
-            font-weight: bold;
-            margin-right: 8px;
-        }
-
-        /* PERFECT INPUT STYLE */
         .input-group {
+            margin-bottom: 16px;
             position: relative;
-            margin-bottom: 18px;
-            width: 100%;
         }
 
             .input-group input {
                 width: 100%;
-                height: 46px;
-                padding: 12px 45px 12px 14px;
-                border: 1.7px solid #b7b7b7;
-                border-radius: 6px;
-                font-size: 15px;
+                height: 44px;
+                padding: 10px 42px 10px 14px;
+                border: 1.5px solid #b7b7b7;
+                border-radius: 8px;
+                font-size: 14px;
                 box-sizing: border-box;
                 background: #ffffff;
                 transition: 0.2s;
@@ -123,7 +125,6 @@
                     outline: none;
                 }
 
-        /* Eye Icon Perfect Alignment */
         #togglePassword {
             position: absolute;
             right: 12px;
@@ -132,52 +133,81 @@
             cursor: pointer;
             font-size: 18px;
             color: #666;
-            padding: 5px;
-        }
-
-            #togglePassword:hover {
-                color: #0077c2;
-            }
-
-        .options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-            margin-bottom: 15px;
         }
 
         .btn-login {
             width: 100%;
             background: #0d6efd;
             color: white;
-            padding: 11px;
+            padding: 10px;
             border: none;
-            border-radius: 6px;
-            font-size: 15px;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: 0.3s;
+            margin-top: 6px;
         }
 
             .btn-login:hover {
                 background: #084298;
             }
 
-        @@media (max-width: 768px) {
+        /* ================= MOBILE RESPONSIVE ================= */
+
+        @@media (max-width: 900px) {
             .login-wrapper {
                 flex-direction: column;
-                max-width: 95%;
             }
 
-            .login-left img {
-                width: 140px;
+            .login-right {
+                padding: 20px 15px 25px;
+            }
+        }
+
+        @@media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .company-logo {
+                width: 150px;
+            }
+
+            .login-left h1 {
+                font-size: 22px;
+            }
+
+            .login-left p {
+                font-size: 13px;
+            }
+
+            .login-wrapper {
+                border-radius: 10px;
+            }
+
+            .login-box {
+                padding: 18px 16px 22px;
+            }
+        }
+
+        @@media (max-width: 380px) {
+            .login-left p {
+                font-size: 12px;
+            }
+
+            .login-left small {
+                font-size: 11px;
+            }
+
+            .login-box h2 {
+                font-size: 19px;
             }
         }
     </style>
 </head>
 
 <body>
+
     <div class="login-wrapper">
 
         <!-- LEFT PANEL -->
@@ -192,7 +222,7 @@
         <div class="login-right">
             <div class="login-box">
 
-                <h2> LOGIN</h2>
+                <h2>LOGIN</h2>
 
                 <form asp-action="Login" method="post">
 
@@ -209,11 +239,6 @@
                         <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
 
-                   @*  <div class="options">
-                        <label><input type="checkbox" /> Remember me</label>
-                        <a href="#" style="text-decoration:none;color:#0077c2;">Forgot password?</a>
-                    </div> *@
-
                     <button type="submit" class="btn-login">LOGIN</button>
 
                     @if (ViewBag.Error != null)
@@ -227,7 +252,6 @@
 
     </div>
 
-    <!-- PASSWORD SHOW / HIDE SCRIPT -->
     <script>
         const togglePassword = document.getElementById("togglePassword");
         const passwordInput = document.getElementById("passwordInput");
@@ -244,3 +268,4 @@
     <partial name="_ValidationScriptsPartial" />
 </body>
 </html>
+@* ////////   Responsive Page   ////////*@
