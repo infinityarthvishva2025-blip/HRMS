@@ -192,7 +192,7 @@ namespace HRMS.Controllers
                 }
 
                 AddEarn("Base Salary", m.MonthlySalary);
-                AddEarn("Per Day Salary", m.PerDaySalary);
+                //AddEarn("Per Day Salary", m.PerDaySalary);
                 AddEarn("Performance Allowance", m.PerformanceAllowance);
                 AddEarn("Other Allowances", m.OtherAllowances);
                 AddEarn("Petrol Allowance", m.PetrolAllowance);
@@ -237,14 +237,8 @@ namespace HRMS.Controllers
 
                 // ============================================================
                 // FOOTER
-                // ============================================================
-                doc.Add(new Paragraph("\nNotes:", headerFont));
-                doc.Add(new Paragraph(
-                    "• Saturday (WOP) is considered a paid day.\n" +
-                    "• From the 4th late mark onward, each late = 0.5-day deduction.\n" +
-                    "• Leave Loss = (Absents + Half Days × 0.5) × Per Day Salary.\n", normalFont));
-
-                doc.Add(new Paragraph("\n*This is a system-generated salary slip and does not require a signature.", normalFont));
+                // ===========================================================
+              
                 doc.Add(new Paragraph("Generated on: " + DateTime.Now.ToString("dd-MM-yyyy HH:mm"), normalFont));
 
                 doc.Close();

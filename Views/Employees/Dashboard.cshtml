@@ -200,19 +200,24 @@
 <!-- ============================= -->
 
 <script>
-    document.getElementById("salarySlipForm").addEventListener("submit", function (e) {
+       document.getElementById("salarySlipForm").addEventListener("submit", function (e) {
         e.preventDefault();
 
         const month = document.getElementById("month").value;
         const year = document.getElementById("year").value;
+
+        const empCode = "@Model.Employee.EmployeeCode";   // ADD THIS
 
         if (!month || !year) {
             return alert("Please select both month and year!");
         }
 
         const btn = document.getElementById("downloadSlipBtn");
-        btn.href = `/Payroll/DownloadSalarySlip?month=${month}&year=${year}`;
+
+        // FIXED URL — now includes empCode
+        btn.href = `/Payroll/DownloadSalarySlip?empCode=${empCode}&month=${month}&year=${year}`;
 
         document.getElementById("salarySlipResult").classList.remove("d-none");
     });
+
 </script>
