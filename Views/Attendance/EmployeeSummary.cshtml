@@ -41,7 +41,7 @@
                 <small>Total Working Days</small>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
+       @*  <div class="col-md-3 mb-3">
             <div class="card shadow-sm border-0 text-center p-3">
                 <h4 class="fw-bold text-danger">@Model.TotalLateDays</h4>
                 <small>Late Days</small>
@@ -52,7 +52,7 @@
                 <h4 class="fw-bold text-warning">@Model.TotalEarlyLeaveDays</h4>
                 <small>Early Leave Days</small>
             </div>
-        </div>
+        </div> *@
         <div class="col-md-3 mb-3">
             <div class="card shadow-sm border-0 text-center p-3">
                 <h4 class="fw-bold text-success">@Model.AverageWorkingHours</h4>
@@ -70,8 +70,7 @@
                 <th>Date</th>
                 <th>Check In</th>
                 <th>Check Out</th>
-                <th>Late</th>
-                <th>Early Leave</th>
+               
                 <th>Working Hours</th>
                 <th>Ticket</th>  <!-- NEW -->
             </tr>
@@ -101,27 +100,9 @@
                                             : "--")
                     </td>
 
-                    <td>
-                        @if (isLate)
-                        {
-                            <span class="badge bg-danger">Late ❌</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-success">On Time ✅</span>
-                        }
-                    </td>
-
-                    <td>
-                        @if (isEarly)
-                        {
-                            <span class="badge bg-warning text-dark">Early Leave</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-success">On Time ✅</span>
-                        }
-                    </td>
+                   
+                    
+                  
 
                     <td>
                         @if (a.InTime.HasValue && a.OutTime.HasValue)
