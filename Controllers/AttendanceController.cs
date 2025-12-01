@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using OfficeOpenXml;
-using OfficeOpenXml.Style;
 using System;
 using System.Linq;
 
@@ -46,73 +45,89 @@ namespace HRMS.Controllers
         public IActionResult CheckIn()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
-            if (string.IsNullOrEmpty(empCode))
+            if (empCode == null)
                 return RedirectToAction("Login", "Account");
 
-            var today = DateTime.Today;
-
-            bool exists = _context.Attendances
-                .Any(a => a.Emp_Code == empCode && a.Date == today);
-
-            if (!exists)
+            Attendance att = new Attendance
             {
-                var rec = new Attendance
-                {
-                    Emp_Code = empCode,
-                    Date = today,
-                    Status = "P",
-                    InTime = DateTime.Now.TimeOfDay,
-                    OutTime = null,
-                    Total_Hours = 0
-                };
+                Emp_Code = empCode,
+                Date = DateTime.Now.Date,
+                InTime = DateTime.Now.TimeOfDay,
+                Status = "Present"
+            };
 
-                _context.Attendances.Add(rec);
-                _context.SaveChanges();
-            }
+            _context.Attendances.Add(att);
+            _context.SaveChanges();
 
-            return RedirectToAction(nameof(EmployeePanel));
+            TempData["CheckedIn"] = true; // Start countdown on UI
+
+            return RedirectToAction("EmployeePanel");
         }
 
+        // =========================================================
+        // CHECK OUT
+        // =========================================================
         // =========================================================
         // CHECK OUT
         // =========================================================
         public IActionResult CheckOut()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
-
-            if (string.IsNullOrEmpty(empCode))
+            if (empCode == null)
                 return RedirectToAction("Login", "Account");
 
-            var today = DateTime.Today;
+            DateTime today = DateTime.Today;
 
-            var rec = _context.Attendances
+            // Always fetch TODAY'S record ONLY
+            var record = _context.Attendances
                 .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
 
-            if (rec != null && rec.OutTime == null)
+            // No record found
+            if (record == null)
             {
-                rec.OutTime = DateTime.Now.TimeOfDay;
-
-                // TOTAL HOURS
-                rec.Total_Hours = CalculateTotalHours(rec.InTime, rec.OutTime);
-
-                _context.SaveChanges();
+                TempData["EarlyCheckout"] = "No active attendance found for today.";
+                return RedirectToAction("EmployeePanel");
             }
 
-            return RedirectToAction(nameof(EmployeePanel));
+            // Prevent double checkout
+            if (record.OutTime != null)
+            {
+                TempData["CheckoutSuccess"] = $"You already checked out at {record.OutTime.Value}.";
+                return RedirectToAction("EmployeePanel");
+            }
+
+            // Set checkout time
+            record.OutTime = DateTime.Now.TimeOfDay;
+
+            // If InTime exists calculate hours
+            if (record.InTime != null)
+            {
+                TimeSpan worked = record.OutTime.Value - record.InTime.Value;
+                record.Total_Hours = (decimal)worked.TotalHours;
+
+                TimeSpan shift = TimeSpan.FromHours(8);
+
+                if (worked < shift)
+                {
+                    TimeSpan remaining = shift - worked;
+                    TempData["EarlyCheckout"] =
+                        $"Early Checkout — remaining {remaining.Hours}h {remaining.Minutes}m.";
+                }
+                else
+                {
+                    TempData["CheckoutSuccess"] =
+                        $"Shift completed! Total worked {worked.Hours}h {worked.Minutes}m.";
+                }
+            }
+            else
+            {
+                TempData["CheckoutSuccess"] = "Checked out successfully.";
+            }
+
+            _context.SaveChanges();
+            return RedirectToAction("EmployeePanel");
         }
 
-        private decimal CalculateTotalHours(TimeSpan? inTime, TimeSpan? outTime)
-        {
-            if (!inTime.HasValue || !outTime.HasValue)
-                return 0;
-
-            TimeSpan diff = outTime.Value - inTime.Value;
-
-            if (diff.TotalHours < 0)
-                return 0;
-
-            return (decimal)diff.TotalHours;
-        }
 
 
         // =========================================================
@@ -125,7 +140,9 @@ namespace HRMS.Controllers
             if (string.IsNullOrEmpty(empCode))
                 return RedirectToAction("Login", "Account");
 
-            return RedirectToAction(nameof(EmployeeSummary), new { empCode });
+            var employee = _context.Employees.FirstOrDefault(e => e.EmployeeCode == empCode);
+
+            return RedirectToAction(nameof(EmployeeSummary), new { employeeId = employee.Id });
         }
 
         // =========================================================
@@ -137,16 +154,12 @@ namespace HRMS.Controllers
             if (employeeId <= 0)
                 return BadRequest("Invalid employee ID.");
 
-            // Get employee record
             var emp = _context.Employees.FirstOrDefault(e => e.Id == employeeId);
             if (emp == null)
                 return NotFound("Employee not found.");
 
-            string empCode = emp.EmployeeCode;   // IMPORTANT: Attendance table uses Emp_Code
+            string empCode = emp.EmployeeCode;
 
-            // ---------------------------------------
-            // DEFAULT DATE RANGE → CURRENT MONTH
-            // ---------------------------------------
             if (!from.HasValue)
                 from = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
 
@@ -154,20 +167,14 @@ namespace HRMS.Controllers
                 to = DateTime.Now.Date;
 
             DateTime startDate = from.Value.Date;
-            DateTime endDate = to.Value.Date.AddDays(1).AddSeconds(-1); // include entire day
+            DateTime endDate = to.Value.Date;
 
-            // ---------------------------------------
-            // GET ATTENDANCE RECORDS FOR EMPLOYEE
-            // ---------------------------------------
             var attendanceRecords = _context.Attendances
-                .Where(a => a.Emp_Code == empCode)     // FIXED 🔥 use Emp_Code
+                .Where(a => a.Emp_Code == empCode)
                 .Where(a => a.Date >= startDate && a.Date <= endDate)
                 .OrderByDescending(a => a.Date)
                 .ToList();
 
-            // ---------------------------------------
-            // CALCULATE SUMMARY
-            // ---------------------------------------
             TimeSpan shiftStart = new TimeSpan(9, 30, 0);
             TimeSpan shiftEnd = new TimeSpan(18, 0, 0);
 
@@ -179,7 +186,6 @@ namespace HRMS.Controllers
                 ToDate = endDate,
 
                 TotalDays = attendanceRecords.Count,
-
                 TotalLateDays = attendanceRecords.Count(a =>
                     a.InTime.HasValue && a.InTime.Value > shiftStart),
 
@@ -197,17 +203,13 @@ namespace HRMS.Controllers
             return View(summary);
         }
 
-
-
-
         // =========================================================
         // HR LIST PAGE (FILTER + SEARCH)
         // =========================================================
-        public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status )
+        public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status)
         {
             var attendance = _context.AttendanceRecords.AsQueryable();
 
-            // 🟢 Default: current month
             if (!fromDate.HasValue && !toDate.HasValue)
             {
                 var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
@@ -217,26 +219,21 @@ namespace HRMS.Controllers
                 toDate = lastDay;
             }
 
-            // 🧭 Apply date range
             attendance = attendance.Where(a => a.Date >= fromDate && a.Date <= toDate);
 
-            // 🔍 Search filter
             if (!string.IsNullOrEmpty(search))
                 attendance = attendance.Where(a => a.Emp_Code.Contains(search));
 
-            // 📋 Status filter
             if (status == "NotCheckedOut")
                 attendance = attendance.Where(a => a.InTime != null && a.OutTime == null);
             else if (status == "Completed")
                 attendance = attendance.Where(a => a.InTime != null && a.OutTime != null);
 
-            // 🌐 ViewBag for form prefill
             ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
             ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
             ViewBag.Search = search;
             ViewBag.Status = status;
 
-            // 📊 Projection to ViewModel
             var list = attendance
                 .OrderByDescending(a => a.Date)
                 .Select(a => new AttendanceIndexVm
@@ -245,39 +242,16 @@ namespace HRMS.Controllers
                     AttDate = a.Date,
                     InTime = a.InTime,
                     OutTime = a.OutTime,
-                    Status=a.Status,
+                    Status = a.Status,
                     TotalHours = (a.InTime != null && a.OutTime != null)
                         ? (a.OutTime.Value - a.InTime.Value).ToString(@"hh\:mm")
                         : "--"
                 })
                 .ToList();
 
-            // 👥 Load employees for name display
             ViewBag.EmployeeList = _context.Employees.ToList();
 
             return View(list);
-        }
-
-
-
-        private bool IsLate(Attendance a)
-        {
-            bool presentType = a.Status == "P" || a.Status == "WOP" ||
-                               a.Status == "½P" || a.Status == "P½";
-
-            if (!presentType || !a.InTime.HasValue)
-                return false;
-
-            var day = a.Date.DayOfWeek;
-
-            if (day == DayOfWeek.Sunday)
-                return false;
-
-            TimeSpan cutoff = (day == DayOfWeek.Saturday)
-                ? new TimeSpan(10, 15, 0)
-                : new TimeSpan(9, 45, 0);
-
-            return a.InTime.Value > cutoff;
         }
 
         // =========================================================
@@ -334,10 +308,9 @@ namespace HRMS.Controllers
                     ws.Cells[row, 1].Value = a.Emp_Code;
                     ws.Cells[row, 2].Value = emp?.Name ?? "--";
                     ws.Cells[row, 3].Value = a.Date.ToString("dd-MMM-yyyy");
-                    ws.Cells[row, 4].Value = a.InTime.HasValue ? a.InTime.Value.ToString(@"hh\:mm") : "--";
-                    ws.Cells[row, 5].Value = a.OutTime.HasValue? a.OutTime.Value.ToString(@"hh\:mm") : "--";
+                    ws.Cells[row, 4].Value = a.InTime?.ToString(@"hh\:mm") ?? "--";
+                    ws.Cells[row, 5].Value = a.OutTime?.ToString(@"hh\:mm") ?? "--";
 
-                    // ⭐ TOTAL HOURS
                     string totalHours = "--";
                     if (a.InTime.HasValue && a.OutTime.HasValue)
                     {
@@ -361,7 +334,9 @@ namespace HRMS.Controllers
             }
         }
 
-
+        // =========================================================
+        // CALENDAR VIEW
+        // =========================================================
         public IActionResult CalendarView()
         {
             var data = _context.AttendanceRecords
@@ -380,6 +355,5 @@ namespace HRMS.Controllers
 
             return View();
         }
-
     }
 }

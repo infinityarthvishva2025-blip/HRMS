@@ -6,220 +6,286 @@
     string FormatTime(object time)
     {
         if (time == null) return "—";
-        if (time is DateTime dt) return dt.ToString("dd MMM yyyy, hh:mm tt");
-        if (time is TimeSpan ts) return DateTime.Today.Add(ts).ToString("dd MMM yyyy, hh:mm tt");
-        if (DateTime.TryParse(time.ToString(), out DateTime parsed)) return parsed.ToString("dd MMM yyyy, hh:mm tt");
+
+        if (time is TimeSpan ts)
+            return DateTime.Today.Add(ts).ToString("dd MMM yyyy, hh:mm tt");
+
+        if (time is DateTime dt)
+            return dt.ToString("dd MMM yyyy, hh:mm tt");
+
+        if (DateTime.TryParse(time.ToString(), out DateTime parsed))
+            return parsed.ToString("dd MMM yyyy, hh:mm tt");
+
         return "—";
     }
 }
 
-<div class="att-container">
+<div class="att-page">
+    <div class="att-container shadow-lg">
 
-    <h2 class="att-title">
-        <i class="fa-solid fa-clock text-warning me-2"></i>
-        Attendance Panel
-    </h2>
-
-    @if (Model == null)
-    {
-        <p class="att-subtext">You haven't checked in yet today.</p>
-
-        <a asp-action="CheckIn" class="att-btn att-btn-checkin">
-            <i class="fa-solid fa-play me-2"></i> Check In
-        </a>
-    }
-    else
-    {
-        <div class="att-card neon-card">
-            <div class="att-entry">
-                <i class="fa-solid fa-sign-in-alt text-success att-icon"></i>
-                <div>
-                    <div class="att-label">CHECK-IN</div>
-                    <div class="att-value">@FormatTime(Model.InTime)</div>
-                </div>
+        <!-- HEADER -->
+        <div class="att-header">
+            <div class="att-header-icon">
+                <i class="fa-solid fa-clock"></i>
+            </div>
+            <div class="att-header-text">
+                <h2 class="att-title">Attendance Panel</h2>
+                <p class="att-subtitle">Track your work hours & check-in / check-out status</p>
             </div>
         </div>
 
-        <!-- Countdown -->
-        <div id="countdownContainer" class="att-card countdown-card neon-card">
-            <div class="att-label">
-                <i class="fa-solid fa-hourglass-half me-2 text-warning"></i>
-                Time Remaining
-            </div>
-            <div id="countdown" class="countdown-digits">00:00:00</div>
-        </div>
-
-        @if (Model.OutTime == null)
+        <!-- SUCCESS GREEN MESSAGE -->
+        @if (TempData["CheckoutSuccess"] != null)
         {
-            <a asp-action="CheckOut" class="att-btn att-btn-checkout">
-                <i class="fa-solid fa-stop me-2"></i> Check Out
-            </a>
+            <div class="alert alert-success text-center fw-bold mb-3">
+                <i class="fa-solid fa-circle-check me-2"></i>
+                @TempData["CheckoutSuccess"]
+            </div>
+        }
+
+        <!-- EARLY LEAVE RED MESSAGE -->
+        @if (TempData["EarlyCheckout"] != null)
+        {
+            <div class="alert alert-danger text-center fw-bold mb-3">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                @TempData["EarlyCheckout"]
+            </div>
+        }
+
+        <!-- NO CHECK-IN -->
+        @if (Model == null)
+        {
+            <div class="att-empty-state">
+                <p class="att-empty-text mb-3">You haven't checked in yet today.</p>
+
+                <a asp-action="CheckIn" class="att-btn att-btn-checkin">
+                    <i class="fa-solid fa-play me-2"></i> Check In
+                </a>
+            </div>
         }
         else
         {
-            <div class="success-card neon-card">
-                <i class="fa-solid fa-circle-check text-success me-2"></i>
-                You have successfully checked out today.
+            <!-- CHECK-IN CARD -->
+            <div class="att-card neon-card">
+                <div class="att-entry">
+                    <div class="att-icon-wrapper bg-success-soft">
+                        <i class="fa-solid fa-right-to-bracket att-icon text-success"></i>
+                    </div>
+                    <div>
+                        <div class="att-label">Check-in Time</div>
+                        <div class="att-value">@FormatTime(Model.InTime)</div>
+                    </div>
+                </div>
             </div>
+
+            <!-- IF CHECKED OUT SHOW CARD -->
+            @if (Model.OutTime != null)
+            {
+                <div class="att-card neon-card mt-3">
+                    <div class="att-entry">
+                        <div class="att-icon-wrapper bg-danger-soft">
+                            <i class="fa-solid fa-right-from-bracket att-icon text-danger"></i>
+                        </div>
+                        <div>
+                            <div class="att-label">Check-out Time</div>
+                            <div class="att-value">@FormatTime(Model.OutTime)</div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- COUNTDOWN -->
+                <div id="countdownContainer" class="att-card neon-card mt-3">
+                    <div class="att-label text-center">
+                        <i class="fa-solid fa-hourglass-half me-2 text-warning"></i>
+                        Time Remaining (8-hour shift)
+                    </div>
+                    <div id="countdown" class="countdown-digits">00:00:00</div>
+                </div>
+
+                <!-- CHECKOUT BUTTON -->
+                <a asp-action="CheckOut" id="checkoutBtn" class="att-btn att-btn-checkout mt-3">
+                    <i class="fa-solid fa-stop me-2"></i> Check Out
+                </a>
+            }
         }
-    }
+    </div>
 </div>
-
-
-<!-- COUNTDOWN SCRIPT (Your original JS kept same, only moved) -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-        var inTime = "@(Model?.InTime?.ToString() ?? "")";
+        let success = document.querySelector(".alert-success");
+        let early   = document.querySelector(".alert-danger");
+        let countdown = document.getElementById("countdownContainer");
+        let btnCheckout = document.getElementById("checkoutBtn");
 
-        if (inTime && inTime.length > 0) {
-            var today = new Date();
-            var dateStr = today.getFullYear() + "-" +
-                          String(today.getMonth() + 1).padStart(2, '0') + "-" +
-                          String(today.getDate()).padStart(2, '0') + " " + inTime;
+        // If any checkout message → stop countdown + hide button
+        if (success || early) {
+            if (countdown) countdown.style.display = "none";
+            if (btnCheckout) btnCheckout.style.display = "none";
+            return;
+        }
 
-            var startTime = new Date(dateStr);
+        let inTime  = '@(Model?.InTime?.ToString() ?? "")';
+        let outTime = '@(Model?.OutTime?.ToString() ?? "")';
 
-            if (isNaN(startTime.getTime())) {
-                document.getElementById("countdownContainer").style.display = "none";
+        // Hide countdown if outtime exists
+        if (outTime && outTime !== "") {
+            if (countdown) countdown.style.display = "none";
+            return;
+        }
+
+        if (!inTime || inTime === "") {
+            if (countdown) countdown.style.display = "none";
+            return;
+        }
+
+        // Build countdown
+        let label = document.getElementById("countdown");
+        let today = new Date();
+        let dateStr = today.toISOString().split("T")[0];
+        let start = new Date(dateStr + "T" + inTime);
+        let endTime = new Date(start.getTime() + (8 * 60 * 60 * 1000)); // +8h
+
+        function updateCountdown() {
+            let now = new Date();
+            let diff = endTime - now;
+
+            if (diff <= 0) {
+                label.textContent = "00:00:00";
                 return;
             }
 
-            var endTime = new Date(startTime.getTime() + (8 * 60 * 60 * 1000));
+            let h = Math.floor(diff / (1000 * 60 * 60));
+            let m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            let s = Math.floor((diff % (1000 * 60)) / 1000);
 
-            function updateCountdown() {
-                var now = new Date();
-                var diff = endTime - now;
-
-                if (diff <= 0) {
-                    document.getElementById("countdown").innerHTML = "00:00:00";
-                    return;
-                }
-
-                var hours = Math.floor(diff / (1000 * 60 * 60));
-                var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                var seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-                document.getElementById("countdown").innerHTML =
-                    String(hours).padStart(2, '0') + ":" +
-                    String(minutes).padStart(2, '0') + ":" +
-                    String(seconds).padStart(2, '0');
-            }
-
-            updateCountdown();
-            setInterval(updateCountdown, 1000);
+            label.textContent =
+                h.toString().padStart(2, '0') + ":" +
+                m.toString().padStart(2, '0') + ":" +
+                s.toString().padStart(2, '0');
         }
-        else {
-            document.getElementById("countdownContainer").style.display = "none";
-        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
     });
 </script>
-
 <style>
-/* ---------- Layout Wrapper ---------- */
-.att-container {
-    max-width: 650px;
-    margin: 40px auto;
-    text-align: center;
-}
+    .att-page {
+        display: flex;
+        justify-content: center;
+        padding: 25px 10px;
+    }
 
-/* ---------- Title ---------- */
-.att-title {
-    font-size: 32px;
-    font-weight: 800;
-    margin-bottom: 10px;
-}
+    .att-container {
+        width: 100%;
+        max-width: 760px;
+        background: #fff;
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 12px 30px rgba(0,0,0,.08);
+    }
 
-.att-subtext {
-    font-size: 18px;
-    color: #666;
-}
+    .att-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+    }
 
-/* ---------- Neon Glass Cards ---------- */
-.neon-card {
-    background: rgba(255, 255, 255, 0.15);
-    padding: 18px 25px;
-    border-radius: 15px;
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-    margin-top: 18px;
-}
+    .att-header-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: linear-gradient(135deg,#fde68a,#f97316);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-/* ---------- Check-in/out info ---------- */
-.att-entry {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
+    .att-title {
+        font-weight: 800;
+        font-size: 22px;
+    }
 
-.att-icon {
-    font-size: 30px;
-}
+    .att-subtitle {
+        color: #6b7280;
+        font-size: 13px;
+    }
 
-.att-label {
-    font-size: 14px;
-    text-transform: uppercase;
-    color: #555;
-    letter-spacing: 1px;
-}
+    .neon-card {
+        background: #f9fafb;
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px solid #eee;
+    }
 
-.att-value {
-    font-size: 20px;
-    font-weight: bold;
-}
+    .att-entry {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
 
-/* ---------- Countdown ---------- */
-.countdown-digits {
-    font-size: 38px;
-    margin-top: 8px;
-    font-weight: bold;
-    color: #d9534f;
-    letter-spacing: 3px;
-    animation: glowPulse 1.5s infinite alternate;
-}
+    .att-label {
+        text-transform: uppercase;
+        font-size: 12px;
+        color: #6b7280;
+    }
 
-@@keyframes glowPulse {
-    from { text-shadow: 0 0 6px #ffb3b3; }
-    to   { text-shadow: 0 0 15px #ff4d4d; }
-}
+    .att-value {
+        font-size: 18px;
+        font-weight: 800;
+    }
 
-/* ---------- Buttons ---------- */
-.att-btn {
-    display: block;
-    width: 100%;
-    max-width: 260px;
-    margin: 25px auto;
-    padding: 14px;
-    font-size: 20px;
-    border-radius: 50px;
-    color: #fff;
-    text-decoration: none;
-    transition: 0.25s;
-}
+    .bg-success-soft {
+        background: #dcfce7;
+    }
 
-.att-btn-checkin {
-    background: linear-gradient(135deg, #0d6efd, #00b4ff);
-    box-shadow: 0 6px 15px rgba(33,150,243,0.4);
-}
+    .bg-danger-soft {
+        background: #fee2e2;
+    }
 
-.att-btn-checkout {
-    background: linear-gradient(135deg, #d9534f, #b52b27);
-    box-shadow: 0 6px 15px rgba(217,83,79,0.4);
-}
+    .countdown-digits {
+        text-align: center;
+        font-size: 35px;
+        font-weight: 900;
+        color: #ef4444;
+        letter-spacing: 4px;
+        animation: glow 1.4s infinite alternate;
+    }
+    @@keyframes glow {
+        from {
+            text-shadow: 0 0 6px rgba(239,68,68,.5);
+        }
 
-.att-btn:hover {
-    transform: translateY(-3px);
-    opacity: 0.9;
-}
+        to {
+            text-shadow: 0 0 16px rgba(239,68,68,1);
+        }
+    }
 
-/* ---------- Success Card ---------- */
-.success-card {
-    margin-top: 20px;
-    font-size: 18px;
-    padding: 18px;
-    background: #e8fff0;
-    border-left: 4px solid #28a745;
-    border-radius: 10px;
-}
+    .att-btn {
+        display: block;
+        width: 100%;
+        max-width: 260px;
+        margin: auto;
+        padding: 12px;
+        border-radius: 999px;
+        font-size: 16px;
+        font-weight: 700;
+        text-align: center;
+        color: white;
+        text-decoration: none;
+    }
+
+    .att-btn-checkin {
+        background: linear-gradient(135deg,#10b981,#059669);
+    }
+
+    .att-btn-checkout {
+        background: linear-gradient(135deg,#ef4444,#b91c1c);
+    }
 </style>
+
