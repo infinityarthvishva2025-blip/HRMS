@@ -3,6 +3,11 @@
 @{
     Layout = null;
     var empId = Context.Session.GetInt32("EmployeeId");
+
+    // 🔥 VERY IMPORTANT: Disable cache so bell unread count updates instantly
+    Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+    Context.Response.Headers["Pragma"] = "no-cache";
+    Context.Response.Headers["Expires"] = "-1";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -191,6 +196,43 @@
             border-bottom: 1px solid #e5e7eb;
         }
 
+
+        /* Bell animation */
+        .bell-icon {
+            font-size: 22px;
+            transition: 0.3s ease;
+        }
+
+        .blink {
+            animation: shake 0.8s infinite;
+        }
+
+        @@keyframes shake {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            20% {
+                transform: rotate(-15deg);
+            }
+
+            40% {
+                transform: rotate(15deg);
+            }
+
+            60% {
+                transform: rotate(-10deg);
+            }
+
+            80% {
+                transform: rotate(10deg);
+            }
+
+            100% {
+                transform: rotate(0deg);
+            }
+        }
+
         /* ======================= MOBILE ======================= */
 
         .sidebar-overlay {
@@ -319,26 +361,27 @@
 
     <!-- =============== PAGE CONTENT =============== -->
     <div id="page-content">
-
         <nav class="navbar px-4 py-3 d-flex align-items-center">
             <button id="sidebarToggle">
                 <i class="fa-solid fa-bars"></i>
             </button>
-            <span class="ms-auto fw-semibold">Infinity Arthvishva</span>
-
-            <a href="/Announcements/MyNotifications"
-               class="btn btn-secondary position-relative bell-icon @(ViewBag.UnreadCount != null && ViewBag.UnreadCount > 0 ? "blink" : "")">
+            <span class="ms-auto fw-semibold">Infinity Arthvishva</span>&nbsp;&nbsp;&nbsp;
+            
+            <div>
+             <a href="/Announcements/MyNotifications"
+               class="btn btn-secondary position-relative bell-icon @(ViewBag.UnreadCount > 0 ? "blink" : "")">
 
                 <i class="fa-solid fa-bell text-white"></i>
 
-                @if (ViewBag.UnreadCount != null && ViewBag.UnreadCount > 0)
+                @if (ViewBag.UnreadCount > 0)
                 {
                     <span class="badge bg-danger rounded-circle position-absolute top-0 end-0"
                           style="font-size: 11px; padding: 5px 7px;">
                         @ViewBag.UnreadCount
                     </span>
                 }
-            </a>
+             </a>
+            </div>
         </nav>
 
         <div class="container-fluid p-4">
