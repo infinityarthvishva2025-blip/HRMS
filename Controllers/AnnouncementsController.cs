@@ -130,6 +130,12 @@ public class AnnouncementsController : Controller
             )
             .ToList();
 
+        // SET UNREAD COUNT FOR LAYOUT
+        ViewBag.UnreadCount = list.Count(a =>
+            string.IsNullOrEmpty(a.ReadByEmployees) ||
+            !a.ReadByEmployees.Split(',').Contains(employeeId.ToString())
+        );
+
         return View(list);
     }
 

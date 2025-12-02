@@ -402,10 +402,11 @@
             <span class="fw-bold">Infinity Arthvishva</span>
 
             <a href="/Announcements/MyNotifications"
-               class="btn btn-secondary position-relative bell-icon @(ViewBag.UnreadCount > 0 ? "blink" : "")">
+               class="btn btn-secondary position-relative bell-icon @(ViewBag.UnreadCount != null && ViewBag.UnreadCount > 0 ? "blink" : "")">
+
                 <i class="fa-solid fa-bell text-white"></i>
 
-                @if (ViewBag.UnreadCount > 0)
+                @if (ViewBag.UnreadCount != null && ViewBag.UnreadCount > 0)
                 {
                     <span class="badge bg-danger rounded-circle position-absolute top-0 end-0"
                           style="font-size: 11px; padding: 5px 7px;">
