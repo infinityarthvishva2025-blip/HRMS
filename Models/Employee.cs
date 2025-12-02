@@ -18,7 +18,7 @@ namespace HRMS.Models
         [Required]
         [StringLength(100)]
         public string Name { get; set; } = string.Empty;
-
+       
         [Required]
         [EmailAddress]
         [StringLength(150)]

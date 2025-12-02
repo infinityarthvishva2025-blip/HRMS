@@ -4,9 +4,148 @@
     ViewData["Title"] = "Apply for Leave";
     Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
 }
+<style>
+
+
+    .leave-card {
+        border-radius: 16px;
+        background: #fff;
+        padding: 35px;
+        margin: 20px auto;
+        margin-bottom: 40px;
+        max-width: 650px; /* Centers content on desktop */
+        width: 100%;
+        box-shadow: 0 3px 18px rgba(0,0,0,0.1);
+    }
+
+    .leave-title {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #222;
+        margin-bottom: 10px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px !important;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+    }
+
+    textarea.form-control {
+        height: 110px !important;
+    }
+
+    .total-box {
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 20px;
+        font-size: 1.4rem;
+        font-weight: 600;
+        text-align: center;
+        background: #fafafa;
+        color: #2a2a2a;
+    }
+
+    .leave-row {
+        margin-bottom: 25px;
+    }
+
+    .btn-primary {
+        border-radius: 8px;
+        padding: 12px 34px;
+        font-size: 1.1rem;
+    }
+
+
+   
+    @@media (max-width: 1024px) {
+        .leave-card
+
+    {
+        padding: 25px;
+        max-width: 90%;
+    }
+
+    }
+
+
+    
+    @@media (max-width: 768px) {
+        .leave-card
+
+    {
+        padding: 20px;
+        max-width: 95%;
+        margin-top: 10px;
+    }
+
+    .leave-title {
+        font-size: 1.3rem;
+        text-align: center;
+    }
+
+    .total-box {
+        font-size: 1.1rem;
+        padding: 12px;
+    }
+
+    .btn-primary {
+        width: 100%;
+        padding: 12px 0;
+        font-size: 1rem;
+    }
+
+    .row.leave-row {
+        flex-direction: column;
+    }
+
+    #fullOrMultiDayBlock,
+    #halfDayBlock,
+    #timeBlock {
+        flex-direction: column !important;
+    }
+
+        #fullOrMultiDayBlock .col-md-6,
+        #halfDayBlock .col-md-6,
+        #timeBlock .col-md-6 {
+            width: 100% !important;
+            margin-bottom: 12px;
+        }
+
+    }
+
+
+   
+    @@media (max-width: 480px) {
+        .leave-card
+
+    {
+        padding: 15px;
+    }
+
+    .leave-title {
+        font-size: 1.1rem;
+    }
+
+    .total-box {
+        font-size: 1rem;
+    }
+
+    label.form-label {
+        font-size: 0.88rem;
+    }
+
+    }
+</style>
 
 <!-- ============ GLOBAL RESPONSIVE CSS ============ -->
-<style>
+@* <style>
 
     /* MAIN CARD */
     .leave-card {
@@ -66,7 +205,7 @@
     
    
 </style>
-
+ *@
 <!-- ===================== PAGE CONTAINER ===================== -->
 <div class="container">
 
@@ -316,294 +455,3 @@
     </script>
 }
 
-
-@* @model HRMS.Models.Leave
-
-@{
-    ViewData["Title"] = "Apply for Leave";
-    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
-}
-
-<!-- ===================== CUSTOM RESPONSIVE + HRMS UI CSS ===================== -->
-<style>
-
-    /* MAIN CARD */
-    .leave-card {
-        border-radius: 16px;
-        background: #fff;
-        padding: 35px;
-        margin-top: 20px;
-        margin-bottom: 30px;
-        box-shadow: 0 3px 18px rgba(0,0,0,0.1);
-    }
-
-    /* HEADINGS */
-    .leave-title {
-        font-size: 1.6rem;
-        font-weight: 600;
-        color: #222;
-        margin-bottom: 10px;
-    }
-
-    hr {
-        margin-top: 5px;
-        margin-bottom: 25px;
-    }
-
-    /* FORM LABELS */
-    .form-label {
-        font-weight: 600;
-        color: #333;
-    }
-
-    /* FORM INPUTS */
-    .form-control,
-    .form-select {
-        border-radius: 8px !important;
-        padding: 10px 12px;
-        font-size: 0.95rem;
-    }
-
-    textarea.form-control {
-        height: 110px !important;
-    }
-
-    /* TOTAL DAYS BOX */
-    .total-box {
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 20px;
-        font-size: 1.4rem;
-        font-weight: 600;
-        text-align: center;
-        background: #fafafa;
-        color: #2a2a2a;
-    }
-
-    /* ROW SPACING */
-    .leave-row {
-        margin-bottom: 25px;
-    }
-
-    /* SUBMIT BUTTON */
-    .btn-primary {
-        border-radius: 8px;
-        padding: 10px 25px;
-        font-size: 1rem;
-    }
-
-   
-</style>
-
-<!-- ===================== PAGE CONTAINER ===================== -->
-<div class="container">
-
-    <div class="leave-card">
-
-        <div class="leave-title">Apply for Leave</div>
-        <hr />
-
-        <!-- ===================== MAIN FORM ===================== -->
-        <form asp-action="Create" asp-controller="Leave" method="post">
-
-            <!-- Leave Category + Leave Type -->
-            <div class="row leave-row">
-                <div class="col-md-6">
-                    <label class="form-label">Leave Category</label>
-                    <select asp-for="Category" class="form-select" id="Category">
-                        <option value="">-- Select --</option>
-                        <option value="FullDay">Full Day</option>
-                        <option value="MultiDay">More Than 1 Day</option>
-                        <option value="HalfDay">Half Day</option>
-                        <option value="EarlyGoing">Early Going</option>
-                        <option value="LateComing">Late Coming</option>
-                    </select>
-                </div>
-
-                <div id="leaveTypeBlock" class="col-md-6" style="display:none;">
-                    <label class="form-label">Leave Type</label>
-                    <select asp-for="LeaveType" class="form-select">
-                        <option value="">-- Select Leave Type --</option>
-                        <option value="Sick">Sick Leave</option>
-                        <option value="Casual">Casual Leave</option>
-                        <option value="Paid">Public Holidays</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Full or Multi Day -->
-            <div id="fullOrMultiDayBlock" class="row leave-row" style="display:none;">
-                <div class="col-md-6">
-                    <label class="form-label">Start Date</label>
-                    <input asp-for="StartDate" type="date" class="form-control" />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">End Date</label>
-                    <input asp-for="EndDate" type="date" class="form-control" />
-                </div>
-            </div>
-
-            <!-- Half Day -->
-            <div id="halfDayBlock" class="row leave-row" style="display:none;">
-                <div class="col-md-6">
-                    <label class="form-label">Date</label>
-                    <input asp-for="StartDate" type="date" class="form-control" />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Session</label>
-                    <select asp-for="HalfDaySession" class="form-select">
-                        <option value="">-- Select --</option>
-                        <option value="FirstHalf">First Half</option>
-                        <option value="SecondHalf">Second Half</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Early Going / Late Coming -->
-            <div id="timeBlock" class="row leave-row" style="display:none;">
-                <div class="col-md-6">
-                    <label class="form-label">Date</label>
-                    <input asp-for="StartDate" type="date" class="form-control" />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Time</label>
-                    <input asp-for="TimeValue" type="time" class="form-control" />
-                </div>
-            </div>
-
-            <!-- Reason + Total Days -->
-            <div class="row leave-row">
-                <div class="col-md-6">
-                    <label class="form-label">Reason</label>
-                    <textarea asp-for="Reason" class="form-control"></textarea>
-                </div>
-
-                <div id="totalDaysBlock" class="col-md-2" style="display:none;">
-                    <label class="form-label">Total Days</label>
-                    <div class="total-box" id="TotalDays">@Model.TotalDays</div>
-                    <input asp-for="TotalDays" type="hidden" id="TotalDays" />
-                </div>
-                <div  class="col-md-4" ><//div>
-            </div>
-
-            <!-- Contact + Address -->
-            <div class="row leave-row">
-                <div class="col-md-6">
-                    <label class="form-label">Contact During Leave</label>
-                    <input asp-for="ContactDuringLeave" class="form-control" />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Address During Leave</label>
-                    <input asp-for="AddressDuringLeave" class="form-control" />
-                </div>
-            </div>
-
-            <!-- Submit Button -->
-            <div class="text-center mt-4">
-                <button type="submit" class="btn btn-primary px-4">Submit Leave</button>
-            </div>
-
-        </form>
-
-    </div>
-</div>
-
-
-
-<!-- ===================== JAVASCRIPT LOGIC (Your original code) ===================== -->
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-
-            const catSelect = document.getElementById("Category");
-            const fullMulti = document.getElementById("fullOrMultiDayBlock");
-            const half = document.getElementById("halfDayBlock");
-            const timeBlock = document.getElementById("timeBlock");
-            const leaveTypeBlock = document.getElementById("leaveTypeBlock");
-            const totalDaysBlock = document.getElementById("totalDaysBlock");
-
-            function updateBlocks() {
-                const val = catSelect.value;
-
-                fullMulti.style.display = "none";
-                half.style.display = "none";
-                timeBlock.style.display = "none";
-                leaveTypeBlock.style.display = "none";
-                totalDaysBlock.style.display = "none";
-
-                document.querySelector("[name='EndDate']").disabled = false;
-
-                if (val === "FullDay" || val === "MultiDay") {
-                    fullMulti.style.display = "flex";
-                    leaveTypeBlock.style.display = "flex";
-                    totalDaysBlock.style.display = "block";
-                }
-                else if (val === "HalfDay") {
-                    half.style.display = "flex";
-                }
-                else if (val === "EarlyGoing" || val === "LateComing") {
-                    timeBlock.style.display = "flex";
-                }
-
-                calculateDays();
-            }
-
-            function calculateDays() {
-                const category = catSelect.value;
-                const start = document.querySelector("[name='StartDate']").value;
-                const end = document.querySelector("[name='EndDate']").value;
-                const totalDaysInput = document.getElementById("TotalDays");
-
-                if (!start) return;
-
-                if (category === "FullDay") {
-                    document.querySelector("[name='EndDate']").value = start;
-                    document.querySelector("[name='EndDate']").disabled = true;
-                    totalDaysInput.value = 1;
-                    return;
-                }
-
-                if (category === "MultiDay") {
-                    document.querySelector("[name='EndDate']").disabled = false;
-
-                    if (!end) {
-                        totalDaysInput.value = 1;
-                        return;
-                    }
-
-                    const s = new Date(start);
-                    const e = new Date(end);
-                    const diff = (e - s) / (1000 * 3600 * 24) + 1;
-
-                    totalDaysInput.value = diff > 0 ? diff : 1;
-                    return;
-                }
-
-                if (category === "HalfDay") {
-                    totalDaysInput.value = 0.5;
-                }
-
-                if (category === "EarlyGoing" || category === "LateComing") {
-                    totalDaysInput.value = 0;
-                }
-            }
-
-            catSelect.addEventListener("change", updateBlocks);
-            document.querySelector("[name='StartDate']").addEventListener("change", calculateDays);
-            document.querySelector("[name='EndDate']").addEventListener("change", calculateDays);
-
-            updateBlocks();
-        });
-    </script>
-}
- *@

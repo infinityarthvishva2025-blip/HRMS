@@ -2,12 +2,12 @@
 
 @{
     ViewData["Title"] = "Leave Dashboard";
-    Layout = "_EmployeeLayout";
+    Layout = "_HrLayout";
 }
 
 <div class="container mt-4">
     <h3 class="mb-3">
-    <i class="fa-solid fa-plane-departure icon-leave"></i><span> Leave Management</span>
+        <i class="fa-solid fa-plane-departure icon-leave"></i><span> Leave Management</span>
     </h3>
     <!-- 🔷 Advanced Cards -->
 
@@ -36,8 +36,6 @@
             </div>
 
         </div>
-
-     
     </div>
 
     <!-- 🔷 Monthly Line Chart -->
@@ -47,19 +45,19 @@
             <canvas id="leaveMonthlyChart" height="80"></canvas>
         </div>
     </div>
-  
+
     <div class="text-center mt-5 mb-3">
         <a asp-controller="Leave" asp-action="Create" class="btn btn-lg text-white me-2 shadow"
            style="background: linear-gradient(90deg, #0077c2, #009688); border-radius: 8px;">
             <i class="fa-solid fa-paper-plane me-2"></i> Apply for Leave
         </a>
 
-        
+
     </div>
     <table class="table table-striped table-bordered">
         <thead>
             <tr>
-                <td>Employee Name</td>
+                <th>Employee Nmae</th>
                 <th>Category</th>
                 <th>Start</th>
                 <th>End</th>
@@ -71,9 +69,8 @@
         <tbody>
             @foreach (var item in Model)
             {
-               
-                    var empCode = item.Employee?.EmployeeCode ?? "-";
-                    var empName = item.Employee?.Name ?? "-";
+                var empCode = item.Employee?.EmployeeCode ?? "-";
+                var empName = item.Employee?.Name ?? "-";
                 <tr>
                     <td>@($"{empCode} - {empName}")</td>
                     <td>@item.Category</td>
@@ -92,7 +89,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            fetch('/Leave/GetMonthlyLeaveSummary')
+            fetch('/Leave/GetMonthlyLeaveSummaryAll')
                 .then(r => r.json())
                 .then(data => {
                     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -134,13 +131,13 @@
                 });
         });
     </script>
-   
+
     <script>
         // function loadPendingCounts() {
         //     fetch('/Leave/GetPendingCounts')
         //         .then(res => res.json())
         //         .then(data => {
-                   
+
         //             document.getElementById("managerPending").textContent = data.managerPending;
         //             document.getElementById("hrPending").textContent = data.hrPending;
         //             document.getElementById("directorPending").textContent = data.directorPending;
@@ -157,7 +154,7 @@
 
         function loadPendingCounts() {
 
-            fetch('/Leave/GetPendingCounts')
+            fetch('/Leave/GetPendingCountsall')
                 .then(res => res.json())
                 .then(data => {
 

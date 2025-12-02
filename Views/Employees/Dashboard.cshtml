@@ -5,7 +5,7 @@
     Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
 }
 
-<div class="dashboard-container py-5">
+<div class="dashboard-container py-4">
 
     <!-- HEADER SECTION -->
     <div class="dashboard-header text-center mb-5">
@@ -13,28 +13,29 @@
             <i class="fa-solid fa-hand-wave text-warning me-2"></i>
             Welcome, @Model.Employee.Name
         </h2>
-        <p class="lead text-white">Your personalized work summary & attendance panel</p>
+        <p class="welcome-sub">Your personalized work summary & attendance panel</p>
 
-        <div class="mt-4 text-center">
+        <!-- ACTION BUTTONS -->
+        <div class="action-buttons mt-4">
 
             <a href="/Attendance/EmployeePanel"
-               class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold">
+               class="dash-btn">
                 <i class="fa-solid fa-calendar-check me-2"></i> Mark Attendance
             </a>
 
             <a asp-controller="Attendance" asp-action="EmployeeSummary"
                asp-route-employeeId="@Model.Employee.Id"
-               class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold">
+               class="dash-btn">
                 <i class="fa-solid fa-chart-line me-2"></i> Attendance Summary
             </a>
 
             <a asp-controller="Leave" asp-action="Create"
-               class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold">
+               class="dash-btn">
                 <i class="fa-solid fa-paper-plane me-2"></i> Apply Leave
             </a>
 
             <button type="button"
-                    class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold"
+                    class="dash-btn"
                     data-bs-toggle="modal"
                     data-bs-target="#salarySlipModal">
                 <i class="fa-solid fa-file-invoice-dollar me-2"></i> View Salary Slip
@@ -46,60 +47,61 @@
 
     <!-- INFO CARDS -->
     <div class="row g-4 justify-content-center">
+
         <!-- Department -->
-        <div class="col-md-3 col-sm-6">
+        <div class="col-lg-3 col-md-4 col-sm-6 col-12">
             <div class="info-card shadow-sm p-4 text-center">
                 <div class="icon-circle bg-primary bg-gradient mb-3">
                     <i class="fa-solid fa-building fa-2x text-white"></i>
                 </div>
-                <h6 class="fw-bold text-muted">Department</h6>
-                <h5 class="fw-bold text-dark">@Model.Employee.Department</h5>
+                <h6 class="info-label">Department</h6>
+                <h5 class="info-value">@Model.Employee.Department</h5>
             </div>
         </div>
 
         <!-- Position -->
-        <div class="col-md-3 col-sm-6">
+        <div class="col-lg-3 col-md-4 col-sm-6 col-12">
             <div class="info-card shadow-sm p-4 text-center">
                 <div class="icon-circle bg-success bg-gradient mb-3">
                     <i class="fa-solid fa-briefcase fa-2x text-white"></i>
                 </div>
-                <h6 class="fw-bold text-muted">Position</h6>
-                <h5 class="fw-bold text-dark">@Model.Employee.Position</h5>
+                <h6 class="info-label">Position</h6>
+                <h5 class="info-value">@Model.Employee.Position</h5>
             </div>
         </div>
 
         <!-- Total Leaves -->
-        <div class="col-md-3 col-sm-6">
+        <div class="col-lg-3 col-md-4 col-sm-6 col-12">
             <div class="info-card shadow-sm p-4 text-center">
                 <div class="icon-circle bg-info bg-gradient mb-3">
                     <i class="fa-solid fa-plane-departure fa-2x text-white"></i>
                 </div>
-                <h6 class="fw-bold text-muted">Total Leaves</h6>
-                <h5 class="fw-bold text-dark">@Model.TotalLeaves</h5>
+                <h6 class="info-label">Total Leaves</h6>
+                <h5 class="info-value">@Model.TotalLeaves</h5>
             </div>
         </div>
 
         <!-- Approved Leaves -->
-        <div class="col-md-3 col-sm-6">
+        <div class="col-lg-3 col-md-4 col-sm-6 col-12">
             <div class="info-card shadow-sm p-4 text-center">
                 <div class="icon-circle bg-warning bg-gradient mb-3">
                     <i class="fa-solid fa-circle-check fa-2x text-white"></i>
                 </div>
-                <h6 class="fw-bold text-muted">Approved Leaves</h6>
-                <h5 class="fw-bold text-dark">@Model.ApprovedLeaves</h5>
+                <h6 class="info-label">Approved Leaves</h6>
+                <h5 class="info-value">@Model.ApprovedLeaves</h5>
             </div>
         </div>
+
     </div>
 </div>
 
-<!-- ============================= -->
-<!-- SALARY SLIP MODAL -->
-<!-- ============================= -->
+<!-- =========================================================== -->
+<!--     SALARY SLIP MODAL (NO CHANGES NEEDED)                  -->
+<!-- =========================================================== -->
 
 <div class="modal fade" id="salarySlipModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
-
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">
                     <i class="fa-solid fa-file-invoice-dollar me-2"></i> Select Month & Year
@@ -146,31 +148,68 @@
                     <i class="fa-solid fa-download me-2"></i> Download Salary Slip
                 </a>
             </div>
-
         </div>
     </div>
 </div>
 
-<!-- ============================= -->
-<!-- STYLING -->
-<!-- ============================= -->
+<!-- =========================================================== -->
+<!--       NEW RESPONSIVE CSS (ADDED BY CHATGPT)                -->
+<!-- =========================================================== -->
 
 <style>
     body {
         background: #eef3fb;
     }
 
+    /* HEADER */
     .dashboard-header {
         background: linear-gradient(135deg, #0d47a1, #00897b);
-        padding: 50px 30px;
+        padding: 40px 25px;
         border-radius: 20px;
         color: white;
     }
 
+    .welcome-title {
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    .welcome-sub {
+        font-size: 18px;
+        margin-top: -8px;
+    }
+
+    /* Buttons container */
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: center;
+    }
+
+    .dash-btn {
+        background: white;
+        color: #333;
+        padding: 10px 22px;
+        border-radius: 50px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        transition: 0.3s;
+    }
+
+        .dash-btn:hover {
+            transform: translateY(-3px);
+            background: #f7f7f7;
+        }
+
+    /* CARDS */
     .info-card {
         background: white;
         border-radius: 15px;
-        transition: all .3s ease;
+        transition: .3s;
     }
 
         .info-card:hover {
@@ -189,16 +228,70 @@
         box-shadow: 0 6px 18px rgba(0,0,0,0.2);
     }
 
-    .btn-gradient-primary {
-        background: linear-gradient(90deg, #0d47a1, #00acc1);
-        color: white !important;
+    .info-label {
+        color: #777;
+        font-weight: 600;
+        margin-top: 5px;
+    }
+
+    .info-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #333;
+    }
+
+    /* ============== MOBILE RESPONSIVE FIXES ============== */
+
+    @@media (max-width: 992px) {
+
+        .welcome-title {
+            font-size: 26px;
+        }
+
+        .welcome-sub {
+            font-size: 15px;
+        }
+
+        .dashboard-header {
+            padding: 30px 18px;
+        }
+    }
+
+    @@media (max-width: 576px) {
+
+        .welcome-title {
+            font-size: 22px;
+        }
+
+        .welcome-sub {
+            font-size: 14px;
+        }
+
+        .dashboard-header {
+            padding: 25px 15px;
+        }
+
+        .dash-btn {
+            width: 100%;
+            justify-content: center;
+            font-size: 15px;
+            padding: 10px;
+        }
+
+        .icon-circle {
+            width: 65px;
+            height: 65px;
+        }
+
+        .info-value {
+            font-size: 18px;
+        }
     }
 </style>
 
-<!-- ============================= -->
-<!-- JS -->
-<!-- ============================= -->
-
+<!-- =========================================================== -->
+<!-- JS FOR SALARY SLIP -->
+<!-- =========================================================== -->
 <script>
        document.getElementById("salarySlipForm").addEventListener("submit", function (e) {
         e.preventDefault();

@@ -236,12 +236,21 @@ namespace HRMS.Controllers
                 PanFilePath = emp.PanFilePath,
                 PassbookFilePath = emp.PassbookFilePath
             };
+            // DISTINCT departments from Employees table
+            // Load distinct departments from Employees table
+            ViewBag.Departments = _context.Employees
+                .Where(e => !string.IsNullOrEmpty(e.Department))
+                .Select(e => e.Department.Trim())
+                .Distinct()
+                .OrderBy(d => d)
+                .ToList();
 
             return View(vm);
+
         }
 
 
-            
+
         // ================================
         // EDIT (POST)
         // ================================
@@ -258,12 +267,21 @@ namespace HRMS.Controllers
             emp.MobileNumber = model.MobileNumber ?? emp.MobileNumber;
             emp.AlternateMobileNumber = model.AlternateMobileNumber ?? emp.AlternateMobileNumber;
 
-            // PASSWORD (only if entered)
+            // PASSWORD UPDATE ONLY WHEN ENTERED
+            // PASSWORD LOGIC
+            // Only validate password if user entered a new one
             if (!string.IsNullOrWhiteSpace(model.Password))
-                if (!string.IsNullOrEmpty(model.Password))
+            {
+                if (model.Password != model.ConfirmPassword)
                 {
-                    emp.Password = model.Password;   // store plain text
+                    ModelState.AddModelError("ConfirmPassword", "Passwords do not match.");
+                    return View(model);
                 }
+
+                emp.Password = model.Password;
+            }
+
+
 
 
             // PERSONAL
@@ -358,12 +376,13 @@ namespace HRMS.Controllers
             return RedirectToAction("Edit", new { id = emp.Id });
         }
 
-        // your existing helper
         private async Task<string> SaveEmployeeFile(IFormFile file, string empCode, string name, string existing = null)
         {
             if (file == null) return existing;
 
-            var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "employees", empCode);
+            // 👉 Save to C Drive instead of wwwroot
+            var uploadDir = Path.Combine("C:\\HRMSFiles", empCode);
+
             if (!Directory.Exists(uploadDir))
                 Directory.CreateDirectory(uploadDir);
 
@@ -376,6 +395,27 @@ namespace HRMS.Controllers
             }
 
             return fileName;
+        }
+
+        public IActionResult ViewDocument(string empCode, string fileName)
+        {
+            if (string.IsNullOrEmpty(empCode) || string.IsNullOrEmpty(fileName))
+                return NotFound();
+
+            string filePath = Path.Combine("C:\\HRMSFiles", empCode, fileName);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found");
+
+            string contentType = "application/octet-stream";
+
+            // Detect image type for preview
+            var ext = Path.GetExtension(fileName).ToLower();
+            if (ext == ".jpg" || ext == ".jpeg") contentType = "image/jpeg";
+            if (ext == ".png") contentType = "image/png";
+            if (ext == ".pdf") contentType = "application/pdf";
+
+            return PhysicalFile(filePath, contentType);
         }
 
 
@@ -408,21 +448,31 @@ namespace HRMS.Controllers
         // ==========================================================
         // GET POSITIONS
         // ==========================================================
+        // GET: /Employees/GetPositions?department=IT
         [HttpGet]
-        public IActionResult GetPositions(string department)
+        public async Task<IActionResult> GetPositions(string department)
         {
-            var positions = new List<string>();
+            if (string.IsNullOrEmpty(department))
+                return Json(new List<string>());
 
-            if (!string.IsNullOrEmpty(department))
-            {
-                if (DepartmentPositions.ContainsKey(department))
-                {
-                    positions = DepartmentPositions[department];
-                }
-            }
+            var positions = await _context.Employees
+                .Where(e =>
+                    e.Department != null &&
+                    e.Position != null &&
+                    e.Department.ToLower() == department.ToLower())
+                .Select(e => e.Position.Trim())
+                .Distinct()
+                .OrderBy(x => x)
+                .ToListAsync();
 
             return Json(positions);
         }
+
+
+
+
+
+
 
         public async Task<IActionResult> Dashboard()
         {

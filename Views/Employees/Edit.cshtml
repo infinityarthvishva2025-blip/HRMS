@@ -1,7 +1,7 @@
 ﻿@model HRMS.ViewModels.EmployeeEditVm
 @{
     ViewData["Title"] = "Edit Employee";
-    Layout = "~/Views/Shared/_HrLayout.cshtml";
+    //Layout = "~/Views/Shared/_HrLayout.cshtml";
 }
 
 <div class="container py-4">
@@ -10,8 +10,12 @@
         <h3 class="fw-bold text-primary">
             <i class="fa-solid fa-user-pen me-2"></i> Edit Employee
         </h3>
-        <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-primary">
+       @*  <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-primary">
             <i class="fa-solid fa-list me-1"></i> Back to List
+        </a> *@
+
+        <a asp-controller="Employees" asp-action="Myprofile" class="btn btn-outline-primary">
+            <i class="fa-solid fa-list me-1"></i> Back to Profile
         </a>
     </div>
 
@@ -81,13 +85,18 @@
                     <label>Confirm Password (optional)</label>
                     <div class="input-group">
                         <input asp-for="ConfirmPassword" type="password" class="form-control"
-                               placeholder="Repeat new password" />
+                               placeholder="Repeat new password"
+                               onkeyup="checkPasswordMatch()" />
+
                         <button type="button" class="btn btn-outline-secondary"
                                 onclick="togglePassword('ConfirmPassword', this)">
                             <i class="fa fa-eye"></i>
                         </button>
                     </div>
+
+                    <span id="passwordError" class="text-danger"></span>
                 </div>
+
             </div>
 
             <hr />
@@ -133,13 +142,30 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label>Profile Photo</label>
-                    @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
-                    {
-                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.ProfileImagePath}");
-                        <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
-                    }
-                    <input type="file" name="ProfilePhoto" class="form-control" accept="image/*" />
+                    <div class="col-md-3">
+                        <label>Profile Photo</label>
+
+                        @{
+                            string profileUrl = "";
+                            if (!string.IsNullOrEmpty(Model.ProfileImagePath))
+                            {
+                                profileUrl = Url.Action("ViewDocument", "Employees",
+                                new { empCode = Model.EmployeeCode, fileName = Model.ProfileImagePath });
+                            }
+                        }
+
+                        <a id="ProfileLink" href="@profileUrl" target="_blank"
+                           style="@(string.IsNullOrEmpty(profileUrl) ? "display:none;" : "")">
+
+                            <img id="ProfilePreview" src="@profileUrl" class="img-thumbnail mb-2"
+                                 style="max-height:120px; @(string.IsNullOrEmpty(profileUrl) ? "display:none;" : "")" />
+                        </a>
+
+                        <input type="file" name="ProfilePhoto" class="form-control"
+                               accept="image/*"
+                               onchange="previewFile(this, 'ProfilePreview', 'ProfileLink')" />
+                    </div>
+
                 </div>
 
                 <div class="col-md-12">
@@ -264,13 +290,28 @@
 
                 <div class="col-md-6">
                     <label>Medical Document</label>
-                    @if (!string.IsNullOrEmpty(Model.MedicalDocumentFilePath))
-                    {
-                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.MedicalDocumentFilePath}");
-                        <a class="btn btn-outline-secondary d-block mb-2" href="@url" target="_blank">View Previous File</a>
+
+                    @{
+                        string medUrl = "";
+                        if (!string.IsNullOrEmpty(Model.MedicalDocumentFilePath))
+                        {
+                            medUrl = Url.Action("ViewDocument", "Employees",
+                            new { empCode = Model.EmployeeCode, fileName = Model.MedicalDocumentFilePath });
+                        }
                     }
-                    <input type="file" name="MedicalDocumentFile" class="form-control" />
+
+                    <a id="MedicalLink" href="@medUrl" target="_blank"
+                       style="@(string.IsNullOrEmpty(medUrl) ? "display:none;" : "")">
+
+                        <img id="MedicalPreview" src="@medUrl" class="img-thumbnail mb-2"
+                             style="max-height:120px; @(string.IsNullOrEmpty(medUrl) ? "display:none;" : "")" />
+                    </a>
+
+                    <input type="file" name="MedicalDocumentFile" class="form-control"
+                           accept=".pdf,image/*"
+                           onchange="previewFile(this, 'MedicalPreview', 'MedicalLink')" />
                 </div>
+
 
             </div>
 
@@ -282,23 +323,24 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <label asp-for="Department">Department</label>
-                    <select asp-for="Department" class="form-select">
+                    <select asp-for="Department" class="form-select" id="Department">
+
                         <option value="">-- Select --</option>
-                        <option>IT</option>
-                        <option>HR</option>
-                        <option>Finance</option>
-                        <option>Marketing</option>
-                        <option>Accounting</option>
-                        <option>General Manager</option>
+                        @foreach (var d in (List<string>)ViewBag.Departments)
+                        {
+                            <option value="@d">@d</option>
+                        }
                     </select>
                 </div>
 
+
                 <div class="col-md-4">
                     <label asp-for="Position">Position</label>
-                    <select asp-for="Position" class="form-select">
+                    <select asp-for="Position" class="form-select" id="Position">
                         <option value="">-- Select Position --</option>
                     </select>
                 </div>
+
 
                 <div class="col-md-4">
                     <label asp-for="Role"></label>
@@ -337,14 +379,25 @@
 
                 <div class="col-md-6">
                     <label>12th Marksheet</label>
-                    @if (!string.IsNullOrEmpty(Model.TwelfthMarksheetFilePath))
-                    {
-                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.TwelfthMarksheetFilePath}");
-                        <a href="@url" target="_blank">
-                            <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
-                        </a>
+
+                    @{
+                        string hscUrl = "";
+                        if (!string.IsNullOrEmpty(Model.TwelfthMarksheetFilePath))
+                        {
+                            hscUrl = Url.Action("ViewDocument", "Employees",
+                            new { empCode = Model.EmployeeCode, fileName = Model.TwelfthMarksheetFilePath });
+                        }
                     }
-                    <input type="file" name="TwelfthMarksheetFile" class="form-control" accept=".pdf,image/*" />
+
+                    <a id="HSCLink" href="@hscUrl" target="_blank" style="@(string.IsNullOrEmpty(hscUrl) ? "display:none;" : "")">
+                        <img id="HSCPreview" src="@hscUrl" class="img-thumbnail mb-2"
+                             style="max-height:120px; @(string.IsNullOrEmpty(hscUrl) ? "display:none;" : "")" />
+                    </a>
+
+                    <input type="file" name="TwelfthMarksheetFile" class="form-control"
+                           accept=".pdf,image/*"
+                           onchange="previewFile(this, 'HSCPreview', 'HSCLink')" />
+
                 </div>
 
                 <!-- Graduation -->
@@ -371,14 +424,25 @@
 
                 <div class="col-md-4">
                     <label>Graduation Marksheet</label>
-                    @if (!string.IsNullOrEmpty(Model.GraduationMarksheetFilePath))
-                    {
-                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.GraduationMarksheetFilePath}");
-                        <a href="@url" target="_blank">
-                            <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
-                        </a>
+
+                    @{
+                        string gradUrl = "";
+                        if (!string.IsNullOrEmpty(Model.GraduationMarksheetFilePath))
+                        {
+                            gradUrl = Url.Action("ViewDocument", "Employees",
+                            new { empCode = Model.EmployeeCode, fileName = Model.GraduationMarksheetFilePath });
+                        }
                     }
-                    <input type="file" name="GraduationMarksheetFile" class="form-control" accept=".pdf,image/*" />
+
+                    <a id="GradLink" href="@gradUrl" target="_blank" style="@(string.IsNullOrEmpty(gradUrl) ? "display:none;" : "")">
+                        <img id="GradPreview" src="@gradUrl" class="img-thumbnail mb-2"
+                             style="max-height:120px; @(string.IsNullOrEmpty(gradUrl) ? "display:none;" : "")" />
+                    </a>
+
+                    <input type="file" name="GraduationMarksheetFile" class="form-control"
+                           accept=".pdf,image/*"
+                           onchange="previewFile(this, 'GradPreview', 'GradLink')" />
+
                 </div>
 
                 <!-- Post Graduation -->
@@ -397,20 +461,26 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="PostGraduationPercent">Post Graduation %</label>
-                    <input asp-for="PostGraduationPercent" type="number"  class="form-control" />
-                </div>
-
-                <div class="col-md-4">
                     <label>PG Marksheet</label>
-                    @if (!string.IsNullOrEmpty(Model.PostGraduationMarksheetFilePath))
-                    {
-                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.PostGraduationMarksheetFilePath}");
-                        <a href="@url" target="_blank">
-                            <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
-                        </a>
+
+                    @{
+                        string pgUrl = "";
+                        if (!string.IsNullOrEmpty(Model.PostGraduationMarksheetFilePath))
+                        {
+                            pgUrl = Url.Action("ViewDocument", "Employees",
+                            new { empCode = Model.EmployeeCode, fileName = Model.PostGraduationMarksheetFilePath });
+                        }
                     }
-                    <input type="file" name="PostGraduationMarksheetFile" class="form-control" accept=".pdf,image/*" />
+
+                    <a id="PGLink" href="@pgUrl" target="_blank" style="@(string.IsNullOrEmpty(pgUrl) ? "display:none;" : "")">
+                        <img id="PGPreview" src="@pgUrl" class="img-thumbnail mb-2"
+                             style="max-height:120px; @(string.IsNullOrEmpty(pgUrl) ? "display:none;" : "")" />
+                    </a>
+
+                    <input type="file" name="PostGraduationMarksheetFile" class="form-control"
+                           accept=".pdf,image/*"
+                           onchange="previewFile(this, 'PGPreview', 'PGLink')" />
+
                 </div>
 
             </div>
@@ -432,15 +502,27 @@
                 <div class="col-md-6">
                     <label>Aadhaar Card</label>
 
-                    @if (!string.IsNullOrEmpty(Model.AadhaarFilePath))
-                    {
-                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.AadhaarFilePath}");
-                        <a href="@url" target="_blank">
-                            <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
-                        </a>
+                    @{
+                        string aadhaarUrl = "";
+                        if (!string.IsNullOrEmpty(Model.AadhaarFilePath))
+                        {
+                            aadhaarUrl = Url.Action("ViewDocument", "Employees",
+                            new { empCode = Model.EmployeeCode, fileName = Model.AadhaarFilePath });
+                        }
                     }
 
-                    <input type="file" name="AadhaarFile" class="form-control" />
+                    <a id="AadhaarLink" href="@aadhaarUrl" target="_blank"
+                       style="@(string.IsNullOrEmpty(aadhaarUrl) ? "display:none;" : "")">
+
+                        <img id="AadhaarPreview" src="@aadhaarUrl" class="img-thumbnail mb-2"
+                             style="max-height:120px; @(string.IsNullOrEmpty(aadhaarUrl) ? "display:none;" : "")" />
+                    </a>
+
+                    <input type="file" name="AadhaarFile" class="form-control"
+                           accept=".pdf,image/*"
+                           onchange="previewFile(this, 'AadhaarPreview', 'AadhaarLink')" />
+
+
                 </div>
 
                 <div class="col-md-4">
@@ -454,14 +536,27 @@
 
                 <div class="col-md-6">
                     <label>PAN Card</label>
-                    @if (!string.IsNullOrEmpty(Model.PanFilePath))
-                    {
-                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.PanFilePath}");
-                        <a href="@url" target="_blank">
-                            <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
-                        </a>
+
+                    @{
+                        string panUrl = "";
+                        if (!string.IsNullOrEmpty(Model.PanFilePath))
+                        {
+                            panUrl = Url.Action("ViewDocument", "Employees",
+                            new { empCode = Model.EmployeeCode, fileName = Model.PanFilePath });
+                        }
                     }
-                    <input type="file" name="PanFile" class="form-control" />
+
+                    <a id="PanLink" href="@panUrl" target="_blank"
+                       style="@(string.IsNullOrEmpty(panUrl) ? "display:none;" : "")">
+
+                        <img id="PanPreview" src="@panUrl" class="img-thumbnail mb-2"
+                             style="max-height:120px; @(string.IsNullOrEmpty(panUrl) ? "display:none;" : "")" />
+                    </a>
+
+                    <input type="file" name="PanFile" class="form-control"
+                           accept=".pdf,image/*"
+                           onchange="previewFile(this, 'PanPreview', 'PanLink')" />
+
                 </div>
 
             </div>
@@ -500,14 +595,28 @@
 
                 <div class="col-md-6">
                     <label>Passbook</label>
-                    @if (!string.IsNullOrEmpty(Model.PassbookFilePath))
-                    {
-                        var url = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{Model.PassbookFilePath}");
-                        <a href="@url" target="_blank">
-                            <img src="@url" class="img-thumbnail mb-2" style="max-height:120px;" />
-                        </a>
+
+                    @{
+                        string passUrl = "";
+                        if (!string.IsNullOrEmpty(Model.PassbookFilePath))
+                        {
+                            passUrl = Url.Action("ViewDocument", "Employees",
+                            new { empCode = Model.EmployeeCode, fileName = Model.PassbookFilePath });
+                        }
                     }
-                    <input type="file" name="PassbookFile" class="form-control" />
+
+                    <a id="PassLink" href="@passUrl" target="_blank"
+                       style="@(string.IsNullOrEmpty(passUrl) ? "display:none;" : "")">
+
+                        <img id="PassPreview" src="@passUrl" class="img-thumbnail mb-2"
+                             style="max-height:120px; @(string.IsNullOrEmpty(passUrl) ? "display:none;" : "")" />
+                    </a>
+
+                    <input type="file" name="PassbookFile" class="form-control"
+                           accept=".pdf,image/*"
+                           onchange="previewFile(this, 'PassPreview', 'PassLink')" />
+
+
                 </div>
 
             </div>
@@ -556,67 +665,149 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
+                document.addEventListener("DOMContentLoaded", function () {
 
+            const dept = document.getElementById("Department");
+            const pos = document.getElementById("Position");
 
+            // If employee already has a position, load positions automatically
+            let currentPosition = "@Model.Position";
+
+            if (dept.value && currentPosition) {
+                fetch(`/Employees/GetPositions?department=${dept.value}`)
+                    .then(r => r.json())
+                    .then(list => {
+                        pos.innerHTML = '<option value="">-- Select Position --</option>';
+
+                        list.forEach(item => {
+                            if (item === currentPosition) {
+                                pos.innerHTML += `<option value="${item}" selected>${item}</option>`;
+                            } else {
+                                pos.innerHTML += `<option value="${item}">${item}</option>`;
+                            }
+                        });
+                    });
+            }
+        });
+
+        // Password match
+        function validatePasswordMatch() {
+            const pwd = document.getElementById("Password");
+            const conf = document.getElementById("ConfirmPassword");
+            const err = document.getElementById("passwordError");
+
+            err.textContent = (pwd.value !== conf.value)
+                ? "Passwords do not match."
+                : "";
+        }
+
+            // Experience show/hide
+            const expType = document.getElementById("ExperienceType");
+            const expSection = document.getElementById("experience-section");
+
+            expType.addEventListener("change", () => {
+                if (expType.value === "Experienced") {
+                    expSection.classList.remove("d-none");
+                } else {
+                    expSection.classList.add("d-none");
+                }
+            });
+
+        // Show/hide disease section based on dropdown
+        const diseaseDropdown = document.getElementById("HasDisease");
+        const diseaseSection = document.getElementById("DiseaseSection");
+
+        diseaseDropdown.addEventListener("change", function () {
+            if (this.value === "Yes") {
+                diseaseSection.classList.remove("d-none");
+            } else {
+                diseaseSection.classList.add("d-none");
+            }
+        });
 
         // Position loading
-        const dept = document.getElementById("Department");
-        const pos = document.getElementById("Position");
+                     document.addEventListener("DOMContentLoaded", function () {
 
-        dept.addEventListener("change", function () {
-            pos.innerHTML = "";
-            fetch(`/Employees/GetPositions?department=${this.value}`)
-                .then(r => r.json())
-                .then(list => {
+            const dept = document.getElementById("Department");
+            const pos = document.getElementById("Position");
+            let selectedPosition = "@Model.Position";
+
+            function loadPositions() {
+                if (!dept.value) {
                     pos.innerHTML = '<option value="">-- Select Position --</option>';
-                    list.forEach(item => {
-                        pos.innerHTML += `<option value="${item}">${item}</option>`;
-                    });
-                });
+                    return;
+                }
+
+                const url = `/Employees/GetPositions?department=${encodeURIComponent(dept.value)}`;
+
+                fetch(url)
+                    .then(r => r.json())
+                    .then(list => {
+                        pos.innerHTML = '<option value="">-- Select Position --</option>';
+
+                        list.forEach(item => {
+                            let isSelected = (item === selectedPosition) ? "selected" : "";
+                            pos.innerHTML += `<option value="${item}" ${isSelected}>${item}</option>`;
+                        });
+                    })
+                    .catch(err => console.error("Error loading positions:", err));
+            }
+
+            // Load the positions when page loads (Edit mode)
+            loadPositions();
+
+            // Load positions when department changes
+            dept.addEventListener("change", function () {
+                selectedPosition = "";
+                loadPositions();
+            });
+
         });
-        //Show password buttton 
-        function togglePassword(field, btn) {
-            const input = document.getElementById(field);
+
+
+
+
+
+
+        // Password toggle
+        function togglePassword(fieldId, btn) {
+            const input = document.getElementById(fieldId);
             const icon = btn.querySelector("i");
 
             if (input.type === "password") {
                 input.type = "text";
-                icon.classList.replace("fa-eye", "fa-eye-slash");
+                icon.classList.replace("fa-eye", "fa-eye-s  lash");
             } else {
                 input.type = "password";
                 icon.classList.replace("fa-eye-slash", "fa-eye");
             }
         }
 
-        // Experience Show/Hide
-        document.getElementById("ExperienceType").addEventListener("change", function () {
-            document.getElementById("experience-section").classList.toggle("d-none", this.value !== "Experienced");
-        });
+        // Current / Permanent address sync
+        const sameAddressCheckbox = document.getElementById("SameAddressCheckbox");
+        const currentAddress = document.getElementById("CurrentAddress");
+        const permanentAddress = document.getElementById("PermanentAddress");
+        const permanentSection = document.getElementById("PermanentAddressSection");
 
-        // Disease Show/Hide
-        document.getElementById("HasDisease").addEventListener("change", function () {
-            document.getElementById("DiseaseSection").classList.toggle("d-none", this.value !== "Yes");
-        });
+        // default: show permanent address
+        permanentSection.classList.remove("d-none");
 
-        // Address Sync
-        const sameAdd = document.getElementById("SameAddressCheckbox");
-        const curr = document.getElementById("CurrentAddress");
-        const perm = document.getElementById("PermanentAddress");
-        const permSec = document.getElementById("PermanentAddressSection");
-
-        sameAdd.addEventListener("change", () => {
-            if (sameAdd.checked) {
-                perm.value = curr.value;
-                permSec.classList.add("d-none");
+        sameAddressCheckbox.addEventListener("change", function () {
+            if (this.checked) {
+                permanentAddress.value = currentAddress.value;
+                permanentSection.classList.add("d-none");
             } else {
-                permSec.classList.remove("d-none");
+                permanentSection.classList.remove("d-none");
+                permanentAddress.value = "";
             }
         });
 
-        curr.addEventListener("input", () => {
-            if (sameAdd.checked) perm.value = curr.value;
+        // Auto-update if user edits Current Address while checkbox checked
+        currentAddress.addEventListener("input", function () {
+            if (sameAddressCheckbox.checked) {
+                permanentAddress.value = currentAddress.value;
+            }
         });
-
 
 
                // AUTO-CAPITAL for INPUT and TEXTAREA
@@ -628,6 +819,36 @@
                 e.target.value = e.target.value.toUpperCase();
             }
         });
+
+        //FIle Preview
+                function previewFile(input, previewId, linkId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById(previewId).src = e.target.result;
+                    document.getElementById(previewId).style.display = "block";
+
+                    // update link for full preview
+                    document.getElementById(linkId).href = e.target.result;
+                    document.getElementById(linkId).style.display = "block";
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+//confirm password
+
+        function checkPasswordMatch() {
+            const pwd = document.getElementById("Password").value;
+            const conf = document.getElementById("ConfirmPassword").value;
+            const err = document.getElementById("passwordError");
+
+            if (pwd !== conf) {
+                err.textContent = "Passwords do not match";
+            } else {
+                err.textContent = "";
+            }
+        }
 
     </script>
 }

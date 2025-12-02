@@ -326,37 +326,80 @@ namespace HRMS.Controllers
                 "Director" => "DirectorApprove",
                 _ => "ManagerApprove"
             };
-
-            return PartialView("_ApprovalTablePartial", list);
+            return View(list);
+            //return PartialView("_ApprovalTablePartial", list);
         }
-        public async Task<IActionResult> LeaveReport()
+        public async Task<IActionResult> OverallLeaveReport()
         {
             var now = DateTime.Today;
             var startOfMonth = new DateTime(now.Year, now.Month, 1);
 
             var pendingHr = await _context.Leaves.CountAsync(l => l.HrStatus == "Pending");
-            var pendingManager  = await _context.Leaves.CountAsync(l => l.HrStatus  == "Approved" &&
-                                                                   l.ManagerStatus == "Pending");
-            var pendingDirector = await _context.Leaves.CountAsync(l => l.ManagerStatus == "Approved" &&
-                                                                         l.HrStatus == "Approved" &&
-                                                                         l.DirectorStatus == "Pending");
-            var totalThisMonth = await _context.Leaves.CountAsync(l => l.StartDate >= startOfMonth &&
-                                                                        l.StartDate <= now);
+            var pendingManager = await _context.Leaves.CountAsync(l =>
+                l.HrStatus == "Approved" && l.ManagerStatus == "Pending");
+
+            var pendingDirector = await _context.Leaves.CountAsync(l =>
+                l.HrStatus == "Approved" && l.ManagerStatus == "Approved" &&
+                l.DirectorStatus == "Pending");
+
+            var totalThisMonth = await _context.Leaves.CountAsync(l =>
+                l.StartDate >= startOfMonth && l.StartDate <= now);
 
             ViewBag.PendingManager = pendingManager;
             ViewBag.PendingHr = pendingHr;
             ViewBag.PendingDirector = pendingDirector;
             ViewBag.TotalThisMonth = totalThisMonth;
-           // var leaves = await _context.Leaves.ToListAsync();
-            //return View();
 
+            var leaves = await _context.Leaves
+                .Where(l =>
+                    l.HrStatus == "Pending" ||
+                    l.ManagerStatus == "Pending" ||
+                    l.DirectorStatus == "Pending")
+                .Include(l => l.Employee)      // ⭐ REQUIRED
+                .OrderByDescending(l => l.CreatedOn)
+                .ToListAsync();
+
+            return View(leaves);
+        }
+
+
+
+        public async Task<IActionResult> LeaveReport()
+        {
+            var now = DateTime.Today;
+            var startOfMonth = new DateTime(now.Year, now.Month, 1);
 
             var empId = GetCurrentEmployeeId();
             if (empId == null)
                 return RedirectToAction("Login", "Account");
 
+            var pendingHr = await _context.Leaves.CountAsync(l =>
+                l.EmployeeId == empId.Value && l.HrStatus == "Pending");
+
+            var pendingManager = await _context.Leaves.CountAsync(l =>
+                l.EmployeeId == empId.Value &&
+                l.HrStatus == "Approved" &&
+                l.ManagerStatus == "Pending");
+
+            var pendingDirector = await _context.Leaves.CountAsync(l =>
+                l.EmployeeId == empId.Value &&
+                l.HrStatus == "Approved" &&
+                l.ManagerStatus == "Approved" &&
+                l.DirectorStatus == "Pending");
+
+            var totalThisMonth = await _context.Leaves.CountAsync(l =>
+                l.EmployeeId == empId.Value &&
+                l.StartDate >= startOfMonth &&
+                l.StartDate <= now);
+
+            ViewBag.PendingManager = pendingManager;
+            ViewBag.PendingHr = pendingHr;
+            ViewBag.PendingDirector = pendingDirector;
+            ViewBag.TotalThisMonth = totalThisMonth;
+
             var leaves = await _context.Leaves
-                .Where(l => l.EmployeeId == empId.Value)
+                .Where(l => l.EmployeeId == empId.Value )
+                .Include(l => l.Employee)             // ⭐ REQUIRED
                 .OrderByDescending(l => l.CreatedOn)
                 .ToListAsync();
 
@@ -365,6 +408,36 @@ namespace HRMS.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetMonthlyLeaveSummary(int? year)
+        {
+            var empId = GetCurrentEmployeeId();
+            if (empId == null)
+                return Json(new { error = "Not logged in" });
+
+            int targetYear = year ?? DateTime.Today.Year;
+
+            var raw = await _context.Leaves
+                .Where(l => l.EmployeeId == empId.Value &&           // ⭐ ADDED
+                            l.StartDate.Year == targetYear)
+                .GroupBy(l => l.StartDate.Month)
+                .Select(g => new
+                {
+                    month = g.Key,
+                    count = g.Count()
+                })
+                .ToListAsync();
+
+            // Fill all 12 months
+            var result = Enumerable.Range(1, 12)
+                .Select(m => new
+                {
+                    month = m,
+                    count = raw.FirstOrDefault(r => r.month == m)?.count ?? 0
+                });
+
+            return Json(result);
+        }
+
+        public async Task<IActionResult> GetMonthlyLeaveSummaryAll(int? year)
         {
             int targetYear = year ?? DateTime.Today.Year;
 
@@ -404,6 +477,35 @@ namespace HRMS.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPendingCounts()
         {
+            var empId = GetCurrentEmployeeId();
+            if (empId == null)
+                return Json(new { error = "Not logged in" });
+
+            var hr = await _context.Leaves.CountAsync(l =>
+                l.EmployeeId == empId.Value &&           // ⭐ ADDED
+                l.HrStatus == "Pending");
+
+            var manager = await _context.Leaves.CountAsync(l =>
+                l.EmployeeId == empId.Value &&           // ⭐ ADDED
+                l.HrStatus == "Approved" &&
+                l.ManagerStatus == "Pending");
+
+            var director = await _context.Leaves.CountAsync(l =>
+                l.EmployeeId == empId.Value &&           // ⭐ ADDED
+                l.HrStatus == "Approved" &&
+                l.ManagerStatus == "Approved" &&
+                l.DirectorStatus == "Pending");
+
+            return Json(new
+            {
+                managerPending = manager,
+                hrPending = hr,
+                directorPending = director
+            });
+        }
+
+        public async Task<IActionResult> GetPendingCountsall()
+        {
             var hr = await _context.Leaves.CountAsync(l => l.HrStatus == "Pending");
 
             var manager = await _context.Leaves.CountAsync(l =>
@@ -412,7 +514,7 @@ namespace HRMS.Controllers
 
             var director = await _context.Leaves.CountAsync(l =>
             l.HrStatus == "Approved" &&
-            l.ManagerStatus == "Approved" &&  
+            l.ManagerStatus == "Approved" &&
                 l.DirectorStatus == "Pending");
 
             return Json(new
