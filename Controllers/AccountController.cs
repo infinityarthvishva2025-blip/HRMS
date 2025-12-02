@@ -64,18 +64,12 @@ namespace HRMS.Controllers
             // ===========================================
             // ROLE-BASED REDIRECT
             // ===========================================
-            if (emp.Role == "HR")
+            if((emp.Role == "HR") ||(emp.Role == "VP") || (emp.Role == "GM") || (emp.Role == "DIRECTOR"))
             {
                 return RedirectToAction("Index", "Home");
             }
-            else if (emp.Role == "VP")
-            {
-                return RedirectToAction("Index", "Home");
-            }
-            else if (emp.Role == "GM")
-            {
-                return RedirectToAction("Index", "Home");
-            }
+           
+            
             else
             {
                 return RedirectToAction("Dashboard", "Employees");
