@@ -68,6 +68,14 @@ namespace HRMS.Controllers
             {
                 return RedirectToAction("Index", "Home");
             }
+            else if (emp.Role == "VP")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            else if (emp.Role == "GM")
+            {
+                return RedirectToAction("Index", "Home");
+            }
             else
             {
                 return RedirectToAction("Dashboard", "Employees");
