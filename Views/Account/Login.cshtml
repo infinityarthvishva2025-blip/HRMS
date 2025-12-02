@@ -14,44 +14,63 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
     <style>
-        body {
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
             margin: 0;
+            overflow: auto;
+        }
+
+        body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #2076C7, #1CADA3);
-            min-height: 100vh;
-            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
 
         /* MAIN WRAPPER */
         .login-wrapper {
             width: 100%;
             max-width: 900px;
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
             display: flex;
-            flex-direction: row;
+            overflow: hidden;
         }
 
         /* LEFT PANEL */
         .login-left {
             flex: 1;
-            background: #ffffff;
             text-align: center;
-            padding: 40px 20px;
+            padding: 40px 25px;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            justify-content: center;
+            align-items: center; /* CENTER EVERYTHING INSIDE */
         }
 
+        /* PERFECT LOGO WRAPPER */
+        .logo-box {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        /* FIXED CENTERED LOGO */
         .company-logo {
-            width: 200px;
-            max-width: 70%;
-            margin-bottom: 15px;
+            width: 180px;
+            height: auto;
+            display: block;
+            object-fit: contain;
         }
 
         .login-left h1 {
@@ -61,67 +80,62 @@
         }
 
         .login-left p {
-            font-size: 14px;
             color: #444;
-            margin: 0 auto;
             max-width: 260px;
-            line-height: 1.5;
+            margin: 0 auto;
+            font-size: 14px;
         }
 
         .login-left small {
-            color: #333 !important;
-            font-weight: 600;
             margin-top: 20px;
-            display: block;
+            font-weight: 600;
+            color: #000;
         }
 
         /* RIGHT PANEL */
         .login-right {
             flex: 1;
-            padding: 30px 20px;
-            background: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 35px 25px;
+            min-width: 350px;
         }
 
-        /* CARD AROUND FIELDS – FIXES “COLUMN NOT PROPER” */
         .login-box {
             width: 100%;
-            max-width: 360px;
+            max-width: 320px;
             background: #f8fbff;
-            border-radius: 14px;
-            padding: 22px 20px 26px;
+            border-radius: 12px;
+            padding: 22px 20px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
         }
 
             .login-box h2 {
                 text-align: center;
-                color: #0d47a1;
+                font-size: 20px;
                 margin-bottom: 20px;
+                color: #0d47a1;
                 font-weight: bold;
             }
 
         .input-group {
-            margin-bottom: 16px;
+            margin-bottom: 15px;
             position: relative;
         }
 
             .input-group input {
                 width: 100%;
                 height: 44px;
-                padding: 10px 42px 10px 14px;
-                border: 1.5px solid #b7b7b7;
+                padding: 10px 40px 10px 14px;
                 border-radius: 8px;
+                border: 1.4px solid #b7b7b7;
                 font-size: 14px;
-                box-sizing: border-box;
-                background: #ffffff;
-                transition: 0.2s;
             }
 
                 .input-group input:focus {
-                    border-color: #0077c2;
-                    box-shadow: 0 0 6px rgba(0, 119, 194, 0.3);
+                    border-color: #0d6efd;
+                    box-shadow: 0 0 6px rgba(13,110,253,0.3);
                     outline: none;
                 }
 
@@ -132,93 +146,67 @@
             transform: translateY(-50%);
             cursor: pointer;
             font-size: 18px;
-            color: #666;
+            color: #555;
         }
 
         .btn-login {
             width: 100%;
-            background: #0d6efd;
-            color: white;
-            padding: 10px;
+            height: 44px;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
+            background: #0d6efd;
+            color: #fff;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 6px;
+            margin-top: 8px;
         }
 
             .btn-login:hover {
                 background: #084298;
             }
 
-        /* ================= MOBILE RESPONSIVE ================= */
-
+        /* MOBILE FIX */
         @@media (max-width: 900px) {
             .login-wrapper {
                 flex-direction: column;
+                max-width: 420px;
             }
 
             .login-right {
-                padding: 20px 15px 25px;
-            }
-        }
-
-        @@media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-
-            .company-logo {
-                width: 150px;
-            }
-
-            .login-left h1 {
-                font-size: 22px;
-            }
-
-            .login-left p {
-                font-size: 13px;
-            }
-
-            .login-wrapper {
-                border-radius: 10px;
+                padding: 20px;
+                min-width: 100%;
             }
 
             .login-box {
-                padding: 18px 16px 22px;
+                max-width: 100%;
             }
         }
 
-        @@media (max-width: 380px) {
-            .login-left p {
-                font-size: 12px;
-            }
-
-            .login-left small {
-                font-size: 11px;
-            }
-
-            .login-box h2 {
-                font-size: 19px;
-            }
-        }
     </style>
+
 </head>
 
 <body>
 
     <div class="login-wrapper">
 
-        <!-- LEFT PANEL -->
+        <!-- LEFT -->
         <div class="login-left">
-            <img src="~/images/infinity-logo.png" alt="Infinity Arthvishva Logo" class="company-logo" />
+
+            <div class="logo-box">
+                <img src="~/images/infinity-logo.png" class="company-logo" />
+            </div>
+
             <h1>Welcome to HRMS</h1>
+
             <p>Manage your HR operations efficiently with Infinity Arthvishva’s HRMS platform.</p>
+
             <small>© 2025 Infinity Arthvishva | All Rights Reserved</small>
+
         </div>
 
-        <!-- RIGHT PANEL -->
+        <!-- RIGHT -->
         <div class="login-right">
             <div class="login-box">
 
@@ -226,25 +214,24 @@
 
                 <form asp-action="Login" method="post">
 
-                    <!-- USERNAME -->
                     <div class="input-group">
                         <input asp-for="UserId" placeholder="Enter HR ID or Employee Code" />
                         <span asp-validation-for="UserId" class="text-danger"></span>
                     </div>
 
-                    <!-- PASSWORD -->
                     <div class="input-group">
                         <input asp-for="Password" id="passwordInput" type="password" placeholder="Password" />
                         <i class="fa-solid fa-eye" id="togglePassword"></i>
                         <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
 
-                    <button type="submit" class="btn-login">LOGIN</button>
+                    <button class="btn-login">LOGIN</button>
 
                     @if (ViewBag.Error != null)
                     {
-                        <div class="alert alert-danger mt-3 text-center">@ViewBag.Error</div>
+                        <div class="alert alert-danger text-center mt-3">@ViewBag.Error</div>
                     }
+
                 </form>
 
             </div>
@@ -256,16 +243,12 @@
         const togglePassword = document.getElementById("togglePassword");
         const passwordInput = document.getElementById("passwordInput");
 
-        togglePassword.addEventListener("click", function () {
-            const type = passwordInput.type === "password" ? "text" : "password";
-            passwordInput.type = type;
-
-            this.classList.toggle("fa-eye");
-            this.classList.toggle("fa-eye-slash");
-        });
+        togglePassword.onclick = () => {
+            passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+            togglePassword.classList.toggle("fa-eye");
+            togglePassword.classList.toggle("fa-eye-slash");
+        };
     </script>
 
-    <partial name="_ValidationScriptsPartial" />
 </body>
 </html>
-@* ////////   Responsive Page   ////////*@
