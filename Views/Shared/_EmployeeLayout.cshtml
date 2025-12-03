@@ -367,6 +367,7 @@
             </button>
             <span class="ms-auto fw-semibold">Infinity Arthvishva</span>&nbsp;&nbsp;&nbsp;
             
+            @* /////bell notification////// *@
             <div>
              <a href="/Announcements/MyNotifications"
                class="btn btn-secondary position-relative bell-icon @(ViewBag.UnreadCount > 0 ? "blink" : "")">
@@ -383,6 +384,48 @@
              </a>
             </div>
         </nav>
+
+
+        @{
+            int loggedEmpId = Context.Session.GetInt32("EmployeeId") ?? 0;
+
+            // Get DB context correctly
+            var db = (HRMS.Data.ApplicationDbContext)
+            Context.RequestServices.GetService(typeof(HRMS.Data.ApplicationDbContext));
+
+            int unreadCount = 0;
+
+            if (db != null && loggedEmpId > 0)
+            {
+                // Get employee
+                var emp = db.Employees.FirstOrDefault(e => e.Id == loggedEmpId);
+
+                if (emp != null)
+                {
+                    // Load all announcements
+                    var all = db.Announcements.ToList();
+
+                    // Filter announcements for this employee
+                    var filtered = all.Where(a =>
+                    a.IsGlobal ||
+                    (!string.IsNullOrEmpty(a.TargetDepartments) &&
+                    a.TargetDepartments.Split(',').Contains(emp.Department)) ||
+                    (!string.IsNullOrEmpty(a.TargetEmployees) &&
+                    a.TargetEmployees.Split(',').Contains(loggedEmpId.ToString()))
+                    ).ToList();
+
+                    // Count unread ones
+                    unreadCount = filtered.Count(a =>
+                    string.IsNullOrEmpty(a.ReadByEmployees) ||
+                    !a.ReadByEmployees.Split(',').Contains(loggedEmpId.ToString())
+                    );
+                }
+            }
+
+            ViewBag.UnreadCount = unreadCount;
+        }
+
+
 
         <div class="container-fluid p-4">
             @RenderBody()

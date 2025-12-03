@@ -210,7 +210,8 @@ namespace HRMS.Controllers
         // =========================================================
         public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status)
         {
-            var attendance = _context.AttendanceRecords.AsQueryable();
+            // ❌ WRONG TABLE FIXED HERE
+            var attendance = _context.Attendances.AsQueryable();
 
             if (!fromDate.HasValue && !toDate.HasValue)
             {
@@ -237,24 +238,32 @@ namespace HRMS.Controllers
             ViewBag.Status = status;
 
             var list = attendance
-                .OrderByDescending(a => a.Date)
-                .Select(a => new AttendanceIndexVm
-                {
-                    Emp_Code = a.Emp_Code,
-                    AttDate = a.Date,
-                    InTime = a.InTime,
-                    OutTime = a.OutTime,
-                    Status = a.Status,
-                    TotalHours = (a.InTime != null && a.OutTime != null)
-                        ? (a.OutTime.Value - a.InTime.Value).ToString(@"hh\:mm")
-                        : "--"
-                })
-                .ToList();
+    .OrderByDescending(a => a.Date)
+    .Select(a => new AttendanceIndexVm
+    {
+        Emp_Code = a.Emp_Code,
+        AttDate = a.Date,
+        InTime = a.InTime,
+        OutTime = a.OutTime,
+        Status = a.Status,
+        TotalHours = (a.InTime != null && a.OutTime != null)
+            ? (a.OutTime.Value - a.InTime.Value).ToString(@"hh\:mm")
+            : "--",
+
+        // ✅ ADD THESE TWO
+        CorrectionRequested = a.CorrectionRequested,
+        CorrectionStatus = a.CorrectionStatus
+    })
+    .ToList();
 
             ViewBag.EmployeeList = _context.Employees.ToList();
+            ViewBag.PendingRequests = _context.Attendances
+    .Count(a => a.CorrectionRequested == true
+             && a.CorrectionStatus == "Pending");
 
             return View(list);
         }
+
 
         // =========================================================
         // EXPORT TO EXCEL
@@ -359,9 +368,12 @@ namespace HRMS.Controllers
         }
 
 
-        public IActionResult RequestCorrection(int id, int employeeId)
+        public IActionResult RequestCorrection(string empCode, string date, int employeeId)
         {
-            var att = _context.Attendances.FirstOrDefault(a => a.Id == id);
+            DateTime parsedDate = DateTime.ParseExact(date, "yyyy-MM-dd", null);
+
+            var att = _context.Attendances
+                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == parsedDate);
 
             if (att == null)
                 return RedirectToAction("EmployeeSummary", new { employeeId });
@@ -373,9 +385,15 @@ namespace HRMS.Controllers
 
 
         [HttpPost]
-        public IActionResult RequestCorrection(int Id, string CorrectionRemark, int employeeId)
+        public IActionResult RequestCorrection(string empCode, string date, string CorrectionRemark, int employeeId)
         {
-            var att = _context.Attendances.FirstOrDefault(a => a.Id == Id);
+            DateTime parsedDate = DateTime.ParseExact(date, "yyyy-MM-dd", null);
+
+            var att = _context.Attendances
+                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == parsedDate);
+
+            if (att == null)
+                return RedirectToAction("EmployeeSummary", new { employeeId });
 
             att.CorrectionRequested = true;
             att.CorrectionRemark = CorrectionRemark;
@@ -383,28 +401,45 @@ namespace HRMS.Controllers
 
             _context.SaveChanges();
 
-            return RedirectToAction("EmployeeSummary", new { employeeId = employeeId });
+            return RedirectToAction("EmployeeSummary", new { employeeId });
         }
 
 
 
-        public IActionResult ResolveCorrection(int id)
+
+        public IActionResult ResolveCorrection(string empCode, DateTime date)
         {
-            var att = _context.Attendances.FirstOrDefault(x => x.Id == id);
+            var att = _context.Attendances
+                .FirstOrDefault(x => x.Emp_Code == empCode && x.Date == date.Date);
+
             if (att == null)
-                return NotFound();
+                return NotFound("Attendance record not found.");
 
             return View(att);
         }
 
 
 
+
         [HttpPost]
-        public IActionResult ResolveCorrection(int id, TimeSpan? InTime, TimeSpan? OutTime, string actionType)
+        public IActionResult ResolveCorrection(string empCode, DateTime date,
+                                       TimeSpan? InTime, TimeSpan? OutTime,
+                                       string actionType)
         {
-            var att = _context.Attendances.FirstOrDefault(x => x.Id == id);
+            // find attendance by EmpCode + Date
+            var att = _context.Attendances
+                .FirstOrDefault(x => x.Emp_Code == empCode && x.Date == date);
+
             if (att == null)
                 return NotFound();
+
+            // find employee
+            var emp = _context.Employees.FirstOrDefault(e => e.EmployeeCode == empCode);
+            if (emp == null)
+                return NotFound();
+
+            string notificationMessage = "";
+            string statusText = "";
 
             if (actionType == "Approve")
             {
@@ -418,13 +453,34 @@ namespace HRMS.Controllers
                 }
 
                 att.CorrectionStatus = "Approved";
+                statusText = "Approved";
+                notificationMessage = "Your attendance correction request for "
+                                      + date.ToString("dd-MMM-yyyy")
+                                      + " has been APPROVED.";
             }
             else
             {
                 att.CorrectionStatus = "Rejected";
+                statusText = "Rejected";
+                notificationMessage = "Your attendance correction request for "
+                                      + date.ToString("dd-MMM-yyyy")
+                                      + " has been REJECTED.";
             }
 
             att.CorrectionRequested = false;
+
+            // ------- CREATE ANNOUNCEMENT (EMPLOYEE NOTIFICATION) -------
+            Announcement notif = new Announcement()
+            {
+                Title = "Attendance Correction Update",
+                Message = notificationMessage,
+                IsGlobal = false,
+                TargetEmployees = emp.Id.ToString(),   // send ONLY to that employee
+                CreatedOn = DateTime.UtcNow,
+                IsUrgent = false
+            };
+
+            _context.Announcements.Add(notif);
             _context.SaveChanges();
 
             return RedirectToAction("CorrectionRequests");
@@ -432,10 +488,13 @@ namespace HRMS.Controllers
 
 
 
+
+
+
         public IActionResult CorrectionRequests()
         {
             var pending = _context.Attendances
-                .Where(a => a.CorrectionRequested)
+                .Where(a => a.CorrectionRequested == true)
                 .OrderByDescending(a => a.Date)
                 .ToList();
 

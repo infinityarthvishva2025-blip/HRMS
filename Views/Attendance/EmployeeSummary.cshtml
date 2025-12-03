@@ -121,9 +121,14 @@
                         @if (!a.CorrectionRequested)
                         {
                             <!-- Request Button -->
-                            <a href="/Attendance/RequestCorrection?id=@a.Id&employeeId=@Model.Employee.Id"
-                               class="btn btn-warning btn-sm">Request</a>
-
+                            <a asp-controller="Attendance"
+                               asp-action="RequestCorrection"
+                               asp-route-empCode="@a.Emp_Code"
+                               asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
+                               asp-route-employeeId="@Model.Employee.Id"
+                               class="btn btn-warning btn-sm">
+                                Request
+                            </a>
 
 
                         }
