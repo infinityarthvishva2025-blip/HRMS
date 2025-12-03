@@ -694,7 +694,38 @@ public IActionResult ExportExcel()
             return PhysicalFile(filePath, "application/pdf", $"{emp.EmployeeCode}_{month}_{year}.pdf");
         }
 
-        
+
+        [HttpPost]
+      
+        public IActionResult UpdateStatus(int id, [FromBody] StatusUpdateModel model)
+        {
+            var emp = _context.Employees.FirstOrDefault(e => e.Id == id);
+
+            if (emp == null)
+                return Json(new { success = false });
+
+            emp.Status = model.Status;
+
+            if (model.Status == "Active")
+            {
+                emp.DeactiveReason = null; // CLEAR reason when active again
+            }
+            else
+            {
+                emp.DeactiveReason = model.Reason; // Save reason
+            }
+
+            _context.SaveChanges();
+
+            return Json(new { success = true });
+        }
+
+        public class StatusUpdateModel
+        {
+            public string Status { get; set; }
+            public string Reason { get; set; }
+        }
+
 
 
     }
