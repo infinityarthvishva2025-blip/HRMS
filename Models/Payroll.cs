@@ -22,5 +22,6 @@
     public decimal? net_salary { get; set; }
     public decimal? total_deduction { get; set; }
     public decimal? total_pay { get; set; }
-    public string month { get; set; }
+    public int month { get; set; }
+    public int Year { get; set; }
 }
