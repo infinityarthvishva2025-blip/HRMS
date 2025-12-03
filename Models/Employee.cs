@@ -15,20 +15,20 @@ namespace HRMS.Models
         [StringLength(10)]
         public string EmployeeCode { get; set; } = string.Empty;
 
-        [Required]
+       
         [StringLength(100)]
         public string Name { get; set; } = string.Empty;
        
-        [Required]
+    
         [EmailAddress]
         [StringLength(150)]
         public string Email { get; set; } = string.Empty;
 
-        [Required]
+     
         [StringLength(15)]
         public string MobileNumber { get; set; } = string.Empty;
 
-        [Required]
+   
         [StringLength(15)]
         public string? AlternateMobileNumber { get; set; }
 
@@ -76,7 +76,7 @@ namespace HRMS.Models
         public string? Position { get; set; }
         public decimal? Salary { get; set; }
         public string? ReportingManager { get; set; }
-        public int ManagerId { get; set; }
+        public int? ManagerId { get; set; }
 
         public string Role { get; set; } = string.Empty;
        

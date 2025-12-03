@@ -82,7 +82,7 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label>Confirm Password (optional)</label>
+                    <label>Confirm Password </label>
                     <div class="input-group">
                         <input asp-for="ConfirmPassword" type="password" class="form-control"
                                placeholder="Repeat new password"
@@ -116,12 +116,12 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label asp-for="FatherName"></label>
+                    <label asp-for="FatherName">Father Name</label>
                     <input asp-for="FatherName" class="form-control" />
                 </div>
 
                 <div class="col-md-3">
-                    <label asp-for="MotherName"></label>
+                    <label asp-for="MotherName">Mother Name</label>
                     <input asp-for="MotherName" class="form-control" />
                 </div>
 
@@ -131,7 +131,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label asp-for="MaritalStatus"></label>
+                    <label asp-for="MaritalStatus">Marital Status</label>
                     <select asp-for="MaritalStatus" class="form-select">
                         <option value="">-- Select --</option>
                         <option>Single</option>
@@ -234,12 +234,12 @@
                  class="row g-3 mt-3 @(Model.ExperienceType == "Experienced" ? "" : "d-none")">
 
                 <div class="col-md-4">
-                    <label asp-for="TotalExperienceYears"></label>
+                    <label asp-for="TotalExperienceYears">Total Experience Years</label>
                     <input asp-for="TotalExperienceYears" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="LastCompanyName"></label>
+                    <label asp-for="LastCompanyName">Last Company Name</label>
                     <input asp-for="LastCompanyName" class="form-control" />
                 </div>
             </div>
@@ -264,27 +264,27 @@
                  class="row g-3 mt-3 @(Model.HasDisease == "Yes" ? "" : "d-none")">
 
                 <div class="col-md-4">
-                    <label asp-for="DiseaseName"></label>
+                    <label asp-for="DiseaseName">Disease Name</label>
                     <input asp-for="DiseaseName" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="DiseaseSince"></label>
+                    <label asp-for="DiseaseSince">Disease Since</label>
                     <input asp-for="DiseaseSince" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="MedicinesRequired"></label>
+                    <label asp-for="MedicinesRequired"> Medicines Required</label>
                     <input asp-for="MedicinesRequired" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="DoctorName"></label>
+                    <label asp-for="DoctorName"> Doctor Name</label>
                     <input asp-for="DoctorName" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="DoctorContact"></label>
+                    <label asp-for="DoctorContact">Doctor Contact</label>
                     <input asp-for="DoctorContact" class="form-control" />
                 </div>
 
@@ -319,7 +319,10 @@
 
             <!-- ============= JOB DETAILS ============= -->
             <h5 class="fw-bold text-secondary mb-3">Job Details</h5>
-
+            <div class="col-md-4">
+                <label asp-for="JoiningDate">Joining Date</label>
+                <input asp-for="JoiningDate" type="date" class="form-control" />
+            </div>
             <div class="row g-3">
                 <div class="col-md-4">
                     <label asp-for="Department">Department</label>
@@ -456,10 +459,14 @@
                         <option>M.Sc</option>
                         <option>ME</option>
                         <option>M.Tech</option>
+                        <option>None</option>
                         <option>Other</option>
                     </select>
                 </div>
-
+                <div class="col-md-4">
+                    <label asp-for="PostGraduationPercent">Post Graduation %</label>
+                    <input asp-for="PostGraduationPercent" type="number" class="form-control" />
+                </div>
                 <div class="col-md-4">
                     <label>PG Marksheet</label>
 
@@ -526,7 +533,7 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="PanNumber">PAN</label>
+                    <label asp-for="PanNumber">PAN Card</label>
                     <input asp-for="PanNumber"
                            class="form-control"
                            pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
@@ -569,27 +576,27 @@
             <div class="row g-3">
 
                 <div class="col-md-6">
-                    <label asp-for="AccountHolderName"></label>
+                    <label asp-for="AccountHolderName">Account Holder Name</label>
                     <input asp-for="AccountHolderName" class="form-control" />
                 </div>
 
                 <div class="col-md-6">
-                    <label asp-for="BankName"></label>
+                    <label asp-for="BankName">Bank Name</label>
                     <input asp-for="BankName" class="form-control" />
                 </div>
 
                 <div class="col-md-6">
-                    <label asp-for="AccountNumber"></label>
+                    <label asp-for="AccountNumber">Account Number</label>
                     <input asp-for="AccountNumber" class="form-control" />
                 </div>
 
                 <div class="col-md-6">
-                    <label asp-for="IFSC"></label>
+                    <label asp-for="IFSC">IFSC Code</label>
                     <input asp-for="IFSC" class="form-control" />
                 </div>
 
                 <div class="col-md-6">
-                    <label asp-for="Branch"></label>
+                    <label asp-for="Branch">Branch Name</label>
                     <input asp-for="Branch" class="form-control" />
                 </div>
 
@@ -628,12 +635,12 @@
 
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label asp-for="EmergencyContactName"></label>
+                    <label asp-for="EmergencyContactName">Contact Name</label>
                     <input asp-for="EmergencyContactName" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="EmergencyContactRelationship"></label>
+                    <label asp-for="EmergencyContactRelationship">Relationship</label>
                     <input asp-for="EmergencyContactRelationship" class="form-control" />
                 </div>
 
@@ -643,7 +650,7 @@
                 </div>
 
                 <div class="col-md-12">
-                    <label asp-for="EmergencyContactAddress"></label>
+                    <label asp-for="EmergencyContactAddress">Adress</label>
                     <textarea asp-for="EmergencyContactAddress" class="form-control" rows="2"></textarea>
                 </div>
             </div>
@@ -665,7 +672,7 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-                document.addEventListener("DOMContentLoaded", function () {
+            document.addEventListener("DOMContentLoaded", function () {
 
             const dept = document.getElementById("Department");
             const pos = document.getElementById("Position");
