@@ -157,6 +157,8 @@ namespace HRMS.Models
         // ====================================
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string? Status { get; set; }
-       
+        public String? DeactiveReason { get; set; }
+
+
     }
 }
