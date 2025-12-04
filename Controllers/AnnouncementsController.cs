@@ -164,7 +164,7 @@ public class AnnouncementsController : Controller
 
         var readList = string.IsNullOrEmpty(a.ReadByEmployees)
             ? new List<string>()
-            : a.ReadByEmployees.Split(',').ToList();
+            : a.ReadByEmployees.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
 
         if (!readList.Contains(employeeId.ToString()))
         {
@@ -173,8 +173,10 @@ public class AnnouncementsController : Controller
             await _context.SaveChangesAsync();
         }
 
+        // After marking read → auto removed → redirect back
         return RedirectToAction("MyNotifications");
     }
+
 
     // ================================
     // DELETE ONE ANNOUNCEMENT

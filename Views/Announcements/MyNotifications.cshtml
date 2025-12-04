@@ -10,12 +10,14 @@
             return false;
         return a.ReadByEmployees.Split(',').Contains(empId.ToString());
     };
+
+    // 🔥 FINAL FIX — FILTER ONLY UNREAD NOTIFICATIONS
+    var unreadList = Model.Where(a => !isRead(a)).ToList();
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
 <style>
-    /* Page Title */
     .notif-header {
         font-weight: 800;
         color: #1a237e;
@@ -26,7 +28,6 @@
         margin-bottom: 25px;
     }
 
-    /* Notification Card */
     .notif-card {
         background: #ffffff;
         border-radius: 14px;
@@ -37,17 +38,11 @@
         transition: .25s ease;
     }
 
-        .notif-card:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
-        }
-
         .notif-card.unread {
             background: #fff7e5;
             border-left-color: #ff9800;
         }
 
-    /* Title */
     .notif-title {
         font-size: 19px;
         font-weight: 700;
@@ -55,7 +50,6 @@
         margin-bottom: 6px;
     }
 
-    /* Message */
     .notif-message {
         font-size: 15.5px;
         color: #444;
@@ -63,7 +57,6 @@
         line-height: 1.5;
     }
 
-    /* Date */
     .notif-date {
         font-size: 13.5px;
         color: #666;
@@ -72,7 +65,6 @@
         gap: 6px;
     }
 
-    /* Mark as Read Button */
     .mark-read-btn {
         background: #2563eb;
         color: white;
@@ -85,12 +77,6 @@
         margin-top: -35px;
     }
 
-        .mark-read-btn:hover {
-            background: #1e40af;
-            color: white;
-        }
-
-    /* Empty State */
     .empty-box {
         background: #eef2ff;
         padding: 35px;
@@ -100,7 +86,6 @@
         font-size: 16px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
-
 </style>
 
 <div class="container mt-4">
@@ -109,20 +94,18 @@
         <i class="fa-solid fa-bell text-warning"></i> My Notifications
     </h3>
 
-    @if (!Model.Any())
+    @if (!unreadList.Any())
     {
         <div class="empty-box">
-            <i class="fa-solid fa-circle-info fa-2x mb-2"></i>
-            <p>No notifications found.</p>
+            <i class="fa-solid fa-circle-check fa-2x mb-2 text-success"></i>
+            <p>All caught up! No unread notifications.</p>
         </div>
     }
     else
     {
-        foreach (var a in Model)
+        foreach (var a in unreadList)
         {
-            bool alreadyRead = isRead(a);
-
-            <div class="notif-card @(alreadyRead ? "" : "unread")">
+            <div class="notif-card unread">
 
                 <div class="notif-title">@a.Title</div>
 
@@ -133,12 +116,9 @@
                     @a.CreatedOn.AddHours(5).AddMinutes(30).ToString("dd MMM yyyy, hh:mm tt")
                 </div>
 
-                @if (!alreadyRead)
-                {
-                    <a href="/Announcements/Read/@a.Id" class="mark-read-btn">
-                        Mark as Read
-                    </a>
-                }
+                <a href="/Announcements/Read/@a.Id" class="mark-read-btn">
+                    Mark as Read
+                </a>
             </div>
         }
     }
