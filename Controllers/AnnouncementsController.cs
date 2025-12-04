@@ -99,45 +99,56 @@ public class AnnouncementsController : Controller
     // ==============================================
     public async Task<IActionResult> MyNotifications()
     {
+        // Only employees can access this page
         if (HttpContext.Session.GetString("Role") != "Employee")
             return RedirectToAction("Login", "Account");
 
         int employeeId = HttpContext.Session.GetInt32("EmployeeId") ?? 0;
 
-        // Pass empId to View for read-checking
         ViewBag.EmployeeId = employeeId;
 
+        // Load employee info
         var emp = await _context.Employees.FindAsync(employeeId);
         if (emp == null)
             return RedirectToAction("Logout", "Account");
 
-        // Load all announcements (no SQL filtering, to allow Split())
-        var all = await _context.Announcements
+        // Load ALL announcements (needed for split-based multi-target matching)
+        var allAnnouncements = await _context.Announcements
             .OrderByDescending(a => a.CreatedOn)
             .ToListAsync();
 
-        // In-memory filtering (supports multi department/employee)
-        var list = all.Where(a =>
+        // FILTER ANNOUNCEMENTS FOR THIS EMPLOYEE
+        var filtered = allAnnouncements
+            .Where(a =>
                 a.IsGlobal ||
 
                 (!string.IsNullOrEmpty(a.TargetDepartments) &&
-                 a.TargetDepartments.Split(',')
-                     .Contains(emp.Department)) ||
+                    a.TargetDepartments.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                       .Select(x => x.Trim())
+                       .Contains(emp.Department)) ||
 
                 (!string.IsNullOrEmpty(a.TargetEmployees) &&
-                 a.TargetEmployees.Split(',')
-                     .Contains(employeeId.ToString()))
+                    a.TargetEmployees.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                       .Select(x => x.Trim())
+                       .Contains(employeeId.ToString()))
             )
             .ToList();
 
-        // SET UNREAD COUNT FOR LAYOUT
-        ViewBag.UnreadCount = list.Count(a =>
+        // CALCULATE UNREAD COUNT
+        int unreadCount = filtered.Count(a =>
             string.IsNullOrEmpty(a.ReadByEmployees) ||
-            !a.ReadByEmployees.Split(',').Contains(employeeId.ToString())
+            !a.ReadByEmployees
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .Contains(employeeId.ToString())
         );
 
-        return View(list);
+        ViewBag.UnreadCount = unreadCount;
+
+        // RETURN FILTERED NOTIFICATIONS
+        return View(filtered);
     }
+
 
 
     // ==============================================
@@ -196,5 +207,25 @@ public class AnnouncementsController : Controller
         return RedirectToAction("List");
     }
 
+    public int GetUnreadCount(int empId)
+    {
+        var emp = _context.Employees.FirstOrDefault(e => e.Id == empId);
+        if (emp == null) return 0;
+
+        var all = _context.Announcements.ToList();
+
+        var list = all.Where(a =>
+            a.IsGlobal ||
+            (!string.IsNullOrEmpty(a.TargetDepartments) &&
+             a.TargetDepartments.Split(',').Contains(emp.Department)) ||
+            (!string.IsNullOrEmpty(a.TargetEmployees) &&
+             a.TargetEmployees.Split(',').Contains(empId.ToString()))
+        ).ToList();
+
+        return list.Count(a =>
+            string.IsNullOrEmpty(a.ReadByEmployees) ||
+            !a.ReadByEmployees.Split(',').Contains(empId.ToString())
+        );
+    }
 
 }

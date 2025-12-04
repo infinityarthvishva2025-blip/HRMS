@@ -48,8 +48,11 @@
             </select>
         </div>
 
-        <div class="col-12 col-lg-3 d-grid d-md-flex align-items-end gap-2">
-            <button class="btn btn-primary"><i class="fa-solid fa-search me-1"></i> Apply</button>
+        <div class="col-12 d-flex flex-wrap gap-2 align-items-end mt-3">
+
+            <button class="btn btn-primary">
+                <i class="fa-solid fa-search me-1"></i> Apply
+            </button>
 
             <button formaction="/Attendance/ExportFiltered" formmethod="get"
                     class="btn btn-success">
@@ -59,7 +62,24 @@
             <a href="/Attendance/CalendarView" class="btn btn-info text-white">
                 <i class="fa-solid fa-calendar-days me-1"></i> View in Calendar
             </a>
+
+            <a href="/Attendance/CorrectionRequests"
+               class="btn btn-warning position-relative">
+
+                <i class="fa-solid fa-list-check me-1"></i> View Requests
+
+                @if (ViewBag.PendingRequests > 0)
+                {
+                    <span class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">
+                        @ViewBag.PendingRequests
+                    </span>
+                }
+            </a>
+
         </div>
+
+
+
 
     </form>
 
@@ -133,32 +153,28 @@
                                     </td>
 
                                     <!-- NEW TICKET COLUMN -->
-                                    <td class="text-nowrap">
+                                    <td>
                                         @if (a.CorrectionRequested)
                                         {
                                             if (a.CorrectionStatus == "Pending")
                                             {
-                                                <span class="badge bg-warning text-dark">Pending</span>
+                                                <span class="badge bg-info">Pending</span>
                                             }
                                             else if (a.CorrectionStatus == "Approved")
                                             {
                                                 <span class="badge bg-success">Approved</span>
                                             }
-                                            else
+                                            else if (a.CorrectionStatus == "Rejected")
                                             {
                                                 <span class="badge bg-danger">Rejected</span>
                                             }
-
-                                            <a href="/Attendance/ResolveCorrection?id=@a.Id"
-                                               class="btn btn-sm btn-primary ms-2">
-                                                Resolve
-                                            </a>
                                         }
                                         else
                                         {
                                             <span class="badge bg-secondary">No Ticket</span>
                                         }
                                     </td>
+
                                 </tr>
                             }
                         }

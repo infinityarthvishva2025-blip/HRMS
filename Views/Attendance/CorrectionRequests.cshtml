@@ -6,59 +6,88 @@
 }
 
 <div class="container py-4">
+
     <h2 class="fw-bold mb-4">
-        <i class="fa-solid fa-ticket me-2 text-primary"></i>
+        <i class="fa-solid fa-pen-to-square me-2 text-primary"></i>
         Attendance Correction Requests
     </h2>
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
 
-            <table class="table table-bordered table-striped mb-0">
+            <table class="table table-bordered table-striped mb-0 align-middle">
                 <thead class="table-dark">
                     <tr>
-                        <th>Employee Code</th>
-                        <th>Date</th>
+                        <th style="width: 130px;">Employee Code</th>
+                        <th style="width: 130px;">Date</th>
                         <th>Reason</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th style="width: 120px;">Status</th>
+                        <th style="width: 120px;">Actions</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    @if (!Model.Any())
+
+                    @if (Model == null || !Model.Any())
                     {
                         <tr>
                             <td colspan="5" class="text-center py-4 text-danger fw-bold">
-                                No pending requests.
+                                No correction requests found.
                             </td>
                         </tr>
                     }
                     else
                     {
-                        foreach (var a in Model)
+                        foreach (var a in Model.OrderByDescending(x => x.Date))
                         {
                             <tr>
-                                <td>@a.Emp_Code</td>
-                                <td>@a.Date.ToString("dd-MMM-yyyy")</td>
-                                <td>@a.CorrectionRemark</td>
+                                <!-- Employee Code -->
+                                <td class="fw-semibold">
+                                    @a.Emp_Code
+                                </td>
+
+                                <!-- Attendance Date -->
                                 <td>
-                                    @if (a.CorrectionStatus == "Pending")
+                                    @a.Date.ToString("dd-MMM-yyyy")
+                                </td>
+
+                                <!-- Correction Reason -->
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(a.CorrectionRemark))
                                     {
-                                        <span class="badge bg-warning text-dark">Pending</span>
-                                    }
-                                    else if (a.CorrectionStatus == "Approved")
-                                    {
-                                        <span class="badge bg-success">Approved</span>
+                                        @a.CorrectionRemark
                                     }
                                     else
                                     {
-                                        <span class="badge bg-danger">Rejected</span>
+                                        <span class="text-muted">No reason provided</span>
                                     }
                                 </td>
 
+                                <!-- Correction Status -->
                                 <td>
-                                    <a href="/Attendance/ResolveCorrection?id=@a.Id"
+                                    @switch (a.CorrectionStatus)
+                                    {
+                                        case "Pending":
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                            break;
+
+                                        case "Approved":
+                                            <span class="badge bg-success">Approved</span>
+                                            break;
+
+                                        case "Rejected":
+                                            <span class="badge bg-danger">Rejected</span>
+                                            break;
+
+                                        default:
+                                            <span class="badge bg-secondary">Unknown</span>
+                                            break;
+                                    }
+                                </td>
+
+                                <!-- Action Button -->
+                                <td>
+                                    <a href="/Attendance/ResolveCorrection?empCode=@a.Emp_Code&date=@a.Date.ToString("yyyy-MM-dd")"
                                        class="btn btn-primary btn-sm">
                                         Resolve
                                     </a>
@@ -66,9 +95,21 @@
                             </tr>
                         }
                     }
+
                 </tbody>
 
             </table>
         </div>
     </div>
 </div>
+
+<style>
+    table td, table th {
+        vertical-align: middle !important;
+    }
+
+    .badge {
+        padding: 6px 10px;
+        font-size: 0.85rem;
+    }
+</style>

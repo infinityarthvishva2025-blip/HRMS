@@ -2,6 +2,7 @@
 using HRMS.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace HRMS.Controllers
 {
@@ -50,25 +51,36 @@ namespace HRMS.Controllers
             return Json(data);
         }
 
-        //// ------------------------------  
-        //// PAYROLL REPORT API  
-        //// ------------------------------  
-        //[HttpGet]
-        //public IActionResult GetPayrollReport()
-        //{
-        //    var data = _context.Payrolls
-        //        .GroupBy(p => p.MonthYear)
-        //        .Select(g => new
-        //        {
-        //            Month = g.Key,
-        //            Total = g.Sum(x => x.NetPay)
-        //        })
-        //        .ToList();
+        // ------------------------------  
+        // PAYROLL REPORT API  
+        // ------------------------------  
 
-        //    return Json(data);
-        //}
+
+        [HttpGet]
+      
+        public IActionResult GetPayrollReport()
+        {
+            var result = _context.Payrolls
+                .AsEnumerable()   // ⭐ IMPORTANT → forces evaluation on C# side
+                .GroupBy(p => new { p.month, p.Year })
+                .Select(g => new
+                {
+                    monthNum = g.Key.month,
+                    month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key.month),
+                    year = g.Key.Year,
+                    total = g.Sum(x => x.net_salary)
+                })
+                .OrderBy(x => x.year)
+                .ThenBy(x => x.month)
+                .ToList();
+
+            return Json(result);
+        }
+
     }
-}
+};
+        
+ 
 
 
 //using HRMS.Data;

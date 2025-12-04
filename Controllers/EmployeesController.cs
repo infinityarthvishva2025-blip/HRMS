@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HRMS.Controllers
@@ -589,7 +590,7 @@ namespace HRMS.Controllers
             // ============================================================
             var allAnnouncements = await _context.Announcements.ToListAsync();
 
-            ViewBag.UnreadCount = allAnnouncements.Count(a =>
+            int unread = allAnnouncements.Count(a =>
                 (
                     a.IsGlobal ||
                     (!string.IsNullOrEmpty(a.TargetDepartments) &&
@@ -601,6 +602,11 @@ namespace HRMS.Controllers
                 (string.IsNullOrEmpty(a.ReadByEmployees) ||
                     !a.ReadByEmployees.Split(',').Contains(empId.ToString()))
             );
+
+            // SEND TO LAYOUT
+            ViewBag.UnreadCount = unread;             // Badge number
+            ViewBag.UnreadAnnouncements = unread;     // Controls bell animation
+
             // ============================================================
 
 

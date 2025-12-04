@@ -103,6 +103,14 @@ namespace HRMS.Controllers
                 .ToList();
 
             ViewBag.RecentEmployees = recentList;
+            var employees = _context.Employees;
+            var departmentGroups = employees
+               .GroupBy(e => e.Department)
+               .Select(g => new { Department = g.Key, Count = g.Count() })
+               .ToList();
+
+            ViewBag.DepartmentLabels = departmentGroups.Select(d => d.Department).ToList();
+            ViewBag.DepartmentValues = departmentGroups.Select(d => d.Count).ToList();
 
             return View(model);
         }
