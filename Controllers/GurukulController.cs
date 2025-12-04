@@ -219,6 +219,9 @@ namespace HRMS.Controllers
             Directory.CreateDirectory(videoFolder);
             Directory.CreateDirectory(thumbFolder);
 
+            // ------------------------
+            // SAVE VIDEO OR LINK
+            // ------------------------
             if (VideoFile != null && VideoFile.Length > 0)
             {
                 string fileName = Guid.NewGuid() + Path.GetExtension(VideoFile.FileName);
@@ -229,11 +232,10 @@ namespace HRMS.Controllers
                     await VideoFile.CopyToAsync(fs);
                 }
 
-                // ✅ FIXED URL PATH
                 model.VideoPath = "/Hrmsfiles/gurukul/" + fileName;
                 model.IsExternal = false;
 
-                // thumbnail
+                // Create thumbnail
                 string thumbFileName = Path.GetFileNameWithoutExtension(fileName) + ".jpg";
                 string fullThumbPath = Path.Combine(thumbFolder, thumbFileName);
 
@@ -247,10 +249,8 @@ namespace HRMS.Controllers
                 process.Start();
                 process.WaitForExit();
 
-                // keep this path correct
                 model.ThumbnailPath = "/uploads/gurukul-thumbs/" + thumbFileName;
             }
-
             else if (!string.IsNullOrWhiteSpace(ExternalLink))
             {
                 string link = ExternalLink.Trim();
@@ -267,11 +267,49 @@ namespace HRMS.Controllers
 
             model.UploadedOn = DateTime.UtcNow;
 
+            // ------------------------
+            // SAVE VIDEO
+            // ------------------------
             _context.GurukulVideos.Add(model);
             await _context.SaveChangesAsync();
 
+
+            // ================================
+            // ⭐ AUTOMATIC ANNOUNCEMENT ⭐
+            // ================================
+            var announcement = new Announcement
+            {
+                Title = "New Gurukul Video Added",
+                Message = $"{model.Title} is now available to view.",
+                CreatedOn = DateTime.UtcNow,
+                ReadByEmployees = ""
+            };
+
+            // Visible to ALL employees
+            if (model.AllowedDepartment == null && model.AllowedEmployeeId == null)
+            {
+                announcement.IsGlobal = true;
+            }
+            // Visible only to ONE employee
+            else if (model.AllowedEmployeeId != null)
+            {
+                announcement.IsGlobal = false;
+                announcement.TargetEmployees = model.AllowedEmployeeId.ToString();
+            }
+            // Visible to a DEPARTMENT
+            else if (model.AllowedDepartment != null)
+            {
+                announcement.IsGlobal = false;
+                announcement.TargetDepartments = model.AllowedDepartment;
+            }
+
+            _context.Announcements.Add(announcement);
+            await _context.SaveChangesAsync();
+
+
             return RedirectToAction(nameof(HRList));
         }
+
 
         // =====================================================================
         // PERMISSION DROPDOWN HELPER
