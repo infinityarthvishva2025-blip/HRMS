@@ -67,68 +67,61 @@ namespace HRMS.Controllers
         // =========================================================
         // CHECK OUT
         // =========================================================
-        // =========================================================
-        // CHECK OUT
-        // =========================================================
-        public IActionResult CheckOut()
+       public IActionResult CheckOut()
+{
+    string empCode = HttpContext.Session.GetString("EmpCode");
+    if (empCode == null)
+        return RedirectToAction("Login", "Account");
+
+    DateTime today = DateTime.Today;
+
+    var record = _context.Attendances
+        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+
+    if (record == null)
+    {
+        TempData["EarlyCheckout"] = "No active attendance found.";
+        TempData.Keep();
+        return RedirectToAction("EmployeePanel");
+    }
+
+    if (record.OutTime != null)
+    {
+        TempData["CheckoutSuccess"] = $"You already checked out at {record.OutTime.Value}.";
+        TempData.Keep();
+        return RedirectToAction("EmployeePanel");
+    }
+
+    record.OutTime = DateTime.Now.TimeOfDay;
+
+    if (record.InTime != null)
+    {
+        TimeSpan worked = record.OutTime.Value - record.InTime.Value;
+        TimeSpan shift = TimeSpan.FromMinutes(510); // 8.5 hours
+
+        if (worked < shift)
         {
-            string empCode = HttpContext.Session.GetString("EmpCode");
-            if (empCode == null)
-                return RedirectToAction("Login", "Account");
+            TimeSpan remaining = shift - worked;
 
-            DateTime today = DateTime.Today;
-
-            // Always fetch TODAY'S record ONLY
-            var record = _context.Attendances
-                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
-
-            // No record found
-            if (record == null)
-            {
-                TempData["EarlyCheckout"] = "No active attendance found for today.";
-                return RedirectToAction("EmployeePanel");
-            }
-
-            // Prevent double checkout
-            if (record.OutTime != null)
-            {
-                TempData["CheckoutSuccess"] = $"You already checked out at {record.OutTime.Value}.";
-                return RedirectToAction("EmployeePanel");
-            }
-
-            // Set checkout time
-            record.OutTime = DateTime.Now.TimeOfDay;
-
-            // If InTime exists calculate hours
-            if (record.InTime != null)
-            {
-                TimeSpan worked = record.OutTime.Value - record.InTime.Value;
-                record.Total_Hours = (decimal)worked.TotalHours;
-
-                TimeSpan shift = TimeSpan.FromHours(8);
-
-                if (worked < shift)
-                {
-                    TimeSpan remaining = shift - worked;
-                    TempData["EarlyCheckout"] =
-                        $"Early Checkout — remaining {remaining.Hours}h {remaining.Minutes}m.";
+                    TempData["EarlyTime"] = $"{remaining.Hours}h {remaining.Minutes}m";
+                    TempData["EarlyCheckout"] = "Early Checkout";
+                 
                 }
                 else
-                {
-                    TempData["CheckoutSuccess"] =
-                        $"Shift completed! Total worked {worked.Hours}h {worked.Minutes}m.";
+        {
+            TimeSpan extra = worked - shift;
+
+            TempData["LateTime"] = $"{extra.Hours}h {extra.Minutes}m";
+            TempData["LateCheckout"] = "Great! Overtime";
+                    
                 }
-            }
-            else
-            {
-                TempData["CheckoutSuccess"] = "Checked out successfully.";
-            }
+    }
 
-            _context.SaveChanges();
-            return RedirectToAction("EmployeePanel");
-        }
+    _context.SaveChanges();
 
-
+    return RedirectToAction("EmployeePanel");
+}
+    
 
         // =========================================================
         // SUMMARY REDIRECT

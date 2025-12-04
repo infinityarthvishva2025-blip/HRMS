@@ -28,7 +28,7 @@
             <div class="att-header-icon">
                 <i class="fa-solid fa-clock"></i>
             </div>
-            <div class="att-header-text">
+            <div>
                 <h2 class="att-title">Attendance Panel</h2>
                 <p class="att-subtitle">Track your work hours & check-in / check-out status</p>
             </div>
@@ -44,50 +44,70 @@
         }
 
         <!-- EARLY LEAVE RED MESSAGE -->
-        @if (TempData["EarlyCheckout"] != null)
+    <!-- Early Checkout -->
+@if (TempData["EarlyCheckout"] != null && TempData["EarlyTime"] != null)
+{
+    <div class="alert alert-danger text-center fw-bold mb-3">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+        @TempData["EarlyCheckout"] — remaining @TempData["EarlyTime"]
+    </div>
+}
+
+<!-- Late Checkout / Overtime -->
+@if (TempData["LateCheckout"] != null && TempData["LateTime"] != null)
+{
+    <div class="alert alert-success text-center fw-bold mb-3">
+        <i class="fa-solid fa-circle-check me-2"></i>
+        @TempData["LateCheckout"] — extra @TempData["LateTime"]
+    </div>
+}
+
+
+
+
+
+        <!-- SUCCESS CHECKOUT -->
+        @if (TempData.Peek("CheckoutSuccess") != null)
         {
-            <div class="alert alert-danger text-center fw-bold mb-3">
-                <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                @TempData["EarlyCheckout"]
+            <div class="alert alert-success text-center fw-bold mb-3">
+                <i class="fa-solid fa-circle-check me-2"></i>
+                @TempData.Peek("CheckoutSuccess")
             </div>
         }
 
-        <!-- NO CHECK-IN -->
+        <!-- WHEN NO CHECK-IN -->
         @if (Model == null)
         {
-            <div class="att-empty-state">
-                <p class="att-empty-text mb-3">You haven't checked in yet today.</p>
-
-                <a asp-action="CheckIn" class="att-btn att-btn-checkin">
-                    <i class="fa-solid fa-play me-2"></i> Check In
-                </a>
+            <div class="att-empty-state text-center">
+                <p>You haven't checked in yet today.</p>
+                <a asp-action="CheckIn" class="att-btn att-btn-checkin"><i class="fa-solid fa-play me-2"></i>Check In</a>
             </div>
         }
         else
         {
             <!-- CHECK-IN CARD -->
-            <div class="att-card neon-card">
+            <div class="att-card neon-card mt-3">
                 <div class="att-entry">
                     <div class="att-icon-wrapper bg-success-soft">
-                        <i class="fa-solid fa-right-to-bracket att-icon text-success"></i>
+                        <i class="fa-solid fa-right-to-bracket text-success"></i>
                     </div>
                     <div>
-                        <div class="att-label">Check-in Time</div>
+                        <div class="att-label">CHECK-IN TIME</div>
                         <div class="att-value">@FormatTime(Model.InTime)</div>
                     </div>
                 </div>
             </div>
 
-            <!-- IF CHECKED OUT SHOW CARD -->
+            <!-- IF CHECKED OUT -->
             @if (Model.OutTime != null)
             {
                 <div class="att-card neon-card mt-3">
                     <div class="att-entry">
                         <div class="att-icon-wrapper bg-danger-soft">
-                            <i class="fa-solid fa-right-from-bracket att-icon text-danger"></i>
+                            <i class="fa-solid fa-right-from-bracket text-danger"></i>
                         </div>
                         <div>
-                            <div class="att-label">Check-out Time</div>
+                            <div class="att-label">CHECK-OUT TIME</div>
                             <div class="att-value">@FormatTime(Model.OutTime)</div>
                         </div>
                     </div>
@@ -99,13 +119,14 @@
                 <div id="countdownContainer" class="att-card neon-card mt-3">
                     <div class="att-label text-center">
                         <i class="fa-solid fa-hourglass-half me-2 text-warning"></i>
-                        Time Remaining (8-Hour 30-Minutes shift including lunch break)
+                        Time Remaining (8-Hour 30-Minute shift)
                     </div>
                     <div id="countdown" class="countdown-digits">00:00:00</div>
                 </div>
 
-                <!-- CHECKOUT BUTTON (OPENS MODAL) -->
-                <a href="#" class="att-btn att-btn-checkout mt-3" data-bs-toggle="modal" data-bs-target="#checkoutModal">
+                <!-- CHECKOUT BUTTON -->
+                <a href="#" class="att-btn att-btn-checkout mt-3"
+                   data-bs-toggle="modal" data-bs-target="#checkoutModal">
                     <i class="fa-solid fa-stop me-2"></i> Check Out
                 </a>
             }
@@ -113,7 +134,7 @@
     </div>
 </div>
 
-<!-- CUSTOM CHECKOUT MODAL -->
+<!-- Checkout Modal -->
 <div class="modal fade" id="checkoutModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content custom-modal">
@@ -123,17 +144,16 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body text-center">
                 <p class="fs-5 mb-3">Are you sure you want to Check Out?</p>
-
                 <img src="https://cdn-icons-png.flaticon.com/512/463/463612.png"
                      width="90" class="mb-3 opacity-75" />
             </div>
-
             <div class="modal-footer border-0 d-flex justify-content-between">
                 <button class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-                <a href="@Url.Action("CheckOut", "Attendance")" class="btn btn-danger px-4">Yes, Check Out</a>
+                <a href="@Url.Action("CheckOut", "Attendance")" class="btn btn-danger px-4">
+                    Yes, Check Out
+                </a>
             </div>
         </div>
     </div>
@@ -142,12 +162,10 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-        let success = document.querySelector(".alert-success");
-        let early = document.querySelector(".alert-danger");
         let countdown = document.getElementById("countdownContainer");
 
-        // If any checkout message → stop countdown + hide button
-        if (success || early) {
+        // Hide countdown if early/late message exists
+        if (document.querySelector(".early-card") || document.querySelector(".late-card")) {
             if (countdown) countdown.style.display = "none";
             return;
         }
@@ -155,23 +173,21 @@
         let inTime = '@(Model?.InTime?.ToString() ?? "")';
         let outTime = '@(Model?.OutTime?.ToString() ?? "")';
 
-        if (outTime && outTime !== "") {
-            countdown.style.display = "none";
+        // Hide if checked out or no check-in
+        if (outTime !== "" || inTime === "") {
+            if (countdown) countdown.style.display = "none";
             return;
         }
 
-        if (!inTime || inTime === "") {
-            countdown.style.display = "none";
-            return;
-        }
+        // Countdown for exactly 8 hours 30 minutes (510 minutes)
+        const shiftMs = 510 * 60 * 1000; // 8.5 hours in milliseconds
 
-        // Countdown (8 hours + 30 minutes)
         let label = document.getElementById("countdown");
-        let today = new Date();
-        let dateStr = today.toISOString().split("T")[0];
-        let start = new Date(dateStr + "T" + inTime);
+        let today = new Date().toISOString().split("T")[0];
 
-        let endTime = new Date(start.getTime() + (8.5 * 60 * 60 * 1000)); // 8h 30m
+        // Convert to valid datetime
+        let start = new Date(`${today}T${inTime}`);
+        let endTime = new Date(start.getTime() + shiftMs);
 
         function updateCountdown() {
             let now = new Date();
@@ -182,9 +198,9 @@
                 return;
             }
 
-            let h = Math.floor(diff / (1000 * 60 * 60));
-            let m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            let s = Math.floor((diff % (1000 * 60)) / 1000);
+            let h = Math.floor(diff / 3600000);
+            let m = Math.floor((diff % 3600000) / 60000);
+            let s = Math.floor((diff % 60000) / 1000);
 
             label.textContent =
                 h.toString().padStart(2, '0') + ":" +
@@ -197,41 +213,55 @@
     });
 </script>
 
+
 <style>
-    .modal-backdrop.show {
-        opacity: .2 !important;
+    /* EARLY / LATE Checkout cards */
+    .status-card {
+        width: 100%;
+        padding: 14px 18px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 20px;
     }
 
-    .custom-modal {
-        border-radius: 18px;
-        padding: 10px;
-        box-shadow: 0 10px 35px rgba(0,0,0,0.25);
-        animation: popup 0.25s ease-out;
+    .early-card {
+        background: #fde2e2;
+        border-left: 6px solid #f87171;
+        color: #b91c1c;
     }
 
-    @@keyframes popup {
-        from {
-            transform: scale(0.8);
-            opacity: 0;
+    .late-card {
+        background: #dcfce7;
+        border-left: 6px solid #34d399;
+        color: #065f46;
+    }
+
+    .status-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+        .status-icon i {
+            font-size: 18px;
         }
 
-        to {
-            transform: scale(1);
-            opacity: 1;
+    .status-icon {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+        .status-icon.late {
+            background: #bbf7d0;
+            color: #047857;
         }
-    }
 
-    .custom-modal .btn-danger {
-        background: linear-gradient(135deg, #ef4444, #b91c1c);
-        border: none;
-    }
-
-    .custom-modal .btn-secondary {
-        background: #e5e7eb;
-        color: #111;
-        border: none;
-    }
-
+    /* Layout */
     .att-page {
         display: flex;
         justify-content: center;
@@ -249,7 +279,6 @@
 
     .att-header {
         display: flex;
-        align-items: center;
         gap: 15px;
         padding-bottom: 15px;
         border-bottom: 1px solid #eee;
@@ -261,13 +290,13 @@
         border-radius: 50%;
         background: linear-gradient(135deg,#fde68a,#f97316);
         display: flex;
-        align-items: center;
         justify-content: center;
+        align-items: center;
     }
 
     .att-title {
-        font-weight: 800;
         font-size: 22px;
+        font-weight: 800;
     }
 
     .att-subtitle {
@@ -275,6 +304,7 @@
         font-size: 13px;
     }
 
+    /* Cards */
     .neon-card {
         background: #f9fafb;
         padding: 16px;
@@ -284,13 +314,13 @@
 
     .att-entry {
         display: flex;
-        align-items: center;
         gap: 15px;
+        align-items: center;
     }
 
     .att-label {
-        text-transform: uppercase;
         font-size: 12px;
+        text-transform: uppercase;
         color: #6b7280;
     }
 
@@ -299,32 +329,16 @@
         font-weight: 800;
     }
 
-    .bg-success-soft {
-        background: #dcfce7;
-    }
-
-    .bg-danger-soft {
-        background: #fee2e2;
-    }
-
+    /* Countdown */
     .countdown-digits {
         text-align: center;
-        font-size: 35px;
+        font-size: 36px;
         font-weight: 900;
         color: #ef4444;
-        letter-spacing: 4px;
-        animation: glow 1.4s infinite alternate;
-    }
-    @@keyframes glow {
-        from {
-            text-shadow: 0 0 6px rgba(239,68,68,.5);
-        }
-
-        to {
-            text-shadow: 0 0 16px rgba(239,68,68,1);
-        }
+        letter-spacing: 3px;
     }
 
+    /* Buttons */
     .att-btn {
         display: block;
         width: 100%;
@@ -334,7 +348,6 @@
         border-radius: 999px;
         font-size: 16px;
         font-weight: 700;
-        text-align: center;
         color: white;
         text-decoration: none;
     }
@@ -345,5 +358,11 @@
 
     .att-btn-checkout {
         background: linear-gradient(135deg,#ef4444,#b91c1c);
+    }
+
+    /* Modal */
+    .custom-modal {
+        border-radius: 18px;
+        padding: 10px;
     }
 </style>
