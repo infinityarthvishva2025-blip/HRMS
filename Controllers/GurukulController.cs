@@ -212,7 +212,7 @@ namespace HRMS.Controllers
             }
 
             string root = Directory.GetCurrentDirectory();
-            string videoFolder = Path.Combine(root, "wwwroot", "uploads", "gurukul");
+            string videoFolder = Path.Combine(root, "wwwroot", "Hrmsfiles", "gurukul");
             string thumbFolder = Path.Combine(root, "wwwroot", "uploads", "gurukul-thumbs");
             string ffmpegPath = Path.Combine(root, "wwwroot", "ffmpeg", "ffmpeg.exe");
 
@@ -229,9 +229,11 @@ namespace HRMS.Controllers
                     await VideoFile.CopyToAsync(fs);
                 }
 
-                model.VideoPath = "/uploads/gurukul/" + fileName;
+                // ✅ FIXED URL PATH
+                model.VideoPath = "/Hrmsfiles/gurukul/" + fileName;
                 model.IsExternal = false;
 
+                // thumbnail
                 string thumbFileName = Path.GetFileNameWithoutExtension(fileName) + ".jpg";
                 string fullThumbPath = Path.Combine(thumbFolder, thumbFileName);
 
@@ -245,8 +247,10 @@ namespace HRMS.Controllers
                 process.Start();
                 process.WaitForExit();
 
+                // keep this path correct
                 model.ThumbnailPath = "/uploads/gurukul-thumbs/" + thumbFileName;
             }
+
             else if (!string.IsNullOrWhiteSpace(ExternalLink))
             {
                 string link = ExternalLink.Trim();

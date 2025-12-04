@@ -64,99 +64,98 @@
     <!-- Daily Attendance Log -->
     <h4 class="fw-bold mb-3">Daily Attendance Log</h4>
 
-    <table class="table table-striped table-bordered">
-        <thead class="table-dark">
+   <table class="table table-striped table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>Date</th>
+            <th>Check In</th>
+            <th>Check Out</th>
+            <th>Working Hours</th>
+            <th>Status</th>       
+            <th>Ticket</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var a in Model.AttendanceRecords)
+        {
             <tr>
-                <th>Date</th>
-                <th>Check In</th>
-                <th>Check Out</th>
-               
-                <th>Working Hours</th>
-                <th>Ticket</th>  <!-- NEW -->
-            </tr>
-        </thead>
+                <td>@a.Date.ToString("dd-MMM-yyyy")</td>
 
-        <tbody>
-            @foreach (var a in Model.AttendanceRecords)
-            {
-                var shiftStart = new TimeSpan(9, 30, 0);
-                var shiftEnd = new TimeSpan(18, 0, 0);
+                <td>
+                    @(a.InTime.HasValue
+                        ? DateTime.Today.Add(a.InTime.Value).ToString("hh:mm tt")
+                        : "--")
+                </td>
 
-                bool isLate = a.InTime.HasValue && a.InTime.Value > shiftStart;
-                bool isEarly = a.OutTime.HasValue && a.OutTime.Value < shiftEnd;
+                <td>
+                    @(a.OutTime.HasValue
+                        ? DateTime.Today.Add(a.OutTime.Value).ToString("hh:mm tt")
+                        : "--")
+                </td>
 
-                <tr>
-                    <td>@a.Date.ToString("dd-MMM-yyyy")</td>
 
-                    <td>
-                        @(a.InTime.HasValue
-                                            ? DateTime.Today.Add(a.InTime.Value).ToString("hh:mm tt")
-                                            : "--")
-                    </td>
+                <td>
+                    @if (a.InTime.HasValue && a.OutTime.HasValue)
+                    {
+                        var diff = a.OutTime.Value - a.InTime.Value;
+                        @($"{diff.Hours}h {diff.Minutes}m")
+                    }
+                    else
+                    {
+                        @("--")
+                    }
+                </td>
 
-                    <td>
-                        @(a.OutTime.HasValue
-                                            ? DateTime.Today.Add(a.OutTime.Value).ToString("hh:mm tt")
-                                            : "--")
-                    </td>
-
-                   
-                    
-                  
-
+                    <!-- STATUS COLUMN -->
                     <td>
                         @if (a.InTime.HasValue && a.OutTime.HasValue)
                         {
-                            var diff = a.OutTime.Value - a.InTime.Value;
-                            @($"{diff.Hours}h {diff.Minutes}m")
+                            <span class="badge bg-success">Present</span>
+                        }
+                        else if (a.InTime.HasValue && !a.OutTime.HasValue)
+                        {
+                            <span class="badge bg-warning text-dark">Auto Checkout</span>
                         }
                         else
                         {
-                            @("--")
+                            <span class="badge bg-danger">Absent</span>
                         }
                     </td>
-
-                    <!-- NEW TICKET BUTTON -->
-                    <td>
-                        @if (!a.CorrectionRequested)
+                <td>
+                    @if (!a.CorrectionRequested)
+                    {
+                        <a asp-controller="Attendance"
+                           asp-action="RequestCorrection"
+                           asp-route-empCode="@a.Emp_Code"
+                           asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
+                           asp-route-employeeId="@Model.Employee.Id"
+                           class="btn btn-warning btn-sm">
+                            Request
+                        </a>
+                    }
+                    else
+                    {
+                        if (a.CorrectionStatus == "Pending")
                         {
-                            <!-- Request Button -->
-                            <a asp-controller="Attendance"
-                               asp-action="RequestCorrection"
-                               asp-route-empCode="@a.Emp_Code"
-                               asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
-                               asp-route-employeeId="@Model.Employee.Id"
-                               class="btn btn-warning btn-sm">
-                                Request
-                            </a>
-
-
+                            <span class="badge bg-info">Pending</span>
                         }
-                        else
+                        else if (a.CorrectionStatus == "Approved")
                         {
-                            <!-- Status Pill -->
-                            @if (a.CorrectionStatus == "Pending")
-                            {
-                                <span class="badge bg-info">Pending</span>
-                            }
-                            else if (a.CorrectionStatus == "Approved")
-                            {
-                                <span class="badge bg-success">Approved</span>
-                            }
-                            else if (a.CorrectionStatus == "Rejected")
-                            {
-                                <span class="badge bg-danger">Rejected</span>
-                            }
+                            <span class="badge bg-success">Approved</span>
                         }
-                    </td>
-                </tr>
-            }
-        </tbody>
+                        else if (a.CorrectionStatus == "Rejected")
+                        {
+                            <span class="badge bg-danger">Rejected</span>
+                        }
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
 
 
-
-      
-    </table>
 </div>
 
 <style>

@@ -99,54 +99,79 @@
                 <div id="countdownContainer" class="att-card neon-card mt-3">
                     <div class="att-label text-center">
                         <i class="fa-solid fa-hourglass-half me-2 text-warning"></i>
-                        Time Remaining (8-hour shift)
+                        Time Remaining (8-Hour 30-Minutes shift including lunch break)
                     </div>
                     <div id="countdown" class="countdown-digits">00:00:00</div>
                 </div>
 
-                <!-- CHECKOUT BUTTON -->
-                <a asp-action="CheckOut" id="checkoutBtn" class="att-btn att-btn-checkout mt-3">
+                <!-- CHECKOUT BUTTON (OPENS MODAL) -->
+                <a href="#" class="att-btn att-btn-checkout mt-3" data-bs-toggle="modal" data-bs-target="#checkoutModal">
                     <i class="fa-solid fa-stop me-2"></i> Check Out
                 </a>
             }
         }
     </div>
 </div>
+
+<!-- CUSTOM CHECKOUT MODAL -->
+<div class="modal fade" id="checkoutModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-modal">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-danger">
+                    <i class="fa-solid fa-circle-question me-2"></i> Confirm Checkout
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center">
+                <p class="fs-5 mb-3">Are you sure you want to Check Out?</p>
+
+                <img src="https://cdn-icons-png.flaticon.com/512/463/463612.png"
+                     width="90" class="mb-3 opacity-75" />
+            </div>
+
+            <div class="modal-footer border-0 d-flex justify-content-between">
+                <button class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <a href="@Url.Action("CheckOut", "Attendance")" class="btn btn-danger px-4">Yes, Check Out</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
         let success = document.querySelector(".alert-success");
-        let early   = document.querySelector(".alert-danger");
+        let early = document.querySelector(".alert-danger");
         let countdown = document.getElementById("countdownContainer");
-        let btnCheckout = document.getElementById("checkoutBtn");
 
         // If any checkout message → stop countdown + hide button
         if (success || early) {
             if (countdown) countdown.style.display = "none";
-            if (btnCheckout) btnCheckout.style.display = "none";
             return;
         }
 
-        let inTime  = '@(Model?.InTime?.ToString() ?? "")';
+        let inTime = '@(Model?.InTime?.ToString() ?? "")';
         let outTime = '@(Model?.OutTime?.ToString() ?? "")';
 
-        // Hide countdown if outtime exists
         if (outTime && outTime !== "") {
-            if (countdown) countdown.style.display = "none";
+            countdown.style.display = "none";
             return;
         }
 
         if (!inTime || inTime === "") {
-            if (countdown) countdown.style.display = "none";
+            countdown.style.display = "none";
             return;
         }
 
-        // Build countdown
+        // Countdown (8 hours + 30 minutes)
         let label = document.getElementById("countdown");
         let today = new Date();
         let dateStr = today.toISOString().split("T")[0];
         let start = new Date(dateStr + "T" + inTime);
-        let endTime = new Date(start.getTime() + (8 * 60 * 60 * 1000)); // +8h
+
+        let endTime = new Date(start.getTime() + (8.5 * 60 * 60 * 1000)); // 8h 30m
 
         function updateCountdown() {
             let now = new Date();
@@ -169,10 +194,44 @@
 
         updateCountdown();
         setInterval(updateCountdown, 1000);
-
     });
 </script>
+
 <style>
+    .modal-backdrop.show {
+        opacity: .2 !important;
+    }
+
+    .custom-modal {
+        border-radius: 18px;
+        padding: 10px;
+        box-shadow: 0 10px 35px rgba(0,0,0,0.25);
+        animation: popup 0.25s ease-out;
+    }
+
+    @@keyframes popup {
+        from {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .custom-modal .btn-danger {
+        background: linear-gradient(135deg, #ef4444, #b91c1c);
+        border: none;
+    }
+
+    .custom-modal .btn-secondary {
+        background: #e5e7eb;
+        color: #111;
+        border: none;
+    }
+
     .att-page {
         display: flex;
         justify-content: center;
@@ -288,4 +347,3 @@
         background: linear-gradient(135deg,#ef4444,#b91c1c);
     }
 </style>
-
