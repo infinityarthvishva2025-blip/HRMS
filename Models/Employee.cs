@@ -30,7 +30,7 @@ namespace HRMS.Models
 
         [Required]
         [StringLength(15)]
-        public string? AlternateMobileNumber { get; set; }
+        public string? AlternateMobileNumber { get; set; } = "-";
 
         [Required]
         [StringLength(200)]
