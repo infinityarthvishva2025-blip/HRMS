@@ -15,22 +15,18 @@ namespace HRMS.Models
         [StringLength(10)]
         public string EmployeeCode { get; set; } = string.Empty;
 
-       
         [StringLength(100)]
         public string Name { get; set; } = string.Empty;
-       
-    
+
         [EmailAddress]
         [StringLength(150)]
         public string Email { get; set; } = string.Empty;
 
-     
         [StringLength(15)]
         public string MobileNumber { get; set; } = string.Empty;
 
-   
         [StringLength(15)]
-        public string? AlternateMobileNumber { get; set; }
+        public string? AlternateMobileNumber { get; set; } = "-";
 
         [Required]
         [StringLength(200)]
@@ -60,7 +56,6 @@ namespace HRMS.Models
         public string? ExperienceType { get; set; }   // Fresher / Experienced
         public int? TotalExperienceYears { get; set; }
 
-        // MULTIPLE CERTIFICATES (comma separated)
         public string? ExperienceCertificateFilePath { get; set; }
 
         public string? LastCompanyName { get; set; }
@@ -79,7 +74,7 @@ namespace HRMS.Models
         public int? ManagerId { get; set; }
 
         public string Role { get; set; } = string.Empty;
-       
+
         public string? Address { get; set; }   // Present Address
         public string? PermanentAddress { get; set; }
 
@@ -87,7 +82,6 @@ namespace HRMS.Models
         // ====================================
         // EDUCATION
         // ====================================
-    
         public decimal? HSCPercent { get; set; }
         public string? GraduationCourse { get; set; }
         public decimal? GraduationPercent { get; set; }
@@ -101,8 +95,9 @@ namespace HRMS.Models
         public string? AadhaarNumber { get; set; }
         public string? PanNumber { get; set; }
 
+
         // ====================================
-        // Bank DETAILS
+        // BANK DETAILS
         // ====================================
         public string? AccountHolderName { get; set; }
         public string? BankName { get; set; }
@@ -112,21 +107,18 @@ namespace HRMS.Models
 
 
         // ====================================
-        // FILE UPLOAD PATHS
+        // FILE UPLOAD PATHS (All Optional)
         // ====================================
         public string? ProfileImagePath { get; set; }
         public string? AadhaarFilePath { get; set; }
         public string? PanFilePath { get; set; }
         public string? PassbookFilePath { get; set; }
-   
 
-        // Education Documents
         public string? TenthMarksheetFilePath { get; set; }
         public string? TwelfthMarksheetFilePath { get; set; }
         public string? GraduationMarksheetFilePath { get; set; }
         public string? PostGraduationMarksheetFilePath { get; set; }
 
-        // Health Document
         public string? MedicalDocumentFilePath { get; set; }
 
 
@@ -142,9 +134,9 @@ namespace HRMS.Models
         // ====================================
         // HEALTH INFORMATION
         // ====================================
-        public string? HasDisease { get; set; }  // Yes / No
+        public string? HasDisease { get; set; }       // Yes / No
         public string? DiseaseName { get; set; }
-        public string? DiseaseType { get; set; } // NEW FIELD
+        public string? DiseaseType { get; set; }
         public string? DiseaseSince { get; set; }
         public string? MedicinesRequired { get; set; }
         public string? DoctorName { get; set; }
@@ -157,8 +149,6 @@ namespace HRMS.Models
         // ====================================
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string? Status { get; set; }
-        public String? DeactiveReason { get; set; }
-
-
+        public string? DeactiveReason { get; set; }
     }
 }

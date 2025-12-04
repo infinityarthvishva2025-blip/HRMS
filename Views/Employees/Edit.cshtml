@@ -52,21 +52,21 @@
 
                 <div class="col-md-4">
                     <label asp-for="MobileNumber">Mobile Number</label>
-                    <input asp-for="MobileNumber"
-                           class="form-control"
-                           maxlength="10" minlength="10"
-                           pattern="[0-9]{10}"
-                           title="Enter a valid 10-digit mobile number" />
-
+                    <input asp-for="MobileNumber" class="form-control"
+                           maxlength="10"
+                           pattern="^[6-9]\d{9}$"
+                           title="Enter valid 10-digit mobile number"
+                           required />
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="AlternateMobileNumber">Alternate Mobile Number</label>
                     <input asp-for="AlternateMobileNumber"
                            class="form-control"
-                           maxlength="10" minlength="10"
-                           pattern="[0-9]{10}"
-                           title="Enter a valid 10-digit mobile number" />
+                           maxlength="10"
+                           pattern="^[6-9]\d{9}$"
+                           title="Enter valid 10-digit mobile number" />
+                          
                 </div>
 
                 <div class="col-md-4">
@@ -357,7 +357,10 @@
                         <option>Director</option>
                     </select>
                 </div>
-
+                 <div class="col-md-4">
+                    <label asp-for="ReportingManager">Reporting Manager</label>
+                    <input asp-for="ReportingManager" class="form-control" />
+                </div>
                 <div class="col-md-4">
                     <label asp-for="Salary">Salary</label>
                     <input asp-for="Salary" type="number" class="form-control" />
@@ -499,11 +502,12 @@
 
                 <div class="col-md-4">
                     <label asp-for="AadhaarNumber"></label>
-                    <input asp-for="AadhaarNumber"
-                           class="form-control"
-                           pattern="[0-9]{12}"
-                           maxlength="12" minlength="12"
-                           title="Aadhaar number must be exactly 12 digits" />
+                    <input asp-for="AadhaarNumber" class="form-control"
+                           maxlength="12"
+                           pattern="^\d{12}$"
+                           title="Aadhaar must be exactly 12 digits"
+                           required />
+
                 </div>
 
                 <div class="col-md-6">
@@ -587,12 +591,23 @@
 
                 <div class="col-md-6">
                     <label asp-for="AccountNumber">Account Number</label>
-                    <input asp-for="AccountNumber" class="form-control" />
+                    <input asp-for="AccountNumber" class="form-control"
+                           maxlength="18"
+                           pattern="^\d{6,18}$"
+                           title="Account number must be 6 to 18 digits"
+                           required />
+
                 </div>
 
                 <div class="col-md-6">
                     <label asp-for="IFSC">IFSC Code</label>
-                    <input asp-for="IFSC" class="form-control" />
+                    <input asp-for="IFSC" class="form-control"
+                           maxlength="11"
+                           pattern="^[A-Z]{4}0[A-Z0-9]{6}$"
+                           title="Enter valid IFSC code (e.g., SBIN0001234)"
+                           style="text-transform:uppercase;"
+                           required />
+
                 </div>
 
                 <div class="col-md-6">

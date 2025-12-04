@@ -51,7 +51,7 @@ namespace HRMS.ViewModels
         public string Role { get; set; }
         public decimal? Salary { get; set; }
 
-
+        public string? ReportingManager {  get; set; }
 
         // Education
         public decimal? HSCPercent { get; set; }

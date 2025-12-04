@@ -46,7 +46,7 @@ namespace HRMS.Controllers
         // ================================
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Employees.ToListAsync());
+            return View(await _context.Employees.ToListAsync());    
         }
 
         // ================================
@@ -70,133 +70,180 @@ namespace HRMS.Controllers
             return View(new Employee { EmployeeCode = GenerateNextEmployeeCode() });
         }
 
-        // ================================
-        // CREATE (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
-      Employee model,
-      IFormFile ProfilePhoto,
-      IFormFile AadhaarFile,
-      IFormFile PanFile,
-      IFormFile PassbookFile,
-      List<IFormFile> ExperienceCertificateFiles,
-      IFormFile MedicalDocumentFile,
-      IFormFile TenthMarksheetFile,
-      IFormFile TwelfthMarksheetFile,
-      IFormFile GraduationMarksheetFile,
-      IFormFile PostGraduationMarksheetFile
-  )
+            Employee model,
+            IFormFile? ProfilePhoto,
+            IFormFile? AadhaarFile,
+            IFormFile? PanFile,
+            IFormFile? PassbookFile,
+            List<IFormFile>? ExperienceCertificateFiles,
+            IFormFile? MedicalDocumentFile,
+            IFormFile? TenthMarksheetFile,
+            IFormFile? TwelfthMarksheetFile,
+            IFormFile? GraduationMarksheetFile,
+            IFormFile? PostGraduationMarksheetFile
+        )
         {
-            // ❌ IMPORTANT: DO NOT CLEAR MODELSTATE NOW
-            // ModelState.Clear();
+            // ==========================================
+            // CLEAR INITIAL MODELSTATE
+            // ==========================================
+            ModelState.Clear();
 
-            // ============================================
-            // ✔ Only selected validations
-            // ============================================
-            if (string.IsNullOrWhiteSpace(model.Name))
-                ModelState.AddModelError("Name", "Full Name is required.");
+            // ==========================================
+            // 🔥 MASTER FIX: REMOVE ALL FILE VALIDATION AUTO-ERRORS
+            // ==========================================
+            foreach (var key in ModelState.Keys.ToList())
+            {
+                if (key.Contains("File") || key.Contains("Marksheet") || key.Contains("Document"))
+                {
+                    ModelState.Remove(key);
+                }
+            }
 
-            if (string.IsNullOrWhiteSpace(model.Email))
-                ModelState.AddModelError("Email", "Email is required.");
+            // ==========================================
+            // REQUIRED FIELD VALIDATOR FUNCTION
+            // ==========================================
+            void Require(string field, string? value, string message)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    ModelState.AddModelError(field, message);
+            }
 
-            if (string.IsNullOrWhiteSpace(model.MobileNumber))
-                ModelState.AddModelError("MobileNumber", "Mobile number is required.");
+            // ==========================================
+            // ALWAYS REQUIRED
+            // ==========================================
+            Require("Name", model.Name, "Full Name is required.");
+            Require("Email", model.Email, "Email is required.");
+            Require("MobileNumber", model.MobileNumber, "Mobile number is required.");
+            Require("Gender", model.Gender, "Gender is required.");
+            Require("FatherName", model.FatherName, "Father name is required.");
+            Require("MotherName", model.MotherName, "Mother name is required.");
+            Require("Address", model.Address, "Current address is required.");
+            Require("PermanentAddress", model.PermanentAddress, "Permanent address is required.");
+            Require("MaritalStatus", model.MaritalStatus, "Marital status is required.");
 
-            if (string.IsNullOrWhiteSpace(model.Gender))
-                ModelState.AddModelError("Gender", "Gender is required.");
+            Require("Department", model.Department, "Department is required.");
+            Require("Position", model.Position, "Position is required.");
+            Require("ReportingManager", model.ReportingManager, "Reporting Manager is required.");
+            Require("Role", model.Role, "Role is required.");
 
-            if (string.IsNullOrWhiteSpace(model.Department))
-                ModelState.AddModelError("Department", "Please select a department.");
+            Require("AadhaarNumber", model.AadhaarNumber, "Aadhaar Number is required.");
+            Require("PanNumber", model.PanNumber, "PAN Number is required.");
 
-            if (string.IsNullOrWhiteSpace(model.Position))
-                ModelState.AddModelError("Position", "Please select a position.");
+            Require("AccountHolderName", model.AccountHolderName, "Account Holder name is required.");
+            Require("BankName", model.BankName, "Bank name is required.");
+            Require("AccountNumber", model.AccountNumber, "Account number is required.");
+            Require("IFSC", model.IFSC, "IFSC code is required.");
+            Require("Branch", model.Branch, "Branch is required.");
+
+            Require("EmergencyContactName", model.EmergencyContactName, "Emergency contact name is required.");
+            Require("EmergencyContactRelationship", model.EmergencyContactRelationship, "Relationship is required.");
+            Require("EmergencyContactMobile", model.EmergencyContactMobile, "Emergency mobile number is required.");
+            Require("EmergencyContactAddress", model.EmergencyContactAddress, "Emergency contact address is required.");
+
+            if (model.JoiningDate == null)
+                ModelState.AddModelError("JoiningDate", "Joining Date is required.");
+
+            if (model.DOB_Date == null)
+                ModelState.AddModelError("DOB_Date", "Date of Birth is required.");
 
             if (model.Salary == null)
                 ModelState.AddModelError("Salary", "Salary is required.");
 
-            // 🔁 Return with errors if validation failed
+            // Experience (conditional)
+            if (model.ExperienceType == "Experienced")
+            {
+                if (model.TotalExperienceYears == null || model.TotalExperienceYears == 0)
+                    ModelState.AddModelError("TotalExperienceYears", "Total experience years required.");
+
+                Require("LastCompanyName", model.LastCompanyName, "Last company name required.");
+            }
+
+            // Disease (conditional)
+            if (model.HasDisease == "Yes")
+            {
+                Require("DiseaseName", model.DiseaseName, "Disease name required.");
+                Require("DiseaseSince", model.DiseaseSince, "Disease duration required.");
+                Require("MedicinesRequired", model.MedicinesRequired, "Medicines required.");
+                Require("DoctorName", model.DoctorName, "Doctor name required.");
+                Require("DoctorContact", model.DoctorContact, "Doctor contact required.");
+            }
+
+            // ==========================================
+            // STOP IF ERRORS
+            // ==========================================
             if (!ModelState.IsValid)
                 return View(model);
 
-            // ============================================
-            // ✔ Default values
-            // ============================================
+            // ==========================================
+            // DEFAULT DATA
+            // ==========================================
             if (string.IsNullOrEmpty(model.EmployeeCode))
                 model.EmployeeCode = GenerateNextEmployeeCode();
 
-            if (string.IsNullOrEmpty(model.Status))
-                model.Status = "Active";
-
+            model.Status = "Active";
             model.ManagerId = 36;
 
-            // ============================================
-            // ✔ Unique checks
-            // ============================================
-            if (!string.IsNullOrEmpty(model.Email))
+            // ==========================================
+            // UNIQUE CHECK
+            // ==========================================
+            if (await _context.Employees.AnyAsync(x => x.Email == model.Email))
             {
-                if (await _context.Employees.AnyAsync(x => x.Email == model.Email))
-                {
-                    ModelState.AddModelError("Email", "Email already registered.");
-                    return View(model);
-                }
+                ModelState.AddModelError("Email", "Email already exists.");
+                return View(model);
             }
 
-            if (!string.IsNullOrEmpty(model.MobileNumber))
+            if (await _context.Employees.AnyAsync(x => x.MobileNumber == model.MobileNumber))
             {
-                if (await _context.Employees.AnyAsync(x => x.MobileNumber == model.MobileNumber))
-                {
-                    ModelState.AddModelError("MobileNumber", "Mobile number already registered.");
-                    return View(model);
-                }
+                ModelState.AddModelError("MobileNumber", "Mobile number already exists.");
+                return View(model);
             }
 
-            // ============================================
-            // ✔ ALWAYS create employee folder
-            // ============================================
+            // ==========================================
+            // SAVE FILES
+            // ==========================================
             string empFolder = Path.Combine(_env.WebRootPath, "uploads/employees", model.EmployeeCode);
             if (!Directory.Exists(empFolder))
                 Directory.CreateDirectory(empFolder);
 
-            // ============================================
-            // ✔ Save files (not mandatory)
-            // ============================================
             model.ProfileImagePath = await SaveEmployeeFile(ProfilePhoto, empFolder, "profile");
             model.AadhaarFilePath = await SaveEmployeeFile(AadhaarFile, empFolder, "aadhaar");
             model.PanFilePath = await SaveEmployeeFile(PanFile, empFolder, "pan");
             model.PassbookFilePath = await SaveEmployeeFile(PassbookFile, empFolder, "passbook");
 
-            if (ExperienceCertificateFiles != null && ExperienceCertificateFiles.Count > 0)
+            if (ExperienceCertificateFiles?.Count > 0)
             {
                 List<string> saved = new();
                 foreach (var file in ExperienceCertificateFiles)
                 {
-                    var savedPath = await SaveEmployeeFile(file, empFolder, $"exp_{Guid.NewGuid()}");
-                    if (savedPath != null)
-                        saved.Add(savedPath);
+                    var f = await SaveEmployeeFile(file, empFolder, $"exp_{Guid.NewGuid()}");
+                    if (f != null) saved.Add(f);
                 }
                 model.ExperienceCertificateFilePath = string.Join(",", saved);
             }
 
-            model.MedicalDocumentFilePath = await SaveEmployeeFile(MedicalDocumentFile, empFolder, "medical");
-            model.TenthMarksheetFilePath = await SaveEmployeeFile(TenthMarksheetFile, empFolder, "10th");
-            model.TwelfthMarksheetFilePath = await SaveEmployeeFile(TwelfthMarksheetFile, empFolder, "12th");
-            model.GraduationMarksheetFilePath = await SaveEmployeeFile(GraduationMarksheetFile, empFolder, "graduation");
-            model.PostGraduationMarksheetFilePath = await SaveEmployeeFile(PostGraduationMarksheetFile, empFolder, "pg");
+            model.MedicalDocumentFilePath =
+                await SaveEmployeeFile(MedicalDocumentFile, empFolder, "medical");
 
-            // ============================================
-            // ✔ Save to DB
-            // ============================================
-            try
-            {
-                _context.Employees.Add(model);
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", "Database Error: " + ex.Message);
-                return View(model);
-            }
+            model.TenthMarksheetFilePath =
+                await SaveEmployeeFile(TenthMarksheetFile, empFolder, "10th");
+
+            model.TwelfthMarksheetFilePath =
+                await SaveEmployeeFile(TwelfthMarksheetFile, empFolder, "12th");
+
+            model.GraduationMarksheetFilePath =
+                await SaveEmployeeFile(GraduationMarksheetFile, empFolder, "grad");
+
+            model.PostGraduationMarksheetFilePath =
+                await SaveEmployeeFile(PostGraduationMarksheetFile, empFolder, "pg");
+
+            // ==========================================
+            // SAVE TO DB
+            // ==========================================
+            _context.Employees.Add(model);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("Index");
         }
@@ -255,7 +302,7 @@ namespace HRMS.Controllers
                 Position = emp.Position,
                 Role = emp.Role,
                 Salary = emp.Salary,
-               // ReportingManager = emp.ReportingManager,
+               ReportingManager = emp.ReportingManager,
                 HSCPercent = emp.HSCPercent,
                 GraduationCourse = emp.GraduationCourse,
                 GraduationPercent = emp.GraduationPercent,
@@ -336,7 +383,7 @@ namespace HRMS.Controllers
             emp.Position = model.Position;
             emp.Role = model.Role;
             emp.Salary = model.Salary;
-           // emp.ReportingManager = model.ReportingManager; // NEW FIELD
+            emp.ReportingManager = model.ReportingManager; // NEW FIELD
 
             // EDUCATION
             emp.HSCPercent = model.HSCPercent;
