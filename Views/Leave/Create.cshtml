@@ -144,68 +144,6 @@
     }
 </style>
 
-<!-- ============ GLOBAL RESPONSIVE CSS ============ -->
-@* <style>
-
-    /* MAIN CARD */
-    .leave-card {
-        border-radius: 16px;
-        background: #fff;
-        padding: 35px;
-        margin-top: 20px;
-        margin-bottom: 30px;
-        box-shadow: 0 3px 18px rgba(0,0,0,0.1);
-    }
-
-    .leave-title {
-        font-size: 1.6rem;
-        font-weight: 600;
-        color: #222;
-        margin-bottom: 10px;
-    }
-
-    .form-label {
-        font-weight: 600;
-        color: #333;
-    }
-
-    .form-control,
-    .form-select {
-        border-radius: 8px !important;
-        padding: 10px 12px;
-        font-size: 0.95rem;
-    }
-
-    textarea.form-control {
-        height: 110px !important;
-    }
-
-    .total-box {
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 20px;
-        font-size: 1.4rem;
-        font-weight: 600;
-        text-align: center;
-        background: #fafafa;
-        color: #2a2a2a;
-    }
-
-    .leave-row {
-        margin-bottom: 25px;
-    }
-
-    /* SUBMIT BUTTON */
-    .btn-primary {
-        border-radius: 8px;
-        padding: 12px 34px;
-        font-size: 1.1rem;
-    }
-
-    
-   
-</style>
- *@
 <!-- ===================== PAGE CONTAINER ===================== -->
 <div class="container">
 
@@ -236,7 +174,7 @@
                         <option value="">-- Select Leave Type --</option>
                         <option value="Sick">Sick Leave</option>
                         <option value="Casual">Casual Leave</option>
-                        <option value="Paid">Public Holidays</option>
+                        <option value="coff">Comp-Off</option>
                     </select>
                 </div>
             </div>
@@ -299,7 +237,7 @@
             </div>
 
             <!-- Contact + Address -->
-            <div class="row leave-row">
+            <div class="row leave-row" style="display:none;">
                 <div class="col-md-6 col-12">
                     <label class="form-label">Contact During Leave</label>
                     <input asp-for="ContactDuringLeave" class="form-control" />
@@ -321,9 +259,143 @@
     </div>
 </div>
 
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // Elements
+            const catSelect = document.getElementById("Category");
+            const fullMulti = document.getElementById("fullOrMultiDayBlock");
+            const half = document.getElementById("halfDayBlock");
+            const timeBlock = document.getElementById("timeBlock");
+            const leaveTypeBlock = document.getElementById("leaveTypeBlock");
+            const totalDaysBlock = document.getElementById("totalDaysBlock");
+            const totalBox = totalDaysBlock?.querySelector(".total-box");
+            const totalInput = document.querySelector("[name='TotalDays']");
+            const startInput = document.querySelector("[name='StartDate']");
+            const endInput = document.querySelector("[name='EndDate']");
+
+            // ======= NATIONAL HOLIDAYS =========
+            const nationalHolidays = [
+                "2025-01-26",
+                "2025-08-15",
+                "2025-10-02",
+                "2025-12-25"
+            ];
+
+            // ======= TOGGLE BLOCKS BASED ON CATEGORY =========
+            function updateBlocks() {
+                fullMulti.style.display = "none";
+                half.style.display = "none";
+                timeBlock.style.display = "none";
+                leaveTypeBlock.style.display = "none";
+                totalDaysBlock.style.display = "none";
+
+                if (catSelect.value === "FullDay" || catSelect.value === "MultiDay") {
+                    fullMulti.style.display = "flex";
+                    leaveTypeBlock.style.display = "flex";
+                    totalDaysBlock.style.display = "block";
+                } else if (catSelect.value === "HalfDay") {
+                    half.style.display = "flex";
+                } else if (catSelect.value === "EarlyGoing" || catSelect.value === "LateComing") {
+                    timeBlock.style.display = "flex";
+                }
+
+                // trigger count when changing to Full/Multi Day
+                if (catSelect.value === "FullDay" || catSelect.value === "MultiDay") {
+                    updateTotalDays();
+                }
+            }
+
+            catSelect.addEventListener("change", updateBlocks);
+            updateBlocks();
+
+            // ======= VALIDATION FOR INVALID DATES =========
+            function validateLeaveDate(input) {
+                let dateValue = input.value;
+                if (!dateValue) return;
+
+                let picked = new Date(dateValue + "T00:00:00");
+                let day = picked.getDay(); // 0 = Sunday, 6 = Saturday
+
+                if (day === 0) {
+                    alert("❌ You cannot apply leave on Sunday (Weekly Off).");
+                    input.value = "";
+                    updateTotalDays();
+                    return;
+                }
+
+                if (nationalHolidays.includes(dateValue)) {
+                    alert("❌ You cannot apply leave on a National Holiday.");
+                    input.value = "";
+                    updateTotalDays();
+                    return;
+                }
+            }
+
+            // ======= TOTAL DAYS CALCULATION =========
+            function updateTotalDays() {
+                if (!startInput || !endInput || !totalBox || !totalInput) return;
+
+                const startVal = startInput.value;
+                const endVal = endInput.value;
+
+                if (startVal && endVal) {
+                    const start = new Date(startVal);
+                    const end = new Date(endVal);
+
+                    if (end < start) {
+                        alert("❌ End date cannot be before Start date.");
+                        endInput.value = "";
+                        totalBox.textContent = "0";
+                        totalInput.value = 0;
+                        return;
+                    }
+
+                    let totalDays = 0;
+
+                    // Loop through all days from start to end
+                    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                        const dateStr = d.toISOString().split('T')[0];
+                        const day = d.getDay();
+
+                        // skip Sundays and national holidays
+                        if (day !== 0 && !nationalHolidays.includes(dateStr)) {
+                            totalDays++;
+                        }
+                    }
+
+                    totalBox.textContent = totalDays;
+                    totalInput.value = totalDays;
+                } else {
+                    totalBox.textContent = "0";
+                    totalInput.value = 0;
+                }
+            }
+
+            // Attach validation & counting on input changes
+            if (startInput)
+                startInput.addEventListener("change", function () {
+                    validateLeaveDate(startInput);
+                    updateTotalDays();
+                });
+
+            if (endInput)
+                endInput.addEventListener("change", function () {
+                    validateLeaveDate(endInput);
+                    updateTotalDays();
+                });
+
+            // Trigger count once on page load (for already selected values)
+            updateTotalDays();
+        });
+    </script>
+}
 
 <!-- ============ JAVASCRIPT ============ -->
-@section Scripts {
+@* @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
@@ -454,4 +526,4 @@
 
     </script>
 }
-
+ *@

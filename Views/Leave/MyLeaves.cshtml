@@ -22,8 +22,8 @@
         {
             <tr>
                 <td>@l.Category</td>
-                <td>@l.StartDate.ToShortDateString()</td>
-                <td>@l.EndDate?.ToShortDateString()</td>
+                <td>@(l.StartDate.ToString("dd-MM-yyyy") ?? "N/A")</td>
+                <td>@(l.EndDate?.ToString("dd-MM-yyyy") ?? "N/A")</td>
                 <td>@l.TotalDays</td>
                 <td>@l.OverallStatus</td>
             </tr>
@@ -31,41 +31,3 @@
     </tbody>
 </table>
 
-@* @model IEnumerable<Leave>
-@{
-    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
-}
-
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>My Leaves</h3>
-
-    <a asp-controller="Leave" asp-action="Create" class="btn btn-primary">
-        + Add Leave
-    </a>
-</div>
-
-<table class="table table-striped table-bordered">
-    <thead>
-        <tr>
-            <th>Category</th>
-            <th>Start</th>
-            <th>End</th>
-            <th>Total Days</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Category</td>
-                <td>@item.StartDate.ToShortDateString()</td>
-                <td>@item.EndDate?.ToShortDateString()</td>
-                <td>@item.TotalDays</td>
-                <td>@item.OverallStatus</td>
-            </tr>
-        }
-    </tbody>
-</table>
- *@

@@ -532,7 +532,7 @@ namespace HRMS.Controllers
             // UPDATE STATUS
             switch (NextApproverRole)
             {
-                case "Manager":
+                case "GM":
                     leave.ManagerStatus = approve ? "Approved" : "Rejected";
                     leave.ManagerRemark = remark;
                     break;

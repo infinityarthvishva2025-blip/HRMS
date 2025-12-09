@@ -201,7 +201,7 @@ namespace HRMS.Services
             // ============================================================
             // LOAD PAYROLL ROW USING NUMERIC MONTH + YEAR  🔥 FIXED HERE
             // ============================================================
-            var payroll = _context.Payroll
+            var payroll = _context.Payrolls
                 .FirstOrDefault(p => p.emp_code == empCode &&
                                      p.month == month &&   // <-- FIXED (removed ToUpper)
                                      p.Year == year);      // <-- added year filter
