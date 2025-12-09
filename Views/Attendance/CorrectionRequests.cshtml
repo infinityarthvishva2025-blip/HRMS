@@ -7,10 +7,15 @@
 
 <div class="container py-4">
 
-    <h2 class="fw-bold mb-4">
-        <i class="fa-solid fa-pen-to-square me-2 text-primary"></i>
-        Attendance Correction Requests
-    </h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold m-0">
+            <i class="fa-solid fa-pen-to-square me-2 text-primary"></i>
+            Attendance Correction Requests
+        </h2>
+
+ 
+
+    </div>
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
@@ -41,17 +46,9 @@
                         foreach (var a in Model.OrderByDescending(x => x.Date))
                         {
                             <tr>
-                                <!-- Employee Code -->
-                                <td class="fw-semibold">
-                                    @a.Emp_Code
-                                </td>
+                                <td class="fw-semibold">@a.Emp_Code</td>
+                                <td>@a.Date.ToString("dd-MMM-yyyy")</td>
 
-                                <!-- Attendance Date -->
-                                <td>
-                                    @a.Date.ToString("dd-MMM-yyyy")
-                                </td>
-
-                                <!-- Correction Reason -->
                                 <td>
                                     @if (!string.IsNullOrWhiteSpace(a.CorrectionRemark))
                                     {
@@ -63,7 +60,6 @@
                                     }
                                 </td>
 
-                                <!-- Correction Status -->
                                 <td>
                                     @switch (a.CorrectionStatus)
                                     {
@@ -85,7 +81,6 @@
                                     }
                                 </td>
 
-                                <!-- Action Button -->
                                 <td>
                                     <a href="/Attendance/ResolveCorrection?empCode=@a.Emp_Code&date=@a.Date.ToString("yyyy-MM-dd")"
                                        class="btn btn-primary btn-sm">

@@ -254,18 +254,55 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="Department"></label>
-                    <select asp-for="Department" id="Department" class="form-select" required>
-                        <option value="">-- Select --</option>
-                    </select>
+                    <label asp-for="Department">Department</label>
+
+                    <div class="input-group">
+                        <select asp-for="Department" id="Department" class="form-select">
+                            <option value="">-- Select --</option>
+                        </select>
+
+                        <!-- PLUS BUTTON -->
+                        <button type="button" class="btn btn-outline-primary" id="AddDeptBtn">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <!-- MANUAL TEXTBOX (HIDDEN BY DEFAULT) -->
+                    <input type="text"
+                           name="NewDepartment"
+                           id="NewDepartment"
+                           class="form-control mt-2 d-none"
+                           placeholder="Enter new department" />
+
+                    <span asp-validation-for="Department" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="Position"></label>
-                    <select asp-for="Position" id="Position" class="form-select" required>
-                        <option value="">-- Select Position --</option>
-                    </select>
+                    <label asp-for="Position">Position</label>
+
+                    <div class="input-group">
+                        <select asp-for="Position" id="Position" class="form-select">
+                            <option value="">-- Select Position --</option>
+                        </select>
+
+                        <!-- PLUS BUTTON -->
+                        <button type="button" class="btn btn-outline-primary" id="AddPosBtn">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <!-- MANUAL TEXTBOX (HIDDEN BY DEFAULT) -->
+                    <input type="text"
+                           name="NewPosition"
+                           id="NewPosition"
+                           class="form-control mt-2 d-none"
+                           placeholder="Enter new position" />
+
+                    <span asp-validation-for="Position" class="text-danger"></span>
                 </div>
+
+
+
 
                 <div class="col-md-4">
                     <label asp-for="ReportingManager"></label>
@@ -280,7 +317,8 @@
                         <option>Employee</option>
                         <option>HR</option>
                         <option>Manager</option>
-                        <option>Vice President</option>
+                        <option>GM</option>
+                        <option>VP</option>
                         <option>Director</option>
                     </select>
                 </div>
@@ -514,7 +552,6 @@
     </script>
 
     <script>
-
         // Experience Toggle
         document.getElementById("ExperienceType").addEventListener("change", function () {
             document.getElementById("experience-section")
@@ -527,7 +564,7 @@
                 .classList.toggle("d-none", this.value !== "Yes");
         });
 
-        // Preview Image Function
+        // Preview Image
         function previewFile(input, previewId) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -570,7 +607,7 @@
             }
         });
 
-        // Password Toggle
+        // Toggle password
         function togglePassword(fieldId, btn) {
             const input = document.getElementById(fieldId);
             const icon = btn.querySelector("i");
@@ -578,14 +615,13 @@
             if (input.type === "password") {
                 input.type = "text";
                 icon.classList.replace("fa-eye", "fa-eye-slash");
-            }
-            else {
+            } else {
                 input.type = "password";
                 icon.classList.replace("fa-eye-slash", "fa-eye");
             }
         }
 
-        // Address Autofill
+        // Address Auto Fill
         const sameBox = document.getElementById("SameAddressCheckbox");
         const currentAddr = document.getElementById("CurrentAddress");
         const permAddr = document.getElementById("PermanentAddress");
@@ -606,13 +642,69 @@
                 permAddr.value = currentAddr.value;
         });
 
-                document.addEventListener("input", function (e) {
+        // PAN, IFSC, Email uppercase
+        document.addEventListener("input", function (e) {
             if (e.target.id === "PanNumber" || e.target.id === "IFSC" || e.target.id === "Email") {
                 e.target.value = e.target.value.toUpperCase();
             }
         });
+    </script>
+
+    <script>
+        // PLUS BUTTON: MANUAL DEPARTMENT/POSITION
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const deptSelect = document.getElementById("Department");
+            const newDeptBox = document.getElementById("NewDepartment");
+            const addDeptBtn = document.getElementById("AddDeptBtn");
+
+            const posSelect = document.getElementById("Position");
+            const newPosBox = document.getElementById("NewPosition");
+            const addPosBtn = document.getElementById("AddPosBtn");
 
 
+            // Toggle NEW Department field
+            addDeptBtn.addEventListener("click", function () {
+                newDeptBox.classList.toggle("d-none");
+                if (!newDeptBox.classList.contains("d-none")) {
+                    newDeptBox.focus();
+                    deptSelect.value = "";
+                }
+            });
+
+            newDeptBox.addEventListener("input", function () {
+                if (this.value.trim() !== "") deptSelect.value = "";
+            });
+
+            deptSelect.addEventListener("change", function () {
+                if (this.value !== "") {
+                    newDeptBox.value = "";
+                    newDeptBox.classList.add("d-none");
+                }
+            });
+
+
+            // Toggle NEW Position field
+            addPosBtn.addEventListener("click", function () {
+                newPosBox.classList.toggle("d-none");
+                if (!newPosBox.classList.contains("d-none")) {
+                    newPosBox.focus();
+                    posSelect.value = "";
+                }
+            });
+
+            newPosBox.addEventListener("input", function () {
+                if (this.value.trim() !== "") posSelect.value = "";
+            });
+
+            posSelect.addEventListener("change", function () {
+                if (this.value !== "") {
+                    newPosBox.value = "";
+                    newPosBox.classList.add("d-none");
+                }
+            });
+
+        });
     </script>
 
 }

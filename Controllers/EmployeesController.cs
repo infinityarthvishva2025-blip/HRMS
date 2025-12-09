@@ -66,15 +66,23 @@ namespace HRMS.Controllers
         // ================================
         // CREATE (GET)
         // ================================
+        // ================================
+        // CREATE (GET)
+        // ================================
         public IActionResult Create()
         {
             return View(new Employee { EmployeeCode = GenerateNextEmployeeCode() });
         }
 
+        // ================================
+        // CREATE (POST)
+        // ================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
             Employee model,
+            string? NewDepartment,
+            string? NewPosition,
             IFormFile? ProfilePhoto,
             IFormFile? AadhaarFile,
             IFormFile? PanFile,
@@ -102,6 +110,15 @@ namespace HRMS.Controllers
                     ModelState.Remove(key);
                 }
             }
+
+            // ==========================================
+            // APPLY MANUAL DEPARTMENT / POSITION
+            // ==========================================
+            if (!string.IsNullOrWhiteSpace(NewDepartment))
+                model.Department = NewDepartment.Trim();
+
+            if (!string.IsNullOrWhiteSpace(NewPosition))
+                model.Position = NewPosition.Trim();
 
             // ==========================================
             // REQUIRED FIELD VALIDATOR FUNCTION

@@ -109,25 +109,66 @@
 
                     <!-- STATUS COLUMN -->
                     <td>
-                        @if (a.InTime.HasValue && a.OutTime.HasValue)
+
+                        @* 1️⃣ LEAVE *@
+                        @if (a.Status == "L")
                         {
-                            <span class="badge bg-success">Present</span>
+                            <span class="badge bg-info">Leave</span>
                         }
-                        else if (a.InTime.HasValue && !a.OutTime.HasValue)
+
+                        @* 2️⃣ SUNDAY = WO (Weekly Off) *@
+                        else if (a.Date.DayOfWeek == DayOfWeek.Sunday)
+                        {
+                            <span class="badge bg-secondary">WO</span>
+                        }
+
+                        @* 3️⃣ SATURDAY = WOP (Week Off Present) *@
+                        else if (a.Date.DayOfWeek == DayOfWeek.Saturday)
+                        {
+                            <span class="badge bg-primary">WOP</span>
+                        }
+
+                        @* 4️⃣ AUTO CHECKOUT *@
+                        else if (a.InTime.HasValue && !a.OutTime.HasValue &&
+                        (a.Status == "Auto" || a.Status == "AOC"))
                         {
                             <span class="badge bg-warning text-dark">Auto Checkout</span>
                         }
-                        else
+
+                        @* 5️⃣ CHECK-IN AVAILABLE BUT NO CHECK-OUT *@
+                        else if (a.InTime.HasValue && !a.OutTime.HasValue)
+                        {
+                            <span class="badge bg-warning text-dark">Not Checked Out</span>
+                        }
+
+                        @* 6️⃣ PRESENT *@
+                        else if (a.Status == "P")
+                        {
+                            <span class="badge bg-success">Present</span>
+                        }
+
+                        @* 7️⃣ ABSENT *@
+                        else if (!a.InTime.HasValue && !a.OutTime.HasValue)
                         {
                             <span class="badge bg-danger">Absent</span>
                         }
+
+                        @* 8️⃣ DEFAULT PRESENT *@
+                        else
+                        {
+                            <span class="badge bg-success">Present</span>
+                        }
+
                     </td>
+
+
+
                 <td>
                     @if (!a.CorrectionRequested)
                     {
                         <a asp-controller="Attendance"
                            asp-action="RequestCorrection"
-                           asp-route-empCode="@a.Emp_Code"
+                           asp-route-empCode="@a.EmpCode"
                            asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
                            asp-route-employeeId="@Model.Employee.Id"
                            class="btn btn-warning btn-sm">
