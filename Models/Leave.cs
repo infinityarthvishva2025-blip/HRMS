@@ -69,6 +69,10 @@ namespace HRMS.Models
        // public string Role { get; set; } = string.Empty;
 
         public int? ReportingManagerId { get; set; } // FIXED
+       // public string LeaveType { get; set; } // "Sick", "Casual", "coff" (Comp-Off)
+        public bool IsCompOff { get; set; } = false;
+        public DateTime? CompOffEarnedDate { get; set; } // date employee worked on holiday
+
     }
 
 }

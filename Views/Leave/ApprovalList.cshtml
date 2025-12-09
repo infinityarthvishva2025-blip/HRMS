@@ -76,21 +76,79 @@
     <tbody>
         @foreach (var l in Model)
         {
+                var empCode = l.Employee?.EmployeeCode ?? "-";
+                var empName = l.Employee?.Name ?? "-";
             <tr>
-                <td>@l.Employee?.Name</td>
+                    <td>@($"{empCode} - {empName}")</td>
                 <td>@l.Category</td>
-                <td>@l.StartDate.ToShortDateString()</td>
-                <td>@l.EndDate?.ToShortDateString()</td>
+                    <td>@(l.StartDate.ToString("dd-MM-yyyy") ?? "N/A")</td>
+                    <td>@(l.EndDate?.ToString("dd-MM-yyyy") ?? "N/A")</td>
                 <td>@l.TotalDays</td>
                 <td>@l.Reason</td>
 
-                <td>
+                @* <td>
                     
                     HR: @l.HrStatus <br />
                     M: @l.ManagerStatus <br />
                     VP: @l.VpStatus <br />
                     Dir: @l.DirectorStatus
-                </td>
+                </td> *@
+                    <td>
+                        @{
+                            var empRole = l.Employee?.Role ?? "Employee";
+                        }
+
+                        @if (empRole == "Employee")
+                        {
+                            <div>
+                                HR: @(l.HrStatus ?? "Pending") <br />
+                                GM: @(l.ManagerStatus ?? "Pending") <br />
+                                VP: @(l.VpStatus ?? "Pending")
+                            </div>
+                        }
+                        else if (empRole == "HR")
+                        {
+                            <div>
+                                GM: @(l.ManagerStatus ?? "Pending") <br />
+                                VP: @(l.VpStatus ?? "Pending") <br />
+                                Dir: @(l.DirectorStatus ?? "Pending")
+                            </div>
+                        }
+                        else if (empRole == "GM")
+                        {
+                            <div>
+                                
+                                VP: @(l.VpStatus ?? "Pending") <br />
+                                Dir: @(l.DirectorStatus ?? "Pending")
+                            </div>
+                        }
+                        else if (empRole == "VP")
+                        {
+                              <div>
+                                Dir: @(l.DirectorStatus ?? "Pending")
+                                </div> 
+                        }
+                       @*  else if (empRole == "HR" || empRole == "Manager" || empRole == "VP")
+                        {
+                            <div>
+                                HR: @(l.HrStatus ?? "Pending") <br />
+                                GM: @(l.ManagerStatus ?? "Pending") <br />
+                                VP: @(l.VpStatus ?? "Pending") <br />
+                                Dir: @(l.DirectorStatus ?? "Pending")
+                            </div>
+                        } *@
+                        else
+                        {
+                            <!-- Default fallback: show all -->
+                            <div>
+                                HR: @(l.HrStatus ?? "Pending") <br />
+                                GM: @(l.ManagerStatus ?? "Pending") <br />
+                                VP: @(l.VpStatus ?? "Pending") <br />
+                                Dir: @(l.DirectorStatus ?? "Pending")
+                            </div>
+                        }
+                    </td>
+
 
                 <td>
                     <input class="form-control" id="remark-@l.Id" />

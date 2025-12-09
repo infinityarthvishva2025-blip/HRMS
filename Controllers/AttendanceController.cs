@@ -16,11 +16,14 @@ namespace HRMS.Controllers
     public class AttendanceController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<AttendanceController> _logger;
 
-        public AttendanceController(ApplicationDbContext context)
+        public AttendanceController(ApplicationDbContext context, ILogger<AttendanceController> logger)
         {
             _context = context;
+            _logger = logger;
         }
+
 
         // =========================================================
         // EMPLOYEE PANEL
@@ -53,7 +56,7 @@ namespace HRMS.Controllers
                 Emp_Code = empCode,
                 Date = DateTime.Now.Date,
                 InTime = DateTime.Now.TimeOfDay,
-                Status = "Present"
+                Status = "P"
             };
 
             _context.Attendances.Add(att);
@@ -149,7 +152,7 @@ namespace HRMS.Controllers
         // EMPLOYEE SUMMARY PAGE
         // =========================================================
         [HttpGet]
-       public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
+        public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
 
 
         {
@@ -348,24 +351,7 @@ namespace HRMS.Controllers
         // =========================================================
         // CALENDAR VIEW
         // =========================================================
-        public IActionResult CalendarView()
-        {
-            var data = _context.AttendanceRecords
-                .Select(a => new
-                {
-                    title = a.Emp_Code + " - " +
-                        (!a.InTime.HasValue ? "Absent" :
-                        (a.OutTime.HasValue ? "Present" : "Not Checked Out")),
-                    start = a.Date.ToString("yyyy-MM-dd"),
-                    color = !a.InTime.HasValue ? "#dc3545" :
-                            (a.OutTime.HasValue ? "#28a745" : "#ffc107")
-                })
-                .ToList();
 
-            ViewBag.AttendanceJson = JsonConvert.SerializeObject(data);
-
-            return View();
-        }
 
 
         public IActionResult RequestCorrection(string empCode, string date, int employeeId)
@@ -501,7 +487,235 @@ namespace HRMS.Controllers
             return View(pending);
         }
 
+        
+
+        public async Task<IActionResult> CalendarView(int? year, int? month, string department = "all", int itemsPerPage = 50)
+        {
+            try
+            {
+                var currentDate = DateTime.Now;
+                var selectedYear = year ?? currentDate.Year;
+                var selectedMonth = month ?? currentDate.Month;
+
+                // Get employees
+                var allEmployees = _context.Attendances.AsQueryable();  //await GetEmployeesFromDatabase(department);
+
+                if (allEmployees == null || !allEmployees.Any())
+                {
+                    _logger.LogWarning($"No employees found for department: {department}");
+                    ViewBag.Message = "No employee data found.";
+                }
+
+                // Rest of your code...
+
+                //return View(viewModel);
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading calendar view");
+                ViewBag.Error = "Error loading calendar data. Please try again.";
+                return View(new CalendarViewModel()); // Return empty model
+            }
+        }
+        private async Task<List<Attendance>> GetAttendanceFromDatabase(int year, int month)
+        {
+            try
+            {
+                var firstDay = new DateTime(year, month, 1);
+                var lastDay = firstDay.AddMonths(1).AddDays(-1);
+
+                var attendance = await _context.Attendances // If table name is different
+                    .Where(a => a.Date >= firstDay && a.Date <= lastDay) // If column is AttendanceDate
+                    .Select(a => new Attendance
+                    {
+                        Id = a.Id, // If primary key is different
+                        Emp_Code = a.Emp_Code , // Match with your column
+                        Date = a.Date,
+                        Status = a.Status, // If column is AttendanceStatus
+                                                     // Add other properties
+                        InTime = a.InTime,
+                        OutTime = a.OutTime,
+                        Total_Hours = a.Total_Hours
+                    })
+                    .ToListAsync();
+
+                return attendance;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting attendance data");
+                return new List<Attendance>();
+            }
+        }
 
 
+
+
+        // -------------------------------------------------------------
+        // HIGH DENSITY CALENDAR
+        // -------------------------------------------------------------
+        public IActionResult HighDensityCalendar(
+ int year = 0,
+ int month = 0,
+ string? search = null,
+ string? department = "All",
+ int page = 1,
+ int pageSize = 20)
+        {
+            if (year == 0) year = DateTime.Now.Year;
+            if (month == 0) month = DateTime.Now.Month;
+            if (page < 1) page = 1;
+
+            // ---------------- EMPLOYEE FILTER ----------------
+            var empQuery = _context.Employees.AsQueryable();
+
+            // ✅ Search by name or code
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim();
+                empQuery = empQuery.Where(e =>
+                    e.EmployeeCode.Contains(search) ||
+                    e.Name.Contains(search));
+            }
+
+            // ✅ Department filter
+            if (!string.IsNullOrWhiteSpace(department) && department != "All")
+            {
+                empQuery = empQuery.Where(e => e.Department == department);
+            }
+
+            // ✅ NEW — Hide employees who haven’t joined yet
+            empQuery = empQuery.Where(e =>
+                !e.JoiningDate.HasValue ||
+                (e.JoiningDate.Value.Year < year ||
+                 (e.JoiningDate.Value.Year == year && e.JoiningDate.Value.Month <= month)));
+
+            int totalEmployees = empQuery.Count();
+            int totalPages = (int)Math.Ceiling(totalEmployees / (double)pageSize);
+            if (totalPages > 0 && page > totalPages) page = totalPages;
+
+            var employeesPage = empQuery
+                .OrderBy(e => e.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // ---------------- ATTENDANCE DATA ----------------
+            var empCodes = employeesPage.Select(e => e.EmployeeCode).ToList();
+
+            var attendance = _context.Attendances
+                .Where(a => a.Date.Year == year &&
+                            a.Date.Month == month &&
+                            empCodes.Contains(a.Emp_Code))
+                .ToList();
+
+            // ---------------- DEPARTMENT LIST ----------------
+            var departments = _context.Employees
+                .Where(e => !string.IsNullOrEmpty(e.Department))
+                .Select(e => e.Department)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToList();
+
+            // ---------------- VIEWMODEL ----------------
+            var vm = new HighDensityCalendarVM
+            {
+                Year = year,
+                Month = month,
+                Search = search,
+                Department = department,
+                Departments = departments,
+                Page = page,
+                PageSize = pageSize,
+                TotalPages = totalPages,
+                TotalEmployees = totalEmployees,
+                Employees = employeesPage,
+                Attendance = attendance
+            };
+
+            return View(vm);
+        }
+
+
+        // -------------------------------------------------------------
+        // EXPORT CALENDAR TO EXCEL
+        // -------------------------------------------------------------
+        [HttpGet]
+            public IActionResult ExportCalendar(
+                int year,
+                int month,
+                string? search,
+                string? department = "All")
+            {
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+                var empQuery = _context.Employees.AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    search = search.Trim();
+                    empQuery = empQuery.Where(e =>
+                        e.EmployeeCode.Contains(search) ||
+                        e.Name.Contains(search));
+                }
+
+                if (!string.IsNullOrWhiteSpace(department) && department != "All")
+                {
+                    empQuery = empQuery.Where(e => e.Department == department);
+                }
+
+                var employees = empQuery.OrderBy(e => e.Name).ToList();
+                var empCodes = employees.Select(e => e.EmployeeCode).ToList();
+
+                var attendance = _context.Attendances
+                    .Where(a => a.Date.Year == year &&
+                                a.Date.Month == month &&
+                                empCodes.Contains(a.Emp_Code))
+                    .OrderBy(a => a.Date)
+                    .ToList();
+
+                using var pkg = new ExcelPackage();
+                var ws = pkg.Workbook.Worksheets.Add("Calendar");
+
+                // header row
+                ws.Cells[1, 1].Value = "Employee Code";
+                ws.Cells[1, 2].Value = "Employee Name";
+                ws.Cells[1, 3].Value = "Date";
+                ws.Cells[1, 4].Value = "Status";
+                ws.Cells[1, 5].Value = "In Time";
+                ws.Cells[1, 6].Value = "Out Time";
+                ws.Cells[1, 7].Value = "Total Hours";
+
+                int row = 2;
+                foreach (var emp in employees)
+                {
+                    var empAtt = attendance
+                        .Where(a => a.Emp_Code == emp.EmployeeCode)
+                        .OrderBy(a => a.Date);
+
+                    foreach (var a in empAtt)
+                    {
+                        ws.Cells[row, 1].Value = emp.EmployeeCode;
+                        ws.Cells[row, 2].Value = emp.Name;
+                        ws.Cells[row, 3].Value = a.Date.ToString("yyyy-MM-dd");
+                        ws.Cells[row, 4].Value = a.Status;
+                        ws.Cells[row, 5].Value = a.InTime?.ToString(@"hh\:mm");
+                        ws.Cells[row, 6].Value = a.OutTime?.ToString(@"hh\:mm");
+                        ws.Cells[row, 7].Value = a.Total_Hours;
+                        row++;
+                    }
+                }
+
+                ws.Cells.AutoFitColumns();
+
+                var fileName = $"Calendar_{year}_{month}.xlsx";
+                return File(pkg.GetAsByteArray(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    fileName);
+            }
+        }
     }
-}
+
+
+

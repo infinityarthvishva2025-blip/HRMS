@@ -1,0 +1,286 @@
+﻿@model HRMS.Models.ViewModels.HighDensityCalendarVM
+@using Newtonsoft.Json
+
+@{
+     ViewData["Title"] = "Attendance Records";
+    Layout = "~/Views/Shared/_HrLayout.cshtml";
+   
+    var monthName = System.Globalization.CultureInfo.CurrentCulture
+        .DateTimeFormat.GetMonthName(Model.Month);
+
+    var employeeJson = JsonConvert.SerializeObject(Model.Employees);
+    var attendanceJson = JsonConvert.SerializeObject(Model.Attendance);
+}
+
+<style>
+    body { font-family: 'Segoe UI', sans-serif; margin:0; background:#f8f9fa; }
+
+    .header {
+        background:#2c3e50; color:white; padding:15px 25px;
+        display:flex; justify-content:space-between; align-items:center;
+    }
+
+    .controls { background:#f1f3f4; padding:15px 25px; display:flex; flex-wrap:wrap; gap:10px; }
+
+    select, input, button {
+        padding:6px 10px; border:1px solid #ccc; border-radius:4px; font-size:14px;
+    }
+    .calendar-cell:nth-child(7n+1) {
+    background-color: #f9fafb; /* slightly lighter for Sundays */
+}
+    button { background:#2c3e50; color:white; border:none; cursor:pointer; }
+    button:hover { background:#1a252f; }
+
+    .calendar-container { overflow-x:auto; padding:20px; background:white; }
+    .calendar-grid { display:grid; border:1px solid #dee2e6; min-width:1800px; }
+
+    .calendar-header { background:#495057; color:white; font-weight:600; text-align:center; }
+    .calendar-cell { border:1px solid #dee2e6; text-align:center; padding:6px; min-height:30px; }
+    .employee-cell { text-align:left; background:#f8f9fa; font-weight:600; position:sticky; left:0; z-index:5; }
+
+    .status-icon { width:24px; height:24px; border-radius:4px; display:flex; align-items:center; justify-content:center; color:white; margin:auto; font-weight:600; }
+
+    .legend { display:flex; gap:15px; padding:10px 20px; background:#f8f9fa; border-top:1px solid #dee2e6; }
+
+    .legend-item { display:flex; align-items:center; gap:5px; font-size:14px; }
+
+    .tooltip {
+        position: absolute; background:rgba(0,0,0,0.8); color:white;
+        padding:6px 10px; border-radius:4px; font-size:12px;
+        pointer-events:none; opacity:0; transition:opacity 0.2s;
+        z-index:100;
+    }
+
+    @@media print {
+        .controls, .legend { display:none; }
+        body { background:white; }
+    }
+</style>
+
+<div class="header">
+    <h2>Employee Attendance Calendar</h2>
+    <div>@monthName @Model.Year</div>
+</div>
+
+<div class="controls">
+    <form method="get" asp-action="HighDensityCalendar">
+        <label>Month:</label>
+        <select name="month">
+            @for (int m = 1; m <= 12; m++)
+            {
+                <option value="@m" selected="@(m == Model.Month)">
+                    @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)
+                </option>
+            }
+        </select>
+
+        <label>Year:</label>
+        <select name="year">
+            @for (int y = DateTime.Now.Year - 4; y <= DateTime.Now.Year + 1; y++)
+            {
+                <option value="@y" selected="@(y == Model.Year)">@y</option>
+            }
+        </select>
+
+        <label>Search:</label>
+        <input type="text" name="search" value="@Model.Search" placeholder="Name or code" />
+
+        <label>Department:</label>
+        <select name="department">
+            <option value="All" selected="@(Model.Department == "All")">All</option>
+            @foreach (var d in Model.Departments)
+            {
+                <option value="@d" selected="@(d == Model.Department)">@d</option>
+            }
+        </select>
+
+        <label>Page size:</label>
+        <select name="pageSize">
+            @foreach (var s in new[] { 10, 20, 50, 100 })
+            {
+                <option value="@s" selected="@(s == Model.PageSize)">@s</option>
+            }
+        </select>
+
+        <button type="submit">Apply</button>
+        <button type="button">
+        <a class="" style="margin-left:10px;" type="button"
+           href="@Url.Action("ExportCalendar", new {
+                year = Model.Year,
+                month = Model.Month,
+                search = Model.Search,
+                department = Model.Department
+           })">Export Excel</a>
+           </button>
+        <button type="button" onclick="window.print();">Print</button>
+    </form>
+</div>
+
+<div class="calendar-container">
+    <div id="calendarGrid" class="calendar-grid"></div>
+</div>
+
+<div class="legend">
+    <div class="legend-item"><div class="status-icon" style="background:#27ae60">P</div>Present</div>
+    <div class="legend-item"><div class="status-icon" style="background:#dc3545">A</div>Absent</div>
+    <div class="legend-item"><div class="status-icon" style="background:#f39c12">L</div>Leave</div>
+    <div class="legend-item"><div class="status-icon" style="background:#6c757d">WO</div>Weekly Off</div>
+    <div class="legend-item"><div class="status-icon" style="background:#ffc107">NC</div>Not Checked Out</div>
+    <div class="legend-item"><div class="status-icon" style="background:#95a5a6">-</div>No Data</div>
+</div>
+
+<div id="tooltip" class="tooltip"></div>
+
+<script>
+    const employees = @Html.Raw(employeeJson);
+    const attendances = @Html.Raw(attendanceJson);
+    const year = @Model.Year;
+    const month = @Model.Month;
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    const statusColors = {
+        "P": "#27ae60",
+        "A": "#e74c3c",
+        "L": "#f39c12",
+        "WO": "#6c757d",
+        "NC": "#ffc107",
+        "-": "#95a5a6"
+    };
+    function buildCalendar() {
+    const grid = document.getElementById("calendarGrid");
+    grid.innerHTML = "";
+
+    // header
+    grid.style.gridTemplateColumns = `200px repeat(${daysInMonth}, 1fr)`;
+    grid.innerHTML += `<div class='calendar-cell calendar-header employee-cell'>Employee</div>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+        grid.innerHTML += `<div class='calendar-cell calendar-header'>${d}</div>`;
+    }
+
+    // rows
+    employees.forEach(emp => {
+        grid.innerHTML += `
+            <div class='calendar-cell employee-cell'>
+                <b>${emp.Name}</b><br>
+                <small>${emp.EmployeeCode}</small><br>
+                <small>${emp.Department || ""}</small>
+            </div>`;
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const jsDate = new Date(`${year}-${month}-${d}`);
+            const dayOfWeek = jsDate.getDay(); // 0 = Sunday, 6 = Saturday
+
+            const att = attendances.find(a =>
+                a.Emp_Code === emp.EmployeeCode &&
+                a.Date && a.Date.startsWith(dateStr)
+            );
+
+            let status = "-";
+            let inTime = "", outTime = "", hours = "";
+
+            if (att) {
+                status = att.Status || "-";
+                if (att.InTime && !att.OutTime) status = "NC";
+                inTime = att.InTime ? att.InTime.substring(0, 5) : "";
+                outTime = att.OutTime ? att.OutTime.substring(0, 5) : "";
+                hours = att.Total_Hours ?? "";
+            } 
+            else if (dayOfWeek === 0) { 
+                // SUNDAY weekly off
+                status = "WO";
+            }
+
+            const color = statusColors[status] || "#95a5a6";
+
+            grid.innerHTML += `
+                <div class='calendar-cell'>
+                    <div class='status-icon'
+                         style='background:${color}'
+                         data-emp='${emp.Name}'
+                         data-date='${dateStr}'
+                         data-status='${status}'
+                         data-in='${inTime}'
+                         data-out='${outTime}'
+                         data-hours='${hours}'>${status}</div>
+                </div>`;
+        }
+    });
+
+    attachTooltips();
+}
+
+    // function buildCalendar() {
+    //     const grid = document.getElementById("calendarGrid");
+    //     grid.innerHTML = "";
+
+    //     // header
+    //     grid.style.gridTemplateColumns = `200px repeat(${daysInMonth}, 1fr)`;
+    //     grid.innerHTML += `<div class='calendar-cell calendar-header employee-cell'>Employee</div>`;
+    //     for (let d = 1; d <= daysInMonth; d++) {
+    //         grid.innerHTML += `<div class='calendar-cell calendar-header'>${d}</div>`;
+    //     }
+
+    //     // rows
+    //     employees.forEach(emp => {
+    //         grid.innerHTML += `<div class='calendar-cell employee-cell'><b>${emp.Name}</b><br><small>${emp.EmployeeCode}</small><br><small>${emp.Department || ""}</small></div>`;
+
+    //         for (let d = 1; d <= daysInMonth; d++) {
+    //             const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    //             const att = attendances.find(a =>
+    //                 a.Emp_Code === emp.EmployeeCode &&
+    //                 a.Date && a.Date.startsWith(dateStr)
+    //             );
+
+    //             let status = "-";
+    //             let inTime = "", outTime = "", hours = "";
+
+    //             if (att) {
+    //                 status = att.Status || "-";
+    //                 if (att.InTime && !att.OutTime) status = "NC";
+    //                 inTime = att.InTime ? att.InTime.substring(0, 5) : "";
+    //                 outTime = att.OutTime ? att.OutTime.substring(0, 5) : "";
+    //                 hours = att.Total_Hours ?? "";
+    //             }
+
+    //             const color = statusColors[status] || "#95a5a6";
+
+    //             grid.innerHTML += `
+    //                 <div class='calendar-cell'>
+    //                     <div class='status-icon'
+    //                          style='background:${color}'
+    //                          data-emp='${emp.Name}'
+    //                          data-date='${dateStr}'
+    //                          data-status='${status}'
+    //                          data-in='${inTime}'
+    //                          data-out='${outTime}'
+    //                          data-hours='${hours}'>${status}</div>
+    //                 </div>`;
+    //         }
+    //     });
+
+    //     attachTooltips();
+    // }
+
+    function attachTooltips() {
+        const tooltip = document.getElementById("tooltip");
+        document.querySelectorAll(".status-icon").forEach(el => {
+            el.addEventListener("mouseenter", e => {
+                const emp = el.dataset.emp;
+                const date = el.dataset.date;
+                const status = el.dataset.status;
+                const i = el.dataset.in || "--";
+                const o = el.dataset.out || "--";
+                const h = el.dataset.hours || "--";
+                tooltip.innerHTML = `<b>${emp}</b><br>${date}<br>Status: ${status}<br>In: ${i} | Out: ${o}<br>Hours: ${h}`;
+                const rect = el.getBoundingClientRect();
+                tooltip.style.left = `${rect.left + rect.width / 2}px`;
+                tooltip.style.top = `${rect.top - 10}px`;
+                tooltip.style.opacity = 1;
+            });
+            el.addEventListener("mouseleave", () => tooltip.style.opacity = 0);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", buildCalendar);
+</script>

@@ -1,81 +1,807 @@
-﻿@{
+﻿@model HRMS.Models.ViewModels.HighDensityCalendarVM
+@using Newtonsoft.Json
+
+@{
+    var monthName = System.Globalization.CultureInfo.CurrentCulture
+                    .DateTimeFormat.GetMonthName(Model.Month);
+
+    var employeesJson = JsonConvert.SerializeObject(
+        Model.Employees.Select(e => new
+        {
+            e.Id,
+            e.Name,
+            e.EmployeeCode,
+            Department = e.Department
+        }));
+
+    var attendanceJson = JsonConvert.SerializeObject(
+        Model.Attendance.Select(a => new
+        {
+            EmpCode = a.Emp_Code,
+            Date = a.Date,          // serialized as ISO
+            Status = a.Status,
+            InTime = a.InTime,
+            OutTime = a.OutTime,
+            TotalHours = a.Total_Hours
+        }));
+}
+
+<style>
+    
+@@media print {
+    .controls, .legend { display:none !important; }
+    body { background:white; padding:0; }
+    .container { box-shadow:none; border-radius:0; }
+}
+
+    /* High-Density Grid Styles */
+    .container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin: 20px;
+    }
+
+    .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header h1 {
+        font-size: 24px;
+        font-weight: 600;
+    }
+
+    .month-year {
+        font-size: 18px;
+        opacity: 0.9;
+    }
+
+    .controls {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px 25px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e0e0e0;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .control-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .control-group label {
+        font-weight: 500;
+        color: #495057;
+        white-space: nowrap;
+    }
+
+    select, button {
+        padding: 8px 15px;
+        border-radius: 4px;
+        border: 1px solid #ced4da;
+        font-size: 14px;
+        background-color: white;
+        cursor: pointer;
+    }
+
+    select:focus, button:focus {
+        outline: none;
+        border-color: #2c3e50;
+        box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+    }
+
+    button {
+        background-color: #2c3e50;
+        color: white;
+        border: none;
+        font-weight: 500;
+    }
+
+    button:hover {
+        background-color: #1a252f;
+    }
+
+    .calendar-container {
+        padding: 0 25px 25px;
+        overflow-x: auto;
+    }
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: 200px repeat(@@daysInMonth.Count, 1fr);
+        min-width: 1800px;
+        border: 1px solid #dee2e6;
+    }
+
+    .calendar-header {
+        background-color: #2c3e50;
+        color: white;
+        font-weight: 600;
+        position: sticky;
+        left: 0;
+        z-index: 10;
+    }
+
+    .calendar-cell {
+        padding: 8px 4px;
+        border-right: 1px solid #dee2e6;
+        border-bottom: 1px solid #dee2e6;
+        text-align: center;
+        min-height: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .employee-cell {
+        text-align: left;
+        padding: 8px 12px;
+        background-color: #f8f9fa;
+        position: sticky;
+        left: 0;
+        z-index: 5;
+        font-weight: 500;
+        border-right: 2px solid #dee2e6;
+    }
+
+    .day-header {
+        font-weight: 600;
+        background-color: #495057;
+        color: white;
+        padding: 10px 4px;
+    }
+
+    .day-number {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .day-weekday {
+        font-size: 11px;
+        opacity: 0.8;
+    }
+
+    .status-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .status-icon:hover {
+        transform: scale(1.2);
+    }
+
+    .employee-row {
+        display: contents;
+    }
+
+    .legend {
+        padding: 15px 25px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .legend-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: white;
+    }
+
+    .legend-label {
+        font-size: 13px;
+        color: #495057;
+    }
+
+    .summary-panel {
+        padding: 15px 25px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #e0e0e0;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+    }
+
+    .summary-item {
+        background-color: white;
+        padding: 12px;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .summary-title {
+        font-size: 12px;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+
+    .summary-value {
+        font-size: 20px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .footer {
+        text-align: center;
+        padding: 15px;
+        color: #6c757d;
+        font-size: 13px;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .department-filter {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .department-tag {
+        padding: 4px 10px;
+        background-color: #e9ecef;
+        border-radius: 20px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .department-tag:hover, .department-tag.active {
+        background-color: #2c3e50;
+        color: white;
+    }
+
+    .weekend {
+        background-color: #f9fafb !important;
+    }
+
+    .today {
+        background-color: #e3f2fd !important;
+    }
+
+    .status-tooltip {
+        position: absolute;
+        background-color: #2c3e50;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 100;
+        pointer-events: none;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.2s;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    @@media (max-width: 1200px) {
+        .calendar-container {
+            padding: 0 15px 15px;
+        }
+
+        .controls {
+            padding: 15px;
+        }
+
+        .header {
+            padding: 15px;
+        }
+
+        .summary-panel {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<div class="controls">
+    <form method="get" asp-action="HighDensityCalendar" class="control-group" style="flex-wrap:wrap; gap:10px;">
+        <input type="hidden" name="year" value="@Model.Year" />
+        <input type="hidden" name="month" value="@Model.Month" />
+
+        <label>Search:</label>
+        <input type="text" name="search" value="@Model.Search" placeholder="Name or code" />
+
+        <label>Department:</label>
+        <select name="department">
+            <option value="All" selected="@(Model.Department == "All")">All</option>
+            @foreach (var d in Model.Departments)
+            {
+                <option value="@d" selected="@(d == Model.Department)">@d</option>
+            }
+        </select>
+
+        <label>Page size:</label>
+        <select name="pageSize">
+            @foreach (var size in new[] { 10, 20, 50, 100 })
+            {
+                <option value="@size" selected="@(size == Model.PageSize)">@size</option>
+            }
+        </select>
+
+        <button type="submit">Apply</button>
+
+        <a class="btn" style="margin-left:10px;"
+           href="@Url.Action("ExportCalendar", new {
+                year = Model.Year,
+                month = Model.Month,
+                search = Model.Search,
+                department = Model.Department
+           })">
+            Export Excel
+        </a>
+
+        <button type="button" class="btn" onclick="window.print();">
+            Print
+        </button>
+    </form>
+</div>
+@if (Model.TotalPages > 1)
+{
+    <div class="controls" style="justify-content:center;">
+        <div class="control-group">
+            @if (Model.Page > 1)
+            {
+                <a class="btn"
+                   href="@Url.Action("HighDensityCalendar", new {
+                        year = Model.Year,
+                        month = Model.Month,
+                        search = Model.Search,
+                        department = Model.Department,
+                        page = Model.Page - 1,
+                        pageSize = Model.PageSize
+                   })">Prev</a>
+            }
+
+            <span>Page @Model.Page of @Model.TotalPages</span>
+
+            @if (Model.Page < Model.TotalPages)
+            {
+                <a class="btn"
+                   href="@Url.Action("HighDensityCalendar", new {
+                        year = Model.Year,
+                        month = Model.Month,
+                        search = Model.Search,
+                        department = Model.Department,
+                        page = Model.Page + 1,
+                        pageSize = Model.PageSize
+                   })">Next</a>
+            }
+        </div>
+    </div>
+};
+
+
+<!-- Tooltip element -->
+<div class="status-tooltip" id="statusTooltip"></div>
+<script>
+    const employees = @Html.Raw(employeesJson);
+    const attendances = @Html.Raw(attendanceJson);
+    const year = @Model.Year;
+    const month = @Model.Month;
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    const statusColors = {
+        "P": "#27ae60",
+        "A": "#e74c3c",
+        "L": "#f39c12",
+        "WO": "#6c757d",
+        "NC": "#ffc107",
+        "-": "#95a5a6"
+    };
+
+    function buildCalendar() {
+        const grid = document.getElementById("calendarGrid");
+        grid.innerHTML = "";
+
+        // header row
+        grid.innerHTML += "<div class='calendar-cell calendar-header employee-cell'>Employee</div>";
+        for (let d = 1; d <= daysInMonth; d++) {
+            grid.innerHTML += `
+                <div class="calendar-cell calendar-header day-header">
+                    <div class="day-number">${d}</div>
+                </div>`;
+        }
+
+        employees.forEach(emp => {
+            grid.innerHTML += `
+                <div class="calendar-cell employee-cell">
+                    <div><b>${emp.name}</b></div>
+                    <div style="font-size:11px;color:#6c757d;">
+                        ${emp.employeeCode} • ${emp.department ?? ""}
+                    </div>
+                </div>`;
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+                const att = attendances.find(a =>
+                    a.empCode === emp.employeeCode &&
+                    a.date && a.date.startsWith(dateStr)
+                );
+
+                let status = "-";
+                let inTime = "";
+                let outTime = "";
+                let total = "";
+
+                if (att) {
+                    status = att.status || "-";
+                    inTime = att.inTime ? formatTime(att.inTime) : "";
+                    outTime = att.outTime ? formatTime(att.outTime) : "";
+                    total = att.totalHours ?? "";
+
+                    if (status === "P" && att.inTime && !att.outTime) status = "NC";
+                }
+
+                const color = statusColors[status] || "#95a5a6";
+
+                grid.innerHTML += `
+                    <div class="calendar-cell">
+                        <div class="status-icon"
+                             style="background-color:${color}"
+                             data-emp="${emp.name}"
+                             data-code="${emp.employeeCode}"
+                             data-date="${dateStr}"
+                             data-status="${status}"
+                             data-in="${inTime}"
+                             data-out="${outTime}"
+                             data-total="${total}">
+                            ${status}
+                        </div>
+                    </div>`;
+            }
+        });
+
+        attachTooltips();
+    }
+
+    function formatTime(ts) {
+        // ts is "hh:mm:ss" or "hh:mm"
+        return ts.substring(0,5);
+    }
+
+    function attachTooltips() {
+        const tooltip = document.getElementById("statusTooltip");
+        const icons = document.querySelectorAll(".status-icon");
+
+        icons.forEach(icon => {
+            icon.addEventListener("mouseenter", e => {
+                const emp = icon.dataset.emp;
+                const code = icon.dataset.code;
+                const date = icon.dataset.date;
+                const status = icon.dataset.status;
+                const i = icon.dataset.in || "--";
+                const o = icon.dataset.out || "--";
+                const t = icon.dataset.total || "--";
+
+                tooltip.innerHTML = `
+                    <strong>${emp} (${code})</strong><br>
+                    ${date} — Status: ${status}<br>
+                    In: ${i} | Out: ${o}<br>
+                    Hours: ${t}
+                `;
+
+                const rect = icon.getBoundingClientRect();
+                tooltip.style.left = (rect.left + rect.width / 2) + "px";
+                tooltip.style.top = (rect.top - 10) + "px";
+                tooltip.style.transform = "translate(-50%, -100%)";
+                tooltip.style.opacity = "1";
+            });
+
+            icon.addEventListener("mouseleave", () => {
+                tooltip.style.opacity = "0";
+            });
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", buildCalendar);
+</script>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Department filter click
+            $('.department-tag').click(function() {
+                var dept = $(this).data('dept');
+                $('#selectedDepartment').val(dept);
+                $('#calendarForm').submit();
+            });
+            
+            // Form submit via AJAX
+            $('#calendarForm').submit(function(e) {
+                e.preventDefault();
+                
+                var formData = $(this).serialize();
+                var year = $('#yearSelect').val();
+                var month = $('#monthSelect').val();
+                
+                formData += '&year=' + year + '&month=' + month;
+                
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    success: function(data) {
+                        // Reload the page with new data
+                        window.location.href = '@Url.Action("CalendarView", "Attendance")?year=' + year + '&month=' + month;
+                    },
+                    error: function() {
+                        alert('Error updating calendar. Please try again.');
+                    }
+                });
+            });
+            
+            // Add tooltip functionality
+            attachTooltipListeners();
+        });
+        
+        function attachTooltipListeners() {
+            const tooltip = $('#statusTooltip')[0];
+            const cells = $('.calendar-cell:not(.employee-cell):not(.calendar-header)');
+            
+            cells.each(function() {
+                const $cell = $(this);
+                const statusIcon = $cell.find('.status-icon')[0];
+                
+                if (statusIcon) {
+                    $cell.on('mouseenter', function(e) {
+                        const employee = $cell.data('employee');
+                        const day = $cell.data('day');
+                        const status = $cell.data('status');
+                        const empId = $cell.data('empid');
+                        
+                        if (employee && day && status) {
+                            tooltip.innerHTML = `
+                                <strong>${employee}</strong><br>
+                                ${empId ? `ID: ${empId}<br>` : ''}
+                                Day ${day}: ${status}
+                            `;
+                            
+                            // Position tooltip
+                            const rect = this.getBoundingClientRect();
+                            tooltip.style.left = (rect.left + rect.width/2 - tooltip.offsetWidth/2) + 'px';
+                            tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+                            tooltip.style.opacity = '1';
+                        }
+                    });
+                    
+                    $cell.on('mouseleave', function() {
+                        tooltip.style.opacity = '0';
+                    });
+                }
+            });
+        }
+    </script>
+}
+@* @model HRMS.Models.CalendarViewModel
+@{
     ViewData["Title"] = "Attendance Calendar";
     Layout = "~/Views/Shared/_HrLayout.cshtml";
 }
 
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
-
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary">
-            <i class="fa-solid fa-calendar-days me-2"></i> Attendance Calendar
-        </h2>
-        <a asp-action="Index" class="btn btn-outline-primary">
-            <i class="fa-solid fa-arrow-left me-1"></i> Back to List
-        </a>
-    </div>
-
-    <!-- Calendar container -->
-    <div id="calendar" class="shadow-sm border rounded p-3 bg-white"></div>
-
-    <!-- ✅ Paste this block just below the calendar -->
-    <div class="mt-3 small">
-        <b>Legend:</b>
-        <span class="badge bg-success">Present</span>
-        <span class="badge bg-warning text-dark">Not Checked Out</span>
-        <span class="badge bg-danger">Absent</span>
-    </div>
-</div>
-
-
-@section Scripts {
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                var calendarEl = document.getElementById('calendar');
-
-                // ✅ Safely parse your JSON data
-                var attendanceData = @Html.Raw(ViewBag.AttendanceJson ?? "[]");
-
-                // ✅ Initialize the calendar
-                var calendar = new FullCalendar.Calendar(calendarEl, {
-                    initialView: 'dayGridMonth',
-                    height: 'auto',
-                    themeSystem: 'bootstrap5',
-                    events: attendanceData,
-                    eventDisplay: 'block',
-                    eventTextColor: '#fff',
-                    headerToolbar: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'dayGridMonth,dayGridWeek,dayGridDay'
-                    }
-                });
-
-                calendar.render();
-            });
-        </script>
-}
-
 <style>
-    #calendar {
-        max-width: 100%;
-        font-family: 'Poppins', sans-serif;
+    .calendar-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
-    .fc .fc-toolbar-title {
-        font-weight: 600;
-        color: #2F3D88;
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #007bff;
     }
 
-    .fc-daygrid-event {
-        border-radius: 6px;
-        font-size: 0.85rem;
-        padding: 2px 4px;
+    .month-nav {
+        display: flex;
+        gap: 10px;
+        align-items: center;
     }
 
-    .fc-day-today {
-        background-color: #fff9e6 !important;
+    .nav-btn {
+        padding: 5px 15px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+        .nav-btn:hover {
+            background: #0056b3;
+        }
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1px;
+        background: #eee;
+        border: 1px solid #eee;
+    }
+
+    .day-header {
+        background: #007bff;
+        color: white;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .calendar-day {
+        background: white;
+        min-height: 120px;
+        padding: 5px;
+        border: 1px solid #eee;
+    }
+
+    .day-number {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+    }
+
+    .weekend {
+        background: #f9f9f9;
+    }
+
+    .today {
+        background: #e3f2fd;
+    }
+
+    .attendance-item {
+        font-size: 12px;
+        padding: 2px 5px;
+        margin: 2px 0;
+        border-radius: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .present {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .absent {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .leave {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .holiday {
+        background: #d1ecf1;
+        color: #0c5460;
     }
 </style>
-@* ////// Responsive page /////// *@
+
+<div class="calendar-container">
+    <div class="calendar-header">
+        <h2>@Model.MonthName Attendance Calendar</h2>
+        <div class="month-nav">
+            @{
+                var prevMonth = Model.Month - 1;
+                var prevYear = Model.Year;
+                if (prevMonth < 1)
+                {
+                    prevMonth = 12;
+                    prevYear--;
+                }
+
+                var nextMonth = Model.Month + 1;
+                var nextYear = Model.Year;
+                if (nextMonth > 12)
+                {
+                    nextMonth = 1;
+                    nextYear++;
+                }
+            }
+
+            <a href="@Url.Action("CalendarView", new { year = prevYear, month = prevMonth })"
+               class="nav-btn">&lt; Previous</a>
+
+            <a href="@Url.Action("CalendarView", new { year = DateTime.Now.Year, month = DateTime.Now.Month })"
+               class="nav-btn">Current Month</a>
+
+            <a href="@Url.Action("CalendarView", new { year = nextYear, month = nextMonth })"
+               class="nav-btn">Next &gt;</a>
+        </div>
+    </div>
+
+    <div class="calendar-grid">
+        <!-- Day headers -->
+        <div class="day-header">Sunday</div>
+        <div class="day-header">Monday</div>
+        <div class="day-header">Tuesday</div>
+        <div class="day-header">Wednesday</div>
+        <div class="day-header">Thursday</div>
+        <div class="day-header">Friday</div>
+        <div class="day-header">Saturday</div>
+
+        <!-- Empty cells for days before first day of month -->
+        @{
+            var firstDay = new DateTime(Model.Year, Model.Month, 1);
+            var startDay = (int)firstDay.DayOfWeek;
+
+            for (int i = 0; i < startDay; i++)
+            {
+                <div class="calendar-day"></div>
+            }
+        }
+
+        <!-- Days of the month -->
+        @foreach (var date in Model.Dates)
+        {
+            var isWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday;
+            var isToday = date.Date == DateTime.Today;
+            var dayClass = "calendar-day";
+
+            if (isWeekend) dayClass += " weekend";
+            if (isToday) dayClass += " today";
+
+            <div class="@dayClass">
+                <div class="day-number">@date.Day</div>
+
+                @if (Model.DailyAttendance.ContainsKey(date))
+                {
+                    foreach (var attendance in Model.DailyAttendance[date].Take(3)) // Show max 3 per day
+                    {
+                        <div class="attendance-item @attendance.Status.ToLower()">
+                            @attendance.Emp_Code - @attendance.Status
+                        </div>
+                    }
+
+                    if (Model.DailyAttendance[date].Count > 3)
+                    {
+                        <div class="attendance-item" style="background: #eee; color: #666;">
+                            + @(Model.DailyAttendance[date].Count - 3) more
+                        </div>
+                    }
+                }
+            </div>
+        }
+    </div>
+</div> *@

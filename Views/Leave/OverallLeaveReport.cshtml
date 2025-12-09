@@ -74,8 +74,8 @@
                 <tr>
                     <td>@($"{empCode} - {empName}")</td>
                     <td>@item.Category</td>
-                    <td>@item.StartDate.ToShortDateString()</td>
-                    <td>@item.EndDate?.ToShortDateString()</td>
+                    <td>@(item.StartDate.ToString("dd-MM-yyyy") ?? "N/A")</td>
+                    <td>@(item.EndDate?.ToString("dd-MM-yyyy") ?? "N/A")</td>
                     <td>@item.TotalDays</td>
                     <td>@item.OverallStatus</td>
                 </tr>

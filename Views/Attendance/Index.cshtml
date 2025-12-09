@@ -59,9 +59,12 @@
                 <i class="fa-solid fa-file-excel me-1"></i> Export
             </button>
 
-            <a href="/Attendance/CalendarView" class="btn btn-info text-white">
+            <a href="@Url.Action("HighDensityCalendar", "Attendance",
+                       new { year = DateTime.Now.Year, month = DateTime.Now.Month })"
+               class="btn btn-info text-white">
                 <i class="fa-solid fa-calendar-days me-1"></i> View in Calendar
             </a>
+
 
             <a href="/Attendance/CorrectionRequests"
                class="btn btn-warning position-relative">
