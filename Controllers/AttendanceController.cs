@@ -889,8 +889,7 @@ namespace HRMS.Controllers
             return RedirectToAction("ManualAttendance");
         }
 
-    }
-}
+ 
         public async Task<IActionResult> EarnCompOff(int empId, DateTime workDate)
         {
             var emp = await _context.Employees.FindAsync(empId);
