@@ -63,6 +63,7 @@
         <tr>
             <th>Employee</th>
             <th>Category</th>
+                <th>Leave Type</th>
             <th>Start</th>
             <th>End</th>
             <th>Days</th>
@@ -81,6 +82,7 @@
             <tr>
                     <td>@($"{empCode} - {empName}")</td>
                 <td>@l.Category</td>
+                    <td>@l.LeaveType </td>
                     <td>@(l.StartDate.ToString("dd-MM-yyyy") ?? "N/A")</td>
                     <td>@(l.EndDate?.ToString("dd-MM-yyyy") ?? "N/A")</td>
                 <td>@l.TotalDays</td>

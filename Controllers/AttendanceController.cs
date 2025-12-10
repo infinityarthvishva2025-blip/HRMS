@@ -714,8 +714,27 @@ namespace HRMS.Controllers
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     fileName);
             }
+        public async Task<IActionResult> EarnCompOff(int empId, DateTime workDate)
+        {
+            var emp = await _context.Employees.FindAsync(empId);
+            if (emp == null) return Json("Employee not found");
+
+            // Earn only on weekly off / holiday
+            if (workDate.DayOfWeek != DayOfWeek.Sunday &&
+                workDate.DayOfWeek != DayOfWeek.Saturday) // optional
+            {
+                return Json("Not eligible for Comp-Off");
+            }
+
+            emp.CompOffBalance += 1;
+            emp.LastCompOffEarnedDate = DateTime.Today;
+
+            await _context.SaveChangesAsync();
+            return Json("Comp-Off earned successfully");
         }
+
     }
+}
 
 
 
