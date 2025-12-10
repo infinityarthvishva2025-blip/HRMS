@@ -18,85 +18,74 @@
     </div>
 
     <form asp-action="Create" method="post" enctype="multipart/form-data" id="employeeForm">
+
         @Html.AntiForgeryToken()
 
-        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+   
 
         <div class="card shadow-sm border-0 p-4">
 
-            <!-- BASIC DETAILS -->
+            <!-- ======================= BASIC DETAILS ======================= -->
             <h5 class="fw-bold text-secondary mb-3">Basic Details</h5>
             <div class="row g-3">
 
                 <div class="col-md-4">
-                    <label asp-for="EmployeeCode" class="form-label">Employee Code</label>
+                    <label asp-for="EmployeeCode"></label>
                     <input asp-for="EmployeeCode" class="form-control" readonly />
-                    <span asp-validation-for="EmployeeCode" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="Name" class="form-label">Full Name</label>
-                    <input asp-for="Name" class="form-control" required minlength="2" maxlength="100" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
+                    <label asp-for="Name"></label>
+                    <input asp-for="Name" class="form-control" required />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="Email" class="form-label"></label>
-                    <input asp-for="Email" type="email" class="form-control" required maxlength="150" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email" class="form-control" required />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="MobileNumber" class="form-label">Mobile Number</label>
+                    <label asp-for="MobileNumber"></label>
                     <input asp-for="MobileNumber" class="form-control"
-                           required maxlength="10" minlength="10"
-                           pattern="[0-9]{10}"
-                           title="Enter a valid 10-digit mobile number" />
-                    <span asp-validation-for="MobileNumber" class="text-danger"></span>
+                           maxlength="10"
+                           pattern="^[6-9]\d{9}$"
+                           title="Enter valid 10-digit mobile number "
+                           required />
+
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">Alternate Mobile Number</label>
-                    <input name="AlternateMobileNumber" class="form-control"
-                           maxlength="10" minlength="10"
-                           pattern="[0-9]{10}"
-                           title="Enter a valid 10-digit mobile number (optional)" />
+                    <label>Alternate Mobile Number</label>
+                    <input asp-for="AlternateMobileNumber" class="form-control"
+                          
+                           />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="Password" class="form-label"></label>
+                    <label asp-for="Password"></label>
                     <div class="input-group">
-                        <input asp-for="Password" type="password"
-                               class="form-control" id="Password"
-                               required minlength="6" maxlength="200" />
-                        <button type="button" class="btn btn-outline-secondary"
-                                onclick="togglePassword('Password', this)">
+                        <input asp-for="Password" type="password" class="form-control" id="Password" required />
+                        <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('Password', this)">
                             <i class="fa fa-eye"></i>
                         </button>
                     </div>
-                    <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+                    <label asp-for="ConfirmPassword"></label>
                     <div class="input-group">
-                        <input asp-for="ConfirmPassword" type="password" class="form-control"
-                               id="ConfirmPassword" required minlength="6"
-                               oninput="validatePasswordMatch()" />
-                        <button type="button" class="btn btn-outline-secondary"
-                                onclick="togglePassword('ConfirmPassword', this)">
+                        <input asp-for="ConfirmPassword" type="password" class="form-control" id="ConfirmPassword" required />
+                        <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('ConfirmPassword', this)">
                             <i class="fa fa-eye"></i>
                         </button>
                     </div>
-                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                    <span class="text-danger" id="passwordError"></span>
                 </div>
 
             </div>
 
             <hr class="my-4" />
 
-            <!-- PERSONAL DETAILS -->
+            <!-- ====================== PERSONAL DETAILS ======================= -->
             <h5 class="fw-bold text-secondary mb-3">Personal Details</h5>
 
             <div class="row g-3">
@@ -109,30 +98,25 @@
                         <option>Female</option>
                         <option>Other</option>
                     </select>
-                    <span asp-validation-for="Gender" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-3">
-                    <label asp-for="FatherName">Father Name</label>
-                    <input asp-for="FatherName" class="form-control" required maxlength="150" />
-                    <span asp-validation-for="FatherName" class="text-danger"></span>
+                    <label asp-for="FatherName"></label>
+                    <input asp-for="FatherName" class="form-control" required />
                 </div>
 
                 <div class="col-md-3">
-                    <label asp-for="MotherName">Mother Name</label>
-                    <input asp-for="MotherName" class="form-control" required maxlength="150" />
-                    <span asp-validation-for="MotherName" class="text-danger"></span>
+                    <label asp-for="MotherName"></label>
+                    <input asp-for="MotherName" class="form-control" required />
                 </div>
 
                 <div class="col-md-3">
                     <label asp-for="DOB_Date"></label>
-                    <input asp-for="DOB_Date" type="date" class="form-control"
-                           required max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                    <span asp-validation-for="DOB_Date" class="text-danger"></span>
+                    <input asp-for="DOB_Date" type="date" class="form-control" required />
                 </div>
 
                 <div class="col-md-3">
-                    <label asp-for="MaritalStatus">Marital Status</label>
+                    <label asp-for="MaritalStatus"></label>
                     <select asp-for="MaritalStatus" class="form-select" required>
                         <option value="">-- Select --</option>
                         <option>Single</option>
@@ -140,196 +124,189 @@
                         <option>Divorced</option>
                         <option>Widowed</option>
                     </select>
-                    <span asp-validation-for="MaritalStatus" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-3">
-                    <label>Passport Size Photo</label>
+                    <label>Profile Photo</label>
+                    <img id="ProfilePreview" class="img-thumbnail mb-2" style="max-height:120px; display:none;" />
                     <input type="file" name="ProfilePhoto" class="form-control"
-                           accept="image/*" required />
+                           onchange="previewFile(this, 'ProfilePreview')" />
                 </div>
 
-                <!-- CURRENT ADDRESS -->
                 <div class="col-md-12">
-                    <label asp-for="Address">Current Address</label>
-                    <textarea asp-for="Address" id="CurrentAddress"
-                              class="form-control" rows="2"
-                              required minlength="5"></textarea>
-                    <span asp-validation-for="Address" class="text-danger"></span>
+                    <label asp-for="Address"></label>
+                    <textarea asp-for="Address" id="CurrentAddress" class="form-control" rows="2" required></textarea>
                 </div>
 
-                <!-- Checkbox -->
                 <div class="col-md-12 mt-2">
                     <input type="checkbox" id="SameAddressCheckbox" />
-                    <label for="SameAddressCheckbox" class="ms-1">
-                        Permanent address same as current
-                    </label>
+                    <label for="SameAddressCheckbox">Permanent address same as current</label>
                 </div>
 
-                <!-- PERMANENT ADDRESS -->
-                <div class="col-md-12 mt-2" id="PermanentAddressSection">
-                    <label asp-for="PermanentAddress">Permanent Address</label>
-                    <textarea asp-for="PermanentAddress" id="PermanentAddress"
-                              class="form-control" rows="2"></textarea>
-                    <span asp-validation-for="PermanentAddress" class="text-danger"></span>
+                <div class="col-md-12" id="PermanentAddressSection">
+                    <label asp-for="PermanentAddress"></label>
+                    <textarea asp-for="PermanentAddress" id="PermanentAddress" class="form-control" rows="2" required></textarea>
                 </div>
 
             </div>
 
             <hr class="my-4" />
 
-            <!-- EXPERIENCE -->
+            <!-- ====================== EXPERIENCE ======================= -->
             <h5 class="fw-bold text-secondary mb-3">Experience Details</h5>
+
             <div class="row g-3">
 
                 <div class="col-md-4">
-                    <label asp-for="ExperienceType">Experience Type</label>
-                    <select asp-for="ExperienceType" id="ExperienceType"
-                            class="form-select" required>
+                    <label asp-for="ExperienceType"></label>
+                    <select asp-for="ExperienceType" id="ExperienceType" class="form-select" required>
                         <option value="">-- Select --</option>
                         <option>Fresher</option>
                         <option>Experienced</option>
                     </select>
-                    <span asp-validation-for="ExperienceType" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-6">
-                    <label>Certificates (PDF/Image)</label>
-                    <input type="file" name="ExperienceCertificateFiles"
-                           class="form-control" accept=".pdf,image/*" multiple />
-                    <small class="text-muted">You can upload multiple files</small>
+                    <label>Experience Certificates</label>
+                    <input type="file" name="ExperienceCertificateFiles" class="form-control" multiple />
                 </div>
 
             </div>
 
-            <div class="row g-3 mt-2 d-none" id="experience-section">
+            <div id="experience-section" class="row g-3 mt-3 d-none">
 
                 <div class="col-md-4">
-                    <label asp-for="TotalExperienceYears">Total Experience Years</label>
-                    <input asp-for="TotalExperienceYears" type="number"
-                           class="form-control" min="1" max="40" />
-                    <span asp-validation-for="TotalExperienceYears" class="text-danger"></span>
+                    <label asp-for="TotalExperienceYears"></label>
+                    <input asp-for="TotalExperienceYears" class="form-control" />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="LastCompanyName">Last Company Name</label>
-                    <input asp-for="LastCompanyName" class="form-control" maxlength="200" />
-                    <span asp-validation-for="LastCompanyName" class="text-danger"></span>
+                    <label asp-for="LastCompanyName"></label>
+                    <input asp-for="LastCompanyName" class="form-control" />
                 </div>
 
             </div>
 
             <hr class="my-4" />
 
-            <!-- HEALTH INFORMATION -->
+            <!-- ======================= HEALTH ======================= -->
             <h5 class="fw-bold text-secondary mb-3">Health Information</h5>
 
             <div class="row g-3">
 
-                <!-- Any Pre-existing Disease? -->
                 <div class="col-md-4">
-                    <label>Any Pre-existing Disease / Condition</label>
-                    <select asp-for="HasDisease" id="HasDisease"
-                            class="form-select" required>
+                    <label asp-for="HasDisease"></label>
+                    <select asp-for="HasDisease" id="HasDisease" class="form-select" required>
                         <option value="">-- Select --</option>
                         <option>No</option>
                         <option>Yes</option>
                     </select>
-                    <span asp-validation-for="HasDisease" class="text-danger"></span>
                 </div>
 
             </div>
 
-            <!-- SHOW ONLY IF DISEASE = YES -->
-            <div id="DiseaseSection" class="d-none mt-3">
+            <div id="DiseaseSection" class="row g-3 d-none mt-3">
 
-                <div class="row g-3">
-
-                    <div class="col-md-4">
-                        <label>Name of Disease</label>
-                        <input asp-for="DiseaseName" class="form-control" />
-                        <span asp-validation-for="DiseaseName" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label>Since When (Month/Year)</label>
-                        <input asp-for="DiseaseSince" class="form-control"
-                               placeholder="MM/YYYY" />
-                        <span asp-validation-for="DiseaseSince" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label>Medicines Required (if any)</label>
-                        <input asp-for="MedicinesRequired" class="form-control" />
-                        <span asp-validation-for="MedicinesRequired" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label>Doctor's Name</label>
-                        <input asp-for="DoctorName" class="form-control" />
-                        <span asp-validation-for="DoctorName" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label>Doctor’s Contact Number</label>
-                        <input asp-for="DoctorContact" class="form-control"
-                               pattern="[0-9]{10}"
-                               title="Enter a valid 10-digit mobile number" />
-                        <span asp-validation-for="DoctorContact" class="text-danger"></span>
-                    </div>
-
-                 
-
-                    <div class="col-md-6">
-                        <label>Medical Document (PDF/Image) (Optional)</label>
-                        <input type="file"
-                               name="MedicalDocumentFile"
-                               class="form-control"
-                               accept=".pdf,image/*" />
-                    </div>
-
-                    <p class="text-muted mt-2 ms-2">
-                        <small>(Attach medical documents or prescriptions if applicable)</small>
-                    </p>
-
+                <div class="col-md-4">
+                    <label asp-for="DiseaseName"></label>
+                    <input asp-for="DiseaseName" class="form-control" />
                 </div>
+
+                <div class="col-md-4">
+                    <label asp-for="DiseaseSince"></label>
+                    <input asp-for="DiseaseSince" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="MedicinesRequired"></label>
+                    <input asp-for="MedicinesRequired" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="DoctorName"></label>
+                    <input asp-for="DoctorName" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="DoctorContact"></label>
+                    <input asp-for="DoctorContact" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label>Medical Document</label>
+                    <img id="MedicalPreview" class="img-thumbnail mb-2" style="max-height:120px; display:none;" />
+                    <input type="file" name="MedicalDocumentFile" class="form-control"
+                           onchange="previewFile(this, 'MedicalPreview')" />
+                </div>
+
             </div>
 
             <hr class="my-4" />
 
-            <!-- JOB DETAILS -->
+            <!-- ======================= JOB DETAILS ======================= -->
             <h5 class="fw-bold text-secondary mb-3">Job Details</h5>
+
             <div class="row g-3">
 
                 <div class="col-md-4">
-                    <label asp-for="JoiningDate">Joining Date</label>
-                    <input asp-for="JoiningDate" type="date"
-                           class="form-control" required />
-                    <span asp-validation-for="JoiningDate" class="text-danger"></span>
+                    <label asp-for="JoiningDate"></label>
+                    <input asp-for="JoiningDate" type="date" class="form-control" required />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="Department"></label>
-                    <select asp-for="Department" id="Department"
-                            class="form-select" required>
-                        <option value="">-- Select --</option>
-                        <option>IT</option>
-                        <option>HR</option>
-                        <option>Finance</option>
-                        <option>Marketing</option>
-                        <option>Accounting</option>
-                        <option>Ganeral Manager</option>
-                    </select>
+                    <label asp-for="Department">Department</label>
+
+                    <div class="input-group">
+                        <select asp-for="Department" id="Department" class="form-select">
+                            <option value="">-- Select --</option>
+                        </select>
+
+                        <!-- PLUS BUTTON -->
+                        <button type="button" class="btn btn-outline-primary" id="AddDeptBtn">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <!-- MANUAL TEXTBOX (HIDDEN BY DEFAULT) -->
+                    <input type="text"
+                           name="NewDepartment"
+                           id="NewDepartment"
+                           class="form-control mt-2 d-none"
+                           placeholder="Enter new department" />
+
                     <span asp-validation-for="Department" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="Position"></label>
-                    <select asp-for="Position" id="Position"
-                            class="form-select" required>
-                        <option value="">-- Select Position --</option>
-                    </select>
+                    <label asp-for="Position">Position</label>
+
+                    <div class="input-group">
+                        <select asp-for="Position" id="Position" class="form-select">
+                            <option value="">-- Select Position --</option>
+                        </select>
+
+                        <!-- PLUS BUTTON -->
+                        <button type="button" class="btn btn-outline-primary" id="AddPosBtn">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <!-- MANUAL TEXTBOX (HIDDEN BY DEFAULT) -->
+                    <input type="text"
+                           name="NewPosition"
+                           id="NewPosition"
+                           class="form-control mt-2 d-none"
+                           placeholder="Enter new position" />
+
                     <span asp-validation-for="Position" class="text-danger"></span>
+                </div>
+
+
+
+
+                <div class="col-md-4">
+                    <label asp-for="ReportingManager"></label>
+                    <input asp-for="ReportingManager" class="form-control" required />
                 </div>
 
                 <div class="col-md-4">
@@ -340,52 +317,38 @@
                         <option>Employee</option>
                         <option>HR</option>
                         <option>Manager</option>
-                        <option>Vice President</option>
+                        <option>GM</option>
+                        <option>VP</option>
                         <option>Director</option>
                     </select>
-                    <span asp-validation-for="Role" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="Salary"></label>
-                    <input asp-for="Salary" type="number"
-                           class="form-control" min="1000" required />
-                    <span asp-validation-for="Salary" class="text-danger"></span>
+                    <input asp-for="Salary" class="form-control" required />
                 </div>
 
             </div>
 
             <hr class="my-4" />
 
-            <!-- EDUCATION -->
+            <!-- ======================= EDUCATION ======================= -->
             <h5 class="fw-bold text-secondary mb-3">Education</h5>
+
             <div class="row g-3">
 
-                <!-- 10th -->
+                <!-- 12th % -->
                 <div class="col-md-4">
-                    <label>10th %</label>
-                    <input name="TenthPercent" type="number"
-                           min="35" max="100" class="form-control" required />
+                    <label asp-for="HSCPercent">12th / Diploma %</label>
+                    <input asp-for="HSCPercent" class="form-control" required />
                 </div>
 
+                <!-- 12th REQUIRED Marksheet -->
                 <div class="col-md-6">
-                    <label>10th Marksheet</label>
-                    <input type="file" name="TenthMarksheetFile"
-                           class="form-control" accept=".pdf,image/*" required />
-                </div>
-
-                <!-- 12th -->
-                <div class="col-md-4">
-                    <label asp-for="HSCPercent">12th %</label>
-                    <input asp-for="HSCPercent" type="number"
-                           min="35" max="100" class="form-control" required />
-                    <span asp-validation-for="HSCPercent" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6">
-                    <label>12th Marksheet</label>
-                    <input type="file" name="TwelfthMarksheetFile"
-                           class="form-control" accept=".pdf,image/*" required />
+                    <label>12th / Diploma Marksheet <span class="text-danger">*</span></label><br />
+                    <img id="HSCPreview" class="img-thumbnail mb-2" style="max-height:120px; display:none;" />
+                    <input type="file" name="TwelfthMarksheetFile" class="form-control"
+                           onchange="previewFile(this, 'HSCPreview')" required />
                 </div>
 
                 <!-- Graduation -->
@@ -403,27 +366,26 @@
                         <option>B.Tech</option>
                         <option>Other</option>
                     </select>
-                    <span asp-validation-for="GraduationCourse" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="GraduationPercent">Graduation %</label>
-                    <input asp-for="GraduationPercent" type="number"
-                           min="35" max="100" class="form-control" required />
-                    <span asp-validation-for="GraduationPercent" class="text-danger"></span>
+                    <input asp-for="GraduationPercent" class="form-control" required />
                 </div>
 
+                <!-- Graduation REQUIRED Marksheet -->
                 <div class="col-md-4">
-                    <label>Graduation Marksheet</label>
-                    <input type="file" name="GraduationMarksheetFile"
-                           class="form-control" accept=".pdf,image/*" required />
+                    <label>Graduation Marksheet <span class="text-danger">*</span></label><br />
+                    <img id="GradPreview" class="img-thumbnail mb-2" style="max-height:120px; display:none;" />
+                    <input type="file" name="GraduationMarksheetFile" class="form-control"
+                           onchange="previewFile(this, 'GradPreview')" required />
                 </div>
 
-                <!-- PG -->
+                <!-- PG OPTIONAL -->
                 <div class="col-md-4">
                     <label asp-for="PostGraduationCourse">Post Graduation</label>
                     <select asp-for="PostGraduationCourse" class="form-select">
-                        <option value="">-- Select PG --</option>
+                        <option value="">-- Optional --</option>
                         <option>MCA</option>
                         <option>MBA</option>
                         <option>M.Com</option>
@@ -432,146 +394,139 @@
                         <option>M.Tech</option>
                         <option>Other</option>
                     </select>
-                    <span asp-validation-for="PostGraduationCourse" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-4">
                     <label asp-for="PostGraduationPercent">Post Graduation %</label>
-                    <input asp-for="PostGraduationPercent" type="number"
-                           min="35" max="100" class="form-control" />
-                    <span asp-validation-for="PostGraduationPercent" class="text-danger"></span>
+                    <input asp-for="PostGraduationPercent" class="form-control" />
                 </div>
 
+                <!-- PG OPTIONAL -->
                 <div class="col-md-4">
-                    <label>PG Marksheet (Optional)</label>
-                    <input type="file" name="PostGraduationMarksheetFile"
-                           class="form-control" accept=".pdf,image/*" />
+                    <label>PG Marksheet (Optional)</label><br />
+                    <img id="PGPreview" class="img-thumbnail mb-2" style="max-height:120px; display:none;" />
+                    <input type="file" name="PostGraduationMarksheetFile" class="form-control"
+                           onchange="previewFile(this, 'PGPreview')" />
                 </div>
 
             </div>
 
             <hr class="my-4" />
 
-            <!-- ID PROOFS -->
+            <!-- ======================= ID PROOFS ======================= -->
             <h5 class="fw-bold text-secondary mb-3">ID Proofs</h5>
+
             <div class="row g-3">
 
                 <div class="col-md-4">
-                    <label asp-for="AadhaarNumber">Aadhaar Number</label>
+                    <label asp-for="AadhaarNumber"></label>
                     <input asp-for="AadhaarNumber" class="form-control"
-                           pattern="[0-9]{12}"
-                           title="Aadhaar must be exactly 12 digits" />
-                    <span asp-validation-for="AadhaarNumber" class="text-danger"></span>
+                           maxlength="12"
+                           pattern="^\d{12}$"
+                           title="Aadhaar must be exactly 12 digits"
+                           required />
+
                 </div>
 
                 <div class="col-md-6">
-                    <label>Aadhaar Card</label>
-                    <input type="file" name="AadhaarFile"
-                           class="form-control" accept=".pdf,image/*" />
+                    <label>Aadhaar Card</label><br />
+                    <img id="AadhaarPreview" class="img-thumbnail mb-2" style="max-height:120px; display:none;" />
+                    <input type="file" name="AadhaarFile" class="form-control"
+                           onchange="previewFile(this, 'AadhaarPreview')" />
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="PanNumber">PAN Number</label>
+                    <label asp-for="PanNumber">Pan Number</label>
                     <input asp-for="PanNumber" class="form-control"
-                           pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
-                           title="Enter valid PAN e.g. ABCDE1234F" />
-                    <span asp-validation-for="PanNumber" class="text-danger"></span>
+                           maxlength="10"
+                           pattern="^[A-Z]{5}[0-9]{4}[A-Z]{1}$"
+                           title="Enter valid PAN number (ABCDE1234F)"
+                           style="text-transform:uppercase;"
+                           required />
+
                 </div>
 
                 <div class="col-md-6">
-                    <label>PAN Card</label>
-                    <input type="file" name="PanFile"
-                           class="form-control" accept=".pdf,image/*" />
+                    <label>PAN Card</label><br />
+                    <img id="PanPreview" class="img-thumbnail mb-2" style="max-height:120px; display:none;" />
+                    <input type="file" name="PanFile" class="form-control"
+                           onchange="previewFile(this, 'PanPreview')" />
                 </div>
 
             </div>
 
             <hr class="my-4" />
 
-            <!-- BANK DETAILS -->
+            <!-- ======================= BANK DETAILS ======================= -->
             <h5 class="fw-bold text-secondary mb-3">Bank Details</h5>
+
             <div class="row g-3">
 
                 <div class="col-md-6">
-                    <label asp-for="AccountHolderName">Account Holder Name</label>
+                    <label asp-for="AccountHolderName"></label>
                     <input asp-for="AccountHolderName" class="form-control" required />
-                    <span asp-validation-for="AccountHolderName" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-6">
-                    <label asp-for="BankName">Bank Name</label>
+                    <label asp-for="BankName"></label>
                     <input asp-for="BankName" class="form-control" required />
-                    <span asp-validation-for="BankName" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-6">
-                    <label asp-for="AccountNumber">Account Number</label>
+                    <label asp-for="AccountNumber"></label>
                     <input asp-for="AccountNumber" class="form-control"
-                           pattern="[0-9]{9,18}"
-                           title="Account number must be 9–18 digits"
+                           maxlength="18"
+                           pattern="^\d{6,18}$"
+                           title="Account number must be 6 to 18 digits"
                            required />
-                    <span asp-validation-for="AccountNumber" class="text-danger"></span>
+
                 </div>
 
                 <div class="col-md-6">
-                    <label asp-for="IFSC">IFSC Code</label>
-                    <input asp-for="IFSC" class="form-control"
-                           pattern="[A-Z]{4}0[A-Z0-9]{6}"
-                           title="Enter valid IFSC e.g. HDFC0001234"
-                           required />
-                    <span asp-validation-for="IFSC" class="text-danger"></span>
+                    <label asp-for="IFSC"></label>
+                    <input asp-for="IFSC" class="form-control" required />
                 </div>
 
                 <div class="col-md-6">
-                    <label asp-for="Branch">Branch Name</label>
+                    <label asp-for="Branch"></label>
                     <input asp-for="Branch" class="form-control" required />
-                    <span asp-validation-for="Branch" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-6">
-                    <label>Passbook File</label>
-                    <input type="file" name="PassbookFile"
-                           class="form-control" accept=".pdf,image/*" />
+                    <label>Passbook</label><br />
+                    <img id="PassbookPreview" class="img-thumbnail mb-2" style="max-height:120px; display:none;" />
+                    <input type="file" name="PassbookFile" class="form-control"
+                           onchange="previewFile(this, 'PassbookPreview')" />
                 </div>
 
             </div>
 
             <hr class="my-4" />
 
-            <!-- EMERGENCY CONTACT -->
+            <!-- ======================= EMERGENCY CONTACT ======================= -->
             <h5 class="fw-bold text-secondary mb-3">Emergency Contact Details</h5>
-
             <div class="row g-3">
 
                 <div class="col-md-4">
-                    <label>Name</label>
+                    <label asp-for="EmergencyContactName"></label>
                     <input asp-for="EmergencyContactName" class="form-control" required />
-                    <span asp-validation-for="EmergencyContactName" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-4">
-                    <label>Relationship</label>
-                    <input asp-for="EmergencyContactRelationship"
-                           class="form-control" required />
-                    <span asp-validation-for="EmergencyContactRelationship" class="text-danger"></span>
+                    <label asp-for="EmergencyContactRelationship"></label>
+                    <input asp-for="EmergencyContactRelationship" class="form-control" required />
                 </div>
 
                 <div class="col-md-4">
-                    <label>Mobile Number</label>
-                    <input asp-for="EmergencyContactMobile" class="form-control"
-                           maxlength="10" minlength="10"
-                           pattern="[0-9]{10}"
-                           title="Enter a valid 10-digit mobile number"
-                           required />
-                    <span asp-validation-for="EmergencyContactMobile" class="text-danger"></span>
+                    <label asp-for="EmergencyContactMobile"></label>
+                    <input asp-for="EmergencyContactMobile" class="form-control" required />
                 </div>
 
                 <div class="col-md-12">
-                    <label>Address</label>
-                    <textarea asp-for="EmergencyContactAddress"
-                              class="form-control" rows="2" required></textarea>
-                    <span asp-validation-for="EmergencyContactAddress" class="text-danger"></span>
+                    <label asp-for="EmergencyContactAddress"></label>
+                    <textarea asp-for="EmergencyContactAddress" class="form-control" rows="2" required></textarea>
                 </div>
+
             </div>
 
         </div>
@@ -583,113 +538,173 @@
         </div>
 
     </form>
+
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+
+    <!-- Disable Unobtrusive Client Validation -->
+    <script>
+        $(document).ready(function () {
+            $('#employeeForm').removeData("validator");
+            $('#employeeForm').removeData("unobtrusiveValidation");
+        });
+    </script>
 
     <script>
-        // Password match
-        function validatePasswordMatch() {
-            const pwd = document.getElementById("Password");
-            const conf = document.getElementById("ConfirmPassword");
-            const err = document.getElementById("passwordError");
-
-            err.textContent = (pwd.value !== conf.value)
-                ? "Passwords do not match."
-                : "";
-        }
-
-            // Experience show/hide
-            const expType = document.getElementById("ExperienceType");
-            const expSection = document.getElementById("experience-section");
-
-            expType.addEventListener("change", () => {
-                if (expType.value === "Experienced") {
-                    expSection.classList.remove("d-none");
-                } else {
-                    expSection.classList.add("d-none");
-                }
-            });
-
-        // Show/hide disease section based on dropdown
-        const diseaseDropdown = document.getElementById("HasDisease");
-        const diseaseSection = document.getElementById("DiseaseSection");
-
-        diseaseDropdown.addEventListener("change", function () {
-            if (this.value === "Yes") {
-                diseaseSection.classList.remove("d-none");
-            } else {
-                diseaseSection.classList.add("d-none");
-            }
+        // Experience Toggle
+        document.getElementById("ExperienceType").addEventListener("change", function () {
+            document.getElementById("experience-section")
+                .classList.toggle("d-none", this.value !== "Experienced");
         });
 
-        // Position loading
-        const dept = document.getElementById("Department");
-        const pos = document.getElementById("Position");
+        // Disease Toggle
+        document.getElementById("HasDisease").addEventListener("change", function () {
+            document.getElementById("DiseaseSection")
+                .classList.toggle("d-none", this.value !== "Yes");
+        });
 
-        dept.addEventListener("change", function () {
-            pos.innerHTML = "";
-            fetch(`/Employees/GetPositions?department=${this.value}`)
+        // Preview Image
+        function previewFile(input, previewId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.getElementById(previewId);
+                    img.src = e.target.result;
+                    img.style.display = "block";
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Load Departments
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch("/Employees/GetDepartments")
                 .then(r => r.json())
                 .then(list => {
-                    pos.innerHTML = '<option value="">-- Select Position --</option>';
-                    list.forEach(item => {
-                        pos.innerHTML += `<option value="${item}">${item}</option>`;
-                    });
+                    const dept = document.getElementById("Department");
+                    dept.innerHTML = '<option value="">-- Select --</option>';
+                    list.forEach(d => dept.innerHTML += `<option value="${d}">${d}</option>`);
                 });
         });
 
-        // Password toggle
+        // Load Positions
+        document.getElementById("Department").addEventListener("change", function () {
+            const pos = document.getElementById("Position");
+            pos.innerHTML = '<option value="">-- Select Position --</option>';
+            fetch(`/Employees/GetPositions?department=${this.value}`)
+                .then(r => r.json())
+                .then(list => list.forEach(item =>
+                    pos.innerHTML += `<option value="${item}">${item}</option>`
+                ));
+        });
+
+        // Auto Uppercase
+        document.addEventListener("input", function (e) {
+            if ((e.target.tagName === "INPUT" && e.target.type === "text") ||
+                e.target.tagName === "TEXTAREA") {
+                e.target.value = e.target.value.toUpperCase();
+            }
+        });
+
+        // Toggle password
         function togglePassword(fieldId, btn) {
             const input = document.getElementById(fieldId);
             const icon = btn.querySelector("i");
 
             if (input.type === "password") {
                 input.type = "text";
-                icon.classList.replace("fa-eye", "fa-eye-s  lash");
+                icon.classList.replace("fa-eye", "fa-eye-slash");
             } else {
                 input.type = "password";
                 icon.classList.replace("fa-eye-slash", "fa-eye");
             }
         }
 
-        // Current / Permanent address sync
-        const sameAddressCheckbox = document.getElementById("SameAddressCheckbox");
-        const currentAddress = document.getElementById("CurrentAddress");
-        const permanentAddress = document.getElementById("PermanentAddress");
-        const permanentSection = document.getElementById("PermanentAddressSection");
+        // Address Auto Fill
+        const sameBox = document.getElementById("SameAddressCheckbox");
+        const currentAddr = document.getElementById("CurrentAddress");
+        const permAddr = document.getElementById("PermanentAddress");
+        const permSection = document.getElementById("PermanentAddressSection");
 
-        // default: show permanent address
-        permanentSection.classList.remove("d-none");
-
-        sameAddressCheckbox.addEventListener("change", function () {
+        sameBox.addEventListener("change", function () {
             if (this.checked) {
-                permanentAddress.value = currentAddress.value;
-                permanentSection.classList.add("d-none");
+                permAddr.value = currentAddr.value;
+                permSection.classList.add("d-none");
             } else {
-                permanentSection.classList.remove("d-none");
-                permanentAddress.value = "";
+                permAddr.value = "";
+                permSection.classList.remove("d-none");
             }
         });
 
-        // Auto-update if user edits Current Address while checkbox checked
-        currentAddress.addEventListener("input", function () {
-            if (sameAddressCheckbox.checked) {
-                permanentAddress.value = currentAddress.value;
-            }
+        currentAddr.addEventListener("input", function () {
+            if (sameBox.checked)
+                permAddr.value = currentAddr.value;
         });
 
-
-               // AUTO-CAPITAL for INPUT and TEXTAREA
+        // PAN, IFSC, Email uppercase
         document.addEventListener("input", function (e) {
-            if (
-                (e.target.tagName === "INPUT" && e.target.type === "text") ||
-                (e.target.tagName === "TEXTAREA")
-            ) {
+            if (e.target.id === "PanNumber" || e.target.id === "IFSC" || e.target.id === "Email") {
                 e.target.value = e.target.value.toUpperCase();
             }
         });
-
     </script>
+
+    <script>
+        // PLUS BUTTON: MANUAL DEPARTMENT/POSITION
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const deptSelect = document.getElementById("Department");
+            const newDeptBox = document.getElementById("NewDepartment");
+            const addDeptBtn = document.getElementById("AddDeptBtn");
+
+            const posSelect = document.getElementById("Position");
+            const newPosBox = document.getElementById("NewPosition");
+            const addPosBtn = document.getElementById("AddPosBtn");
+
+
+            // Toggle NEW Department field
+            addDeptBtn.addEventListener("click", function () {
+                newDeptBox.classList.toggle("d-none");
+                if (!newDeptBox.classList.contains("d-none")) {
+                    newDeptBox.focus();
+                    deptSelect.value = "";
+                }
+            });
+
+            newDeptBox.addEventListener("input", function () {
+                if (this.value.trim() !== "") deptSelect.value = "";
+            });
+
+            deptSelect.addEventListener("change", function () {
+                if (this.value !== "") {
+                    newDeptBox.value = "";
+                    newDeptBox.classList.add("d-none");
+                }
+            });
+
+
+            // Toggle NEW Position field
+            addPosBtn.addEventListener("click", function () {
+                newPosBox.classList.toggle("d-none");
+                if (!newPosBox.classList.contains("d-none")) {
+                    newPosBox.focus();
+                    posSelect.value = "";
+                }
+            });
+
+            newPosBox.addEventListener("input", function () {
+                if (this.value.trim() !== "") posSelect.value = "";
+            });
+
+            posSelect.addEventListener("change", function () {
+                if (this.value !== "") {
+                    newPosBox.value = "";
+                    newPosBox.classList.add("d-none");
+                }
+            });
+
+        });
+    </script>
+
 }

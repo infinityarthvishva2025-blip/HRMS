@@ -47,7 +47,7 @@ namespace HRMS.Controllers
         // ================================
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Employees.ToListAsync());
+            return View(await _context.Employees.ToListAsync());    
         }
 
         // ================================
@@ -66,6 +66,9 @@ namespace HRMS.Controllers
         // ================================
         // CREATE (GET)
         // ================================
+        // ================================
+        // CREATE (GET)
+        // ================================
         public IActionResult Create()
         {
             return View(new Employee { EmployeeCode = GenerateNextEmployeeCode() });
@@ -73,84 +76,175 @@ namespace HRMS.Controllers
 
         // ================================
         // CREATE (POST)
-        // Includes 10th/12th/Grad/PG Marksheets
         // ================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
-     Employee model,
-     IFormFile ProfilePhoto,
-     IFormFile AadhaarFile,
-     IFormFile PanFile,
-     IFormFile PassbookFile,
-     List<IFormFile> ExperienceCertificateFiles,
-     IFormFile MedicalDocumentFile,
-     IFormFile TenthMarksheetFile,
-     IFormFile TwelfthMarksheetFile,
-     IFormFile GraduationMarksheetFile,
-     IFormFile PostGraduationMarksheetFile
- )
+            Employee model,
+            string? NewDepartment,
+            string? NewPosition,
+            IFormFile? ProfilePhoto,
+            IFormFile? AadhaarFile,
+            IFormFile? PanFile,
+            IFormFile? PassbookFile,
+            List<IFormFile>? ExperienceCertificateFiles,
+            IFormFile? MedicalDocumentFile,
+            IFormFile? TenthMarksheetFile,
+            IFormFile? TwelfthMarksheetFile,
+            IFormFile? GraduationMarksheetFile,
+            IFormFile? PostGraduationMarksheetFile
+        )
         {
-            // REMOVE NON-NEEDED MODEL VALIDATION
-            ModelState.Remove("ConfirmPassword");
-            ModelState.Remove("MedicalDocumentFile");
-            ModelState.Remove("MarksheetFile");
+            // ==========================================
+            // CLEAR INITIAL MODELSTATE
+            // ==========================================
+            ModelState.Clear();
 
-            // CONDITIONAL VALIDATION
-            if (model.HasDisease == "Yes" && MedicalDocumentFile == null)
+            // ==========================================
+            // 🔥 MASTER FIX: REMOVE ALL FILE VALIDATION AUTO-ERRORS
+            // ==========================================
+            foreach (var key in ModelState.Keys.ToList())
             {
-                ModelState.AddModelError("MedicalDocumentFile", "Please upload medical document because you selected 'Yes'.");
+                if (key.Contains("File") || key.Contains("Marksheet") || key.Contains("Document"))
+                {
+                    ModelState.Remove(key);
+                }
             }
 
+            // ==========================================
+            // APPLY MANUAL DEPARTMENT / POSITION
+            // ==========================================
+            if (!string.IsNullOrWhiteSpace(NewDepartment))
+                model.Department = NewDepartment.Trim();
+
+            if (!string.IsNullOrWhiteSpace(NewPosition))
+                model.Position = NewPosition.Trim();
+
+            // ==========================================
+            // REQUIRED FIELD VALIDATOR FUNCTION
+            // ==========================================
+            void Require(string field, string? value, string message)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    ModelState.AddModelError(field, message);
+            }
+
+            // ==========================================
+            // ALWAYS REQUIRED
+            // ==========================================
+            Require("Name", model.Name, "Full Name is required.");
+            Require("Email", model.Email, "Email is required.");
+            Require("MobileNumber", model.MobileNumber, "Mobile number is required.");
+            Require("Gender", model.Gender, "Gender is required.");
+            Require("FatherName", model.FatherName, "Father name is required.");
+            Require("MotherName", model.MotherName, "Mother name is required.");
+            Require("Address", model.Address, "Current address is required.");
+            Require("PermanentAddress", model.PermanentAddress, "Permanent address is required.");
+            Require("MaritalStatus", model.MaritalStatus, "Marital status is required.");
+
+            Require("Department", model.Department, "Department is required.");
+            Require("Position", model.Position, "Position is required.");
+            Require("ReportingManager", model.ReportingManager, "Reporting Manager is required.");
+            Require("Role", model.Role, "Role is required.");
+
+            Require("AadhaarNumber", model.AadhaarNumber, "Aadhaar Number is required.");
+            Require("PanNumber", model.PanNumber, "PAN Number is required.");
+
+            Require("AccountHolderName", model.AccountHolderName, "Account Holder name is required.");
+            Require("BankName", model.BankName, "Bank name is required.");
+            Require("AccountNumber", model.AccountNumber, "Account number is required.");
+            Require("IFSC", model.IFSC, "IFSC code is required.");
+            Require("Branch", model.Branch, "Branch is required.");
+
+            Require("EmergencyContactName", model.EmergencyContactName, "Emergency contact name is required.");
+            Require("EmergencyContactRelationship", model.EmergencyContactRelationship, "Relationship is required.");
+            Require("EmergencyContactMobile", model.EmergencyContactMobile, "Emergency mobile number is required.");
+            Require("EmergencyContactAddress", model.EmergencyContactAddress, "Emergency contact address is required.");
+
+            if (model.JoiningDate == null)
+                ModelState.AddModelError("JoiningDate", "Joining Date is required.");
+
+            if (model.DOB_Date == null)
+                ModelState.AddModelError("DOB_Date", "Date of Birth is required.");
+
+            if (model.Salary == null)
+                ModelState.AddModelError("Salary", "Salary is required.");
+
+            // Experience (conditional)
+            if (model.ExperienceType == "Experienced")
+            {
+                if (model.TotalExperienceYears == null || model.TotalExperienceYears == 0)
+                    ModelState.AddModelError("TotalExperienceYears", "Total experience years required.");
+
+                Require("LastCompanyName", model.LastCompanyName, "Last company name required.");
+            }
+
+            // Disease (conditional)
+            if (model.HasDisease == "Yes")
+            {
+                Require("DiseaseName", model.DiseaseName, "Disease name required.");
+                Require("DiseaseSince", model.DiseaseSince, "Disease duration required.");
+                Require("MedicinesRequired", model.MedicinesRequired, "Medicines required.");
+                Require("DoctorName", model.DoctorName, "Doctor name required.");
+                Require("DoctorContact", model.DoctorContact, "Doctor contact required.");
+            }
+
+            // ==========================================
+            // STOP IF ERRORS
+            // ==========================================
             if (!ModelState.IsValid)
                 return View(model);
 
-            // UNIQUE MOBILE / EMAIL CHECKS
-            if (await _context.Employees.AnyAsync(e => e.Email == model.Email))
-            {
-                ModelState.AddModelError("Email", "This email is already registered.");
-                return View(model);
-            }
+            // ==========================================
+            // DEFAULT DATA
+            // ==========================================
+            if (string.IsNullOrEmpty(model.EmployeeCode))
+                model.EmployeeCode = GenerateNextEmployeeCode();
 
-            if (await _context.Employees.AnyAsync(e => e.MobileNumber == model.MobileNumber))
-            {
-                ModelState.AddModelError("MobileNumber", "This mobile number is already registered.");
-                return View(model);
-            }
-
-            // SET DEFAULTS
-            model.EmployeeCode ??= GenerateNextEmployeeCode();
             model.Status = "Active";
+            model.ManagerId = 36;
 
-            // CREATE FOLDER
+            // ==========================================
+            // UNIQUE CHECK
+            // ==========================================
+            if (await _context.Employees.AnyAsync(x => x.Email == model.Email))
+            {
+                ModelState.AddModelError("Email", "Email already exists.");
+                return View(model);
+            }
+
+            if (await _context.Employees.AnyAsync(x => x.MobileNumber == model.MobileNumber))
+            {
+                ModelState.AddModelError("MobileNumber", "Mobile number already exists.");
+                return View(model);
+            }
+
+            // ==========================================
+            // SAVE FILES
+            // ==========================================
             string empFolder = Path.Combine(_env.WebRootPath, "uploads/employees", model.EmployeeCode);
-            Directory.CreateDirectory(empFolder);
+            if (!Directory.Exists(empFolder))
+                Directory.CreateDirectory(empFolder);
 
-            // STORE REQUIRED FILES
             model.ProfileImagePath = await SaveEmployeeFile(ProfilePhoto, empFolder, "profile");
             model.AadhaarFilePath = await SaveEmployeeFile(AadhaarFile, empFolder, "aadhaar");
             model.PanFilePath = await SaveEmployeeFile(PanFile, empFolder, "pan");
             model.PassbookFilePath = await SaveEmployeeFile(PassbookFile, empFolder, "passbook");
 
-            // MULTIPLE EXPERIENCE FILES
-            if (ExperienceCertificateFiles != null && ExperienceCertificateFiles.Any())
+            if (ExperienceCertificateFiles?.Count > 0)
             {
-                List<string> savedExp = new();
-
+                List<string> saved = new();
                 foreach (var file in ExperienceCertificateFiles)
                 {
-                    var saved = await SaveEmployeeFile(file, empFolder, $"exp_{Guid.NewGuid()}");
-                    savedExp.Add(saved);
+                    var f = await SaveEmployeeFile(file, empFolder, $"exp_{Guid.NewGuid()}");
+                    if (f != null) saved.Add(f);
                 }
-
-                model.ExperienceCertificateFilePath = string.Join(",", savedExp);
+                model.ExperienceCertificateFilePath = string.Join(",", saved);
             }
 
-            // MEDICAL (OPTIONAL)
             model.MedicalDocumentFilePath =
                 await SaveEmployeeFile(MedicalDocumentFile, empFolder, "medical");
 
-            // EDUCATION FILES
             model.TenthMarksheetFilePath =
                 await SaveEmployeeFile(TenthMarksheetFile, empFolder, "10th");
 
@@ -158,12 +252,14 @@ namespace HRMS.Controllers
                 await SaveEmployeeFile(TwelfthMarksheetFile, empFolder, "12th");
 
             model.GraduationMarksheetFilePath =
-                await SaveEmployeeFile(GraduationMarksheetFile, empFolder, "graduation");
+                await SaveEmployeeFile(GraduationMarksheetFile, empFolder, "grad");
 
             model.PostGraduationMarksheetFilePath =
                 await SaveEmployeeFile(PostGraduationMarksheetFile, empFolder, "pg");
 
-            // SAVE
+            // ==========================================
+            // SAVE TO DB
+            // ==========================================
             _context.Employees.Add(model);
             await _context.SaveChangesAsync();
 
@@ -171,13 +267,29 @@ namespace HRMS.Controllers
         }
 
 
-        // ================================
-        // EDIT (GET)
-        // ================================
-        public IActionResult Edit(int id)
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
         {
-            var emp = _context.Employees.Find(id);
-            if (emp == null) return NotFound();
+            var emp = await _context.Employees.FirstOrDefaultAsync(e => e.Id == id);
+            if (emp == null)
+                return NotFound();
+
+            // Load departments
+            ViewBag.Departments = await _context.Employees
+                .Where(e => e.Department != null && e.Department.Trim() != "")
+                .Select(e => e.Department.Trim())
+                .Distinct()
+                .OrderBy(x => x)
+                .ToListAsync();
+
+            // Load positions
+            ViewBag.Positions = await _context.Employees
+                .Where(e => e.Position != null && e.Position.Trim() != "")
+                .Select(e => e.Position.Trim())
+                .Distinct()
+                .OrderBy(x => x)
+                .ToListAsync();
 
             var vm = new EmployeeEditVm
             {
@@ -203,12 +315,12 @@ namespace HRMS.Controllers
                 MedicinesRequired = emp.MedicinesRequired,
                 DoctorName = emp.DoctorName,
                 DoctorContact = emp.DoctorContact,
-               
                 JoiningDate = emp.JoiningDate,
                 Department = emp.Department,
                 Position = emp.Position,
                 Role = emp.Role,
                 Salary = emp.Salary,
+               ReportingManager = emp.ReportingManager,
                 HSCPercent = emp.HSCPercent,
                 GraduationCourse = emp.GraduationCourse,
                 GraduationPercent = emp.GraduationPercent,
@@ -224,30 +336,10 @@ namespace HRMS.Controllers
                 EmergencyContactName = emp.EmergencyContactName,
                 EmergencyContactRelationship = emp.EmergencyContactRelationship,
                 EmergencyContactMobile = emp.EmergencyContactMobile,
-                EmergencyContactAddress = emp.EmergencyContactAddress,
-
-                ProfileImagePath = emp.ProfileImagePath,
-                ExperienceCertificateFilePath = emp.ExperienceCertificateFilePath,
-                MedicalDocumentFilePath = emp.MedicalDocumentFilePath,
-                TenthMarksheetFilePath = emp.TenthMarksheetFilePath,
-                TwelfthMarksheetFilePath = emp.TwelfthMarksheetFilePath,
-                GraduationMarksheetFilePath = emp.GraduationMarksheetFilePath,
-                PostGraduationMarksheetFilePath = emp.PostGraduationMarksheetFilePath,
-                AadhaarFilePath = emp.AadhaarFilePath,
-                PanFilePath = emp.PanFilePath,
-                PassbookFilePath = emp.PassbookFilePath
+                EmergencyContactAddress = emp.EmergencyContactAddress
             };
-            // DISTINCT departments from Employees table
-            // Load distinct departments from Employees table
-            ViewBag.Departments = _context.Employees
-                .Where(e => !string.IsNullOrEmpty(e.Department))
-                .Select(e => e.Department.Trim())
-                .Distinct()
-                .OrderBy(d => d)
-                .ToList();
 
             return View(vm);
-
         }
 
 
@@ -256,21 +348,20 @@ namespace HRMS.Controllers
         // EDIT (POST)
         // ================================
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(EmployeeEditVm model)
         {
-            var emp = _context.Employees.FirstOrDefault(x => x.Id == model.Id);
+            var emp = await _context.Employees.FirstOrDefaultAsync(e => e.Id == model.Id);
             if (emp == null)
                 return NotFound();
 
             // BASIC
-            emp.Name = model.Name ?? emp.Name;
-            emp.Email = model.Email ?? emp.Email;
-            emp.MobileNumber = model.MobileNumber ?? emp.MobileNumber;
-            emp.AlternateMobileNumber = model.AlternateMobileNumber ?? emp.AlternateMobileNumber;
+            emp.Name = model.Name;
+            emp.Email = model.Email;
+            emp.MobileNumber = model.MobileNumber;
+            emp.AlternateMobileNumber = model.AlternateMobileNumber;
 
-            // PASSWORD UPDATE ONLY WHEN ENTERED
-            // PASSWORD LOGIC
-            // Only validate password if user entered a new one
+            // PASSWORD
             if (!string.IsNullOrWhiteSpace(model.Password))
             {
                 if (model.Password != model.ConfirmPassword)
@@ -282,90 +373,84 @@ namespace HRMS.Controllers
                 emp.Password = model.Password;
             }
 
-
-
-
             // PERSONAL
-            emp.Gender = model.Gender ?? emp.Gender;
-            emp.FatherName = model.FatherName ?? emp.FatherName;
-            emp.MotherName = model.MotherName ?? emp.MotherName;
-            emp.DOB_Date = model.DOB_Date ?? emp.DOB_Date;
-            emp.MaritalStatus = model.MaritalStatus ?? emp.MaritalStatus;
-            emp.Address = model.Address ?? emp.Address;
-            emp.PermanentAddress = model.PermanentAddress ?? emp.PermanentAddress;
+            emp.Gender = model.Gender;
+            emp.FatherName = model.FatherName;
+            emp.MotherName = model.MotherName;
+            emp.DOB_Date = model.DOB_Date;
+            emp.MaritalStatus = model.MaritalStatus;
+            emp.Address = model.Address;
+            emp.PermanentAddress = model.PermanentAddress;
 
             // EXPERIENCE
-            emp.ExperienceType = model.ExperienceType ?? emp.ExperienceType;
-            emp.TotalExperienceYears = model.TotalExperienceYears ?? emp.TotalExperienceYears;
-            emp.LastCompanyName = model.LastCompanyName ?? emp.LastCompanyName;
+            emp.ExperienceType = model.ExperienceType;
+            emp.TotalExperienceYears = model.TotalExperienceYears;
+            emp.LastCompanyName = model.LastCompanyName;
 
             // HEALTH
-            emp.HasDisease = model.HasDisease ?? emp.HasDisease;
-            emp.DiseaseName = model.DiseaseName ?? emp.DiseaseName;
-            emp.DiseaseSince = model.DiseaseSince ?? emp.DiseaseSince;
-            emp.MedicinesRequired = model.MedicinesRequired ?? emp.MedicinesRequired;
-            emp.DoctorName = model.DoctorName ?? emp.DoctorName;
-            emp.DoctorContact = model.DoctorContact ?? emp.DoctorContact;
-            
+            emp.HasDisease = model.HasDisease;
+            emp.DiseaseName = model.DiseaseName;
+            emp.DiseaseSince = model.DiseaseSince;
+            emp.MedicinesRequired = model.MedicinesRequired;
+            emp.DoctorName = model.DoctorName;
+            emp.DoctorContact = model.DoctorContact;
 
-            // JOB
-            emp.JoiningDate = model.JoiningDate ?? emp.JoiningDate;
-            emp.Department = model.Department ?? emp.Department;
-            emp.Position = model.Position ?? emp.Position;
-            emp.Role = model.Role ?? emp.Role;
-            emp.Salary = model.Salary ?? emp.Salary;
+            // JOB DETAILS
+            emp.JoiningDate = model.JoiningDate;
+            emp.Department = model.Department;
+            emp.Position = model.Position;
+            emp.Role = model.Role;
+            emp.Salary = model.Salary;
+            emp.ReportingManager = model.ReportingManager; // NEW FIELD
 
             // EDUCATION
-            emp.HSCPercent = model.HSCPercent ?? emp.HSCPercent;
-            emp.GraduationCourse = model.GraduationCourse ?? emp.GraduationCourse;
-            emp.GraduationPercent = model.GraduationPercent ?? emp.GraduationPercent;
-            emp.PostGraduationCourse = model.PostGraduationCourse ?? emp.PostGraduationCourse;
-            emp.PostGraduationPercent = model.PostGraduationPercent ?? emp.PostGraduationPercent;
+            emp.HSCPercent = model.HSCPercent;
+            emp.GraduationCourse = model.GraduationCourse;
+            emp.GraduationPercent = model.GraduationPercent;
 
-            // IDs
-            emp.AadhaarNumber = model.AadhaarNumber ?? emp.AadhaarNumber;
-            emp.PanNumber = model.PanNumber ?? emp.PanNumber;
+            // PG OPTIONAL
+            emp.PostGraduationCourse = model.PostGraduationCourse;
+            emp.PostGraduationPercent = model.PostGraduationPercent;
+
+            // ID NUMBERS
+            emp.AadhaarNumber = model.AadhaarNumber;
+            emp.PanNumber = model.PanNumber;
 
             // BANK
-            emp.AccountHolderName = model.AccountHolderName ?? emp.AccountHolderName;
-            emp.BankName = model.BankName ?? emp.BankName;
-            emp.AccountNumber = model.AccountNumber ?? emp.AccountNumber;
-            emp.IFSC = model.IFSC ?? emp.IFSC;
-            emp.Branch = model.Branch ?? emp.Branch;
-            // Emergency Contact
-            emp.EmergencyContactName = model.EmergencyContactName ?? emp.EmergencyContactName;
-            emp.EmergencyContactRelationship = model.EmergencyContactRelationship ?? emp.EmergencyContactRelationship;
-            emp.EmergencyContactMobile = model.EmergencyContactMobile ?? emp.EmergencyContactMobile;
-            emp.EmergencyContactAddress = model.EmergencyContactAddress ?? emp.EmergencyContactAddress;
+            emp.AccountHolderName = model.AccountHolderName;
+            emp.BankName = model.BankName;
+            emp.AccountNumber = model.AccountNumber;
+            emp.IFSC = model.IFSC;
+            emp.Branch = model.Branch;
 
+            // EMERGENCY
+            emp.EmergencyContactName = model.EmergencyContactName;
+            emp.EmergencyContactRelationship = model.EmergencyContactRelationship;
+            emp.EmergencyContactMobile = model.EmergencyContactMobile;
+            emp.EmergencyContactAddress = model.EmergencyContactAddress;
 
-            // FILE UPLOADS
+            // FILES — stored in C:\HRMSFiles
             emp.ProfileImagePath = await SaveEmployeeFile(model.ProfilePhoto, emp.EmployeeCode, "Profile", emp.ProfileImagePath);
             emp.AadhaarFilePath = await SaveEmployeeFile(model.AadhaarFile, emp.EmployeeCode, "Aadhaar", emp.AadhaarFilePath);
             emp.PanFilePath = await SaveEmployeeFile(model.PanFile, emp.EmployeeCode, "Pan", emp.PanFilePath);
             emp.PassbookFilePath = await SaveEmployeeFile(model.PassbookFile, emp.EmployeeCode, "Passbook", emp.PassbookFilePath);
             emp.MedicalDocumentFilePath = await SaveEmployeeFile(model.MedicalDocumentFile, emp.EmployeeCode, "Medical", emp.MedicalDocumentFilePath);
 
-            emp.TenthMarksheetFilePath = await SaveEmployeeFile(model.TenthMarksheetFile, emp.EmployeeCode, "Tenth", emp.TenthMarksheetFilePath);
-            emp.TwelfthMarksheetFilePath = await SaveEmployeeFile(model.TwelfthMarksheetFile, emp.EmployeeCode, "Twelfth", emp.TwelfthMarksheetFilePath);
+            // EDUCATION FILES (10th removed)
+            emp.TwelfthMarksheetFilePath = await SaveEmployeeFile(model.TwelfthMarksheetFile, emp.EmployeeCode, "12th", emp.TwelfthMarksheetFilePath);
             emp.GraduationMarksheetFilePath = await SaveEmployeeFile(model.GraduationMarksheetFile, emp.EmployeeCode, "Graduation", emp.GraduationMarksheetFilePath);
+
+            // PG OPTIONAL
             emp.PostGraduationMarksheetFilePath = await SaveEmployeeFile(model.PostGraduationMarksheetFile, emp.EmployeeCode, "PG", emp.PostGraduationMarksheetFilePath);
 
-            //EMERGENCY DETAILS
-
-           
-
-
-
-            // MULTIPLE EXPERIENCE FILES
-            if (model.ExperienceCertificateFiles != null && model.ExperienceCertificateFiles.Count > 0)
+            // MULTIPLE EXPERIENCE CERTIFICATES
+            if (model.ExperienceCertificateFiles != null && model.ExperienceCertificateFiles.Any())
             {
                 List<string> certFiles = new();
 
                 foreach (var file in model.ExperienceCertificateFiles)
                 {
-                    var saved = await SaveEmployeeFile(file, emp.EmployeeCode, "Experience", null);
-                    certFiles.Add(saved);
+                    certFiles.Add(await SaveEmployeeFile(file, emp.EmployeeCode, "Experience", null));
                 }
 
                 emp.ExperienceCertificateFilePath = string.Join(",", certFiles);
@@ -373,9 +458,10 @@ namespace HRMS.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["success"] = "Employee details updated successfully!";
+            TempData["success"] = "Employee updated successfully!";
             return RedirectToAction("Edit", new { id = emp.Id });
         }
+
 
         private async Task<string> SaveEmployeeFile(IFormFile file, string empCode, string name, string existing = null)
         {
@@ -469,8 +555,18 @@ namespace HRMS.Controllers
             return Json(positions);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetDepartments()
+        {
+            var departments = await _context.Employees
+                .Where(e => e.Department != null && e.Department.Trim() != "")
+                .Select(e => e.Department.Trim())
+                .Distinct()
+                .OrderBy(d => d)
+                .ToListAsync();
 
-
+            return Json(departments);
+        }
 
 
 
