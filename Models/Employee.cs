@@ -150,8 +150,10 @@ namespace HRMS.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string? Status { get; set; }
         public String? DeactiveReason { get; set; }
-       // public int CompOffBalance { get; set; } = 0;
+        // public int CompOffBalance { get; set; } = 0;
+        public double CompOffBalance { get; set; } = 0;
 
+        public DateTime? LastCompOffEarnedDate { get; set; }
 
     }
 }

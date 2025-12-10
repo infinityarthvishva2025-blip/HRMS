@@ -19,7 +19,7 @@ namespace HRMS.Models
 
         public int EmployeeId { get; set; }
         public Employee? Employee { get; set; }
-
+        //public Employee Employee { get; set; }
         // Category selected by Employee
         [Required]
         public LeaveCategory Category { get; set; }
@@ -68,11 +68,11 @@ namespace HRMS.Models
 
        // public string Role { get; set; } = string.Empty;
 
-        public int? ReportingManagerId { get; set; } // FIXED
-       // public string LeaveType { get; set; } // "Sick", "Casual", "coff" (Comp-Off)
-        public bool IsCompOff { get; set; } = false;
-        public DateTime? CompOffEarnedDate { get; set; } // date employee worked on holiday
+        public int? ReportingManagerId { get; set; } 
 
+        // NEW Comp-Off specific flags (add below)
+        public bool? IsCompOff { get; set; } = false;       // identifies Comp-Off leave
+        public DateTime? WorkDate { get; set; }            // the date employee worked (to earn comp-off)
     }
 
 }
