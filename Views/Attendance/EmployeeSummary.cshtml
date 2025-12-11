@@ -163,34 +163,36 @@
 
 
 
-                <td>
-                    @if (!a.CorrectionRequested)
-                    {
-                        <a asp-controller="Attendance"
-                           asp-action="RequestCorrection"
-                           asp-route-empCode="@a.EmpCode"
-                           asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
-                           asp-route-employeeId="@Model.Employee.Id"
-                           class="btn btn-warning btn-sm">
-                            Request
-                        </a>
-                    }
-                    else
-                    {
-                        if (a.CorrectionStatus == "Pending")
+                    <td>
+                        @if (!a.CorrectionRequested)
                         {
-                            <span class="badge bg-info">Pending</span>
+                            <a asp-controller="Attendance"
+                               asp-action="RequestCorrection"
+                               asp-route-empCode="@a.EmpCode"
+                               asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
+                               asp-route-employeeId="@Model.Employee.Id"
+                               class="btn btn-warning btn-sm">
+                                Request
+                            </a>
                         }
-                        else if (a.CorrectionStatus == "Approved")
+                        else
                         {
-                            <span class="badge bg-success">Approved</span>
+                            if (a.CorrectionStatus == "Pending")
+                            {
+                                <span class="badge bg-info">Pending</span>
+                            }
+                            else if (a.CorrectionStatus == "Approved")
+                            {
+                                <span class="badge bg-success">Approved</span>
+                            }
+                            else if (a.CorrectionStatus == "Rejected")
+                            {
+                                <span class="badge bg-danger">Rejected</span>
+                            }
                         }
-                        else if (a.CorrectionStatus == "Rejected")
-                        {
-                            <span class="badge bg-danger">Rejected</span>
-                        }
-                    }
-                </td>
+                    </td>
+
+
             </tr>
         }
     </tbody>

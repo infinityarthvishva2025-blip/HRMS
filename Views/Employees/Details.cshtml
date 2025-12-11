@@ -1,12 +1,12 @@
 ﻿@model HRMS.Models.Employee
 @using Microsoft.AspNetCore.Html
-@using Microsoft.AspNetCore.Mvc.Rendering
 
 @{
     ViewData["Title"] = "Employee Details";
     Layout = "~/Views/Shared/_HrLayout.cshtml";
 
-    string baseFolder = Url.Content("~/uploads/employees/" + Model.EmployeeCode + "/");
+    string baseFolderUrl = ViewBag.UrlFolder;             // URL path
+    string basePhysicalFolder = ViewBag.PhysicalFolder;    // C:\HRMSFiles\IA000xx\
 }
 
 <style>
@@ -37,15 +37,11 @@
             object-fit: contain;
             margin-bottom: 5px;
         }
-
-        .file-box a {
-            font-size: 0.9rem;
-        }
 </style>
 
 <div class="container py-4">
 
-    <!-- Header -->
+    <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold text-primary">
             <i class="fa-solid fa-user-circle me-2"></i> Employee Profile
@@ -61,17 +57,17 @@
     </div>
 
 
-    <!-- ========================================= -->
-    <!-- PROFILE SUMMARY CARD -->
-    <!-- ========================================= -->
+    <!-- ======================= PROFILE CARD ======================== -->
     <div class="card shadow-sm border-0 p-4 mb-4">
+
         <div class="row">
 
+            <!-- PROFILE IMAGE -->
             <div class="col-md-3 text-center">
 
                 @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
                 {
-                    var url = baseFolder + Model.ProfileImagePath;
+                    string url = baseFolderUrl + Model.ProfileImagePath;
                     <img src="@url" class="img-thumbnail mb-2" style="max-height:180px;" />
                 }
                 else
@@ -85,45 +81,19 @@
             </div>
 
 
+            <!-- BASIC INFO -->
             <div class="col-md-9">
 
                 <div class="section-title">Basic Details</div>
-
                 <div class="row g-3">
 
-                    <div class="col-md-4">
-                        <span class="info-label">Email:</span><br /> @Model.Email
-                    </div>
+                    <div class="col-md-4"><span class="info-label">Email:</span><br /> @Model.Email</div>
+                    <div class="col-md-4"><span class="info-label">Mobile:</span><br /> @Model.MobileNumber</div>
+                    <div class="col-md-4"><span class="info-label">Alt Mobile:</span><br /> @Model.AlternateMobileNumber ?? "-" </div>
 
-                    <div class="col-md-4">
-                        <span class="info-label">Mobile:</span><br /> @Model.MobileNumber
-                    </div>
-
-                    <div class="col-md-4">
-                        <span class="info-label">Alternate Mobile:</span><br />
-                        @(string.IsNullOrEmpty(Model.AlternateMobileNumber) ? "-" : Model.AlternateMobileNumber)
-                    </div>
-
-                    <div class="col-md-4">
-                        <span class="info-label">Gender:</span><br /> @Model.Gender
-                    </div>
-
-                    <div class="col-md-4">
-                        <span class="info-label">DOB:</span><br />
-                        @(Model.DOB_Date?.ToString("dd-MMM-yyyy") ?? "-")
-                    </div>
-
-                    <div class="col-md-4">
-                        <span class="info-label">Marital Status:</span><br /> @Model.MaritalStatus
-                    </div>
-
-                    <div class="col-md-4">
-                        <span class="info-label">Father Name:</span><br /> @Model.FatherName
-                    </div>
-
-                    <div class="col-md-4">
-                        <span class="info-label">Mother Name:</span><br /> @Model.MotherName
-                    </div>
+                    <div class="col-md-4"><span class="info-label">Gender:</span><br /> @Model.Gender</div>
+                    <div class="col-md-4"><span class="info-label">DOB:</span><br /> @(Model.DOB_Date?.ToString("dd-MMM-yyyy") ?? "-")</div>
+                    <div class="col-md-4"><span class="info-label">Marital Status:</span><br /> @Model.MaritalStatus</div>
 
                 </div>
 
@@ -131,89 +101,50 @@
 
                 <div class="section-title">Address</div>
 
-                <div class="mb-2">
-                    <span class="info-label">Current:</span><br /> @Model.Address
-                </div>
-
-                <div>
-                    <span class="info-label">Permanent:</span><br /> @Model.PermanentAddress
-                </div>
+                <div class="mb-2"><span class="info-label">Current:</span><br /> @Model.Address</div>
+                <div><span class="info-label">Permanent:</span><br /> @Model.PermanentAddress</div>
 
             </div>
+
         </div>
+
     </div>
 
 
 
-    <!-- ========================================= -->
-    <!-- JOB DETAILS -->
-    <!-- ========================================= -->
+    <!-- ======================= JOB DETAILS ======================== -->
     <div class="card shadow-sm border-0 p-4 mb-4">
 
         <div class="section-title">Job Details</div>
 
         <div class="row g-3">
-            <div class="col-md-3">
-                <span class="info-label">Joining Date:</span><br />
-                @(Model.JoiningDate?.ToString("dd-MMM-yyyy") ?? "-")
-            </div>
+            <div class="col-md-3"><span class="info-label">Joining Date:</span><br /> @(Model.JoiningDate?.ToString("dd-MMM-yyyy") ?? "-")</div>
+            <div class="col-md-3"><span class="info-label">Department:</span><br /> @Model.Department</div>
+            <div class="col-md-3"><span class="info-label">Position:</span><br /> @Model.Position</div>
+            <div class="col-md-3"><span class="info-label">Salary:</span><br /> @Model.Salary</div>
 
-            <div class="col-md-3">
-                <span class="info-label">Department:</span><br /> @Model.Department
-            </div>
-
-            <div class="col-md-3">
-                <span class="info-label">Position:</span><br /> @Model.Position
-            </div>
-
-            <div class="col-md-3">
-                <span class="info-label">Salary:</span><br /> @Model.Salary
-            </div>
-
-            <div class="col-md-3">
-                <span class="info-label">Reporting Manager:</span><br /> @Model.ReportingManager
-            </div>
-
-            <div class="col-md-3">
-                <span class="info-label">Status:</span><br /> @Model.Status
-            </div>
-
-            <div class="col-md-3">
-                <span class="info-label">Created At:</span><br />
-                @Model.CreatedAt.ToString("dd-MMM-yyyy HH:mm")
-            </div>
+            <div class="col-md-3"><span class="info-label">Reporting Manager:</span><br /> @Model.ReportingManager</div>
+            <div class="col-md-3"><span class="info-label">Status:</span><br /> @Model.Status</div>
+            <div class="col-md-3"><span class="info-label">Created At:</span><br /> @Model.CreatedAt.ToString("dd-MMM-yyyy HH:mm")</div>
         </div>
 
     </div>
 
 
 
-    <!-- ========================================= -->
-    <!-- EXPERIENCE DETAILS -->
-    <!-- ========================================= -->
+    <!-- ======================= EXPERIENCE DETAILS ======================== -->
     <div class="card shadow-sm border-0 p-4 mb-4">
 
         <div class="section-title">Experience Details</div>
 
         <div class="row g-3">
-            <div class="col-md-4">
-                <span class="info-label">Experience Type:</span><br /> @Model.ExperienceType
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">Total Experience Years:</span><br />
-                @(Model.TotalExperienceYears?.ToString() ?? "-")
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">Last Company:</span><br /> @Model.LastCompanyName
-            </div>
+            <div class="col-md-4"><span class="info-label">Type:</span><br /> @Model.ExperienceType</div>
+            <div class="col-md-4"><span class="info-label">Years:</span><br /> @Model.TotalExperienceYears ?? "-" </div>
+            <div class="col-md-4"><span class="info-label">Last Company:</span><br /> @Model.LastCompanyName</div>
         </div>
 
-
-        <!-- Experience Certificates -->
         <div class="mt-3">
-            <span class="info-label">Experience Certificates:</span><br />
+            <span class="info-label">Certificates:</span><br />
 
             @if (!string.IsNullOrEmpty(Model.ExperienceCertificateFilePath))
             {
@@ -222,26 +153,7 @@
                 <div class="row g-2 mt-1">
                     @foreach (var f in files)
                     {
-                        var fileUrl = baseFolder + f;
-                        var ext = System.IO.Path.GetExtension(f)?.ToLower();
-
-                        <div class="col-md-3">
-                            <div class="file-box">
-                                @if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" ||
-                                                        ext == ".gif" || ext == ".webp" || ext == ".bmp")
-                                {
-                                    <img src="@fileUrl" />
-                                }
-                                else
-                                {
-                                    <i class="fa-solid fa-file-pdf fa-3x text-danger"></i>
-                        
-                                    <br />
-                                }
-
-                                <a href="@fileUrl" target="_blank">View / Download</a>
-                            </div>
-                        </div>
+                        @DisplayFile(f)
                     }
                 </div>
             }
@@ -249,41 +161,26 @@
             {
                 <span class="text-muted">No certificates uploaded.</span>
             }
-
         </div>
 
     </div>
 
 
 
-    <!-- ========================================= -->
-    <!-- EDUCATION DETAILS -->
-    <!-- ========================================= -->
+    <!-- ======================= EDUCATION DETAILS ======================== -->
     <div class="card shadow-sm border-0 p-4 mb-4">
 
         <div class="section-title">Education</div>
 
         <div class="row g-3">
 
-            <div class="col-md-4">
-                <span class="info-label">12th %:</span><br /> @Model.HSCPercent
-            </div>
+            <div class="col-md-4"><span class="info-label">12th %:</span><br /> @Model.HSCPercent</div>
+            <div class="col-md-4"><span class="info-label">Graduation:</span><br /> @Model.GraduationCourse</div>
+            <div class="col-md-4"><span class="info-label">Graduation %:</span><br /> @Model.GraduationPercent</div>
 
-            <div class="col-md-4">
-                <span class="info-label">Graduation:</span><br /> @Model.GraduationCourse
-            </div>
+            <div class="col-md-4"><span class="info-label">PG:</span><br /> @Model.PostGraduationCourse</div>
+            <div class="col-md-4"><span class="info-label">PG %:</span><br /> @Model.PostGraduationPercent</div>
 
-            <div class="col-md-4">
-                <span class="info-label">Graduation %:</span><br /> @Model.GraduationPercent
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">Post Graduation:</span><br /> @Model.PostGraduationCourse
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">PG %:</span><br /> @Model.PostGraduationPercent
-            </div>
         </div>
 
         <hr />
@@ -292,23 +189,9 @@
 
         <div class="row g-3">
 
-            <!-- 12th -->
-            <div class="col-md-3">
-                <span class="info-label">12th Marksheet</span><br />
-                @DisplayFile(Model.TwelfthMarksheetFilePath)
-            </div>
-
-            <!-- Graduation -->
-            <div class="col-md-3">
-                <span class="info-label">Graduation Marksheet</span><br />
-                @DisplayFile(Model.GraduationMarksheetFilePath)
-            </div>
-
-            <!-- PG -->
-            <div class="col-md-3">
-                <span class="info-label">PG Marksheet</span><br />
-                @DisplayFile(Model.PostGraduationMarksheetFilePath)
-            </div>
+            <div class="col-md-3"><span class="info-label">12th Marksheet</span><br /> @DisplayFile(Model.TwelfthMarksheetFilePath)</div>
+            <div class="col-md-3"><span class="info-label">Graduation Marksheet</span><br /> @DisplayFile(Model.GraduationMarksheetFilePath)</div>
+            <div class="col-md-3"><span class="info-label">PG Marksheet</span><br /> @DisplayFile(Model.PostGraduationMarksheetFilePath)</div>
 
         </div>
 
@@ -316,150 +199,61 @@
 
 
 
-    <!-- ========================================= -->
-    <!-- ID & BANK -->
-    <!-- ========================================= -->
+    <!-- ======================= ID & BANK DETAILS ======================== -->
     <div class="card shadow-sm border-0 p-4 mb-4">
 
         <div class="section-title">ID Proofs</div>
 
         <div class="row g-3">
-
-            <div class="col-md-4">
-                <span class="info-label">Aadhaar Number:</span><br /> @Model.AadhaarNumber
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">PAN Number:</span><br /> @Model.PanNumber
-            </div>
-
+            <div class="col-md-4"><span class="info-label">Aadhaar:</span><br /> @Model.AadhaarNumber</div>
+            <div class="col-md-4"><span class="info-label">PAN:</span><br /> @Model.PanNumber</div>
         </div>
 
         <div class="row g-3 mt-2">
-
-            <div class="col-md-3">
-                <span class="info-label">Aadhaar File</span><br />
-                @DisplayFile(Model.AadhaarFilePath)
-            </div>
-
-            <div class="col-md-3">
-                <span class="info-label">PAN File</span><br />
-                @DisplayFile(Model.PanFilePath)
-            </div>
-
-            <div class="col-md-3">
-                <span class="info-label">Passbook</span><br />
-                @DisplayFile(Model.PassbookFilePath)
-            </div>
-
+            <div class="col-md-3">@DisplayFile(Model.AadhaarFilePath)</div>
+            <div class="col-md-3">@DisplayFile(Model.PanFilePath)</div>
+            <div class="col-md-3">@DisplayFile(Model.PassbookFilePath)</div>
         </div>
 
-
         <hr />
-
 
         <div class="section-title">Bank Details</div>
 
         <div class="row g-3">
-
-            <div class="col-md-4">
-                <span class="info-label">Account Holder Name:</span><br />
-                @Model.AccountHolderName
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">Bank Name:</span><br />
-                @Model.BankName
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">Account Number:</span><br />
-                @Model.AccountNumber
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">IFSC:</span><br />
-                @Model.IFSC
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">Branch:</span><br />
-                @Model.Branch
-            </div>
-
+            <div class="col-md-4"><span class="info-label">Account Holder:</span><br /> @Model.AccountHolderName</div>
+            <div class="col-md-4"><span class="info-label">Bank Name:</span><br /> @Model.BankName</div>
+            <div class="col-md-4"><span class="info-label">Account No:</span><br /> @Model.AccountNumber</div>
+            <div class="col-md-4"><span class="info-label">IFSC:</span><br /> @Model.IFSC</div>
+            <div class="col-md-4"><span class="info-label">Branch:</span><br /> @Model.Branch</div>
         </div>
 
-
         <hr />
-
 
         <div class="section-title">Emergency Contact</div>
 
         <div class="row g-3">
-
-            <div class="col-md-4">
-                <span class="info-label">Name:</span><br />
-                @Model.EmergencyContactName
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">Relationship:</span><br />
-                @Model.EmergencyContactRelationship
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">Mobile:</span><br />
-                @Model.EmergencyContactMobile
-            </div>
-
-            <div class="col-md-12">
-                <span class="info-label">Address:</span><br />
-                @Model.EmergencyContactAddress
-            </div>
-
+            <div class="col-md-4"><span class="info-label">Name:</span><br /> @Model.EmergencyContactName</div>
+            <div class="col-md-4"><span class="info-label">Relation:</span><br /> @Model.EmergencyContactRelationship</div>
+            <div class="col-md-4"><span class="info-label">Mobile:</span><br /> @Model.EmergencyContactMobile</div>
+            <div class="col-md-12"><span class="info-label">Address:</span><br /> @Model.EmergencyContactAddress</div>
         </div>
-
-
 
         <hr />
 
-
-        <div class="section-title">Health Information</div>
+        <div class="section-title">Health Info</div>
 
         <div class="row g-3">
 
-            <div class="col-md-4">
-                <span class="info-label">Has Disease:</span><br /> @Model.HasDisease
-            </div>
+            <div class="col-md-4"><span class="info-label">Has Disease:</span><br /> @Model.HasDisease</div>
+            <div class="col-md-4"><span class="info-label">Disease Name:</span><br /> @Model.DiseaseName</div>
+            <div class="col-md-4"><span class="info-label">Since:</span><br /> @Model.DiseaseSince</div>
 
-            <div class="col-md-4">
-                <span class="info-label">Disease Name:</span><br /> @Model.DiseaseName
-            </div>
+            <div class="col-md-4"><span class="info-label">Medicines:</span><br /> @Model.MedicinesRequired</div>
+            <div class="col-md-4"><span class="info-label">Doctor:</span><br /> @Model.DoctorName</div>
+            <div class="col-md-4"><span class="info-label">Doctor Contact:</span><br /> @Model.DoctorContact</div>
 
-            <div class="col-md-4">
-                <span class="info-label">Disease Since:</span><br /> @Model.DiseaseSince
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">Medicines Required:</span><br /> @Model.MedicinesRequired
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">Doctor Name:</span><br /> @Model.DoctorName
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">Doctor Contact:</span><br /> @Model.DoctorContact
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">Last Affected Date:</span><br /> @Model.LastAffectedDate
-            </div>
-
-            <div class="col-md-4">
-                <span class="info-label">Medical Document:</span><br />
-                @DisplayFile(Model.MedicalDocumentFilePath)
-            </div>
+            <div class="col-md-4"><span class="info-label">Last Affected:</span><br /> @Model.LastAffectedDate</div>
+            <div class="col-md-4">@DisplayFile(Model.MedicalDocumentFilePath)</div>
 
         </div>
 
@@ -468,29 +262,24 @@
 </div>
 
 
-
-
-
-<!-- ===================================================== -->
-<!-- INLINE RAZOR FUNCTION FOR FILE PREVIEW (NO PARTIAL) -->
-<!-- ===================================================== -->
+<!-- ===================================================================== -->
+<!-- FILE PREVIEW FUNCTION (UPDATED FOR C:\HRMSFiles\ FOLDER) -->
+<!-- ===================================================================== -->
 @functions {
+
     public IHtmlContent DisplayFile(string file)
     {
-        
         if (string.IsNullOrEmpty(file))
         {
             return new HtmlString("<span class='text-muted'>Not uploaded</span>");
         }
 
-        string baseFolder = Url.Content("~/uploads/employees/" + Model.EmployeeCode + "/");
-        string url = baseFolder + file;
+        string url = ViewBag.UrlFolder + file;
         string ext = System.IO.Path.GetExtension(file)?.ToLower();
 
         string html = "<div class='file-box'>";
 
-        if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" ||
-            ext == ".bmp" || ext == ".webp")
+        if (new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" }.Contains(ext))
         {
             html += $"<img src='{url}' />";
         }
