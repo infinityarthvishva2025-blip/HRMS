@@ -184,9 +184,7 @@ namespace HRMS.Controllers
         // =====================================================================
         public async Task<IActionResult> Create()
         {
-            if (HttpContext.Session.GetString("Role") != "HR")
-                return RedirectToAction("Login", "Account");
-
+            // ❌ Removed HR role check
             await PopulatePermissionDropdowns();
             return View();
         }
@@ -198,8 +196,7 @@ namespace HRMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(GurukulVideo model, IFormFile? VideoFile, string? ExternalLink)
         {
-            if (HttpContext.Session.GetString("Role") != "HR")
-                return RedirectToAction("Login", "Account");
+            // ❌ Removed HR role check
 
             model.Category = string.IsNullOrWhiteSpace(model.Category) ? "General" : model.Category.Trim();
             model.TitleGroup = string.IsNullOrWhiteSpace(model.TitleGroup) ? "General" : model.TitleGroup.Trim();
@@ -211,10 +208,12 @@ namespace HRMS.Controllers
                 return View(model);
             }
 
-            string root = Directory.GetCurrentDirectory();
-            string videoFolder = Path.Combine(root, "wwwroot", "Hrmsfiles", "gurukul");
-            string thumbFolder = Path.Combine(root, "wwwroot", "uploads", "gurukul-thumbs");
-            string ffmpegPath = Path.Combine(root, "wwwroot", "ffmpeg", "ffmpeg.exe");
+            // ================================
+            // ⭐ CUSTOM SERVER STORAGE PATH
+            // ================================
+            string videoFolder = @"C:\HRMSFiles\Gurukul Videos";
+            string thumbFolder = @"C:\HRMSFiles\Gurukul Videos\Thumbs";
+            string ffmpegPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "ffmpeg", "ffmpeg.exe");
 
             Directory.CreateDirectory(videoFolder);
             Directory.CreateDirectory(thumbFolder);
@@ -232,7 +231,8 @@ namespace HRMS.Controllers
                     await VideoFile.CopyToAsync(fs);
                 }
 
-                model.VideoPath = "/Hrmsfiles/gurukul/" + fileName;
+                // Store server path in DB OR a relative path — your choice:
+                model.VideoPath = fullVideoPath;   // ← FULL PATH stored
                 model.IsExternal = false;
 
                 // Create thumbnail
@@ -249,7 +249,7 @@ namespace HRMS.Controllers
                 process.Start();
                 process.WaitForExit();
 
-                model.ThumbnailPath = "/uploads/gurukul-thumbs/" + thumbFileName;
+                model.ThumbnailPath = fullThumbPath;   // Saving full server path
             }
             else if (!string.IsNullOrWhiteSpace(ExternalLink))
             {
@@ -267,12 +267,8 @@ namespace HRMS.Controllers
 
             model.UploadedOn = DateTime.UtcNow;
 
-            // ------------------------
-            // SAVE VIDEO
-            // ------------------------
             _context.GurukulVideos.Add(model);
             await _context.SaveChangesAsync();
-
 
             // ================================
             // ⭐ AUTOMATIC ANNOUNCEMENT ⭐
@@ -285,18 +281,15 @@ namespace HRMS.Controllers
                 ReadByEmployees = ""
             };
 
-            // Visible to ALL employees
             if (model.AllowedDepartment == null && model.AllowedEmployeeId == null)
             {
                 announcement.IsGlobal = true;
             }
-            // Visible only to ONE employee
             else if (model.AllowedEmployeeId != null)
             {
                 announcement.IsGlobal = false;
                 announcement.TargetEmployees = model.AllowedEmployeeId.ToString();
             }
-            // Visible to a DEPARTMENT
             else if (model.AllowedDepartment != null)
             {
                 announcement.IsGlobal = false;
@@ -305,7 +298,6 @@ namespace HRMS.Controllers
 
             _context.Announcements.Add(announcement);
             await _context.SaveChangesAsync();
-
 
             return RedirectToAction(nameof(HRList));
         }

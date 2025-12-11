@@ -24,6 +24,11 @@
             color: #0d6efd;
         }
 
+    #pagination {
+        position: relative;
+        padding-top: 10px;
+    }
+
     @@media (max-width: 768px) {
 
         .btn-group-mobile {
@@ -68,15 +73,15 @@
     }
 </style>
 
+
 <div class="container py-4">
 
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
         <h2 class="fw-bold text-primary mb-2">
             <i class="fa-solid fa-users me-2"></i> Employee Directory
         </h2>
-
-       
     </div>
+
 
     <!-- Search + Status Filter -->
     <div class="card shadow-sm border-0 mb-4">
@@ -100,7 +105,8 @@
                         <option value="Inactive">Inactive Employees</option>
                     </select>
                 </div>
-                <div class="col-md-5  btn-group-mobile">
+
+                <div class="col-md-5 btn-group-mobile">
                     <a class="btn btn-success me-1" asp-action="Create">
                         <i class="fa-solid fa-user-plus me-1"></i> Add New Employee
                     </a>
@@ -109,22 +115,12 @@
                         <i class="fa-solid fa-file-excel me-1"></i> Export to Excel
                     </a>
                 </div>
-                <!-- Mobile Only Buttons -->
-                @* <div class="col-md-12 d-md-none btn-group-mobile">
-
-                    <a class="btn btn-success me-1" asp-action="Create">
-                        <i class="fa-solid fa-user-plus me-1"></i> Add Employee
-                    </a>
-
-                    <a class="btn btn-info text-white" asp-action="ExportExcel">
-                        <i class="fa-solid fa-file-excel me-1"></i> Export Excel
-                    </a>
-                </div> *@
 
             </div>
 
         </div>
     </div>
+
 
     <!-- EMPLOYEE TABLE -->
     <div class="card shadow-sm border-0">
@@ -186,20 +182,27 @@
                             </tr>
                         }
                     </tbody>
-                </table>
 
-                <!-- Pagination -->
-                <div id="pagination" class="d-flex justify-content-end my-3 pe-3 pagination-right"></div>
+                </table>
 
             </div>
 
         </div>
+
+        <!-- FIXED NON-MOVING PAGINATION -->
+        <div class="card-footer bg-white border-0">
+            <div id="pagination" class="d-flex justify-content-end my-3 pe-3 pagination-right"></div>
+        </div>
+
     </div>
 
 </div>
 
 
-<!-- STATUS MODAL -->
+
+<!-- ================================
+    STATUS MODAL
+================================ -->
 <div class="modal fade" id="statusModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -247,6 +250,7 @@
 </div>
 
 
+
 @section Scripts {
 
     <script>
@@ -256,17 +260,13 @@
         let filteredRows = [];
 
 
-        // ============================
-        // INITIAL TABLE LOAD
-        // ============================
+        // PAGE LOAD
         document.addEventListener("DOMContentLoaded", () => {
             applyCombinedFilters();
         });
 
 
-        // ============================
-        // MASTER FILTER (Search + Status)
-        // ============================
+        // COMBINED FILTERS
         function applyCombinedFilters() {
 
             const searchTerm = document.getElementById("employeeSearch").value.toLowerCase();
@@ -276,10 +276,8 @@
 
             filteredRows = Array.from(allRows).filter(row => {
 
-                // 🔍 Search
                 const matchesSearch = row.textContent.toLowerCase().includes(searchTerm);
 
-                // 🔴 Status
                 const statusBadge = row.querySelector("td:nth-child(7) span");
                 const rowStatus = statusBadge ? statusBadge.innerText.trim() : "";
 
@@ -294,9 +292,7 @@
         }
 
 
-        // ============================
-        // EVENT LISTENERS
-        // ============================
+        // SEARCH EVENT
         document.getElementById("employeeSearch").addEventListener("input", applyCombinedFilters);
 
         function filterStatus() {
@@ -304,9 +300,7 @@
         }
 
 
-        // ============================
         // PAGINATION
-        // ============================
         function paginate() {
 
             const startIndex = (currentPage - 1) * rowsPerPage;
@@ -371,10 +365,7 @@
         }
 
 
-        // ============================
-        // STATUS MODAL
-        // ============================
-
+        // STATUS MODAL FUNCTIONS
         function openStatusModal(empId, currentStatus) {
 
             document.getElementById("modalEmpId").value = empId;
