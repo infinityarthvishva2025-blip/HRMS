@@ -202,6 +202,7 @@ namespace HRMS.Controllers
                 {
                     finalList.Add(new AttendanceRecordVm
                     {
+                        Emp_Code= empCode,
                         Date = date,
                         Status = "WO",          // Weekly Off
                         InTime = null,
@@ -216,6 +217,7 @@ namespace HRMS.Controllers
                 {
                     finalList.Add(new AttendanceRecordVm
                     {
+                        Emp_Code = empCode,
                         Date = date,
                         Status = "WOP",         // Week Off Present? (Your existing logic)
                         InTime = null,
@@ -241,6 +243,7 @@ namespace HRMS.Controllers
 
                     finalList.Add(new AttendanceRecordVm
                     {
+                        Emp_Code = empCode,
                         Date = rec.Date,
                         Status = finalStatus,
                         InTime = rec.InTime,
@@ -254,6 +257,7 @@ namespace HRMS.Controllers
                     // -------- NO ATTENDANCE → Absent --------
                     finalList.Add(new AttendanceRecordVm
                     {
+                        Emp_Code = empCode,
                         Date = date,
                         Status = "A",
                         InTime = null,
@@ -483,7 +487,15 @@ namespace HRMS.Controllers
             return View(att);
         }
 
+        public IActionResult CorrectionRequests()
+        {
+            var pending = _context.Attendances
+                .Where(a => a.CorrectionRequested == true)
+                .OrderByDescending(a => a.Date)
+                .ToList();
 
+            return View(pending);
+        }
         [HttpPost]
         public IActionResult RequestCorrection(string empCode, string date, string CorrectionRemark, int employeeId)
         {
@@ -591,16 +603,7 @@ namespace HRMS.Controllers
 
 
 
-        public IActionResult CorrectionRequests()
-        {
-            var pending = _context.Attendances
-                .Where(a => a.CorrectionRequested == true)
-                .OrderByDescending(a => a.Date)
-                .ToList();
-
-            return View(pending);
-        }
-
+       
         
 
         public async Task<IActionResult> CalendarView(int? year, int? month, string department = "all", int itemsPerPage = 50)
@@ -889,7 +892,7 @@ namespace HRMS.Controllers
             return RedirectToAction("ManualAttendance");
         }
 
- 
+
         public async Task<IActionResult> EarnCompOff(int empId, DateTime workDate)
         {
             var emp = await _context.Employees.FindAsync(empId);

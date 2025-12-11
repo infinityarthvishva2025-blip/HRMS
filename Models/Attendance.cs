@@ -37,7 +37,7 @@ namespace HRMS.Models
 
         [Key]
         public int? Id { get; set; } // Should have identity key
-
+       
         public string Emp_Code { get; set; }
     
         public DateTime Date { get; set; }

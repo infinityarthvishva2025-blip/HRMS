@@ -67,6 +67,7 @@
    <table class="table table-striped table-bordered">
     <thead class="table-dark">
         <tr>
+            <th>Employee Code</th>
             <th>Date</th>
             <th>Check In</th>
             <th>Check Out</th>
@@ -80,6 +81,8 @@
         @foreach (var a in Model.AttendanceRecords)
         {
             <tr>
+                    
+                    <td>@a.Emp_Code</td>
                 <td>@a.Date.ToString("dd-MMM-yyyy")</td>
 
                 <td>
@@ -163,36 +166,34 @@
 
 
 
-                    <td>
-                        @if (!a.CorrectionRequested)
+                <td>
+                    @if (!a.CorrectionRequested)
+                    {
+                        <a asp-controller="Attendance"
+                           asp-action="RequestCorrection"
+                               asp-route-empCode="@a.Emp_Code"
+                           asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
+                           asp-route-employeeId="@Model.Employee.Id"
+                           class="btn btn-warning btn-sm">
+                            Request
+                        </a>
+                    }
+                    else
+                    {
+                        if (a.CorrectionStatus == "Pending")
                         {
-                            <a asp-controller="Attendance"
-                               asp-action="RequestCorrection"
-                               asp-route-empCode="@a.EmpCode"
-                               asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
-                               asp-route-employeeId="@Model.Employee.Id"
-                               class="btn btn-warning btn-sm">
-                                Request
-                            </a>
+                            <span class="badge bg-info">Pending</span>
                         }
-                        else
+                        else if (a.CorrectionStatus == "Approved")
                         {
-                            if (a.CorrectionStatus == "Pending")
-                            {
-                                <span class="badge bg-info">Pending</span>
-                            }
-                            else if (a.CorrectionStatus == "Approved")
-                            {
-                                <span class="badge bg-success">Approved</span>
-                            }
-                            else if (a.CorrectionStatus == "Rejected")
-                            {
-                                <span class="badge bg-danger">Rejected</span>
-                            }
+                            <span class="badge bg-success">Approved</span>
                         }
-                    </td>
-
-
+                        else if (a.CorrectionStatus == "Rejected")
+                        {
+                            <span class="badge bg-danger">Rejected</span>
+                        }
+                    }
+                </td>
             </tr>
         }
     </tbody>
