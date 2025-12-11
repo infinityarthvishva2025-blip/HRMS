@@ -67,8 +67,6 @@ namespace HRMS.Controllers
         // CREATE (GET)
         // ================================
         // ================================
-        // CREATE (GET)
-        // ================================
         public IActionResult Create()
         {
             return View(new Employee { EmployeeCode = GenerateNextEmployeeCode() });

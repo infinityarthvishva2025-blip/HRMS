@@ -23,7 +23,7 @@
             <table class="table table-bordered table-striped mb-0 align-middle">
                 <thead class="table-dark">
                     <tr>
-                        <th style="width: 130px;">Employee Code</th>
+                        <th style="width: 130px;">Employee Name</th>
                         <th style="width: 130px;">Date</th>
                         <th>Reason</th>
                         <th style="width: 120px;">Status</th>
@@ -45,8 +45,9 @@
                     {
                         foreach (var a in Model.OrderByDescending(x => x.Date))
                         {
+                           
                             <tr>
-                                <td class="fw-semibold">@a.Emp_Code</td>
+                                <td class="fw-semibold">@a.Emp_Code "-"</td>
                                 <td>@a.Date.ToString("dd-MMM-yyyy")</td>
 
                                 <td>
