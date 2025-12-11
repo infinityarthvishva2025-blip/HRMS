@@ -2,8 +2,8 @@
 {
     public class AttendanceRecordVm
     {
-        public string EmpCode { get; set; }
-
+        public string empCode { get; set; }
+        public string Emp_Code { get; set; }
         public DateTime Date { get; set; }
         public string Status { get; set; }   // P, A, WO, WOP, L, AUTO
 

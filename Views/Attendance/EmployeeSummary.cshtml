@@ -67,6 +67,7 @@
    <table class="table table-striped table-bordered">
     <thead class="table-dark">
         <tr>
+            <th>Employee Code</th>
             <th>Date</th>
             <th>Check In</th>
             <th>Check Out</th>
@@ -80,6 +81,8 @@
         @foreach (var a in Model.AttendanceRecords)
         {
             <tr>
+                    
+                    <td>@a.Emp_Code</td>
                 <td>@a.Date.ToString("dd-MMM-yyyy")</td>
 
                 <td>
@@ -168,7 +171,7 @@
                     {
                         <a asp-controller="Attendance"
                            asp-action="RequestCorrection"
-                           asp-route-empCode="@a.EmpCode"
+                               asp-route-empCode="@a.Emp_Code"
                            asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
                            asp-route-employeeId="@Model.Employee.Id"
                            class="btn btn-warning btn-sm">

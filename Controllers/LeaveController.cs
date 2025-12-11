@@ -217,6 +217,7 @@ namespace HRMS.Controllers
                 if (leave.LeaveType == "coff")
                 {
                     emp.CompOffBalance -= leave.TotalDays;
+                   //emp.CompOffBalance -= (float)leave.TotalDays;
                 }
 
                 await SyncLeaveToAttendance(leave);
