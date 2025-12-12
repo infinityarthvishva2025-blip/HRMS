@@ -277,19 +277,37 @@ namespace HRMS.Controllers
                 }
 
                 // -------- WEEKLY OFF (Saturday = WOP) ----------
+                // -------- WEEKLY OFF (Saturday = WOP) ----------
                 if (date.DayOfWeek == DayOfWeek.Saturday)
                 {
-                    finalList.Add(new AttendanceRecordVm
+                    if (rec != null) // Attendance exists on Saturday
                     {
-                        Emp_Code = empCode,
-                        Date = date,
-                        Status = "WOP",         // Week Off Present? (Your existing logic)
-                        InTime = null,
-                        OutTime = null,
-                        CorrectionRequested = false
-                    });
+                        finalList.Add(new AttendanceRecordVm
+                        {
+                            Emp_Code = empCode,
+                            Date = rec.Date,
+                            Status = "WOP",
+                            InTime = rec.InTime,            // ✅ KEEP TIME
+                            OutTime = rec.OutTime,          // ✅ KEEP TIME
+                            CorrectionRequested = rec.CorrectionRequested,
+                            CorrectionStatus = rec.CorrectionStatus
+                        });
+                    }
+                    else
+                    {
+                        finalList.Add(new AttendanceRecordVm
+                        {
+                            Emp_Code = empCode,
+                            Date = date,
+                            Status = "WOP",
+                            InTime = null,
+                            OutTime = null,
+                            CorrectionRequested = false
+                        });
+                    }
                     continue;
                 }
+
 
                 // -------- ATTENDANCE EXISTS ----------
                 if (rec != null)
