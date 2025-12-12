@@ -39,10 +39,8 @@
                    value="@ViewBag.ToDate" />
         </div>
 
-        <!-- STATUS + APPLY + EXPORT inline row -->
         <div class="col-12 col-md-6 col-lg-4 d-flex align-items-end gap-2">
 
-            <!-- STATUS DROPDOWN -->
             <div class="flex-grow-1">
                 <label class="form-label fw-semibold">Status</label>
                 <select name="status" class="form-select">
@@ -52,44 +50,31 @@
                 </select>
             </div>
 
-            <!-- APPLY BUTTON -->
-            <button class="btn btn-primary mt-auto" style="white-space:nowrap;">
+            <button class="btn btn-primary mt-auto">
                 <i class="fa-solid fa-search me-1"></i> Apply
             </button>
 
-            <!-- EXPORT BUTTON -->
             <button formaction="/Attendance/ExportFiltered" formmethod="get"
-                    class="btn btn-success mt-auto" style="white-space:nowrap;">
+                    class="btn btn-success mt-auto">
                 <i class="fa-solid fa-file-excel me-1"></i> Export
             </button>
-
         </div>
-
-
 
         <div class="col-12 d-flex flex-wrap gap-2 align-items-end mt-3">
 
-         
-
-           
             <a href="@Url.Action("HighDensityCalendar", "Attendance",
                        new { year = DateTime.Now.Year, month = DateTime.Now.Month })"
                class="btn btn-info text-white">
                 <i class="fa-solid fa-calendar-days me-1"></i> View in Calendar
             </a>
 
-            <!-- ⭐ NEW MANUAL ATTENDANCE BUTTON -->
             <a href="/Attendance/ManualAttendance" class="btn btn-success">
                 <i class="fa-solid fa-user-check me-1"></i> Manual Attendance
             </a>
 
-
-
             <a href="/Attendance/CorrectionRequests"
                class="btn btn-warning position-relative">
-
                 <i class="fa-solid fa-list-check me-1"></i> View Requests
-
                 @if (ViewBag.PendingRequests > 0)
                 {
                     <span class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">
@@ -97,14 +82,7 @@
                     </span>
                 }
             </a>
-
-          
-
         </div>
-
-
-
-
     </form>
 
     <!-- TABLE -->
@@ -115,18 +93,19 @@
                 <table class="table table-bordered table-striped mb-0 align-middle">
                     <thead class="table-dark sticky-top">
                         <tr>
-                            <th class="text-nowrap">Employee Code</th>
-                            <th class="text-nowrap">Name</th>
-                            <th class="text-nowrap">Date</th>
-                            <th class="text-nowrap">Check In</th>
-                            <th class="text-nowrap">Check Out</th>
-                            <th class="text-nowrap">Total Hours</th>
-                            <th class="text-nowrap">Status</th>
-                            <th class="text-nowrap">Ticket</th>   <!-- NEW -->
+                            <th>Employee Code</th>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th>Total Hours</th>
+                            <th>Status</th>
+                            <th>Ticket</th>
                         </tr>
                     </thead>
 
-                    <tbody>
+                    <!-- ✅ FIXED HERE -->
+                    <tbody id="tableBody">
                         @if (Model == null || !Model.Any())
                         {
                             <tr>
@@ -142,109 +121,91 @@
                                 var emp = employees.FirstOrDefault(e => e.EmployeeCode == a.Emp_Code);
 
                                 <tr>
-                                    <td class="text-nowrap">@a.Emp_Code</td>
-                                    <td class="text-nowrap">@((emp?.Name) ?? "--")</td>
-                                    <td class="text-nowrap">@a.AttDate.ToString("dd-MM-yyyy")</td>
-                                    <td class="text-nowrap">@((a.InTime.HasValue) ? a.InTime.Value.ToString(@"hh\:mm") : "--")</td>
-                                    <td class="text-nowrap">@((a.OutTime.HasValue) ? a.OutTime.Value.ToString(@"hh\:mm") : "--")</td>
-                                    <td class="text-nowrap">@a.TotalHours</td>
+                                    <td>@a.Emp_Code</td>
+                                    <td>@(emp?.Name ?? "--")</td>
+                                    <td>@a.AttDate.ToString("dd-MM-yyyy")</td>
+                                    <td>@(a.InTime?.ToString(@"hh\:mm") ?? "--")</td>
+                                    <td>@(a.OutTime?.ToString(@"hh\:mm") ?? "--")</td>
+                                    <td>@a.TotalHours</td>
 
-                                    <td class="text-nowrap">
-
-                                        @* 1️⃣ LEAVE *@
-                                        @if (a.Status == "L")
-                                        {
-                                            <span class="badge bg-info">Leave</span>
-                                        }
-
-                                        @* 2️⃣ WEEKLY OFF — SUNDAY = WO *@
-                                        else if (a.AttDate.DayOfWeek == DayOfWeek.Sunday)
-                                        {
-                                            <span class="badge bg-secondary">WO</span>
-                                        }
-
-                                        @* 3️⃣ WEEKLY OFF — SATURDAY = WOP *@
-                                        else if (a.AttDate.DayOfWeek == DayOfWeek.Saturday)
-                                        {
-                                            <span class="badge bg-primary">WOP</span>
-                                        }
-
-                                        @* 4️⃣ PRESENT (P) *@
-                                        else if (a.Status == "P")
-                                        {
-                                            <span class="badge bg-success">Present</span>
-                                        }
-
-                                        @* 5️⃣ NO CHECK-IN & NO CHECK-OUT = ABSENT *@
-                                        else if (!a.InTime.HasValue && !a.OutTime.HasValue)
-                                        {
-                                            <span class="badge bg-danger">Absent</span>
-                                        }
-
-                                        @* 6️⃣ CHECKED IN BUT NOT CHECKED OUT *@
-                                        else if (a.InTime.HasValue && !a.OutTime.HasValue)
-                                        {
-                                            <span class="badge bg-warning text-dark">Not Checked Out</span>
-                                        }
-
-                                        @* 7️⃣ DEFAULT — PRESENT *@
-                                        else
-                                        {
-                                            <span class="badge bg-success">Present</span>
-                                        }
-
+                                    <td>
+                                        @if (a.Status == "L") { <span class="badge bg-info">Leave</span> }
+                                        else if (a.AttDate.DayOfWeek == DayOfWeek.Sunday) { <span class="badge bg-secondary">WO</span> }
+                                        else if (a.AttDate.DayOfWeek == DayOfWeek.Saturday) { <span class="badge bg-primary">WOP</span> }
+                                        else if (a.Status == "P") { <span class="badge bg-success">Present</span> }
+                                        else if (!a.InTime.HasValue && !a.OutTime.HasValue) { <span class="badge bg-danger">Absent</span> }
+                                        else if (a.InTime.HasValue && !a.OutTime.HasValue) { <span class="badge bg-warning text-dark">Not Checked Out</span> }
+                                        else { <span class="badge bg-success">Present</span> }
                                     </td>
 
-
-                                    <!-- NEW TICKET COLUMN -->
                                     <td>
                                         @if (a.CorrectionRequested)
                                         {
-                                            if (a.CorrectionStatus == "Pending")
-                                            {
-                                                <span class="badge bg-info">Pending</span>
-                                            }
-                                            else if (a.CorrectionStatus == "Approved")
-                                            {
-                                                <span class="badge bg-success">Approved</span>
-                                            }
-                                            else if (a.CorrectionStatus == "Rejected")
-                                            {
-                                                <span class="badge bg-danger">Rejected</span>
-                                            }
+                                            <span class="badge bg-info">@a.CorrectionStatus</span>
                                         }
                                         else
                                         {
                                             <span class="badge bg-secondary">No Ticket</span>
                                         }
                                     </td>
-
                                 </tr>
                             }
                         }
                     </tbody>
-
                 </table>
             </div>
-
         </div>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <span id="pageInfo" class="text-muted"></span>
+        <nav>
+            <ul class="pagination mb-0" id="pagination"></ul>
+        </nav>
     </div>
 </div>
 
-<style>
-    .pill-badge {
-        padding: 6px 10px;
-        font-size: .85rem;
-        border-radius: 999px;
-    }
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
 
-    .table-responsive {
-        overflow-x: auto;
-    }
+        const rowsPerPage = 10;
+        const tableBody = document.getElementById("tableBody");
+        if (!tableBody) return;
 
-    thead.sticky-top th {
-        top: 0;
-        z-index: 2;
-    }
-</style>
-   @*  ////////    Responsive Page   //////// *@
+        const rows = Array.from(tableBody.querySelectorAll("tr"));
+        const pagination = document.getElementById("pagination");
+        const pageInfo = document.getElementById("pageInfo");
+
+        let currentPage = 1;
+        const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+        function showPage(page) {
+            currentPage = page;
+
+            rows.forEach((row, index) => {
+                row.style.display =
+                    index >= (page - 1) * rowsPerPage &&
+                    index < page * rowsPerPage ? "" : "none";
+            });
+
+            pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+            renderPagination();
+        }
+
+        function renderPagination() {
+            pagination.innerHTML = "";
+
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement("li");
+                li.className = "page-item " + (i === currentPage ? "active" : "");
+                li.innerHTML = `<a class="page-link">${i}</a>`;
+                li.onclick = () => showPage(i);
+                pagination.appendChild(li);
+            }
+        }
+
+        if (rows.length > 0) showPage(1);
+    });
+</script>
+

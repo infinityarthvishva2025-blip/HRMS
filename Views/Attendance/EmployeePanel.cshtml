@@ -158,8 +158,69 @@
         </div>
     </div>
 </div>
-
 <script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        let countdown = document.getElementById("countdownContainer");
+
+        // Hide countdown if early / late message exists
+        if (document.querySelector(".early-card") || document.querySelector(".late-card")) {
+            if (countdown) countdown.style.display = "none";
+            return;
+        }
+
+        let inTime  = '@(Model?.InTime?.ToString() ?? "")';
+        let outTime = '@(Model?.OutTime?.ToString() ?? "")';
+
+        // Hide if checked out or no check-in
+        if (outTime !== "" || inTime === "") {
+            if (countdown) countdown.style.display = "none";
+            return;
+        }
+
+        let label = document.getElementById("countdown");
+        if (!label) return;
+
+        // ===============================
+        // ✅ SHIFT LOGIC
+        // ===============================
+        let today = new Date();
+        let day = today.getDay(); // Sun=0 ... Sat=6
+
+        // Saturday = 7h (WOP), else 8.5h
+        let shiftMinutes = (day === 6) ? 420 : 510;
+        let shiftMs = shiftMinutes * 60 * 1000;
+
+        // Build valid datetime
+        let dateStr = today.toISOString().split("T")[0];
+        let start = new Date(`${dateStr}T${inTime}`);
+        let endTime = new Date(start.getTime() + shiftMs);
+
+        function updateCountdown() {
+            let now = new Date();
+            let diff = endTime - now;
+
+            if (diff <= 0) {
+                label.textContent = "00:00:00";
+                return;
+            }
+
+            let h = Math.floor(diff / 3600000);
+            let m = Math.floor((diff % 3600000) / 60000);
+            let s = Math.floor((diff % 60000) / 1000);
+
+            label.textContent =
+                h.toString().padStart(2, '0') + ":" +
+                m.toString().padStart(2, '0') + ":" +
+                s.toString().padStart(2, '0');
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    });
+</script>
+
+@* <script>
     document.addEventListener("DOMContentLoaded", function () {
 
         let countdown = document.getElementById("countdownContainer");
@@ -211,7 +272,7 @@
         updateCountdown();
         setInterval(updateCountdown, 1000);
     });
-</script>
+</script> *@
 
 
 <style>

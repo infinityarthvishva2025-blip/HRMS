@@ -88,62 +88,126 @@ namespace HRMS.Controllers
         // =========================================================
         // CHECK OUT
         // =========================================================
+
         public IActionResult CheckOut()
-{
-    string empCode = HttpContext.Session.GetString("EmpCode");
-    if (empCode == null)
-        return RedirectToAction("Login", "Account");
+        {
+            string empCode = HttpContext.Session.GetString("EmpCode");
+            if (empCode == null)
+                return RedirectToAction("Login", "Account");
 
-    DateTime today = DateTime.Today;
+            DateTime today = DateTime.Today;
 
-    var record = _context.Attendances
-        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+            var record = _context.Attendances
+                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
 
-    if (record == null)
-    {
-        TempData["EarlyCheckout"] = "No active attendance found.";
-        TempData.Keep();
-        return RedirectToAction("EmployeePanel");
-    }
+            // No attendance found
+            if (record == null)
+            {
+                TempData["EarlyCheckout"] = "No active attendance found.";
+                TempData.Keep();
+                return RedirectToAction("EmployeePanel");
+            }
 
-    if (record.OutTime != null)
-    {
-        TempData["CheckoutSuccess"] = $"You already checked out at {record.OutTime.Value}.";
-        TempData.Keep();
-        return RedirectToAction("EmployeePanel");
-    }
+            // Prevent double checkout
+            if (record.OutTime != null)
+            {
+                TempData["CheckoutSuccess"] = $"You already checked out at {record.OutTime.Value}.";
+                TempData.Keep();
+                return RedirectToAction("EmployeePanel");
+            }
 
-    record.OutTime = DateTime.Now.TimeOfDay;
+            // Set checkout time
+            record.OutTime = DateTime.Now.TimeOfDay;
             record.Att_Date = record.Date;
 
             if (record.InTime != null)
-    {
-        TimeSpan worked = record.OutTime.Value - record.InTime.Value;
-        TimeSpan shift = TimeSpan.FromMinutes(510); // 8.5 hours
+            {
+                TimeSpan worked = record.OutTime.Value - record.InTime.Value;
 
-        if (worked < shift)
-        {
-            TimeSpan remaining = shift - worked;
+                // 🔥 SHIFT LOGIC
+                // Saturday = 7 hours (WOP)
+                // Other days = 8.5 hours
+                TimeSpan shift = (today.DayOfWeek == DayOfWeek.Saturday)
+                    ? TimeSpan.FromMinutes(420)   // 7 hours
+                    : TimeSpan.FromMinutes(510);  // 8.5 hours
+
+                if (worked < shift)
+                {
+                    TimeSpan remaining = shift - worked;
 
                     TempData["EarlyTime"] = $"{remaining.Hours}h {remaining.Minutes}m";
-                    TempData["EarlyCheckout"] = "Early Checkout";
-                 
+                    TempData["EarlyCheckout"] = "Remaining Time";
                 }
                 else
-        {
-            TimeSpan extra = worked - shift;
+                {
+                    TimeSpan extra = worked - shift;
 
-            TempData["LateTime"] = $"{extra.Hours}h {extra.Minutes}m";
-            TempData["LateCheckout"] = "Great! Overtime";
-                    
+                    TempData["LateTime"] = $"{extra.Hours}h {extra.Minutes}m";
+                    TempData["LateCheckout"] = "Overtime";
                 }
-    }
+            }
 
-    _context.SaveChanges();
+            _context.SaveChanges();
 
-    return RedirectToAction("EmployeePanel");
-}
-    
+            return RedirectToAction("EmployeePanel");
+        }
+
+        //        public IActionResult CheckOut()
+        //{
+        //    string empCode = HttpContext.Session.GetString("EmpCode");
+        //    if (empCode == null)
+        //        return RedirectToAction("Login", "Account");
+
+        //    DateTime today = DateTime.Today;
+
+        //    var record = _context.Attendances
+        //        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+
+        //    if (record == null)
+        //    {
+        //        TempData["EarlyCheckout"] = "No active attendance found.";
+        //        TempData.Keep();
+        //        return RedirectToAction("EmployeePanel");
+        //    }
+
+        //    if (record.OutTime != null)
+        //    {
+        //        TempData["CheckoutSuccess"] = $"You already checked out at {record.OutTime.Value}.";
+        //        TempData.Keep();
+        //        return RedirectToAction("EmployeePanel");
+        //    }
+
+        //    record.OutTime = DateTime.Now.TimeOfDay;
+        //            record.Att_Date = record.Date;
+
+        //            if (record.InTime != null)
+        //    {
+        //        TimeSpan worked = record.OutTime.Value - record.InTime.Value;
+        //        TimeSpan shift = TimeSpan.FromMinutes(510); // 8.5 hours
+
+        //        if (worked < shift)
+        //        {
+        //            TimeSpan remaining = shift - worked;
+
+        //                    TempData["EarlyTime"] = $"{remaining.Hours}h {remaining.Minutes}m";
+        //                    TempData["EarlyCheckout"] = "Early Checkout";
+
+        //                }
+        //                else
+        //        {
+        //            TimeSpan extra = worked - shift;
+
+        //            TempData["LateTime"] = $"{extra.Hours}h {extra.Minutes}m";
+        //            TempData["LateCheckout"] = "Great! Overtime";
+
+        //                }
+        //    }
+
+        //    _context.SaveChanges();
+
+        //    return RedirectToAction("EmployeePanel");
+        //}
+
 
         // =========================================================
         // SUMMARY REDIRECT
