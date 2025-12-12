@@ -41,18 +41,7 @@
                 <small>Total Working Days</small>
             </div>
         </div>
-       @*  <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 text-center p-3">
-                <h4 class="fw-bold text-danger">@Model.TotalLateDays</h4>
-                <small>Late Days</small>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 text-center p-3">
-                <h4 class="fw-bold text-warning">@Model.TotalEarlyLeaveDays</h4>
-                <small>Early Leave Days</small>
-            </div>
-        </div> *@
+
         <div class="col-md-3 mb-3">
             <div class="card shadow-sm border-0 text-center p-3">
                 <h4 class="fw-bold text-success">@Model.AverageWorkingHours</h4>
@@ -64,142 +53,139 @@
     <!-- Daily Attendance Log -->
     <h4 class="fw-bold mb-3">Daily Attendance Log</h4>
 
-   <table class="table table-striped table-bordered">
-    <thead class="table-dark">
-        <tr>
-            <th>Employee Code</th>
-            <th>Date</th>
-            <th>Check In</th>
-            <th>Check Out</th>
-            <th>Working Hours</th>
-            <th>Status</th>       
-            <th>Ticket</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (var a in Model.AttendanceRecords)
-        {
+    <table class="table table-striped table-bordered">
+        <thead class="table-dark">
             <tr>
-                    
-                    <td>@a.Emp_Code</td>
-                <td>@a.Date.ToString("dd-MMM-yyyy")</td>
+                <th>Date</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Working Hours</th>
+                <th>Status</th>
+                <th>Ticket</th>
+            </tr>
+        </thead>
 
-                <td>
-                    @(a.InTime.HasValue
-                        ? DateTime.Today.Add(a.InTime.Value).ToString("hh:mm tt")
-                        : "--")
-                </td>
+        <tbody>
+            @foreach (var a in Model.AttendanceRecords)
+            {
+                <tr>
+                    <td>@a.Date.ToString("dd-MMM-yyyy")</td>
 
-                <td>
-                    @(a.OutTime.HasValue
-                        ? DateTime.Today.Add(a.OutTime.Value).ToString("hh:mm tt")
-                        : "--")
-                </td>
-
-
-                <td>
-                    @if (a.InTime.HasValue && a.OutTime.HasValue)
-                    {
-                        var diff = a.OutTime.Value - a.InTime.Value;
-                        @($"{diff.Hours}h {diff.Minutes}m")
-                    }
-                    else
-                    {
-                        @("--")
-                    }
-                </td>
-
-                    <!-- STATUS COLUMN -->
+                    <!-- CHECK IN -->
                     <td>
+                        @if (a.Date.DayOfWeek == DayOfWeek.Sunday)   // ONLY WO
+                        {
+                            <span>--</span>
+                        }
+                        else
+                        {
+                            @(a.InTime.HasValue
+                                                ? DateTime.Today.Add(a.InTime.Value).ToString("hh:mm tt")
+                                                : "--")
+                        }
+                    </td>
 
-                        @* 1️⃣ LEAVE *@
+                    <!-- CHECK OUT -->
+                    <td>
+                        @if (a.Date.DayOfWeek == DayOfWeek.Sunday)   // ONLY WO
+                        {
+                            <span>--</span>
+                        }
+                        else
+                        {
+                            @(a.OutTime.HasValue
+                                                ? DateTime.Today.Add(a.OutTime.Value).ToString("hh:mm tt")
+                                                : "--")
+                        }
+                    </td>
+
+                    <!-- WORKING HOURS -->
+                    <td>
+                        @if (a.Date.DayOfWeek == DayOfWeek.Sunday)   // ONLY WO
+                        {
+                            <span>--</span>
+                        }
+                        else if (a.InTime.HasValue && a.OutTime.HasValue)
+                        {
+                            var diff = a.OutTime.Value - a.InTime.Value;
+                            @($"{diff.Hours}h {diff.Minutes}m")
+                        }
+                        else
+                        {
+                            <span>--</span>
+                        }
+                    </td>
+
+                    <!-- STATUS -->
+                    <td>
                         @if (a.Status == "L")
                         {
                             <span class="badge bg-info">Leave</span>
                         }
-
-                        @* 2️⃣ SUNDAY = WO (Weekly Off) *@
                         else if (a.Date.DayOfWeek == DayOfWeek.Sunday)
                         {
                             <span class="badge bg-secondary">WO</span>
                         }
-
-                        @* 3️⃣ SATURDAY = WOP (Week Off Present) *@
                         else if (a.Date.DayOfWeek == DayOfWeek.Saturday)
                         {
                             <span class="badge bg-primary">WOP</span>
                         }
-
-                        @* 4️⃣ AUTO CHECKOUT *@
                         else if (a.InTime.HasValue && !a.OutTime.HasValue &&
                         (a.Status == "Auto" || a.Status == "AOC"))
                         {
                             <span class="badge bg-warning text-dark">Auto Checkout</span>
                         }
-
-                        @* 5️⃣ CHECK-IN AVAILABLE BUT NO CHECK-OUT *@
                         else if (a.InTime.HasValue && !a.OutTime.HasValue)
                         {
                             <span class="badge bg-warning text-dark">Not Checked Out</span>
                         }
-
-                        @* 6️⃣ PRESENT *@
                         else if (a.Status == "P")
                         {
                             <span class="badge bg-success">Present</span>
                         }
-
-                        @* 7️⃣ ABSENT *@
                         else if (!a.InTime.HasValue && !a.OutTime.HasValue)
                         {
                             <span class="badge bg-danger">Absent</span>
                         }
-
-                        @* 8️⃣ DEFAULT PRESENT *@
                         else
                         {
                             <span class="badge bg-success">Present</span>
                         }
-
                     </td>
 
-
-
-                <td>
-                    @if (!a.CorrectionRequested)
-                    {
-                        <a asp-controller="Attendance"
-                           asp-action="RequestCorrection"
+                    <!-- TICKET -->
+                    <td>
+                        @if (!a.CorrectionRequested && a.Date.DayOfWeek != DayOfWeek.Sunday)
+                        {
+                            <a asp-controller="Attendance"
+                               asp-action="RequestCorrection"
                                asp-route-empCode="@a.Emp_Code"
-                           asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
-                           asp-route-employeeId="@Model.Employee.Id"
-                           class="btn btn-warning btn-sm">
-                            Request
-                        </a>
-                    }
-                    else
-                    {
-                        if (a.CorrectionStatus == "Pending")
-                        {
-                            <span class="badge bg-info">Pending</span>
+                               asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
+                               asp-route-employeeId="@Model.Employee.Id"
+                               class="btn btn-warning btn-sm">
+                                Request
+                            </a>
                         }
-                        else if (a.CorrectionStatus == "Approved")
+                        else
                         {
-                            <span class="badge bg-success">Approved</span>
+                            if (a.CorrectionStatus == "Pending")
+                            {
+                                <span class="badge bg-info">Pending</span>
+                            }
+                            else if (a.CorrectionStatus == "Approved")
+                            {
+                                <span class="badge bg-success">Approved</span>
+                            }
+                            else if (a.CorrectionStatus == "Rejected")
+                            {
+                                <span class="badge bg-danger">Rejected</span>
+                            }
                         }
-                        else if (a.CorrectionStatus == "Rejected")
-                        {
-                            <span class="badge bg-danger">Rejected</span>
-                        }
-                    }
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
 
 <style>
