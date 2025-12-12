@@ -487,12 +487,24 @@ namespace HRMS.Controllers
             return View(att);
         }
 
+        //public IActionResult CorrectionRequests()
+        //{
+        //    var pending = _context.Attendances
+        //        .Where(a => a.CorrectionRequested == true)
+        //        .OrderByDescending(a => a.Date)
+        //        .ToList();
+
+        //    return View(pending);
+        //}
         public IActionResult CorrectionRequests()
         {
             var pending = _context.Attendances
                 .Where(a => a.CorrectionRequested == true)
                 .OrderByDescending(a => a.Date)
                 .ToList();
+
+            // ✅ Load employees once
+            ViewBag.Employees = _context.Employees.ToList();
 
             return View(pending);
         }

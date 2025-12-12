@@ -23,11 +23,11 @@
             <table class="table table-bordered table-striped mb-0 align-middle">
                 <thead class="table-dark">
                     <tr>
-                        <th style="width: 130px;">Employee Name</th>
-                        <th style="width: 130px;">Date</th>
+                        <th >Employee Name</th>
+                        <th >Date</th>
                         <th>Reason</th>
-                        <th style="width: 120px;">Status</th>
-                        <th style="width: 120px;">Actions</th>
+                        <th >Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
 
@@ -46,8 +46,13 @@
                         foreach (var a in Model.OrderByDescending(x => x.Date))
                         {
                            
+    var employees = ViewBag.Employees as List<HRMS.Models.Employee>;
+    var emp = employees?.FirstOrDefault(e => e.EmployeeCode == a.Emp_Code);
+
                             <tr>
-                                <td class="fw-semibold">@a.Emp_Code "-"</td>
+                                <td class="fw-semibold COL-MD-5">
+                                    @a.Emp_Code - @(emp?.Name ?? "Unknown")
+                                </td>
                                 <td>@a.Date.ToString("dd-MMM-yyyy")</td>
 
                                 <td>
