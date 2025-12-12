@@ -1,4 +1,5 @@
-﻿using HRMS.Data;
+﻿
+using HRMS.Data;
 using HRMS.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
