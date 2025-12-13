@@ -22,7 +22,7 @@
             <th>Role</th>
             <th>Date</th>
             <th>Report</th>
-            <th>Attachment</th>
+            
             <th>Read</th>
         </tr>
     </thead>
@@ -38,21 +38,7 @@
                     <strong>Pending:</strong> @item.Report.PendingWork <br />
                     <strong>Issues:</strong> @item.Report.Issues
                 </td>
-                <td>
-                    @if (!string.IsNullOrEmpty(item.Report.AttachmentPath))
-                    {
-                        <a href="@item.Report.AttachmentPath"
-                           target="_blank"
-                           class="btn btn-sm btn-outline-primary">
-                            View
-                        </a>
-                    }
-                    else
-                    {
-                        <span>-</span>
-                    }
-                </td>
-
+                
                 <td>
                     <input type="checkbox"
                            onchange="markAsRead(@item.Id, this)"

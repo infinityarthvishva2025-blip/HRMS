@@ -241,8 +241,7 @@ namespace HRMS.Controllers
             return RedirectToAction("EmployeePanel");
         }
 
-            return RedirectToAction("EmployeePanel");
-        }
+           
 
         //        public IActionResult CheckOut()
         //{
