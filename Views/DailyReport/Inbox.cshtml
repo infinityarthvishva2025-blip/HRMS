@@ -4,55 +4,181 @@
 
 @{
     var role = HttpContextAccessor.HttpContext.Session.GetString("Role") ?? "Employee";
-
     role = string.IsNullOrWhiteSpace(role) || role == "-" ? "Employee" : role;
 
-    if (role == "HR" || role == "GM" || role == "VP" || role == "Director")
-        Layout = "~/Views/Shared/_HrLayout.cshtml";
-    else
-        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    Layout = (role == "HR" || role == "GM" || role == "VP" || role == "Director")
+        ? "~/Views/Shared/_HrLayout.cshtml"
+        : "~/Views/Shared/_EmployeeLayout.cshtml";
 }
 
-<h2>Daily Report Inbox</h2>
+<div class="container-fluid">
 
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>From</th>
-            <th>Role</th>
-            <th>Date</th>
-            <th>Report</th>
-            
-            <th>Read</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr class="@(item.IsRead ? "" : "table-info")">
-                <td>@item.Report.Sender.Name</td>
-                <td>@item.Report.Sender.Role</td>
-                <td>@item.Report.CreatedDate.ToString("dd-MMM-yyyy HH:mm")</td>
-                <td>
-                    <strong>Today's Work:</strong> @item.Report.TodaysWork <br />
-                    <strong>Pending:</strong> @item.Report.PendingWork <br />
-                    <strong>Issues:</strong> @item.Report.Issues
-                </td>
-                
-                <td>
-                    <input type="checkbox"
-                           onchange="markAsRead(@item.Id, this)"
-                           @(item.IsRead ? "checked=\"checked\"" : "") />
-                    @if (item.IsRead && item.ReadDate.HasValue)
-                    {
-                        <br />
-                        <small>@item.ReadDate.Value.ToString("dd-MMM-yyyy HH:mm")</small>
-                    }
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white d-flex align-items-center">
+            <i class="fa-solid fa-inbox me-2"></i>
+            <h5 class="mb-0">Daily Report Inbox</h5>
+        </div>
+
+        <div class="card-body p-0">
+
+            <!-- ================= DESKTOP TABLE ================= -->
+            <div class="table-responsive d-none d-md-block">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>From</th>
+                            <th>Role</th>
+                            <th>Date</th>
+                            <th>Report Summary</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr class="@(item.IsRead ? "" : "table-info")">
+                                <td>
+                                    <strong>@item.Report.Sender.Name</strong>
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        @item.Report.Sender.Role
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        @item.Report.CreatedDate.ToString("dd MMM yyyy")
+                                    </strong><br />
+                                    <small class="text-muted">
+                                        @item.Report.CreatedDate.ToString("hh:mm tt")
+                                    </small>
+                                </td>
+
+                                <td>
+                                    <div>
+                                        <strong>Today's Work:</strong>
+                                        <span class="text-muted">@item.Report.TodaysWork</span>
+                                    </div>
+                                    <div>
+                                        <strong>Pending:</strong>
+                                        <span class="text-muted">@item.Report.PendingWork</span>
+                                    </div>
+                                    <div>
+                                        <strong>Issues:</strong>
+                                        <span class="text-muted">@item.Report.Issues</span>
+                                    </div>
+                                </td>
+
+                                <td class="text-center">
+                                    <input type="checkbox"
+                                           onchange="markAsRead(@item.Id, this)"
+                                           @(item.IsRead ? "checked=\"checked\"" : "") />
+
+                                    @if (item.IsRead && item.ReadDate.HasValue)
+                                    {
+                                        <div class="mt-1">
+                                            <span class="badge bg-success">
+                                                ✔ Read
+                                            </span>
+                                            <br />
+                                            <small class="text-muted">
+                                                @item.ReadDate.Value.ToString("dd MMM yyyy, hh:mm tt")
+                                            </small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="mt-1">
+                                            <span class="badge bg-warning text-dark">
+                                                ⏳ Unread
+                                            </span>
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ================= MOBILE VIEW ================= -->
+            <div class="d-block d-md-none p-3">
+                @foreach (var item in Model)
+                {
+                    <div class="card mb-3 shadow-sm @(item.IsRead ? "" : "border-primary")">
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>@item.Report.Sender.Name</strong><br />
+                                    <small class="text-muted">
+                                        @item.Report.Sender.Role
+                                    </small>
+                                </div>
+
+                                <div class="text-end">
+                                    @if (item.IsRead)
+                                    {
+                                        <span class="badge bg-success">✔ Read</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">⏳ Unread</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <hr />
+
+                            <div class="mb-2">
+                                <strong>Date:</strong><br />
+                                <span class="text-muted">
+                                    @item.Report.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                                </span>
+                            </div>
+
+                            <div class="mb-2">
+                                <strong>Today's Work:</strong>
+                                <div class="text-muted">@item.Report.TodaysWork</div>
+                            </div>
+
+                            <div class="mb-2">
+                                <strong>Pending:</strong>
+                                <div class="text-muted">@item.Report.PendingWork</div>
+                            </div>
+
+                            <div class="mb-2">
+                                <strong>Issues:</strong>
+                                <div class="text-muted">@item.Report.Issues</div>
+                            </div>
+
+                            <div class="form-check mt-3">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       onchange="markAsRead(@item.Id, this)"
+                                       @(item.IsRead ? "checked=\"checked\"" : "") />
+
+                                <label class="form-check-label">
+                                    Mark as Read
+                                </label>
+                            </div>
+
+                            @if (item.IsRead && item.ReadDate.HasValue)
+                            {
+                                <small class="text-muted d-block mt-1">
+                                    Read on @item.ReadDate.Value.ToString("dd MMM yyyy, hh:mm tt")
+                                </small>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -60,11 +186,13 @@
         function markAsRead(id, checkbox) {
             if (!$(checkbox).is(":checked")) return;
 
-            $.post('@Url.Action("MarkAsRead", "DailyReport")', { id: id }, function (res) {
-                if (res && res.success) {
-                    $(checkbox).closest('tr').removeClass('table-info');
-                }
-            });
+            $.post('@Url.Action("MarkAsRead", "DailyReport")',
+                { id: id },
+                function (res) {
+                    if (res && res.success) {
+                        $(checkbox).closest('tr').removeClass('table-info');
+                    }
+                });
         }
     </script>
 }

@@ -20,8 +20,11 @@ public class AnnouncementsController : Controller
     // ==============================================
     public async Task<IActionResult> List()
     {
-        if (HttpContext.Session.GetString("Role") != "HR")
-            return RedirectToAction("Login", "Account");
+        var role = GetRole();
+
+        if (!new[] { "HR", "GM", "VP", "DIRECTOR" }.Contains(role))
+            return RedirectToAction("AccessDenied", "Account");
+
 
         var list = await _context.Announcements
             .OrderByDescending(a => a.CreatedOn)
@@ -35,6 +38,12 @@ public class AnnouncementsController : Controller
     // ==============================================
     public async Task<IActionResult> Create()
     {
+
+        var role = GetRole();
+
+        if (!new[] { "HR","GM", "VP", "DIRECTOR" }.Contains(role))
+            return RedirectToAction("AccessDenied", "Account");
+
         ViewBag.Departments = await _context.Employees
             .Where(e => !string.IsNullOrEmpty(e.Department))
             .Select(e => e.Department)
@@ -53,6 +62,8 @@ public class AnnouncementsController : Controller
     // HR – CREATE POST (REAL MULTI-TARGET SYSTEM)
     // ==============================================
     [HttpPost]
+
+
     public async Task<IActionResult> Create(
         string Title,
         string Message,
@@ -62,6 +73,12 @@ public class AnnouncementsController : Controller
         int[]? SelectedEmployees
     )
     {
+
+        var role = GetRole();
+
+        if (!new[] { "HR", "MANAGER", "GM", "VP", "DIRECTOR" }.Contains(role))
+            return RedirectToAction("AccessDenied", "Account");
+
         var a = new Announcement
         {
             Title = Title,
@@ -100,8 +117,11 @@ public class AnnouncementsController : Controller
     public async Task<IActionResult> MyNotifications()
     {
         // Only employees can access this page
-        if (HttpContext.Session.GetString("Role") != "Employee")
-            return RedirectToAction("Login", "Account");
+        var role = GetRole();
+
+        if (!new[] { "EMPLOYEE", "MANAGER", "GM", "VP", "DIRECTOR" }.Contains(role))
+            return RedirectToAction("AccessDenied", "Account");
+
 
         int employeeId = HttpContext.Session.GetInt32("EmployeeId") ?? 0;
 
@@ -156,15 +176,29 @@ public class AnnouncementsController : Controller
     // ==============================================
     public async Task<IActionResult> Read(int id)
     {
-        int employeeId = HttpContext.Session.GetInt32("EmployeeId") ?? 0;
+        // ✅ ROLE CHECK — MUST BE FIRST
+        var role = GetRole();
 
+        if (!new[] { "EMPLOYEE", "MANAGER", "GM", "VP", "DIRECTOR" }.Contains(role))
+            return RedirectToAction("AccessDenied", "Account");
+
+        // ✅ USER SESSION CHECK
+        int employeeId = HttpContext.Session.GetInt32("EmployeeId") ?? 0;
+        if (employeeId == 0)
+            return RedirectToAction("Login", "Account");
+
+        // ✅ FETCH ANNOUNCEMENT
         var a = await _context.Announcements.FindAsync(id);
         if (a == null)
             return RedirectToAction("MyNotifications");
 
+        // ✅ MARK AS READ
         var readList = string.IsNullOrEmpty(a.ReadByEmployees)
             ? new List<string>()
-            : a.ReadByEmployees.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+            : a.ReadByEmployees
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .ToList();
 
         if (!readList.Contains(employeeId.ToString()))
         {
@@ -173,9 +207,10 @@ public class AnnouncementsController : Controller
             await _context.SaveChangesAsync();
         }
 
-        // After marking read → auto removed → redirect back
+        // ✅ REDIRECT BACK
         return RedirectToAction("MyNotifications");
     }
+
 
 
     // ================================
@@ -229,5 +264,13 @@ public class AnnouncementsController : Controller
             !a.ReadByEmployees.Split(',').Contains(empId.ToString())
         );
     }
+
+    private string GetRole()
+    {
+        return (HttpContext.Session.GetString("Role") ?? "")
+            .Trim()
+            .ToUpper();
+    }
+
 
 }

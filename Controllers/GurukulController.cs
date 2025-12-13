@@ -26,8 +26,11 @@ namespace HRMS.Controllers
         // =====================================================================
         public async Task<IActionResult> Index()
         {
-            if (HttpContext.Session.GetString("Role") != "Employee")
-                return RedirectToAction("Login", "Account");
+            var role = GetRole();
+
+            if (!new[] { "EMPLOYEE", "MANAGER", "GM", "VP", "DIRECTOR" }.Contains(role))
+                return RedirectToAction("AccessDenied", "Account");
+
 
             int? employeeId = HttpContext.Session.GetInt32("EmployeeId");
             if (employeeId == null)
@@ -71,8 +74,10 @@ namespace HRMS.Controllers
         // =====================================================================
         public async Task<IActionResult> Details(int id)
         {
-            if (HttpContext.Session.GetString("Role") != "Employee")
-                return RedirectToAction("Login", "Account");
+            var role = GetRole();
+
+            if (!new[] { "EMPLOYEE", "MANAGER", "GM", "VP", "DIRECTOR" }.Contains(role))
+                return RedirectToAction("AccessDenied", "Account");
 
             int? employeeId = HttpContext.Session.GetInt32("EmployeeId");
             if (employeeId == null)
@@ -132,8 +137,11 @@ namespace HRMS.Controllers
         [HttpPost]
         public async Task<IActionResult> MarkComplete(int videoId)
         {
-            if (HttpContext.Session.GetString("Role") != "Employee")
+            var role = GetRole();
+
+            if (!new[] { "EMPLOYEE", "MANAGER", "GM", "VP", "DIRECTOR" }.Contains(role))
                 return Unauthorized();
+
 
             int? employeeId = HttpContext.Session.GetInt32("EmployeeId");
             if (employeeId == null)
@@ -168,8 +176,11 @@ namespace HRMS.Controllers
         // =====================================================================
         public async Task<IActionResult> HRList()
         {
-            if (HttpContext.Session.GetString("Role") != "HR")
-                return RedirectToAction("Login", "Account");
+            var role = GetRole();
+
+            if (!new[] { "HR", "DIRECTOR", "GM", "VP" }.Contains(role))
+                return RedirectToAction("AccessDenied", "Account");
+
 
             var videos = await _context.GurukulVideos
                 .Include(v => v.AllowedEmployee)
@@ -184,6 +195,12 @@ namespace HRMS.Controllers
         // =====================================================================
         public async Task<IActionResult> Create()
         {
+
+            var role = GetRole();
+
+            if (!new[] { "HR", "DIRECTOR", "GM", "VP" }.Contains(role))
+                return RedirectToAction("AccessDenied", "Account");
+
             // ❌ Removed HR role check
             await PopulatePermissionDropdowns();
             return View();
@@ -196,6 +213,13 @@ namespace HRMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(GurukulVideo model, IFormFile? VideoFile, string? ExternalLink)
         {
+
+
+            var role = GetRole();
+
+            if (!new[] { "HR", "DIRECTOR", "GM", "VP" }.Contains(role))
+                return RedirectToAction("AccessDenied", "Account");
+
             // ❌ Removed HR role check
 
             model.Category = string.IsNullOrWhiteSpace(model.Category) ? "General" : model.Category.Trim();
@@ -338,8 +362,11 @@ namespace HRMS.Controllers
         // =====================================================================
         public async Task<IActionResult> Progress(int id, string? status, string? search, string? department)
         {
-            if (HttpContext.Session.GetString("Role") != "HR")
-                return RedirectToAction("Login", "Account");
+            var role = GetRole();
+
+            if (!new[] { "HR", "DIRECTOR", "GM", "VP" }.Contains(role))
+                return RedirectToAction("AccessDenied", "Account");
+
 
             var video = await _context.GurukulVideos.FindAsync(id);
             if (video == null) return NotFound();
@@ -480,8 +507,10 @@ namespace HRMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            if (HttpContext.Session.GetString("Role") != "HR")
-                return RedirectToAction("Login", "Account");
+            var role = GetRole();
+
+            if (!new[] { "HR", "DIRECTOR", "GM", "VP" }.Contains(role))
+                return RedirectToAction("AccessDenied", "Account");
 
             var video = await _context.GurukulVideos.FindAsync(id);
             if (video != null)
@@ -505,5 +534,13 @@ namespace HRMS.Controllers
 
             return RedirectToAction(nameof(HRList));
         }
+
+        private string GetRole()
+        {
+            return (HttpContext.Session.GetString("Role") ?? "")
+                .Trim()
+                .ToUpper();
+        }
+
     }
 }
