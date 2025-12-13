@@ -39,18 +39,11 @@
             <i class="fa-solid fa-paper-plane me-2"></i> Apply Leave
         </a>
         <button type="button"
-                class="dash-btn"
-                data-bs-toggle="modal"
-                data-bs-target="#salarySlipModal">
-            <i class="fa-solid fa-file-invoice-dollar me-2"></i> View Salary Slip
-        </button>
-       @*  <button type="button"
                 class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold"
                 data-bs-toggle="modal"
                 data-bs-target="#salarySlipModal">
             <i class="fa-solid fa-file-invoice-dollar me-2"></i> View Salary Slip
-        </button> *@
-
+        </button>
     </div>
 
 </div>
@@ -673,3 +666,25 @@
         color: white !important;
     }
 </style>
+<script>
+       document.getElementById("salarySlipForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const month = document.getElementById("month").value;
+        const year = document.getElementById("year").value;
+
+        const empCode = "@Model.Employee.EmployeeCode";   // ADD THIS
+
+        if (!month || !year) {
+            return alert("Please select both month and year!");
+        }
+
+        const btn = document.getElementById("downloadSlipBtn");
+
+        // FIXED URL — now includes empCode
+        btn.href = `/Payroll/DownloadSalarySlip?empCode=${empCode}&month=${month}&year=${year}`;
+
+        document.getElementById("salarySlipResult").classList.remove("d-none");
+    });
+
+</script>

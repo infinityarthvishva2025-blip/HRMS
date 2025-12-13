@@ -92,14 +92,6 @@
                     <td>@(l.EndDate?.ToString("dd-MM-yyyy") ?? "N/A")</td>
                 <td>@l.TotalDays</td>
                 <td>@l.Reason</td>
-
-                @* <td>
-                    
-                    HR: @l.HrStatus <br />
-                    M: @l.ManagerStatus <br />
-                    VP: @l.VpStatus <br />
-                    Dir: @l.DirectorStatus
-                </td> *@
                     <td>
                         @{
                             var empRole = l.Employee?.Role ?? "Employee";
@@ -135,15 +127,6 @@
                                 Dir: @(l.DirectorStatus ?? "Pending")
                                 </div> 
                         }
-                       @*  else if (empRole == "HR" || empRole == "Manager" || empRole == "VP")
-                        {
-                            <div>
-                                HR: @(l.HrStatus ?? "Pending") <br />
-                                GM: @(l.ManagerStatus ?? "Pending") <br />
-                                VP: @(l.VpStatus ?? "Pending") <br />
-                                Dir: @(l.DirectorStatus ?? "Pending")
-                            </div>
-                        } *@
                         else
                         {
                             <!-- Default fallback: show all -->

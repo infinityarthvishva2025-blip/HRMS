@@ -1,8 +1,6 @@
 ﻿@model HRMS.Models.Attendance
 @{
     ViewData["Title"] = "Attendance";
-    //Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
-    //var role = Context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
     var role = ViewBag.UserRole as string;
     if (role == "HR")
     {
