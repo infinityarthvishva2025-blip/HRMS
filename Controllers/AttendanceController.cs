@@ -27,22 +27,6 @@ namespace HRMS.Controllers
         }
 
 
-        // =========================================================
-        // EMPLOYEE PANEL
-        // =========================================================
-        //public IActionResult EmployeePanel()
-        //{
-        //    string empCode = HttpContext.Session.GetString("EmpCode");
-        //    if (string.IsNullOrEmpty(empCode))
-        //        return RedirectToAction("Login", "Account");
-
-        //    var today = DateTime.Today;
-
-        //    var record = _context.Attendances
-        //        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
-
-        //    return View(record);
-        //}
         public async Task<IActionResult> EmployeePanel()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
@@ -241,69 +225,7 @@ namespace HRMS.Controllers
             return RedirectToAction("EmployeePanel");
         }
 
-           
-
-        //        public IActionResult CheckOut()
-        //{
-        //    string empCode = HttpContext.Session.GetString("EmpCode");
-        //    if (empCode == null)
-        //        return RedirectToAction("Login", "Account");
-
-        //    DateTime today = DateTime.Today;
-
-        //    var record = _context.Attendances
-        //        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
-
-        //    if (record == null)
-        //    {
-        //        TempData["EarlyCheckout"] = "No active attendance found.";
-        //        TempData.Keep();
-        //        return RedirectToAction("EmployeePanel");
-        //    }
-
-        //    if (record.OutTime != null)
-        //    {
-        //        TempData["CheckoutSuccess"] = $"You already checked out at {record.OutTime.Value}.";
-        //        TempData.Keep();
-        //        return RedirectToAction("EmployeePanel");
-        //    }
-
-        //    record.OutTime = DateTime.Now.TimeOfDay;
-        //            record.Att_Date = record.Date;
-
-        //            if (record.InTime != null)
-        //    {
-        //        TimeSpan worked = record.OutTime.Value - record.InTime.Value;
-        //        TimeSpan shift = TimeSpan.FromMinutes(510); // 8.5 hours
-
-        //        if (worked < shift)
-        //        {
-        //            TimeSpan remaining = shift - worked;
-    
-        //                    TempData["EarlyTime"] = $"{remaining.Hours}h {remaining.Minutes}m";
-        //                    TempData["EarlyCheckout"] = "Early Checkout";
-
-        //                }
-        //                else
-        //        {
-        //            TimeSpan extra = worked - shift;
-
-        //            TempData["LateTime"] = $"{extra.Hours}h {extra.Minutes}m";
-        //            TempData["LateCheckout"] = "Great! Overtime";
-
-        //                }
-        //    }
-
-        //    _context.SaveChanges();
-
-        //    return RedirectToAction("EmployeePanel");
-        //}
-
-
-
-        // =========================================================
-        // SUMMARY REDIRECT
-        // =========================================================
+        
         public IActionResult MySummary()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
@@ -372,7 +294,7 @@ namespace HRMS.Controllers
                     continue;
                 }
 
-                // -------- WEEKLY OFF (Saturday = WOP) ----------
+                
                 // -------- WEEKLY OFF (Saturday = WOP) ----------
                 if (date.DayOfWeek == DayOfWeek.Saturday)
                 {
@@ -463,14 +385,8 @@ namespace HRMS.Controllers
             .Average()
             .ToString("0.0") + " Hrs"
             };
-
-
             return View(summary);
         }
-
-
-
-
 
         public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status)
         {
@@ -664,17 +580,7 @@ namespace HRMS.Controllers
 
             return View(att);
         }
-
-        //public IActionResult CorrectionRequests()
-        //{
-        //    var pending = _context.Attendances
-        //        .Where(a => a.CorrectionRequested == true)
-        //        .OrderByDescending(a => a.Date)
-        //        .ToList();
-
-        //    return View(pending);
-        //}
-        public IActionResult CorrectionRequests()
+  public IActionResult CorrectionRequests()
         {
             var pending = _context.Attendances
                 .Where(a => a.CorrectionRequested == true)
@@ -705,10 +611,6 @@ namespace HRMS.Controllers
 
             return RedirectToAction("EmployeeSummary", new { employeeId });
         }
-
-
-
-
         public IActionResult ResolveCorrection(string empCode, DateTime date)
         {
             var att = _context.Attendances
@@ -719,9 +621,6 @@ namespace HRMS.Controllers
 
             return View(att);
         }
-
-
-
 
         [HttpPost]
         public IActionResult ResolveCorrection(string empCode, DateTime date,
@@ -787,15 +686,6 @@ namespace HRMS.Controllers
 
             return RedirectToAction("CorrectionRequests");
         }
-
-
-
-
-
-
-       
-        
-
         public async Task<IActionResult> CalendarView(int? year, int? month, string department = "all", int itemsPerPage = 50)
         {
             try
