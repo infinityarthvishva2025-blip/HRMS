@@ -34,7 +34,10 @@ namespace HRMS.Controllers
             var emp = await _context.Employees.FindAsync(empId);
 
             ViewBag.CompOffBalance = emp.CompOffBalance;   // <-- Send balance to view
+                                                           
 
+            // ✅ SAFE string cast
+            ViewBag.UserRole = emp.Role?.ToString();
             var model = new Leave
             {
                 StartDate = DateTime.Today,

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using OfficeOpenXml;
+using Org.BouncyCastle.Ocsp;
 using System;
 using System.Linq;
 
@@ -15,6 +16,7 @@ namespace HRMS.Controllers
 {
     public class AttendanceController : Controller
     {
+
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AttendanceController> _logger;
 
@@ -28,11 +30,35 @@ namespace HRMS.Controllers
         // =========================================================
         // EMPLOYEE PANEL
         // =========================================================
-        public IActionResult EmployeePanel()
+        //public IActionResult EmployeePanel()
+        //{
+        //    string empCode = HttpContext.Session.GetString("EmpCode");
+        //    if (string.IsNullOrEmpty(empCode))
+        //        return RedirectToAction("Login", "Account");
+
+        //    var today = DateTime.Today;
+
+        //    var record = _context.Attendances
+        //        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+
+        //    return View(record);
+        //}
+        public async Task<IActionResult> EmployeePanel()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
-            if (string.IsNullOrEmpty(empCode))
+
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (empId == null)
                 return RedirectToAction("Login", "Account");
+
+            // ✅ Await FindAsync
+            var emp = await _context.Employees.FindAsync(empId);
+
+            if (emp == null)
+                return RedirectToAction("Login", "Account");
+
+            // ✅ SAFE string cast
+            ViewBag.UserRole = emp.Role?.ToString();
 
             var today = DateTime.Today;
 
@@ -238,7 +264,11 @@ namespace HRMS.Controllers
                 return NotFound("Employee not found.");
 
             string empCode = emp.EmployeeCode;
+            // ✅ Await FindAsync
+           
 
+            // ✅ SAFE string cast
+            ViewBag.UserRole = emp.Role?.ToString();
             // Default date range
             if (!from.HasValue)
                 from = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);

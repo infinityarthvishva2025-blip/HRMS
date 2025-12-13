@@ -1,8 +1,21 @@
 ﻿@model HRMS.Models.Attendance
 @{
     ViewData["Title"] = "Attendance";
-    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
-
+    //Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    //var role = Context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+    var role = ViewBag.UserRole as string;
+    if (role == "HR")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else if (role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
     string FormatTime(object time)
     {
         if (time == null) return "—";
@@ -220,59 +233,6 @@
     });
 </script>
 
-@* <script>
-    document.addEventListener("DOMContentLoaded", function () {
-
-        let countdown = document.getElementById("countdownContainer");
-
-        // Hide countdown if early/late message exists
-        if (document.querySelector(".early-card") || document.querySelector(".late-card")) {
-            if (countdown) countdown.style.display = "none";
-            return;
-        }
-
-        let inTime = '@(Model?.InTime?.ToString() ?? "")';
-        let outTime = '@(Model?.OutTime?.ToString() ?? "")';
-
-        // Hide if checked out or no check-in
-        if (outTime !== "" || inTime === "") {
-            if (countdown) countdown.style.display = "none";
-            return;
-        }
-
-        // Countdown for exactly 8 hours 30 minutes (510 minutes)
-        const shiftMs = 510 * 60 * 1000; // 8.5 hours in milliseconds
-
-        let label = document.getElementById("countdown");
-        let today = new Date().toISOString().split("T")[0];
-
-        // Convert to valid datetime
-        let start = new Date(`${today}T${inTime}`);
-        let endTime = new Date(start.getTime() + shiftMs);
-
-        function updateCountdown() {
-            let now = new Date();
-            let diff = endTime - now;
-
-            if (diff <= 0) {
-                label.textContent = "00:00:00";
-                return;
-            }
-
-            let h = Math.floor(diff / 3600000);
-            let m = Math.floor((diff % 3600000) / 60000);
-            let s = Math.floor((diff % 60000) / 1000);
-
-            label.textContent =
-                h.toString().padStart(2, '0') + ":" +
-                m.toString().padStart(2, '0') + ":" +
-                s.toString().padStart(2, '0');
-        }
-
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
-    });
-</script> *@
 
 
 <style>
