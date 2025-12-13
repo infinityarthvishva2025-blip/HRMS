@@ -57,7 +57,12 @@
     }
 
 </div>
-
+    <div class="d-flex justify-content-end mb-2">
+        <input type="text"
+               id="tableSearch"
+               class="form-control w-25"
+               placeholder="Search employee / reason..." />
+    </div>
 <table class="table table-bordered table-hover">
     <thead class="table-light">
         <tr>
@@ -74,7 +79,7 @@
         </tr>
     </thead>
 
-    <tbody>
+        <tbody id="tableBody">
         @foreach (var l in Model)
         {
                 var empCode = l.Employee?.EmployeeCode ?? "-";
@@ -167,7 +172,15 @@
         }
     </tbody>
 </table>
+    <!-- PAGINATION -->
+    
 </div>  
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <span id="pageInfo" class="text-muted"></span>
+    <nav>
+        <ul class="pagination mb-0" id="pagination"></ul>
+    </nav>
+</div>
 <script >
         document.getElementById("sidebarToggle").addEventListener("click", function () {
         const sidebar = document.getElementById("sidebar-wrapper");
@@ -183,4 +196,102 @@
       
 
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const rowsPerPage = 10;
+        const tableBody = document.getElementById("tableBody");
+        const searchInput = document.getElementById("tableSearch");
+        const pagination = document.getElementById("pagination");
+        const pageInfo = document.getElementById("pageInfo");
+
+        if (!tableBody) return;
+
+        const allRows = Array.from(tableBody.querySelectorAll("tr"));
+        let filteredRows = [...allRows];
+        let currentPage = 1;
+
+        function filterRows() {
+            const query = searchInput.value.toLowerCase().trim();
+
+            // 🔄 AUTO REFRESH when search box is blank
+            if (query === "") {
+                filteredRows = [...allRows];
+            } else {
+                filteredRows = allRows.filter(row =>
+                    row.innerText.toLowerCase().includes(query)
+                );
+            }
+
+            currentPage = 1;
+            paginate();
+        }
+
+        function paginate() {
+            const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+
+            allRows.forEach(row => row.style.display = "none");
+
+            filteredRows.forEach((row, index) => {
+                if (
+                    index >= (currentPage - 1) * rowsPerPage &&
+                    index < currentPage * rowsPerPage
+                ) {
+                    row.style.display = "";
+                }
+            });
+
+            pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            pagination.innerHTML = "";
+
+            // ◀ PREVIOUS
+            const prev = document.createElement("li");
+            prev.className = "page-item " + (currentPage === 1 ? "disabled" : "");
+            prev.innerHTML = `<a class="page-link">&lsaquo;</a>`;
+            prev.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    paginate();
+                }
+            };
+            pagination.appendChild(prev);
+
+            // PAGE NUMBERS
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement("li");
+                li.className = "page-item " + (i === currentPage ? "active" : "");
+                li.innerHTML = `<a class="page-link">${i}</a>`;
+                li.onclick = () => {
+                    currentPage = i;
+                    paginate();
+                };
+                pagination.appendChild(li);
+            }
+
+            // ▶ NEXT
+            const next = document.createElement("li");
+            next.className = "page-item " + (currentPage === totalPages ? "disabled" : "");
+            next.innerHTML = `<a class="page-link">&rsaquo;</a>`;
+            next.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    paginate();
+                }
+            };
+            pagination.appendChild(next);
+        }
+
+        // 🔍 LIVE SEARCH
+        searchInput.addEventListener("keyup", filterRows);
+
+        // INITIAL LOAD
+        paginate();
+    });
+</script>
+
+
 

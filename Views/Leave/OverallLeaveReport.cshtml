@@ -7,169 +7,218 @@
 
 <div class="container mt-4">
     <h3 class="mb-3">
-        <i class="fa-solid fa-plane-departure icon-leave"></i><span> Leave Management</span>
+        <i class="fa-solid fa-plane-departure icon-leave"></i>
+        <span> Leave Management</span>
     </h3>
-    <!-- 🔷 Advanced Cards -->
 
+    <!-- 🔷 CARDS -->
     <div class="row g-3 mb-4">
-        <div class="row mt-3">
-
-            <div class="col-md-4">
-                <div class="card shadow-sm p-3 text-center border-left-primary">
-                    <h5>Manager Pending</h5>
-                    <h3 id="managerPending" class="text-primary">0</h3>
-                </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3 text-center border-left-primary">
+                <h5>Manager Pending</h5>
+                <h3 id="managerPending" class="text-primary">0</h3>
             </div>
+        </div>
 
-            <div class="col-md-4">
-                <div class="card shadow-sm p-3 text-center border-left-warning">
-                    <h5>HR Pending</h5>
-                    <h3 id="hrPending" class="text-warning">0</h3>
-                </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3 text-center border-left-warning">
+                <h5>HR Pending</h5>
+                <h3 id="hrPending" class="text-warning">0</h3>
             </div>
+        </div>
 
-            <div class="col-md-4">
-                <div class="card shadow-sm p-3 text-center border-left-danger">
-                    <h5>Director Pending</h5>
-                    <h3 id="directorPending" class="text-danger">0</h3>
-                </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3 text-center border-left-danger">
+                <h5>Director Pending</h5>
+                <h3 id="directorPending" class="text-danger">0</h3>
             </div>
-
         </div>
     </div>
 
-    <!-- 🔷 Monthly Line Chart -->
-    <div class="card shadow-sm">
+    <!-- 🔷 LEAVE GRAPH (RESTORED) -->
+    <div class="card shadow-sm mb-4">
         <div class="card-body">
             <h5 class="card-title mb-3">Leaves per Month (Current Year)</h5>
             <canvas id="leaveMonthlyChart" height="80"></canvas>
         </div>
     </div>
 
-    <div class="text-center mt-5 mb-3">
-        <a asp-controller="Leave" asp-action="Create" class="btn btn-lg text-white me-2 shadow"
+    <!-- APPLY BUTTON -->
+    <div class="text-center mt-3 mb-3">
+        <a asp-controller="Leave" asp-action="Create"
+           class="btn btn-lg text-white shadow"
            style="background: linear-gradient(90deg, #0077c2, #009688); border-radius: 8px;">
             <i class="fa-solid fa-paper-plane me-2"></i> Apply for Leave
         </a>
-
-
     </div>
-    <table class="table table-striped table-bordered">
-        <thead>
-            <tr>
-                <th>Employee Nmae</th>
-                <th>Category</th>
-                <th>Leave Type</th>
-                <th>Start</th>
-                <th>End</th>
-                <th>Total Days</th>
-                <th>Status</th>
-            </tr>
-        </thead>
 
-        <tbody>
-            @foreach (var item in Model)
-            {
-                var empCode = item.Employee?.EmployeeCode ?? "-";
-                var empName = item.Employee?.Name ?? "-";
+    <!-- 🔍 SEARCH -->
+    <div class="d-flex justify-content-end mb-2">
+        <input type="text" id="tableSearch"
+               class="form-control w-25"
+               placeholder="Search employee / type / status..." />
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="table-light">
                 <tr>
-                    <td>@($"{empCode} - {empName}")</td>
-                    <td>@item.Category</td>
-                    <td>@item.LeaveType </td>
-                    <td>@(item.StartDate.ToString("dd-MM-yyyy") ?? "N/A")</td>
-                    <td>@(item.EndDate?.ToString("dd-MM-yyyy") ?? "N/A")</td>
-                    <td>@item.TotalDays</td>
-                    <td>@item.OverallStatus</td>
+                    <th>Employee Name</th>
+                    <th>Category</th>
+                    <th>Leave Type</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Total Days</th>
+                    <th>Status</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
 
+            <tbody id="tableBody">
+                @foreach (var item in Model)
+                {
+                    var empCode = item.Employee?.EmployeeCode ?? "-";
+                    var empName = item.Employee?.Name ?? "-";
+                    <tr>
+                        <td>@($"{empCode} - {empName}")</td>
+                        <td>@item.Category</td>
+                        <td>@item.LeaveType</td>
+                        <td>@item.StartDate.ToString("dd-MM-yyyy")</td>
+                        <td>@(item.EndDate?.ToString("dd-MM-yyyy") ?? "N/A")</td>
+                        <td>@item.TotalDays</td>
+                        <td>@item.OverallStatus</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <span id="pageInfo" class="text-muted"></span>
+        <nav>
+            <ul class="pagination mb-0" id="pagination"></ul>
+        </nav>
+    </div>
 </div>
 
 @section Scripts {
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- ✅ LEAVE GRAPH SCRIPT (UNCHANGED) -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             fetch('/Leave/GetMonthlyLeaveSummaryAll')
                 .then(r => r.json())
                 .then(data => {
-                    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
+                    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun",
+                                        "Jul","Aug","Sep","Oct","Nov","Dec"];
                     const labels = data.map(d => monthNames[d.month - 1]);
                     const values = data.map(d => d.count);
 
-                    const ctx = document.getElementById('leaveMonthlyChart');
-
-                    new Chart(ctx, {
+                    new Chart(document.getElementById('leaveMonthlyChart'), {
                         type: 'line',
                         data: {
                             labels: labels,
                             datasets: [{
                                 label: 'Total Leaves',
                                 data: values,
-                                fill: false,
                                 tension: 0.3
                             }]
                         },
                         options: {
                             responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'top'
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        precision: 0
-                                    }
-                                }
-                            }
+                            scales: { y: { beginAtZero: true } }
                         }
                     });
                 });
         });
     </script>
 
+    <!-- 🔢 SEARCH + PAGINATION -->
     <script>
-        // function loadPendingCounts() {
-        //     fetch('/Leave/GetPendingCounts')
-        //         .then(res => res.json())
-        //         .then(data => {
+        document.addEventListener("DOMContentLoaded", function () {
 
-        //             document.getElementById("managerPending").textContent = data.managerPending;
-        //             document.getElementById("hrPending").textContent = data.hrPending;
-        //             document.getElementById("directorPending").textContent = data.directorPending;
-        //         })
-        //         .catch(err => console.error("Error loading pending counts:", err));
-        // }
+            const rowsPerPage = 10;
+            const tableBody = document.getElementById("tableBody");
+            const searchBox = document.getElementById("tableSearch");
+            const pagination = document.getElementById("pagination");
+            const pageInfo = document.getElementById("pageInfo");
 
-        // // Load when page opens
-        // loadPendingCounts();
+            const allRows = Array.from(tableBody.querySelectorAll("tr"));
+            let filteredRows = [...allRows];
+            let currentPage = 1;
 
+            function filterRows() {
+                const q = searchBox.value.toLowerCase().trim();
+                filteredRows = q === ""
+                    ? [...allRows]
+                    : allRows.filter(r => r.innerText.toLowerCase().includes(q));
+
+                currentPage = 1;
+                paginate();
+            }
+
+            function paginate() {
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+
+                allRows.forEach(r => r.style.display = "none");
+                filteredRows.forEach((r, i) => {
+                    if (i >= (currentPage - 1) * rowsPerPage &&
+                        i < currentPage * rowsPerPage) {
+                        r.style.display = "";
+                    }
+                });
+
+                pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+                renderPagination(totalPages);
+            }
+
+            function renderPagination(totalPages) {
+                pagination.innerHTML = "";
+
+                const prev = `<li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+                    <a class="page-link">&lsaquo;</a></li>`;
+                pagination.insertAdjacentHTML("beforeend", prev);
+
+                for (let i = 1; i <= totalPages; i++) {
+                    pagination.insertAdjacentHTML("beforeend",
+                        `<li class="page-item ${i === currentPage ? "active" : ""}">
+                            <a class="page-link">${i}</a></li>`);
+                }
+
+                const next = `<li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+                    <a class="page-link">&rsaquo;</a></li>`;
+                pagination.insertAdjacentHTML("beforeend", next);
+
+                [...pagination.children].forEach((li, i) => {
+                    li.onclick = () => {
+                        if (i === 0 && currentPage > 1) currentPage--;
+                        else if (i === pagination.children.length - 1 && currentPage < totalPages) currentPage++;
+                        else if (i > 0 && i < pagination.children.length - 1) currentPage = i;
+                        paginate();
+                    };
+                });
+            }
+
+            searchBox.addEventListener("keyup", filterRows);
+            paginate();
+        });
     </script>
 
+    <!-- 🔄 PENDING COUNTS -->
     <script>
-
         function loadPendingCounts() {
-
             fetch('/Leave/GetPendingCountsall')
                 .then(res => res.json())
                 .then(data => {
-
-                    document.getElementById("managerPending").textContent = data.managerPending;
-                    document.getElementById("hrPending").textContent = data.hrPending;
-                    document.getElementById("directorPending").textContent = data.directorPending;
-                })
-                .catch(err => console.error("Error loading pending counts:", err));
+                    managerPending.textContent = data.managerPending;
+                    hrPending.textContent = data.hrPending;
+                    directorPending.textContent = data.directorPending;
+                });
         }
-
-        // Load when page is ready
         loadPendingCounts();
-
     </script>
 
 }

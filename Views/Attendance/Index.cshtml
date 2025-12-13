@@ -186,7 +186,9 @@
             rows.forEach((row, index) => {
                 row.style.display =
                     index >= (page - 1) * rowsPerPage &&
-                    index < page * rowsPerPage ? "" : "none";
+                    index < page * rowsPerPage
+                        ? ""
+                        : "none";
             });
 
             pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
@@ -196,6 +198,16 @@
         function renderPagination() {
             pagination.innerHTML = "";
 
+            // ◀ PREVIOUS
+            const prev = document.createElement("li");
+            prev.className = "page-item " + (currentPage === 1 ? "disabled" : "");
+            prev.innerHTML = `<a class="page-link">&lsaquo;</a>`;
+            prev.onclick = () => {
+                if (currentPage > 1) showPage(currentPage - 1);
+            };
+            pagination.appendChild(prev);
+
+            // PAGE NUMBERS
             for (let i = 1; i <= totalPages; i++) {
                 const li = document.createElement("li");
                 li.className = "page-item " + (i === currentPage ? "active" : "");
@@ -203,6 +215,15 @@
                 li.onclick = () => showPage(i);
                 pagination.appendChild(li);
             }
+
+            // ▶ NEXT
+            const next = document.createElement("li");
+            next.className = "page-item " + (currentPage === totalPages ? "disabled" : "");
+            next.innerHTML = `<a class="page-link">&rsaquo;</a>`;
+            next.onclick = () => {
+                if (currentPage < totalPages) showPage(currentPage + 1);
+            };
+            pagination.appendChild(next);
         }
 
         if (rows.length > 0) showPage(1);
