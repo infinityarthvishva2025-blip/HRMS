@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using OfficeOpenXml;
+using Org.BouncyCastle.Ocsp;
 using System;
 using System.Linq;
 
@@ -15,6 +16,7 @@ namespace HRMS.Controllers
 {
     public class AttendanceController : Controller
     {
+
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AttendanceController> _logger;
 
@@ -28,11 +30,35 @@ namespace HRMS.Controllers
         // =========================================================
         // EMPLOYEE PANEL
         // =========================================================
-        public IActionResult EmployeePanel()
+        //public IActionResult EmployeePanel()
+        //{
+        //    string empCode = HttpContext.Session.GetString("EmpCode");
+        //    if (string.IsNullOrEmpty(empCode))
+        //        return RedirectToAction("Login", "Account");
+
+        //    var today = DateTime.Today;
+
+        //    var record = _context.Attendances
+        //        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+
+        //    return View(record);
+        //}
+        public async Task<IActionResult> EmployeePanel()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
-            if (string.IsNullOrEmpty(empCode))
+
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (empId == null)
                 return RedirectToAction("Login", "Account");
+
+            // ✅ Await FindAsync
+            var emp = await _context.Employees.FindAsync(empId);
+
+            if (emp == null)
+                return RedirectToAction("Login", "Account");
+
+            // ✅ SAFE string cast
+            ViewBag.UserRole = emp.Role?.ToString();
 
             var today = DateTime.Today;
 
@@ -159,43 +185,55 @@ namespace HRMS.Controllers
             var record = _context.Attendances
                 .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
 
+            // No attendance found
             if (record == null)
             {
                 TempData["EarlyCheckout"] = "No active attendance found.";
+                TempData.Keep();
                 return RedirectToAction("EmployeePanel");
             }
 
+            // Prevent double checkout
             if (record.OutTime != null)
             {
-                TempData["CheckoutSuccess"] =
-                    $"You already checked out at {record.OutTime.Value}.";
+                TempData["CheckoutSuccess"] = $"You already checked out at {record.OutTime.Value}.";
+                TempData.Keep();
                 return RedirectToAction("EmployeePanel");
             }
 
+            // Set checkout time
             record.OutTime = DateTime.Now.TimeOfDay;
             record.Att_Date = record.Date;
 
             if (record.InTime != null)
             {
                 TimeSpan worked = record.OutTime.Value - record.InTime.Value;
-                TimeSpan shift = TimeSpan.FromMinutes(510);
+
+                // 🔥 SHIFT LOGIC
+                // Saturday = 7 hours (WOP)
+                // Other days = 8.5 hours
+                TimeSpan shift = (today.DayOfWeek == DayOfWeek.Saturday)
+                    ? TimeSpan.FromMinutes(420)   // 7 hours
+                    : TimeSpan.FromMinutes(510);  // 8.5 hours
 
                 if (worked < shift)
                 {
                     TimeSpan remaining = shift - worked;
+
                     TempData["EarlyTime"] = $"{remaining.Hours}h {remaining.Minutes}m";
-                    TempData["EarlyCheckout"] = "Early Checkout";
+                    TempData["EarlyCheckout"] = "Remaining Time";
                 }
                 else
                 {
                     TimeSpan extra = worked - shift;
+
                     TempData["LateTime"] = $"{extra.Hours}h {extra.Minutes}m";
-                    TempData["LateCheckout"] = "Great! Overtime";
+                    TempData["LateCheckout"] = "Overtime";
+                    
                 }
             }
 
             _context.SaveChanges();
-
             // ✅ CORRECT REDIRECT
             if (role != "Director")
                 return RedirectToAction("Send", "DailyReport");
@@ -203,6 +241,64 @@ namespace HRMS.Controllers
             return RedirectToAction("EmployeePanel");
         }
 
+            return RedirectToAction("EmployeePanel");
+        }
+
+        //        public IActionResult CheckOut()
+        //{
+        //    string empCode = HttpContext.Session.GetString("EmpCode");
+        //    if (empCode == null)
+        //        return RedirectToAction("Login", "Account");
+
+        //    DateTime today = DateTime.Today;
+
+        //    var record = _context.Attendances
+        //        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+
+        //    if (record == null)
+        //    {
+        //        TempData["EarlyCheckout"] = "No active attendance found.";
+        //        TempData.Keep();
+        //        return RedirectToAction("EmployeePanel");
+        //    }
+
+        //    if (record.OutTime != null)
+        //    {
+        //        TempData["CheckoutSuccess"] = $"You already checked out at {record.OutTime.Value}.";
+        //        TempData.Keep();
+        //        return RedirectToAction("EmployeePanel");
+        //    }
+
+        //    record.OutTime = DateTime.Now.TimeOfDay;
+        //            record.Att_Date = record.Date;
+
+        //            if (record.InTime != null)
+        //    {
+        //        TimeSpan worked = record.OutTime.Value - record.InTime.Value;
+        //        TimeSpan shift = TimeSpan.FromMinutes(510); // 8.5 hours
+
+        //        if (worked < shift)
+        //        {
+        //            TimeSpan remaining = shift - worked;
+    
+        //                    TempData["EarlyTime"] = $"{remaining.Hours}h {remaining.Minutes}m";
+        //                    TempData["EarlyCheckout"] = "Early Checkout";
+
+        //                }
+        //                else
+        //        {
+        //            TimeSpan extra = worked - shift;
+
+        //            TempData["LateTime"] = $"{extra.Hours}h {extra.Minutes}m";
+        //            TempData["LateCheckout"] = "Great! Overtime";
+
+        //                }
+        //    }
+
+        //    _context.SaveChanges();
+
+        //    return RedirectToAction("EmployeePanel");
+        //}
 
 
 
@@ -235,7 +331,11 @@ namespace HRMS.Controllers
                 return NotFound("Employee not found.");
 
             string empCode = emp.EmployeeCode;
+            // ✅ Await FindAsync
+           
 
+            // ✅ SAFE string cast
+            ViewBag.UserRole = emp.Role?.ToString();
             // Default date range
             if (!from.HasValue)
                 from = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
@@ -274,19 +374,37 @@ namespace HRMS.Controllers
                 }
 
                 // -------- WEEKLY OFF (Saturday = WOP) ----------
+                // -------- WEEKLY OFF (Saturday = WOP) ----------
                 if (date.DayOfWeek == DayOfWeek.Saturday)
                 {
-                    finalList.Add(new AttendanceRecordVm
+                    if (rec != null) // Attendance exists on Saturday
                     {
-                        Emp_Code = empCode,
-                        Date = date,
-                        Status = "WOP",         // Week Off Present? (Your existing logic)
-                        InTime = null,
-                        OutTime = null,
-                        CorrectionRequested = false
-                    });
+                        finalList.Add(new AttendanceRecordVm
+                        {
+                            Emp_Code = empCode,
+                            Date = rec.Date,
+                            Status = "WOP",
+                            InTime = rec.InTime,            // ✅ KEEP TIME
+                            OutTime = rec.OutTime,          // ✅ KEEP TIME
+                            CorrectionRequested = rec.CorrectionRequested,
+                            CorrectionStatus = rec.CorrectionStatus
+                        });
+                    }
+                    else
+                    {
+                        finalList.Add(new AttendanceRecordVm
+                        {
+                            Emp_Code = empCode,
+                            Date = date,
+                            Status = "WOP",
+                            InTime = null,
+                            OutTime = null,
+                            CorrectionRequested = false
+                        });
+                    }
                     continue;
                 }
+
 
                 // -------- ATTENDANCE EXISTS ----------
                 if (rec != null)
@@ -548,12 +666,24 @@ namespace HRMS.Controllers
             return View(att);
         }
 
+        //public IActionResult CorrectionRequests()
+        //{
+        //    var pending = _context.Attendances
+        //        .Where(a => a.CorrectionRequested == true)
+        //        .OrderByDescending(a => a.Date)
+        //        .ToList();
+
+        //    return View(pending);
+        //}
         public IActionResult CorrectionRequests()
         {
             var pending = _context.Attendances
                 .Where(a => a.CorrectionRequested == true)
                 .OrderByDescending(a => a.Date)
                 .ToList();
+
+            // ✅ Load employees once
+            ViewBag.Employees = _context.Employees.ToList();
 
             return View(pending);
         }

@@ -1,6 +1,8 @@
-﻿using HRMS.Data;
+﻿
+using HRMS.Data;
 using HRMS.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using OfficeOpenXml;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,9 +54,18 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+//app.UseStaticFiles(new StaticFileOptions
+//{
+//    FileProvider = new PhysicalFileProvider(@"C:\HRMSFiles"),
+//    RequestPath = "/HRMSFiles"
+//});
+
 // ROUTING
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();
+
+
+

@@ -2,7 +2,20 @@
 
 @{
     ViewData["Title"] = "Attendance Summary";
-    Layout = "_EmployeeLayout";
+  //  Layout = "_EmployeeLayout";
+    var role = ViewBag.UserRole as string;
+    if (role == "HR")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else if (role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
 }
 
 <div class="container py-4">
@@ -33,186 +46,172 @@
         </div>
     </form>
 
-    <!-- Summary Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 text-center p-3">
-                <h4 class="fw-bold">@Model.TotalDays</h4>
-                <small>Total Working Days</small>
-            </div>
-        </div>
-       @*  <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 text-center p-3">
-                <h4 class="fw-bold text-danger">@Model.TotalLateDays</h4>
-                <small>Late Days</small>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 text-center p-3">
-                <h4 class="fw-bold text-warning">@Model.TotalEarlyLeaveDays</h4>
-                <small>Early Leave Days</small>
-            </div>
-        </div> *@
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 text-center p-3">
-                <h4 class="fw-bold text-success">@Model.AverageWorkingHours</h4>
-                <small>Avg Working Hours / Day</small>
-            </div>
-        </div>
-    </div>
-
     <!-- Daily Attendance Log -->
     <h4 class="fw-bold mb-3">Daily Attendance Log</h4>
 
-   <table class="table table-striped table-bordered">
-    <thead class="table-dark">
-        <tr>
-            <th>Employee Code</th>
-            <th>Date</th>
-            <th>Check In</th>
-            <th>Check Out</th>
-            <th>Working Hours</th>
-            <th>Status</th>       
-            <th>Ticket</th>
-        </tr>
-    </thead>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Working Hours</th>
+                    <th>Status</th>
+                    <th>Ticket</th>
+                </tr>
+            </thead>
 
-    <tbody>
-        @foreach (var a in Model.AttendanceRecords)
-        {
-            <tr>
-                    
-                    <td>@a.Emp_Code</td>
-                <td>@a.Date.ToString("dd-MMM-yyyy")</td>
+            <!-- 🔹 REQUIRED FOR PAGINATION -->
+            <tbody id="tableBody">
+                @foreach (var a in Model.AttendanceRecords)
+                {
+                    <tr>
+                        <td>@a.Date.ToString("dd-MMM-yyyy")</td>
 
-                <td>
-                    @(a.InTime.HasValue
-                        ? DateTime.Today.Add(a.InTime.Value).ToString("hh:mm tt")
-                        : "--")
-                </td>
+                        <td>
+                            @(a.InTime.HasValue
+                                                    ? DateTime.Today.Add(a.InTime.Value).ToString("hh:mm tt")
+                                                    : "--")
+                                                       </td>
 
-                <td>
-                    @(a.OutTime.HasValue
-                        ? DateTime.Today.Add(a.OutTime.Value).ToString("hh:mm tt")
-                        : "--")
-                </td>
-
-
-                <td>
-                    @if (a.InTime.HasValue && a.OutTime.HasValue)
-                    {
-                        var diff = a.OutTime.Value - a.InTime.Value;
-                        @($"{diff.Hours}h {diff.Minutes}m")
-                    }
-                    else
-                    {
-                        @("--")
-                    }
-                </td>
-
-                    <!-- STATUS COLUMN -->
-                    <td>
-
-                        @* 1️⃣ LEAVE *@
-                        @if (a.Status == "L")
-                        {
-                            <span class="badge bg-info">Leave</span>
-                        }
-
-                        @* 2️⃣ SUNDAY = WO (Weekly Off) *@
-                        else if (a.Date.DayOfWeek == DayOfWeek.Sunday)
-                        {
-                            <span class="badge bg-secondary">WO</span>
-                        }
-
-                        @* 3️⃣ SATURDAY = WOP (Week Off Present) *@
-                        else if (a.Date.DayOfWeek == DayOfWeek.Saturday)
-                        {
-                            <span class="badge bg-primary">WOP</span>
-                        }
-
-                        @* 4️⃣ AUTO CHECKOUT *@
-                        else if (a.InTime.HasValue && !a.OutTime.HasValue &&
-                        (a.Status == "Auto" || a.Status == "AOC"))
-                        {
-                            <span class="badge bg-warning text-dark">Auto Checkout</span>
-                        }
-
-                        @* 5️⃣ CHECK-IN AVAILABLE BUT NO CHECK-OUT *@
-                        else if (a.InTime.HasValue && !a.OutTime.HasValue)
-                        {
-                            <span class="badge bg-warning text-dark">Not Checked Out</span>
-                        }
-
-                        @* 6️⃣ PRESENT *@
-                        else if (a.Status == "P")
-                        {
-                            <span class="badge bg-success">Present</span>
-                        }
-
-                        @* 7️⃣ ABSENT *@
-                        else if (!a.InTime.HasValue && !a.OutTime.HasValue)
-                        {
-                            <span class="badge bg-danger">Absent</span>
-                        }
-
-                        @* 8️⃣ DEFAULT PRESENT *@
-                        else
-                        {
-                            <span class="badge bg-success">Present</span>
-                        }
-
+                        <td>
+                            @(a.OutTime.HasValue
+                                                    ? DateTime.Today.Add(a.OutTime.Value).ToString("hh:mm tt")
+                                                    : "--")
                     </td>
 
+                        <td>
+                        @if (a.InTime.HasValue && a.OutTime.HasValue)
+                            {
+                                var diff = a.OutTime.Value - a.InTime.Value;
+                                @($"{diff.Hours}h {diff.Minutes}m")
+                            }
+                            else
+                            {
+                                <span>--</span>
+                            }
+                        </td>
 
+                        <td>
+                            @if (a.Status == "P")
+                            {
+                                <span class="badge bg-success">Present</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Absent</span>
+                            }
+                        </td>
 
-                <td>
-                    @if (!a.CorrectionRequested)
-                    {
-                        <a asp-controller="Attendance"
-                           asp-action="RequestCorrection"
-                               asp-route-empCode="@a.Emp_Code"
-                           asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
-                           asp-route-employeeId="@Model.Employee.Id"
-                           class="btn btn-warning btn-sm">
-                            Request
-                        </a>
-                    }
-                    else
-                    {
-                        if (a.CorrectionStatus == "Pending")
-                        {
-                            <span class="badge bg-info">Pending</span>
-                        }
-                        else if (a.CorrectionStatus == "Approved")
-                        {
-                            <span class="badge bg-success">Approved</span>
-                        }
-                        else if (a.CorrectionStatus == "Rejected")
-                        {
-                            <span class="badge bg-danger">Rejected</span>
-                        }
-                    }
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                        <td>
+                            @if (!a.CorrectionRequested)
+                            {
+                                <a asp-controller="Attendance"
+                                   asp-action="RequestCorrection"
+                                   asp-route-empCode="@a.Emp_Code"
+                                   asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
+                                   asp-route-employeeId="@Model.Employee.Id"
+                                   class="btn btn-warning btn-sm">
+                                    Request
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="badge bg-info">@a.CorrectionStatus</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 
+    <!-- 🔽 PAGINATION BAR -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <span id="pageInfo" class="text-muted"></span>
 
+        <nav>
+            <ul class="pagination mb-0" id="pagination"></ul>
+        </nav>
+    </div>
 </div>
 
 <style>
-    .card {
-        border-radius: 10px;
+    .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
     }
 
-    .badge {
-        padding: 6px 10px;
-        font-size: 0.85rem;
+    .pagination .page-link {
+        cursor: pointer;
+        border-radius: 6px;
+        margin: 0 2px;
     }
 
     table th, table td {
         vertical-align: middle;
     }
 </style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const rowsPerPage = 10;
+        const tableBody = document.getElementById("tableBody");
+        const rows = Array.from(tableBody.querySelectorAll("tr"));
+
+        const pagination = document.getElementById("pagination");
+        const pageInfo = document.getElementById("pageInfo");
+
+        let currentPage = 1;
+        const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+        function showPage(page) {
+            currentPage = page;
+
+            rows.forEach((row, index) => {
+                row.style.display =
+                    index >= (page - 1) * rowsPerPage &&
+                    index < page * rowsPerPage ? "" : "none";
+            });
+
+            pageInfo.innerText = `Page ${currentPage} of ${totalPages || 1}`;
+            renderPagination();
+        }
+
+        function renderPagination() {
+            pagination.innerHTML = "";
+
+            // ◀ PREVIOUS
+            const prev = document.createElement("li");
+            prev.className = "page-item " + (currentPage === 1 ? "disabled" : "");
+            prev.innerHTML = `<a class="page-link">&lsaquo;</a>`;
+            prev.onclick = () => {
+                if (currentPage > 1) showPage(currentPage - 1);
+            };
+            pagination.appendChild(prev);
+
+            // PAGE NUMBERS
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement("li");
+                li.className = "page-item " + (i === currentPage ? "active" : "");
+                li.innerHTML = `<a class="page-link">${i}</a>`;
+                li.onclick = () => showPage(i);
+                pagination.appendChild(li);
+            }
+
+            // ▶ NEXT
+            const next = document.createElement("li");
+            next.className = "page-item " + (currentPage === totalPages ? "disabled" : "");
+            next.innerHTML = `<a class="page-link">&rsaquo;</a>`;
+            next.onclick = () => {
+                if (currentPage < totalPages) showPage(currentPage + 1);
+            };
+            pagination.appendChild(next);
+        }
+
+        if (rows.length > 0) showPage(1);
+    });
+</script>

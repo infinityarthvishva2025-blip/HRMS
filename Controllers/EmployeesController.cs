@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 
 namespace HRMS.Controllers
 {
+   
     public class EmployeesController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -60,14 +61,19 @@ namespace HRMS.Controllers
             var emp = await _context.Employees.FirstOrDefaultAsync(x => x.Id == id);
             if (emp == null) return NotFound();
 
+            // Server folder: C:\HRMSFiles\{EmployeeCode}\
+            string physicalFolder = Path.Combine(@"C:\HRMSFiles", emp.EmployeeCode);
+            string urlFolder = "/HRMSFiles/" + emp.EmployeeCode + "/";
+
+            ViewBag.PhysicalFolder = physicalFolder;
+            ViewBag.UrlFolder = urlFolder;
+
             return View(emp);
         }
 
         // ================================
         // CREATE (GET)
         // ================================
-        // ================================
-        // CREATE (GET)
         // ================================
         public IActionResult Create()
         {
