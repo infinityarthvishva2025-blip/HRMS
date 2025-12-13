@@ -30,7 +30,12 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+
+    // 🔥 ADD THESE TWO LINES
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
+
 
 // Razor auto-refresh
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();

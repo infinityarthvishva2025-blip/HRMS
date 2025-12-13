@@ -1,0 +1,69 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@model HRMS.ViewModels.DailyReportViewModel
+
+<h2>Daily Report</h2>
+
+<form asp-action="Send"
+      asp-controller="DailyReport"
+      method="post"
+      enctype="multipart/form-data">
+
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        <label>Today's Work</label>
+        <textarea asp-for="TodaysWork" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="TodaysWork" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mt-3">
+        <label>Pending Work</label>
+        <textarea asp-for="PendingWork" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="PendingWork" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mt-3">
+        <label>Issues / Problems</label>
+        <textarea asp-for="Issues" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="Issues" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mt-3">
+        <label>Upload Attachment (PDF / Image)</label>
+        <input asp-for="Attachment" type="file" class="form-control" />
+        <small class="text-muted">Allowed: jpg, jpeg, png, pdf</small>
+        <span asp-validation-for="Attachment" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mt-4">
+        <label class="fw-bold">Select Recipients</label>
+
+        <div class="border rounded p-3"
+             style="max-height: 200px; overflow-y: auto;">
+
+            @foreach (var item in Model.RecipientList)
+            {
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="SelectedRecipientIds[]"
+                           value="@item.Value"
+                           id="recipient_@item.Value" />
+
+                    <label class="form-check-label" for="recipient_@item.Value">
+                        @item.Text
+                    </label>
+                </div>
+            }
+        </div>
+
+        <span class="text-danger">
+            @Html.ValidationMessageFor(m => m.SelectedRecipientIds)
+        </span>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-4">
+        Submit Daily Report
+    </button>
+</form>

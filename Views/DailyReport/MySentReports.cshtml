@@ -1,0 +1,63 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@model IEnumerable<HRMS.Models.DailyReport>
+
+@{
+    var role = HttpContextAccessor.HttpContext.Session.GetString("Role") ?? "Employee";
+    role = string.IsNullOrWhiteSpace(role) || role == "-" ? "Employee" : role;
+
+    Layout = (role == "HR" || role == "GM" || role == "VP" || role == "Director")
+        ? "~/Views/Shared/_HrLayout.cshtml"
+        : "~/Views/Shared/_EmployeeLayout.cshtml";
+}
+
+<h2>My Sent Daily Reports</h2>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Today's Work</th>
+            <th>Pending</th>
+            <th>Issues</th>
+            <th>Recipients</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var r in Model)
+        {
+            <tr>
+                <td>@r.CreatedDate.ToString("dd-MMM-yyyy HH:mm")</td>
+                <td>@r.TodaysWork</td>
+                <td>@r.PendingWork</td>
+                <td>@r.Issues</td>
+
+                <td>
+                    @if (r.Recipients != null && r.Recipients.Any())
+                    {
+                        <ul class="mb-0">
+                            @foreach (var rec in r.Recipients)
+                            {
+                                <li>
+                                    @rec.Receiver?.Name (@rec.Receiver?.Role)
+                                    @if (rec.IsRead)
+                                    {
+                                        <span class="text-success">✔ Read</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-warning">⏳ Unread</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <span>-</span>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

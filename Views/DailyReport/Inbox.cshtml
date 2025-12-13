@@ -1,0 +1,84 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@model IEnumerable<HRMS.Models.DailyReportRecipient>
+
+@{
+    var role = HttpContextAccessor.HttpContext.Session.GetString("Role") ?? "Employee";
+
+    role = string.IsNullOrWhiteSpace(role) || role == "-" ? "Employee" : role;
+
+    if (role == "HR" || role == "GM" || role == "VP" || role == "Director")
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    else
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+}
+
+<h2>Daily Report Inbox</h2>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>From</th>
+            <th>Role</th>
+            <th>Date</th>
+            <th>Report</th>
+            <th>Attachment</th>
+            <th>Read</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr class="@(item.IsRead ? "" : "table-info")">
+                <td>@item.Report.Sender.Name</td>
+                <td>@item.Report.Sender.Role</td>
+                <td>@item.Report.CreatedDate.ToString("dd-MMM-yyyy HH:mm")</td>
+                <td>
+                    <strong>Today's Work:</strong> @item.Report.TodaysWork <br />
+                    <strong>Pending:</strong> @item.Report.PendingWork <br />
+                    <strong>Issues:</strong> @item.Report.Issues
+                </td>
+                <td>
+                    @if (!string.IsNullOrEmpty(item.Report.AttachmentPath))
+                    {
+                        <a href="@item.Report.AttachmentPath"
+                           target="_blank"
+                           class="btn btn-sm btn-outline-primary">
+                            View
+                        </a>
+                    }
+                    else
+                    {
+                        <span>-</span>
+                    }
+                </td>
+
+                <td>
+                    <input type="checkbox"
+                           onchange="markAsRead(@item.Id, this)"
+                           @(item.IsRead ? "checked=\"checked\"" : "") />
+                    @if (item.IsRead && item.ReadDate.HasValue)
+                    {
+                        <br />
+                        <small>@item.ReadDate.Value.ToString("dd-MMM-yyyy HH:mm")</small>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function markAsRead(id, checkbox) {
+            if (!$(checkbox).is(":checked")) return;
+
+            $.post('@Url.Action("MarkAsRead", "DailyReport")', { id: id }, function (res) {
+                if (res && res.success) {
+                    $(checkbox).closest('tr').removeClass('table-info');
+                }
+            });
+        }
+    </script>
+}
