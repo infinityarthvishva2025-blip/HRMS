@@ -534,15 +534,14 @@ namespace HRMS.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult>  RequestCorrection(
-    string token,
-    string CorrectionRemark,
-    int employeeId)
+        public async Task<IActionResult> RequestCorrection(
+     string token,
+     string CorrectionRemark,
+     int employeeId)
         {
             if (string.IsNullOrEmpty(token))
                 return BadRequest("Missing token");
 
-            // 🔐 Decrypt token
             if (!UrlEncryptionHelper.TryDecryptToken(
                     token,
                     out string empCode,
@@ -551,37 +550,33 @@ namespace HRMS.Controllers
             {
                 return StatusCode(403, error);
             }
+
             var empId = HttpContext.Session.GetInt32("EmployeeId");
             if (!empId.HasValue)
                 return RedirectToAction("Login", "Account");
 
-            // 🔹 Await FindAsync (NOW VALID)
             var emp = await _context.Employees.FindAsync(empId.Value);
-
             if (emp == null)
                 return RedirectToAction("Login", "Account");
 
-            // 🔹 SAFE string cast
-            ViewBag.UserRole = emp.Role?.ToString();
-            // 🔍 Find attendance record
             var att = _context.Attendances
                 .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == date);
 
             if (att == null)
                 return RedirectToAction("EmployeeSummary", new { employeeId });
 
-            // 📝 Update correction request
             att.CorrectionRequested = true;
             att.CorrectionRemark = CorrectionRemark;
             att.CorrectionStatus = "Pending";
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("EmployeeSummary", new { employeeId });
         }
 
 
-       
+
+
         [HttpGet]
         public async Task<IActionResult> CorrectionRequests()
         {
