@@ -1,14 +1,12 @@
 ﻿@model HRMS.Models.ViewModels.EmployeeAttendanceSummaryViewModel
+@using HRMS.Helpers
 
 @{
     ViewData["Title"] = "Attendance Summary";
-  //  Layout = "_EmployeeLayout";
+
     var role = ViewBag.UserRole as string;
-    if (role == "HR")
-    {
-        Layout = "~/Views/Shared/_HrLayout.cshtml";
-    }
-    else if (role == "VP" || role == "GM" || role == "Director")
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
     {
         Layout = "~/Views/Shared/_HrLayout.cshtml";
     }
@@ -62,23 +60,35 @@
                 </tr>
             </thead>
 
-            <!-- 🔹 REQUIRED FOR PAGINATION -->
             <tbody id="tableBody">
                 @foreach (var a in Model.AttendanceRecords)
                 {
-                    <tr>
-                        <td>@a.Date.ToString("dd-MMM-yyyy")</td>
+                    bool isHr = role == "HR";
+                    bool canResolve = a.CorrectionRequested && isHr;
 
-                        <td>
-                            @(a.InTime.HasValue
-                                                    ? DateTime.Today.Add(a.InTime.Value).ToString("hh:mm tt")
-                                                    : "--")
-                                                       </td>
+                    string token = null;
+                    if ((canResolve) || (!a.CorrectionRequested && !isHr))
+                    {
+                        token = UrlEncryptionHelper.GenerateToken(
+                        a.Emp_Code,
+                        a.Date,
+                        expiryMinutes: 30
+                        );
+                    }
 
-                        <td>
-                            @(a.OutTime.HasValue
-                                                    ? DateTime.Today.Add(a.OutTime.Value).ToString("hh:mm tt")
-                                                    : "--")
+                <tr>
+                    <td>@a.Date.ToString("dd-MMM-yyyy")</td>
+
+                    <td>
+                        @(a.InTime.HasValue
+                                                ? DateTime.Today.Add(a.InTime.Value).ToString("hh:mm tt")
+                                                : "--")
+                                                   </td>
+
+                    <td>
+                        @(a.OutTime.HasValue
+                                                ? DateTime.Today.Add(a.OutTime.Value).ToString("hh:mm tt")
+                                                : "--")
                     </td>
 
                         <td>
@@ -98,6 +108,10 @@
                             {
                                 <span class="badge bg-success">Present</span>
                             }
+                            else if (a.Status == "WO" || a.Status == "WOP")
+                            {
+                                <span class="badge bg-secondary">@a.Status</span>
+                            }
                             else
                             {
                                 <span class="badge bg-danger">Absent</span>
@@ -105,18 +119,27 @@
                         </td>
 
                         <td>
-                            @if (!a.CorrectionRequested)
+                            @* EMPLOYEE: Request *@
+                            @if (!a.CorrectionRequested && !isHr)
                             {
                                 <a asp-controller="Attendance"
                                    asp-action="RequestCorrection"
-                                   asp-route-empCode="@a.Emp_Code"
-                                   asp-route-date="@a.Date.ToString("yyyy-MM-dd")"
+                                   asp-route-token="@token"
                                    asp-route-employeeId="@Model.Employee.Id"
                                    class="btn btn-warning btn-sm">
                                     Request
                                 </a>
                             }
-                            else
+                            @* HR: Resolve *@
+                            else if (canResolve)
+                            {
+                                <a class="btn btn-success btn-sm"
+                                   href="@Url.Action("ResolveCorrection", "Attendance", new { token })">
+                                    Resolve
+                                </a>
+                            }
+                            @* Others *@
+                            else if (a.CorrectionRequested)
                             {
                                 <span class="badge bg-info">@a.CorrectionStatus</span>
                             }
@@ -127,10 +150,9 @@
         </table>
     </div>
 
-    <!-- 🔽 PAGINATION BAR -->
+    <!-- Pagination -->
     <div class="d-flex justify-content-between align-items-center mt-3">
         <span id="pageInfo" class="text-muted"></span>
-
         <nav>
             <ul class="pagination mb-0" id="pagination"></ul>
         </nav>
@@ -184,7 +206,6 @@
         function renderPagination() {
             pagination.innerHTML = "";
 
-            // ◀ PREVIOUS
             const prev = document.createElement("li");
             prev.className = "page-item " + (currentPage === 1 ? "disabled" : "");
             prev.innerHTML = `<a class="page-link">&lsaquo;</a>`;
@@ -193,7 +214,6 @@
             };
             pagination.appendChild(prev);
 
-            // PAGE NUMBERS
             for (let i = 1; i <= totalPages; i++) {
                 const li = document.createElement("li");
                 li.className = "page-item " + (i === currentPage ? "active" : "");
@@ -202,7 +222,6 @@
                 pagination.appendChild(li);
             }
 
-            // ▶ NEXT
             const next = document.createElement("li");
             next.className = "page-item " + (currentPage === totalPages ? "disabled" : "");
             next.innerHTML = `<a class="page-link">&rsaquo;</a>`;

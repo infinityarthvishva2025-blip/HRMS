@@ -1,8 +1,18 @@
 ﻿@model IEnumerable<HRMS.Models.Attendance>
+@using HRMS.Helpers
 
 @{
     ViewData["Title"] = "Attendance Correction Requests";
-    Layout = "_HrLayout";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
 }
 
 <div class="container py-4">
@@ -50,7 +60,17 @@
                         {
                             var employees = ViewBag.Employees as List<HRMS.Models.Employee>;
                             var emp = employees?.FirstOrDefault(e => e.EmployeeCode == a.Emp_Code);
-
+                            bool isHr = role == "HR";
+                            bool canResolve = a.CorrectionRequested && isHr;
+                            string token = null;
+                            if (canResolve)
+                            {
+                                token = UrlEncryptionHelper.GenerateToken(
+                                a.Emp_Code,
+                                a.Date,
+                                expiryMinutes: 30
+                                );
+                            }
                             <tr>
                                 <td class="fw-semibold">
                                     @a.Emp_Code - @(emp?.Name ?? "Unknown")
@@ -88,10 +108,14 @@
                                 </td>
 
                                 <td>
-                                    <a href="/Attendance/ResolveCorrection?empCode=@a.Emp_Code&date=@a.Date.ToString("yyyy-MM-dd")"
-                                       class="btn btn-primary btn-sm">
+                                    <a class="btn btn-success btn-sm"
+                                       href="@Url.Action("ResolveCorrection", "Attendance", new { token })">
                                         Resolve
                                     </a>
+                                   @*  <a href="/Attendance/ResolveCorrection?empCode=@a.Emp_Code&date=@a.Date.ToString("yyyy-MM-dd")"
+                                       class="btn btn-primary btn-sm">
+                                        Resolve
+                                    </a> *@
                                 </td>
                             </tr>
                         }
