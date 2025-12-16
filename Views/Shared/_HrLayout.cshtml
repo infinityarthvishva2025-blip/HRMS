@@ -1,5 +1,15 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
     Layout = null;
+
+    // ROLE (defined ONCE)
+    string role = HttpContextAccessor.HttpContext?.Session.GetString("Role") ?? "Employee";
+    role = string.IsNullOrWhiteSpace(role) ? "Employee" : role;
+
+    // Employee Id
+    int loggedEmpId = Context.Session.GetInt32("EmployeeId") ?? 0;
 }
 
 <!DOCTYPE html>
@@ -270,6 +280,21 @@
             <a asp-controller="Announcements" asp-action="Create" class="menu-item">
                 <i class="fa-solid fa-notification">📢</i><span>Announcements</span>
             </a>
+
+            <!-- DailyReport -->
+            
+
+            @if (role == "Manager" || role == "GM" || role == "VP" || role == "Director")
+            {
+
+                    <a asp-controller="DailyReport" asp-action="Inbox" class="menu-item">
+                    <i class="fa-solid fa-file-lines"></i><span> Daily Report Inbox</span>
+                    </a>
+
+            }
+
+           
+
             <a asp-controller="Reports" asp-action="Index" class="menu-item">
                 <i class="fa-solid fa-file-alt"></i><span>Reports</span>
             </a>

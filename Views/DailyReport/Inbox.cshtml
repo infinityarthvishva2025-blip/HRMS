@@ -1,0 +1,189 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@model IEnumerable<HRMS.Models.DailyReportRecipient>
+
+@{
+    var role = HttpContextAccessor.HttpContext.Session.GetString("Role") ?? "Employee";
+    role = string.IsNullOrWhiteSpace(role) || role == "-" ? "Employee" : role;
+
+    Layout = (role == "HR" || role == "GM" || role == "VP" || role == "Director")
+        ? "~/Views/Shared/_HrLayout.cshtml"
+        : "~/Views/Shared/_EmployeeLayout.cshtml";
+}
+
+<div class="container-fluid">
+
+    <!-- ================= HEADER ================= -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fa-solid fa-inbox me-2"></i>
+                Daily Report Inbox
+            </h5>
+
+            <form method="get" class="d-flex gap-2">
+                <input type="text"
+                       name="search"
+                       value="@ViewBag.Search"
+                       class="form-control form-control-sm"
+                       placeholder="Search employee..." />
+
+                <select name="range"
+                        class="form-select form-select-sm">
+                    <option value="today" selected="@("today" == ViewBag.Range)">Today</option>
+                    <option value="yesterday" selected="@("yesterday" == ViewBag.Range)">Yesterday</option>
+                    <option value="last7" selected="@("last7" == ViewBag.Range)">Last 7 Days</option>
+                    <option value="all" selected="@("all" == ViewBag.Range)">All</option>
+                </select>
+
+                <button class="btn btn-light btn-sm">
+                    <i class="fa-solid fa-filter"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- ================= DESKTOP TABLE ================= -->
+        <div class="table-responsive d-none d-md-block">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>From</th>
+                        <th>Role</th>
+                        <th>Date</th>
+                        <th>Report Summary</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr class="@(item.IsRead ? "" : "table-info")">
+                            <td><strong>@item.Report.Sender.Name</strong></td>
+
+                            <td>
+                                <span class="badge bg-secondary">
+                                    @item.Report.Sender.Role
+                                </span>
+                            </td>
+
+                            <td>
+                                <strong>@item.Report.CreatedDate.ToString("dd MMM yyyy")</strong><br />
+                                <small class="text-muted">@item.Report.CreatedDate.ToString("hh:mm tt")</small>
+                            </td>
+
+                            <td>
+                                <div><strong>Today's Work:</strong> @item.Report.TodaysWork</div>
+                                <div><strong>Pending:</strong> @item.Report.PendingWork</div>
+                                <div><strong>Issues:</strong> @item.Report.Issues</div>
+                            </td>
+
+                            <td class="text-center">
+                                <input type="checkbox"
+                                       onchange="markAsRead(@item.Id, this)"
+                                       @(item.IsRead ? "checked" : "") />
+
+                                <div class="mt-1">
+                                    @if (item.IsRead)
+                                    {
+                                        <span class="badge bg-success">Read</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">Unread</span>
+                                    }
+                                </div>
+                            </td>
+
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-danger"
+                                        onclick="deleteOne(@item.Id)">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ================= MOBILE VIEW ================= -->
+        <div class="d-block d-md-none p-3">
+            @foreach (var item in Model)
+            {
+                <div class="card mb-3 shadow-sm @(item.IsRead ? "" : "border-primary")">
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between">
+                            <strong>@item.Report.Sender.Name</strong>
+                            <span class="badge @(item.IsRead ? "bg-success" : "bg-warning text-dark")">
+                                @(item.IsRead ? "Read" : "Unread")
+                            </span>
+                        </div>
+
+                        <small class="text-muted">@item.Report.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")</small>
+                        <hr />
+
+                        <div><strong>Today's Work:</strong> @item.Report.TodaysWork</div>
+                        <div><strong>Pending:</strong> @item.Report.PendingWork</div>
+                        <div><strong>Issues:</strong> @item.Report.Issues</div>
+
+                        <div class="d-flex justify-content-between mt-3">
+                            <div>
+                                <input type="checkbox"
+                                       onchange="markAsRead(@item.Id, this)"
+                                       @(item.IsRead ? "checked" : "") />
+                                Mark Read
+                            </div>
+
+                            <button class="btn btn-sm btn-outline-danger"
+                                    onclick="deleteOne(@item.Id)">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- DELETE ALL -->
+    <div class="text-end">
+        <button class="btn btn-danger btn-sm"
+                onclick="deleteAll()">
+            <i class="fa-solid fa-trash"></i> Delete All (Filtered)
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        function markAsRead(id, checkbox) {
+            if (!checkbox.checked) return;
+
+            $.post('@Url.Action("MarkAsRead", "DailyReport")',
+                { id: id });
+        }
+
+        function deleteOne(id) {
+            if (!confirm("Delete this report?")) return;
+
+            $.post('@Url.Action("DeleteOne", "DailyReport")',
+                { id: id },
+                () => location.reload());
+        }
+
+        function deleteAll() {
+            if (!confirm("Delete all filtered reports?")) return;
+
+            $.post('@Url.Action("DeleteAll", "DailyReport")',
+                {
+                    search: '@ViewBag.Search',
+                    range: '@ViewBag.Range'
+                },
+                () => location.reload());
+        }
+    </script>
+}

@@ -20,6 +20,7 @@ namespace HRMS.Controllers
         [HttpGet]
         public IActionResult Login()
         {
+
             return View(new LoginViewModel());
         }
 
@@ -47,12 +48,12 @@ namespace HRMS.Controllers
 
 
             // Normalize Role
-            string role = (emp.Role ?? "").Trim().ToLower();
+            string role = emp.Role?.Trim() ?? "Employee";
 
-            if (role == "hr" || role == "admin")
+            // Normalize role formatting (optional)
+            if (role.Equals("admin", StringComparison.OrdinalIgnoreCase))
                 role = "HR";
-            else
-                role = "Employee";
+
 
 
             // Store session
@@ -64,16 +65,19 @@ namespace HRMS.Controllers
             // ===========================================
             // ROLE-BASED REDIRECT
             // ===========================================
-            if((emp.Role == "HR") ||(emp.Role == "VP") || (emp.Role == "GM") || (emp.Role == "Director"))
+             role = (emp.Role ?? "Employee").Trim();
+
+            if (role.Equals("HR", StringComparison.OrdinalIgnoreCase) ||
+                role.Equals("VP", StringComparison.OrdinalIgnoreCase) ||
+                role.Equals("GM", StringComparison.OrdinalIgnoreCase) ||
+                role.Equals("Director", StringComparison.OrdinalIgnoreCase) )
+                //role.Equals("Manager", StringComparison.OrdinalIgnoreCase)
             {
                 return RedirectToAction("Index", "Home");
             }
-           
-            
-            else
-            {
-                return RedirectToAction("Dashboard", "Employees");
-            }
+
+            return RedirectToAction("Dashboard", "Employees");
+
         }
 
         // ============================

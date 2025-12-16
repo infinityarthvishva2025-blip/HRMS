@@ -5,51 +5,45 @@
 @{
     Layout = null;
 
-    var empId = Context.Session.GetInt32("EmployeeId");
+    // ROLE (DECLARE ONCE)
+    string role = HttpContextAccessor.HttpContext?.Session.GetString("Role") ?? "Employee";
+    role = string.IsNullOrWhiteSpace(role) ? "Employee" : role;
 
-    // 🔥 VERY IMPORTANT: Disable cache so bell unread count updates instantly
+    // EMPLOYEE ID
+    int empId = HttpContextAccessor.HttpContext?.Session.GetInt32("EmployeeId") ?? 0;
+
+    // Disable cache
     Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
     Context.Response.Headers["Pragma"] = "no-cache";
     Context.Response.Headers["Expires"] = "-1";
 
-    // 🔔 UNREAD ANNOUNCEMENT COUNT (runs for EVERY page using this layout)
-    int loggedEmpId = Context.Session.GetInt32("EmployeeId") ?? 0;
+    // UNREAD ANNOUNCEMENT COUNT
+    int loggedEmpId = empId;
+    int unreadCount = 0;
 
     var db = (HRMS.Data.ApplicationDbContext)
         Context.RequestServices.GetService(typeof(HRMS.Data.ApplicationDbContext));
 
-    int unreadCount = 0;
-
     if (db != null && loggedEmpId > 0)
     {
-        // Get employee
         var emp = db.Employees.FirstOrDefault(e => e.Id == loggedEmpId);
-
         if (emp != null)
         {
-            // Load all announcements
             var all = db.Announcements.ToList();
 
-            // Filter announcements for this employee
-            var filtered = all.Where(a =>
-                    a.IsGlobal ||
-                    (!string.IsNullOrEmpty(a.TargetDepartments) &&
-                     a.TargetDepartments.Split(',').Contains(emp.Department)) ||
-                    (!string.IsNullOrEmpty(a.TargetEmployees) &&
-                     a.TargetEmployees.Split(',').Contains(loggedEmpId.ToString()))
-                )
-                .ToList();
-
-            // Count unread announcements
-            unreadCount = filtered.Count(a =>
-                string.IsNullOrEmpty(a.ReadByEmployees) ||
-                !a.ReadByEmployees.Split(',').Contains(loggedEmpId.ToString())
+            unreadCount = all.Count(a =>
+                a.IsGlobal ||
+                (!string.IsNullOrEmpty(a.TargetDepartments) &&
+                 a.TargetDepartments.Split(',').Contains(emp.Department)) ||
+                (!string.IsNullOrEmpty(a.TargetEmployees) &&
+                 a.TargetEmployees.Split(',').Contains(loggedEmpId.ToString()))
             );
         }
     }
 
     ViewBag.UnreadCount = unreadCount;
 }
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -386,6 +380,31 @@
                     <i class="fa-solid fa-bell"></i>My Notifications
                 </a>
             </div>
+
+            <!-- Daily Reports -->
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('dailyReportMenu')">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>Daily Reports</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="dailyReportMenu" class="submenu">
+
+                @* Inbox only for Manager / GM / VP / Director *@
+                @if (role == "Manager" || role == "GM" || role == "VP" || role == "Director")
+                {
+                    <a asp-controller="DailyReport" asp-action="Inbox" class="submenu-item">
+                        <i class="fa-solid fa-inbox"></i>Daily Report Inbox
+                    </a>
+                }
+
+                <a asp-controller="DailyReport" asp-action="MySentReports" class="submenu-item">
+                    <i class="fa-solid fa-paper-plane"></i>My Daily Reports
+                </a>
+
+            </div>
+
+
 
             <!-- Logout -->
             <div class="logout">

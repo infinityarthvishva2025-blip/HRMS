@@ -110,6 +110,9 @@ namespace HRMS.Data
         public DbSet<Announcement> Announcements { get; set; }
 
         public DbSet<Payroll> Payroll { get; set; }
+
+        public DbSet<DailyReport> DailyReports { get; set; }
+        public DbSet<DailyReportRecipient> DailyReportRecipients { get; set; }
         public DbSet<LeaveApprovalRoute> LeaveApprovalRoutes { get; set; }
         public DbSet<Hr> Hrs { get; set; }
         public DbSet<GeoTag> GeoTags => Set<GeoTag>();

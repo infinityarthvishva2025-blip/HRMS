@@ -1,0 +1,241 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@model IEnumerable<HRMS.Models.DailyReport>
+
+@{
+    var role = HttpContextAccessor.HttpContext.Session.GetString("Role") ?? "Employee";
+    role = string.IsNullOrWhiteSpace(role) || role == "-" ? "Employee" : role;
+
+    Layout = (role == "HR" || role == "GM" || role == "VP" || role == "Director")
+        ? "~/Views/Shared/_HrLayout.cshtml"
+        : "~/Views/Shared/_EmployeeLayout.cshtml";
+}
+
+<style>
+    .safe-text {
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        white-space: normal;
+        max-width: 100%;
+    }
+
+    .truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+
+<div class="container-fluid">
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fa-solid fa-paper-plane me-2"></i>
+                <strong>My Sent Daily Reports</strong>
+            </div>
+
+            <button class="btn btn-sm btn-danger"
+                    onclick="deleteAllReports()">
+                <i class="fa-solid fa-trash"></i> Delete All
+            </button>
+        </div>
+
+        <div class="card-body p-0">
+
+            <!-- ================= DESKTOP TABLE ================= -->
+            <div class="table-responsive d-none d-md-block">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:140px;">Date</th>
+                            <th>Today's Work</th>
+                            <th>Pending</th>
+                            <th>Issues</th>
+                            <th class="text-center" style="width:260px;">Recipients</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var r in Model)
+                        {
+                            var total = r.Recipients?.Count() ?? 0;
+                            var read = r.Recipients?.Count(x => x.IsRead) ?? 0;
+                            var unread = total - read;
+                            var modalId = $"recipientsModal_{r.ReportId}";
+
+                            <tr>
+                                <td>
+                                    <strong>@r.CreatedDate.ToString("dd MMM yyyy")</strong><br />
+                                    <small class="text-muted">@r.CreatedDate.ToString("hh:mm tt")</small>
+                                </td>
+
+                                <td>
+                                    <div class="safe-text truncate-2 text-muted">
+                                        @r.TodaysWork
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="safe-text truncate-2 text-muted">
+                                        @r.PendingWork
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="safe-text truncate-2 text-muted">
+                                        @r.Issues
+                                    </div>
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="badge bg-success me-1">✔ @read</span>
+                                    <span class="badge bg-warning text-dark me-2">⏳ @unread</span>
+
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#@modalId">
+                                        View
+                                    </button>
+
+                                    <button class="btn btn-sm btn-outline-danger ms-1"
+                                            onclick="deleteOne(@r.ReportId)">
+                                        Delete
+                                    </button>
+
+                                    <!-- MODAL -->
+                                    <div class="modal fade" id="@modalId" tabindex="-1">
+                                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                                            <div class="modal-content">
+
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h6 class="modal-title">
+                                                        Report Details – @r.CreatedDate.ToString("dd MMM yyyy")
+                                                    </h6>
+                                                    <button type="button"
+                                                            class="btn-close btn-close-white"
+                                                            data-bs-dismiss="modal"></button>
+                                                </div>
+
+                                                <div class="modal-body">
+
+                                                    <strong>Today's Work</strong>
+                                                    <p class="safe-text text-muted">@r.TodaysWork</p>
+
+                                                    <strong>Pending</strong>
+                                                    <p class="safe-text text-muted">@r.PendingWork</p>
+
+                                                    <strong>Issues</strong>
+                                                    <p class="safe-text text-muted">@r.Issues</p>
+
+                                                    <hr />
+                                                    <strong>Recipients Status</strong>
+
+                                                    @foreach (var rec in r.Recipients)
+                                                    {
+                                                        <div class="d-flex justify-content-between align-items-center border rounded p-2 mt-2">
+                                                            <div>
+                                                                <strong>@rec.Receiver?.Name</strong><br />
+                                                                <small class="text-muted">@rec.Receiver?.Role</small>
+                                                            </div>
+
+                                                            @if (rec.IsRead)
+                                                            {
+                                                                <span class="badge bg-success">✔ Read</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="badge bg-warning text-dark">⏳ Unread</span>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ================= MOBILE VIEW ================= -->
+            <div class="d-block d-md-none p-3">
+                @foreach (var r in Model)
+                {
+                    var read = r.Recipients?.Count(x => x.IsRead) ?? 0;
+                    var unread = (r.Recipients?.Count() ?? 0) - read;
+
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+
+                            <strong>@r.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")</strong>
+                            <hr />
+
+                            <strong>Today's Work</strong>
+                            <p class="safe-text truncate-2 text-muted">@r.TodaysWork</p>
+
+                            <strong>Pending</strong>
+                            <p class="safe-text truncate-2 text-muted">@r.PendingWork</p>
+
+                            <strong>Issues</strong>
+                            <p class="safe-text truncate-2 text-muted">@r.Issues</p>
+
+                            <span class="badge bg-success me-1">✔ @read</span>
+                            <span class="badge bg-warning text-dark me-2">⏳ @unread</span>
+
+                        </div>
+                    </div>
+                }
+            </div>
+
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        function deleteOne(reportId) {
+            if (!confirm("Delete this report?")) return;
+
+            $.ajax({
+                url: '/DailyReport/DeleteSentReport',
+                type: 'POST',
+                data: { reportId: reportId },
+                success: function (res) {
+                    if (res && res.success) {
+                        location.reload();
+                    } else {
+                        alert("Unable to delete report.");
+                    }
+                },
+                error: function () {
+                    alert("Server error while deleting report.");
+                }
+            });
+        }
+
+        function deleteAllReports() {
+            if (!confirm("Delete ALL your reports?")) return;
+
+            $.ajax({
+                url: '/DailyReport/DeleteAllSentReports',
+                type: 'POST',
+                success: function (res) {
+                    if (res && res.success) {
+                        location.reload();
+                    } else {
+                        alert("Unable to delete reports.");
+                    }
+                },
+                error: function () {
+                    alert("Server error while deleting reports.");
+                }
+            });
+        }
+    </script>
+}
