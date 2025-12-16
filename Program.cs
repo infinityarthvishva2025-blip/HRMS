@@ -44,6 +44,7 @@ builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 
 var app = builder.Build();
 
+
 // MIDDLEWARE
 app.UseHttpsRedirection();
 app.UseStaticFiles();

@@ -14,21 +14,17 @@ namespace HRMS.Controllers
 {
     public class DailyReportController : Controller
     {
-        private readonly IWebHostEnvironment _env;  
+        private readonly IWebHostEnvironment _env;
         private readonly ApplicationDbContext _db;
 
-        public DailyReportController(
-     ApplicationDbContext db,
-     IWebHostEnvironment env
- )
+        public DailyReportController(ApplicationDbContext db, IWebHostEnvironment env)
         {
             _db = db;
             _env = env;
         }
 
-
         // =========================
-        // SESSION HELPERS (FIXED)
+        // SESSION HELPERS
         // =========================
         private int GetCurrentUserId()
         {
@@ -37,10 +33,10 @@ namespace HRMS.Controllers
 
         private string GetCurrentRole()
         {
-            return HttpContext.Session.GetString("Role") ?? "Employee";
+            // Always normalize role so checks are consistent everywhere
+            var role = HttpContext.Session.GetString("Role") ?? "";
+            return NormalizeRole(role);
         }
-
-
 
         private string NormalizeRole(string role)
         {
@@ -49,17 +45,30 @@ namespace HRMS.Controllers
 
             role = role.Trim();
 
+            // map admin -> HR
             if (role.Equals("admin", StringComparison.OrdinalIgnoreCase))
                 return "HR";
 
-            return role switch
-            {
-                "Manager" => "Manager",
-                "GM" => "GM",
-                "VP" => "VP",
-                "Director" => "Director",
-                _ => "Employee"
-            };
+            // ✅ FIX: HR was missing earlier
+            if (role.Equals("hr", StringComparison.OrdinalIgnoreCase))
+                return "HR";
+
+            if (role.Equals("employee", StringComparison.OrdinalIgnoreCase))
+                return "Employee";
+
+            if (role.Equals("manager", StringComparison.OrdinalIgnoreCase))
+                return "Manager";
+
+            if (role.Equals("gm", StringComparison.OrdinalIgnoreCase))
+                return "GM";
+
+            if (role.Equals("vp", StringComparison.OrdinalIgnoreCase))
+                return "VP";
+
+            if (role.Equals("director", StringComparison.OrdinalIgnoreCase))
+                return "Director";
+
+            return "Employee";
         }
 
         // =========================
@@ -71,9 +80,7 @@ namespace HRMS.Controllers
 
             // Directors cannot send reports
             if (role == "Director")
-            {
                 return RedirectToAction("AccessDenied", "Account");
-            }
 
             int senderId = GetCurrentUserId();
             if (senderId == 0)
@@ -104,9 +111,9 @@ namespace HRMS.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Send(DailyReportViewModel model)
         {
-            string role = NormalizeRole(GetCurrentRole());
+            string role = GetCurrentRole();
 
-            // ❌ Director cannot submit
+            // Director cannot submit
             if (role == "Director")
                 return RedirectToAction("AccessDenied", "Account");
 
@@ -124,25 +131,22 @@ namespace HRMS.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            // =========================
-            // VALIDATE RECIPIENTS
-            // =========================
+            // Validate recipients
             if (model.SelectedRecipientIds == null || !model.SelectedRecipientIds.Any())
             {
-                ModelState.AddModelError("SelectedRecipientIds",
-                    "Please select at least one recipient.");
+                ModelState.AddModelError("SelectedRecipientIds", "Please select at least one recipient.");
             }
 
             if (!ModelState.IsValid)
             {
-                model.RecipientList = BuildRecipientList(role);
+                model.RecipientList = BuildRecipientList(NormalizeRole(sender.Role));
                 return View(model);
             }
 
             // =========================
             // FILE UPLOAD (OPTIONAL)
             // =========================
-            string fileName = null; // ✅ ONLY filename
+            string attachmentPath = null; // store RELATIVE PATH
 
             if (model.Attachment != null && model.Attachment.Length > 0)
             {
@@ -150,29 +154,26 @@ namespace HRMS.Controllers
 
                 if (!new[] { ".jpg", ".jpeg", ".png", ".pdf" }.Contains(ext))
                 {
-                    ModelState.AddModelError("Attachment",
-                        "Only JPG, PNG or PDF files are allowed.");
-                    model.RecipientList = BuildRecipientList(role);
+                    ModelState.AddModelError("Attachment", "Only JPG, PNG or PDF files are allowed.");
+                    model.RecipientList = BuildRecipientList(NormalizeRole(sender.Role));
                     return View(model);
                 }
 
-                string uploadsFolder = Path.Combine(
-                    _env.WebRootPath,
-                    "uploads",
-                    "dailyreports"
-                );
-
+                string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "dailyreports");
                 Directory.CreateDirectory(uploadsFolder);
 
-                fileName = $"{Guid.NewGuid()}{ext}";
+                string fileName = $"{Guid.NewGuid()}{ext}";
                 string fullPath = Path.Combine(uploadsFolder, fileName);
 
                 using var stream = new FileStream(fullPath, FileMode.Create);
                 model.Attachment.CopyTo(stream);
+
+                // Save as url-friendly relative path
+                attachmentPath = $"/uploads/dailyreports/{fileName}";
             }
 
             // =========================
-            // SAVE DAILY REPORT
+            // SAVE REPORT
             // =========================
             var report = new DailyReport
             {
@@ -180,7 +181,7 @@ namespace HRMS.Controllers
                 TodaysWork = model.TodaysWork,
                 PendingWork = model.PendingWork,
                 Issues = model.Issues,
-                AttachmentPath = fileName, // ✅ ONLY filename
+                AttachmentPath = attachmentPath,
                 CreatedDate = DateTime.Now
             };
 
@@ -193,36 +194,39 @@ namespace HRMS.Controllers
                 {
                     ReportId = report.ReportId,
                     ReceiverId = receiverId,
-                    IsRead = false
+                    IsRead = false,
+                    ReadDate = null
                 });
             }
 
             _db.SaveChanges();
 
             // ===============================
-            // AUTO CHECKOUT AFTER DAILY REPORT
+            // ✅ AUTO CHECKOUT AFTER SUBMIT
             // ===============================
+            // IMPORTANT: your old Attendance rows sometimes have OutTime = 00:00:00 (not null)
+            // so we check BOTH: null OR zero.
             var empCode = sender.EmployeeCode;
 
-            if (!string.IsNullOrEmpty(empCode))
+            if (!string.IsNullOrWhiteSpace(empCode))
             {
                 var attendance = _db.Attendances.FirstOrDefault(a =>
                     a.Emp_Code == empCode &&
-                    a.Date == DateTime.Today &&
-                    a.OutTime == null
+                    a.Date.Date == DateTime.Today &&
+                    a.InTime != null &&
+                    (a.OutTime == null || a.OutTime == TimeSpan.Zero)
                 );
 
-                if (attendance != null && attendance.InTime != null)
+                if (attendance != null)
                 {
                     attendance.OutTime = DateTime.Now.TimeOfDay;
 
-                    TimeSpan worked =
-                        attendance.OutTime.Value - attendance.InTime.Value;
+                    var worked = attendance.OutTime.Value - attendance.InTime.Value;
+                    attendance.Total_Hours = Math.Round((decimal)worked.TotalHours, 2);
 
-                    attendance.Total_Hours =
-                        Math.Round((decimal)worked.TotalHours, 2);
-
-                    attendance.Status = "Present";
+                    // if you use Status column
+                    if (string.IsNullOrWhiteSpace(attendance.Status) || attendance.Status == "-")
+                        attendance.Status = "Present";
 
                     _db.SaveChanges();
                 }
@@ -231,30 +235,9 @@ namespace HRMS.Controllers
             return RedirectToAction("MySentReports");
         }
 
-
         // =========================
-        // GET: DailyReport/Success
-        // =========================
-
-        public IActionResult Success()
-        {
-            var role = GetCurrentRole();
-
-            // Employee & Manager should NEVER go to HR dashboard
-            if (role == "Employee" || role == "Manager")
-            {
-                return RedirectToAction("MySentReports", "DailyReport");
-                // OR EmployeePanel if you prefer
-                // return RedirectToAction("EmployeePanel", "Attendance");
-            }
-
-            // GM, VP, Director, HR → HR dashboard
-            return RedirectToAction("Index", "Home");
-        }
-
-
-
         // GET: DailyReport/MySentReports
+        // =========================
         public IActionResult MySentReports()
         {
             int senderId = GetCurrentUserId();
@@ -264,43 +247,132 @@ namespace HRMS.Controllers
             var reports = _db.DailyReports
                 .Where(r => r.SenderId == senderId)
                 .Include(r => r.Recipients)
-                    .ThenInclude(rr => rr.Receiver)   // 🔥 THIS LINE WAS MISSING
+                    .ThenInclude(rr => rr.Receiver)
                 .OrderByDescending(r => r.CreatedDate)
                 .ToList();
 
             return View(reports);
         }
 
+        ///  DeleteSentreport  ////
+        [HttpPost]
+        public IActionResult DeleteSentReport(int reportId)
+        {
+            int userId = GetCurrentUserId();
+
+            var report = _db.DailyReports
+                .Include(r => r.Recipients)
+                .FirstOrDefault(r => r.ReportId == reportId && r.SenderId == userId);
+
+            if (report == null)
+                return Json(new { success = false });
+
+            _db.DailyReportRecipients.RemoveRange(report.Recipients);
+            _db.DailyReports.Remove(report);
+            _db.SaveChanges();
+
+            return Json(new { success = true });
+        }
+
+        ///  DeleteAllsentreports  ///
+        [HttpPost]
+        public IActionResult DeleteAllSentReports()
+        {
+            int userId = GetCurrentUserId();
+
+            var reports = _db.DailyReports
+                .Include(r => r.Recipients)
+                .Where(r => r.SenderId == userId)
+                .ToList();
+
+            foreach (var r in reports)
+                _db.DailyReportRecipients.RemoveRange(r.Recipients);
+
+            _db.DailyReports.RemoveRange(reports);
+            _db.SaveChanges();
+
+            return Json(new { success = true });
+        }
 
 
-
+        // =========================
         // GET: DailyReport/Inbox
-        public IActionResult Inbox()
+        // Default: only TODAY reports
+        // range = today | yesterday | last7 | all
+        // search = employee name
+        // =========================
+        public IActionResult Inbox(string? search, string range = "today")
         {
             var role = GetCurrentRole();
 
-            // Employees & HR cannot access inbox
+            // Only Manager/GM/VP/Director allowed (HR denied as per your rule)
             if (role == "Employee" || role == "HR")
                 return RedirectToAction("AccessDenied", "Account");
 
             int userId = GetCurrentUserId();
+            if (userId == 0)
+                return RedirectToAction("Login", "Account");
 
-            var inbox = _db.DailyReportRecipients
+            DateTime startDate = DateTime.Today;
+
+            switch ((range ?? "today").ToLower())
+            {
+                case "yesterday":
+                    startDate = DateTime.Today.AddDays(-1);
+                    break;
+
+                case "last7":
+                    startDate = DateTime.Today.AddDays(-7);
+                    break;
+
+                case "all":
+                    startDate = DateTime.MinValue;
+                    break;
+
+                default:
+                    startDate = DateTime.Today;
+                    break;
+            }
+
+            var query = _db.DailyReportRecipients
+                .AsNoTracking()
                 .Include(r => r.Report)
-                    .ThenInclude(r => r.Sender)
-                .Where(r => r.ReceiverId == userId)
+                    .ThenInclude(rep => rep.Sender)
+                .Where(r =>
+                    r.ReceiverId == userId &&
+                    r.Report != null &&
+                    r.Report.CreatedDate >= startDate
+                );
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim().ToLower();
+                query = query.Where(r =>
+                    r.Report.Sender != null &&
+                    (r.Report.Sender.Name ?? "").ToLower().Contains(search)
+                );
+            }
+
+            var inbox = query
                 .OrderByDescending(r => r.Report.CreatedDate)
                 .ToList();
+
+            ViewBag.Search = search ?? "";
+            ViewBag.Range = range ?? "today";
 
             return View(inbox);
         }
 
-
-
+        // =========================
+        // POST: MarkAsRead
+        // =========================
         [HttpPost]
         public IActionResult MarkAsRead(int id)
         {
-            var rec = _db.DailyReportRecipients.FirstOrDefault(r => r.Id == id);
+            int userId = GetCurrentUserId();
+            if (userId == 0) return Json(new { success = false });
+
+            var rec = _db.DailyReportRecipients.FirstOrDefault(r => r.Id == id && r.ReceiverId == userId);
             if (rec != null && !rec.IsRead)
             {
                 rec.IsRead = true;
@@ -311,9 +383,85 @@ namespace HRMS.Controllers
             return Json(new { success = true });
         }
 
+        // =========================
+        // DELETE ONE (Inbox item)
+        // =========================
+        [HttpPost]
+        public IActionResult DeleteOne(int id, string? search, string range = "today")
+        {
+            int userId = GetCurrentUserId();
+            if (userId == 0) return Json(new { success = false });
+
+            var rec = _db.DailyReportRecipients.FirstOrDefault(r => r.Id == id && r.ReceiverId == userId);
+            if (rec != null)
+            {
+                _db.DailyReportRecipients.Remove(rec);
+                _db.SaveChanges();
+            }
+
+            return Json(new { success = true });
+        }
+
+        // =========================
+        // DELETE ALL (Inbox filtered)
+        // =========================
+        [HttpPost]
+        public IActionResult DeleteAll(string? search, string range = "today")
+        {
+            int userId = GetCurrentUserId();
+            if (userId == 0) return Json(new { success = false });
+
+            DateTime startDate = DateTime.Today;
+
+            switch ((range ?? "today").ToLower())
+            {
+                case "yesterday":
+                    startDate = DateTime.Today.AddDays(-1);
+                    break;
+
+                case "last7":
+                    startDate = DateTime.Today.AddDays(-7);
+                    break;
+
+                case "all":
+                    startDate = DateTime.MinValue;
+                    break;
+
+                default:
+                    startDate = DateTime.Today;
+                    break;
+            }
+
+            var query = _db.DailyReportRecipients
+                .Include(r => r.Report)
+                .Where(r =>
+                    r.ReceiverId == userId &&
+                    r.Report.CreatedDate >= startDate
+                );
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                string s = search.Trim().ToLower();
+                query = query.Where(r =>
+                    r.Report.Sender.Name.ToLower().Contains(s)
+                );
+            }
+
+            var list = query.ToList();
+
+            _db.DailyReportRecipients.RemoveRange(list);
+            _db.SaveChanges();
+
+            return Json(new { success = true });
+        }
+
+        // =========================
         // Build allowed recipient list based on sender role
+        // =========================
         private IEnumerable<SelectListItem> BuildRecipientList(string senderRole)
         {
+            senderRole = NormalizeRole(senderRole);
+
             var allowedRoles = new List<string>();
 
             switch (senderRole)
@@ -339,24 +487,23 @@ namespace HRMS.Controllers
                     break;
 
                 case "Director":
-                    // Director should not send anyone
                     allowedRoles.Clear();
                     break;
             }
 
-            // load employees and filter in memory (because NormalizeRole is C# method)
             var allEmployees = _db.Employees.ToList();
 
             var recipients = allEmployees
                 .Where(e => allowedRoles.Contains(NormalizeRole(e.Role)))
-                .OrderBy(e => e.Name)   // adjust Name property if different
+                .OrderBy(e => e.Name)
+                .Select(e => new SelectListItem
+                {
+                    Value = e.Id.ToString(),
+                    Text = $"{e.Name} ({NormalizeRole(e.Role)})"
+                })
                 .ToList();
 
-            return recipients.Select(e => new SelectListItem
-            {
-                Value = e.Id.ToString(),
-                Text = $"{e.Name} ({NormalizeRole(e.Role)})"
-            });
+            return recipients;
         }
     }
 }
