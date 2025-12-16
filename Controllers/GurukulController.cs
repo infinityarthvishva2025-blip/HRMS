@@ -481,6 +481,8 @@ namespace HRMS.Controllers
         // =====================================================================
         private string? GetYouTubeThumbnail(string url)
         {
+
+
             try
             {
                 string? videoId = null;
