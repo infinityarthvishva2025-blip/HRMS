@@ -12,11 +12,12 @@ using Org.BouncyCastle.Ocsp;
 using System;
 using System.Linq;
 
+using HRMS.Helpers;
+
 namespace HRMS.Controllers
 {
     public class AttendanceController : Controller
     {
-
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AttendanceController> _logger;
 
@@ -25,12 +26,9 @@ namespace HRMS.Controllers
             _context = context;
             _logger = logger;
         }
-
-
         public async Task<IActionResult> EmployeePanel()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
-
             var empId = HttpContext.Session.GetInt32("EmployeeId");
             if (empId == null)
                 return RedirectToAction("Login", "Account");
@@ -74,10 +72,8 @@ namespace HRMS.Controllers
                 Emp_Code = empCode,
                 Date = DateTime.Today,
                 Status = "P",
-
                 InTime = DateTime.Now.TimeOfDay,
                 Att_Date = DateTime.Now,           // ← store attendance datetime
-
                 OutTime = null,
                 Total_Hours = null,
                 IsLate = false,
@@ -92,9 +88,6 @@ namespace HRMS.Controllers
             TempData["CheckedIn"] = true;
             return RedirectToAction("EmployeePanel");
         }
-
-
-
         // =========================================================
         // CHECK OUT
         // =========================================================
@@ -106,7 +99,6 @@ namespace HRMS.Controllers
                 return RedirectToAction("Login", "Account");
 
             DateTime today = DateTime.Today;
-
             var record = _context.Attendances
                 .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
 
@@ -158,7 +150,6 @@ namespace HRMS.Controllers
             }
 
             _context.SaveChanges();
-
             return RedirectToAction("EmployeePanel");
         }
 
@@ -414,9 +405,6 @@ namespace HRMS.Controllers
 
             return View(list);
         }
-
-
-
         // =========================================================
         // EXPORT TO EXCEL
         // =========================================================
@@ -501,45 +489,88 @@ namespace HRMS.Controllers
         // CALENDAR VIEW
         // =========================================================
 
-
-
-        public IActionResult RequestCorrection(string empCode, string date, int employeeId)
+        [HttpGet]
+        public async Task<IActionResult> RequestCorrection(string token, int employeeId)
         {
-            DateTime parsedDate = DateTime.ParseExact(date, "yyyy-MM-dd", null);
+            if (string.IsNullOrEmpty(token))
+                return BadRequest("Missing token");
 
-            var att = _context.Attendances
-                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == parsedDate);
+            // 🔐 Decrypt token
+            if (!UrlEncryptionHelper.TryDecryptToken(
+                    token,
+                    out string empCode,
+                    out DateTime date,
+                    out string error))
+            {
+                return StatusCode(403, error);
+            }
+
+            // 🔹 Get logged-in employee
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (!empId.HasValue)
+                return RedirectToAction("Login", "Account");
+
+            // 🔹 Await FindAsync (NOW VALID)
+            var emp = await _context.Employees.FindAsync(empId.Value);
+
+            if (emp == null)
+                return RedirectToAction("Login", "Account");
+
+            // 🔹 SAFE string cast
+            ViewBag.UserRole = emp.Role?.ToString();
+
+            // 🔹 Find attendance
+            var att = await _context.Attendances
+                .FirstOrDefaultAsync(a => a.Emp_Code == empCode && a.Date == date);
 
             if (att == null)
                 return RedirectToAction("EmployeeSummary", new { employeeId });
 
             ViewBag.EmployeeId = employeeId;
+            ViewBag.Token = token;
 
             return View(att);
         }
-  public IActionResult CorrectionRequests()
-        {
-            var pending = _context.Attendances
-                .Where(a => a.CorrectionRequested == true)
-                .OrderByDescending(a => a.Date)
-                .ToList();
 
-            // ✅ Load employees once
-            ViewBag.Employees = _context.Employees.ToList();
-
-            return View(pending);
-        }
         [HttpPost]
-        public IActionResult RequestCorrection(string empCode, string date, string CorrectionRemark, int employeeId)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult>  RequestCorrection(
+    string token,
+    string CorrectionRemark,
+    int employeeId)
         {
-            DateTime parsedDate = DateTime.ParseExact(date, "yyyy-MM-dd", null);
+            if (string.IsNullOrEmpty(token))
+                return BadRequest("Missing token");
 
+            // 🔐 Decrypt token
+            if (!UrlEncryptionHelper.TryDecryptToken(
+                    token,
+                    out string empCode,
+                    out DateTime date,
+                    out string error))
+            {
+                return StatusCode(403, error);
+            }
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (!empId.HasValue)
+                return RedirectToAction("Login", "Account");
+
+            // 🔹 Await FindAsync (NOW VALID)
+            var emp = await _context.Employees.FindAsync(empId.Value);
+
+            if (emp == null)
+                return RedirectToAction("Login", "Account");
+
+            // 🔹 SAFE string cast
+            ViewBag.UserRole = emp.Role?.ToString();
+            // 🔍 Find attendance record
             var att = _context.Attendances
-                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == parsedDate);
+                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == date);
 
             if (att == null)
                 return RedirectToAction("EmployeeSummary", new { employeeId });
 
+            // 📝 Update correction request
             att.CorrectionRequested = true;
             att.CorrectionRemark = CorrectionRemark;
             att.CorrectionStatus = "Pending";
@@ -548,81 +579,58 @@ namespace HRMS.Controllers
 
             return RedirectToAction("EmployeeSummary", new { employeeId });
         }
-        public IActionResult ResolveCorrection(string empCode, DateTime date)
+
+
+       
+        [HttpGet]
+        public async Task<IActionResult> CorrectionRequests()
         {
-            var att = _context.Attendances
-                .FirstOrDefault(x => x.Emp_Code == empCode && x.Date == date.Date);
+            // 🔹 Get logged-in employee
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (!empId.HasValue)
+                return RedirectToAction("Login", "Account");
 
-            if (att == null)
-                return NotFound("Attendance record not found.");
+            // 🔹 Await FindAsync (NOW VALID)
+            var emp = await _context.Employees.FindAsync(empId.Value);
 
-            return View(att);
-        }
-
-        [HttpPost]
-        public IActionResult ResolveCorrection(string empCode, DateTime date,
-                                       TimeSpan? InTime, TimeSpan? OutTime,
-                                       string actionType)
-        {
-            // find attendance by EmpCode + Date
-            var att = _context.Attendances
-                .FirstOrDefault(x => x.Emp_Code == empCode && x.Date == date);
-
-            if (att == null)
-                return NotFound();
-
-            // find employee
-            var emp = _context.Employees.FirstOrDefault(e => e.EmployeeCode == empCode);
             if (emp == null)
-                return NotFound();
+                return RedirectToAction("Login", "Account");
 
-            string notificationMessage = "";
-            string statusText = "";
+            // 🔹 SAFE string cast
+            ViewBag.UserRole = emp.Role?.ToString();
 
-            if (actionType == "Approve")
-            {
-                att.InTime = InTime;
-                att.OutTime = OutTime;
+            // 🔹 Get pending correction requests
+            var pending = await _context.Attendances
+                .Where(a => a.CorrectionRequested == true)
+                .OrderByDescending(a => a.Date)
+                .ToListAsync();
 
-                if (InTime.HasValue && OutTime.HasValue)
-                {
-                    var diff = OutTime.Value - InTime.Value;
-                    att.Total_Hours = (decimal)diff.TotalHours;
-                }
+            // 🔹 Load employees once
+            ViewBag.Employees = await _context.Employees.ToListAsync();
 
-                att.CorrectionStatus = "Approved";
-                statusText = "Approved";
-                notificationMessage = "Your attendance correction request for "
-                                      + date.ToString("dd-MMM-yyyy")
-                                      + " has been APPROVED.";
-            }
-            else
-            {
-                att.CorrectionStatus = "Rejected";
-                statusText = "Rejected";
-                notificationMessage = "Your attendance correction request for "
-                                      + date.ToString("dd-MMM-yyyy")
-                                      + " has been REJECTED.";
-            }
-
-            att.CorrectionRequested = false;
-
-            // ------- CREATE ANNOUNCEMENT (EMPLOYEE NOTIFICATION) -------
-            Announcement notif = new Announcement()
-            {
-                Title = "Attendance Correction Update",
-                Message = notificationMessage,
-                IsGlobal = false,
-                TargetEmployees = emp.Id.ToString(),   // send ONLY to that employee
-                CreatedOn = DateTime.UtcNow,
-                IsUrgent = false
-            };
-
-            _context.Announcements.Add(notif);
-            _context.SaveChanges();
-
-            return RedirectToAction("CorrectionRequests");
+            return View(pending);
         }
+
+        //[HttpPost]
+        //public IActionResult RequestCorrection(string empCode, string date, string CorrectionRemark, int employeeId)
+        //{
+        //    DateTime parsedDate = DateTime.ParseExact(date, "yyyy-MM-dd", null);
+
+        //    var att = _context.Attendances
+        //        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == parsedDate);
+
+        //    if (att == null)
+        //        return RedirectToAction("EmployeeSummary", new { employeeId });
+
+        //    att.CorrectionRequested = true;
+        //    att.CorrectionRemark = CorrectionRemark;
+        //    att.CorrectionStatus = "Pending";
+
+        //    _context.SaveChanges();
+
+        //    return RedirectToAction("EmployeeSummary", new { employeeId });
+        //}
+
         public async Task<IActionResult> CalendarView(int? year, int? month, string department = "all", int itemsPerPage = 50)
         {
             try
@@ -682,10 +690,6 @@ namespace HRMS.Controllers
                 return new List<Attendance>();
             }
         }
-
-
-
-
         // -------------------------------------------------------------
         // HIGH DENSITY CALENDAR
         // -------------------------------------------------------------
@@ -927,6 +931,103 @@ namespace HRMS.Controllers
 
             await _context.SaveChangesAsync();
             return Json("Comp-Off earned successfully");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ResolveCorrection(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return BadRequest("Missing token");
+
+            // 🔹 Get logged-in employee
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (!empId.HasValue)
+                return RedirectToAction("Login", "Account");
+
+            // 🔹 Await FindAsync (NOW VALID)
+            var emp = await _context.Employees.FindAsync(empId.Value);
+
+            if (emp == null)
+                return RedirectToAction("Login", "Account");
+
+            // 🔹 SAFE string cast
+            ViewBag.UserRole = emp.Role?.ToString();
+
+            // 🔹 Decrypt & validate token
+            if (!UrlEncryptionHelper.TryDecryptToken(
+                    token,
+                    out string empCode,
+                    out DateTime date,
+                    out string error))
+            {
+                return StatusCode(403, error);
+            }
+
+            // 🔹 Find attendance
+            var att = _context.Attendances
+                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == date);
+
+            if (att == null)
+                return NotFound("Attendance record not found");
+
+            ViewBag.Token = token;
+            return View(att);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResolveCorrection(
+      string token,
+      TimeSpan? InTime,
+      TimeSpan? OutTime,
+      string actionType)
+        {
+            if (!UrlEncryptionHelper.TryDecryptToken(
+                token,
+                out string empCode,
+                out DateTime date,
+                out string error))
+            {
+                return StatusCode(403, error);
+            }
+
+            var att = _context.Attendances
+                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == date);
+
+            if (att == null)
+                return NotFound();
+
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            var emp = empId.HasValue
+                ? await _context.Employees.FindAsync(empId.Value)
+                : null;
+            if (empId == null)
+                return RedirectToAction("Login", "Account");
+
+            // ✅ Await FindAsync
+            if (emp == null)
+                return RedirectToAction("Login", "Account");
+
+            // ✅ SAFE string cast
+            ViewBag.UserRole = emp.Role?.ToString();
+            if (emp == null)
+                return Unauthorized();
+
+            if (actionType == "Approve")
+            {
+                att.InTime = InTime;
+                att.OutTime = OutTime;
+                att.CorrectionStatus = "Approved";
+            }
+            else
+            {
+                att.CorrectionStatus = "Rejected";
+            }
+
+            att.CorrectionRequested = false;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("CorrectionRequests");
         }
 
     }

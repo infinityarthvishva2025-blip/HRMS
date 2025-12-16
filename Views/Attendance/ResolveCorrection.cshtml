@@ -2,8 +2,22 @@
 
 @{
     ViewData["Title"] = "Resolve Correction";
-    Layout = "_HrLayout";
+    //Layout = "_HrLayout";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
 }
+@* <form asp-action="ResolveCorrection" method="post">
+ *@    @Html.AntiForgeryToken()
+
+    <input type="hidden" name="token" value="@ViewBag.Token" />
 
 <div class="container py-4">
 
@@ -14,17 +28,17 @@
     <form method="post" class="card p-4 shadow-sm">
 
         <input type="hidden" name="id" value="@Model.Id" />
-
-        <div class="mb-3">
+        <div class="row">
+            <div class="col-md-6 mb-3">
             <label class="fw-bold">Employee Code</label>
             <input type="text" class="form-control" value="@Model.Emp_Code" disabled />
         </div>
 
-        <div class="mb-3">
+            <div class="col-md-6 mb-3">
             <label class="fw-bold">Date</label>
             <input type="text" class="form-control" value="@Model.Date.ToString("dd-MMM-yyyy")" disabled />
         </div>
-
+        </div>
         <div class="mb-3">
             <label class="fw-bold">Reason Provided</label>
             <textarea class="form-control" disabled>@Model.CorrectionRemark</textarea>
@@ -44,16 +58,16 @@
             </div>
         </div>
 
-        <div class="d-flex gap-3 mt-3">
-            <button name="actionType" value="Approve" class="btn btn-success">
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <button name="actionType" value="Approve" class="btn btn-success px-4">
                 <i class="fa-solid fa-check me-1"></i> Approve
             </button>
 
-            <button name="actionType" value="Reject" class="btn btn-danger">
+            <button name="actionType" value="Reject" class="btn btn-danger px-4">
                 <i class="fa-solid fa-xmark me-1"></i> Reject
             </button>
 
-            <a href="/Attendance/CorrectionRequests" class="btn btn-secondary ms-auto">
+            <a href="/Attendance/CorrectionRequests" class="btn btn-secondary px-4">
                 Back
             </a>
         </div>
@@ -61,3 +75,4 @@
     </form>
 
 </div>
+@* </form> *@

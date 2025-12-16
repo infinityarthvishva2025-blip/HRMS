@@ -1,0 +1,13 @@
+﻿@using HRMS.Helpers
+
+@{
+    string token = UrlEncryptionHelper.GenerateToken(
+        Model.Emp_Code,
+        Model.Date,
+        expiryMinutes: 30
+    );
+}
+
+<a href="@Url.Action("ResolveCorrection", "Attendance", new { token })">
+    Resolve
+</a>
