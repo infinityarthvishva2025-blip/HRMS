@@ -2,11 +2,11 @@
 @{
     ViewData["Title"] = "Attendance";
     var role = ViewBag.UserRole as string;
-    if (role == "HR")
-    {
-        Layout = "~/Views/Shared/_HrLayout.cshtml";
-    }
-    else if (role == "VP" || role == "GM" || role == "Director")
+
+    bool hasCheckedIn = Model?.InTime != null;
+    bool hasCheckedOut = Model?.OutTime != null;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
     {
         Layout = "~/Views/Shared/_HrLayout.cshtml";
     }
@@ -14,19 +14,12 @@
     {
         Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
     }
+
     string FormatTime(object time)
     {
         if (time == null) return "—";
-
-        if (time is TimeSpan ts)
-            return DateTime.Today.Add(ts).ToString("dd MMM yyyy, hh:mm tt");
-
-        if (time is DateTime dt)
-            return dt.ToString("dd MMM yyyy, hh:mm tt");
-
-        if (DateTime.TryParse(time.ToString(), out DateTime parsed))
-            return parsed.ToString("dd MMM yyyy, hh:mm tt");
-
+        if (time is TimeSpan ts) return DateTime.Today.Add(ts).ToString("dd MMM yyyy, hh:mm tt");
+        if (time is DateTime dt) return dt.ToString("dd MMM yyyy, hh:mm tt");
         return "—";
     }
 }
@@ -45,8 +38,8 @@
             </div>
         </div>
 
-        <!-- SUCCESS GREEN MESSAGE -->
-        @if (TempData["CheckoutSuccess"] != null)
+        <!-- SUCCESS MESSAGE -->
+        @if (hasCheckedOut && TempData["CheckoutSuccess"] != null)
         {
             <div class="alert alert-success text-center fw-bold mb-3">
                 <i class="fa-solid fa-circle-check me-2"></i>
@@ -54,44 +47,41 @@
             </div>
         }
 
-        <!-- EARLY LEAVE RED MESSAGE -->
-    <!-- Early Checkout -->
-@if (TempData["EarlyCheckout"] != null && TempData["EarlyTime"] != null)
-{
-    <div class="alert alert-danger text-center fw-bold mb-3">
-        <i class="fa-solid fa-triangle-exclamation me-2"></i>
-        @TempData["EarlyCheckout"] — remaining @TempData["EarlyTime"]
-    </div>
-}
+        <!-- EARLY / LATE MESSAGE (ONLY AFTER CHECK-IN) -->
+        @if (hasCheckedIn && !hasCheckedOut &&
+                TempData["EarlyCheckout"] != null &&
+                TempData["EarlyTime"] != null &&
+                role != "Intern" && role != "Employee" && role != "Manager" && role != "GM" && role != "VP" &&
+                role != "Director")
 
-<!-- Late Checkout / Overtime -->
-@if (TempData["LateCheckout"] != null && TempData["LateTime"] != null)
-{
-    <div class="alert alert-success text-center fw-bold mb-3">
-        <i class="fa-solid fa-circle-check me-2"></i>
-        @TempData["LateCheckout"] — extra @TempData["LateTime"]
-    </div>
-}
-
-
-
-
-
-        <!-- SUCCESS CHECKOUT -->
-        @if (TempData.Peek("CheckoutSuccess") != null)
         {
-            <div class="alert alert-success text-center fw-bold mb-3">
-                <i class="fa-solid fa-circle-check me-2"></i>
-                @TempData.Peek("CheckoutSuccess")
+            <div class="alert alert-danger text-center fw-bold mb-3">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                @TempData["EarlyCheckout"] — remaining @TempData["EarlyTime"]
             </div>
         }
 
-        <!-- WHEN NO CHECK-IN -->
-        @if (Model == null)
+        @if (hasCheckedIn && !hasCheckedOut &&
+                TempData["LateCheckout"] != null &&
+                TempData["LateTime"] != null &&
+                role != "Intern" && role != "Employee" && role != "Manager" && role != "GM" && role != "VP" &&
+                role != "Director")
+
+        {
+            <div class="alert alert-success text-center fw-bold mb-3">
+                <i class="fa-solid fa-circle-check me-2"></i>
+                @TempData["LateCheckout"] — extra @TempData["LateTime"]
+            </div>
+        }
+
+        <!-- NO CHECK-IN -->
+        @if (!hasCheckedIn)
         {
             <div class="att-empty-state text-center">
                 <p>You haven't checked in yet today.</p>
-                <a asp-action="CheckIn" class="att-btn att-btn-checkin"><i class="fa-solid fa-play me-2"></i>Check In</a>
+                <a asp-action="CheckIn" class="att-btn att-btn-checkin">
+                    <i class="fa-solid fa-play me-2"></i>Check In
+                </a>
             </div>
         }
         else
@@ -109,9 +99,9 @@
                 </div>
             </div>
 
-            <!-- IF CHECKED OUT -->
-            @if (Model.OutTime != null)
+            @if (hasCheckedOut)
             {
+                <!-- CHECK-OUT CARD -->
                 <div class="att-card neon-card mt-3">
                     <div class="att-entry">
                         <div class="att-icon-wrapper bg-danger-soft">
@@ -126,7 +116,7 @@
             }
             else
             {
-                <!-- COUNTDOWN -->
+                <!-- COUNTDOWN (ONLY AFTER CHECK-IN) -->
                 <div id="countdownContainer" class="att-card neon-card mt-3">
                     <div class="att-label text-center">
                         <i class="fa-solid fa-hourglass-half me-2 text-warning"></i>
@@ -142,10 +132,11 @@
                 </a>
             }
         }
+
     </div>
 </div>
 
-<!-- Checkout Modal -->
+<!-- CHECKOUT MODAL -->
 <div class="modal fade" id="checkoutModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content custom-modal">
@@ -157,121 +148,51 @@
             </div>
             <div class="modal-body text-center">
                 <p class="fs-5 mb-3">Are you sure you want to Check Out?</p>
-                <img src="https://cdn-icons-png.flaticon.com/512/463/463612.png"
-                     width="90" class="mb-3 opacity-75" />
             </div>
             <div class="modal-footer border-0 d-flex justify-content-between">
                 <button class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-                <a href="@Url.Action("Send", "DailyReport")" class="btn btn-danger px-4">
+                <a href="@Url.Action("Checkout", "Attendance")"
+                   class="btn btn-danger px-4"
+                   onclick="this.classList.add('disabled');">
                     Yes, Check Out
                 </a>
             </div>
         </div>
     </div>
 </div>
-@* <script>
-    document.addEventListener("DOMContentLoaded", function () {
 
-        let countdown = document.getElementById("countdownContainer");
-
-        // Hide countdown if early / late message exists
-        if (document.querySelector(".early-card") || document.querySelector(".late-card")) {
-            if (countdown) countdown.style.display = "none";
-            return;
-        }
-
-        let inTime  = '@(Model?.InTime?.ToString() ?? "")';
-        let outTime = '@(Model?.OutTime?.ToString() ?? "")';
-
-        // Hide if checked out or no check-in
-        if (outTime !== "" || inTime === "") {
-            if (countdown) countdown.style.display = "none";
-            return;
-        }
-
-        let label = document.getElementById("countdown");
-        if (!label) return;
-
-        // ===============================
-        // ✅ SHIFT LOGIC
-        // ===============================
-        let today = new Date();
-        let day = today.getDay(); // Sun=0 ... Sat=6
-
-        // Saturday = 7h (WOP), else 8.5h
-        let shiftMinutes = (day === 6) ? 420 : 510;
-        let shiftMs = shiftMinutes * 60 * 1000;
-
-        // Build valid datetime
-        let dateStr = today.toISOString().split("T")[0];
-        let start = new Date(`${dateStr}T${inTime}`);
-        let endTime = new Date(start.getTime() + shiftMs);
-
-        function updateCountdown() {
-            let now = new Date();
-            let diff = endTime - now;
-
-            if (diff <= 0) {
-                label.textContent = "00:00:00";
-                return;
-            }
-
-            let h = Math.floor(diff / 3600000);
-            let m = Math.floor((diff % 3600000) / 60000);
-            let s = Math.floor((diff % 60000) / 1000);
-
-            label.textContent =
-                h.toString().padStart(2, '0') + ":" +
-                m.toString().padStart(2, '0') + ":" +
-                s.toString().padStart(2, '0');
-        }
-
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
-    });
-</script>  *@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-        let countdown = document.getElementById("countdownContainer");
+        // 🚫 Stop JS completely if NOT checked in
+        if ('@(Model?.InTime == null ? "true" : "false")' === 'true') return;
 
-        // Hide countdown if early / late message exists
-        if (document.querySelector(".early-card") || document.querySelector(".late-card")) {
-            if (countdown) countdown.style.display = "none";
-            return;
-        }
+        let countdown = document.getElementById("countdownContainer");
+        let label = document.getElementById("countdown");
+
+        if (!countdown || !label) return;
 
         let inTime  = '@(Model?.InTime?.ToString() ?? "")';
         let outTime = '@(Model?.OutTime?.ToString() ?? "")';
 
-        // Hide if checked out or no check-in
         if (outTime !== "" || inTime === "") {
-            if (countdown) countdown.style.display = "none";
+            countdown.style.display = "none";
             return;
         }
 
-        let label = document.getElementById("countdown");
-        if (!label) return;
-
-        // ===============================
-        // ✅ SHIFT LOGIC
-        // ===============================
         let today = new Date();
-        let day = today.getDay(); // Sun=0 ... Sat=6
+        let day = today.getDay(); // Sunday=0 ... Saturday=6
 
-        // Saturday = 7h (WOP), else 8.5h
+        // Saturday = 7h, others = 8.5h
         let shiftMinutes = (day === 6) ? 420 : 510;
         let shiftMs = shiftMinutes * 60 * 1000;
 
-        // Build valid datetime
         let dateStr = today.toISOString().split("T")[0];
         let start = new Date(`${dateStr}T${inTime}`);
         let endTime = new Date(start.getTime() + shiftMs);
 
         function updateCountdown() {
-            let now = new Date();
-            let diff = endTime - now;
-
+            let diff = endTime - new Date();
             if (diff <= 0) {
                 label.textContent = "00:00:00";
                 return;
@@ -291,8 +212,6 @@
         setInterval(updateCountdown, 1000);
     });
 </script>
-
-
 
 <style>
     /* EARLY / LATE Checkout cards */

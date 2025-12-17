@@ -214,10 +214,15 @@ namespace HRMS.Controllers
 
             _context.SaveChanges();
             // ✅ CORRECT REDIRECT
-            if (role != "Director")
-                return RedirectToAction("Send", "DailyReport");
+            // ✅ Director → STAY on same page
+            if (role.Equals("Director", StringComparison.OrdinalIgnoreCase))
+            {
+                //  TempData["CheckoutSuccess"] = "Checked out successfully.";
+                return RedirectToAction(nameof(EmployeePanel));
+            }
 
-            return RedirectToAction("EmployeePanel");
+            // ✅ Others → Daily Report
+            return RedirectToAction("Send", "DailyReport");
         }
 
         

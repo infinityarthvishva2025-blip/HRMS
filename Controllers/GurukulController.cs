@@ -28,7 +28,7 @@ namespace HRMS.Controllers
         {
             var role = GetRole();
 
-            if (!new[] { "EMPLOYEE", "MANAGER", "GM", "VP", "DIRECTOR" }.Contains(role))
+            if (!new[] { "EMPLOYEE", "INTERN","MANAGER", "GM", "VP", "DIRECTOR" }.Contains(role))
                 return RedirectToAction("AccessDenied", "Account");
 
 
@@ -76,7 +76,7 @@ namespace HRMS.Controllers
         {
             var role = GetRole();
 
-            if (!new[] { "EMPLOYEE", "MANAGER", "GM", "VP", "DIRECTOR" }.Contains(role))
+            if (!new[] { "EMPLOYEE", "INTERN", "MANAGER", "GM", "VP", "DIRECTOR" }.Contains(role))
                 return RedirectToAction("AccessDenied", "Account");
 
             int? employeeId = HttpContext.Session.GetInt32("EmployeeId");
@@ -139,7 +139,7 @@ namespace HRMS.Controllers
         {
             var role = GetRole();
 
-            if (!new[] { "EMPLOYEE", "MANAGER", "GM", "VP", "DIRECTOR" }.Contains(role))
+            if (!new[] { "EMPLOYEE", "INTERN","MANAGER", "GM", "VP", "DIRECTOR" }.Contains(role))
                 return Unauthorized();
 
 

@@ -56,6 +56,9 @@ namespace HRMS.Controllers
             if (role.Equals("employee", StringComparison.OrdinalIgnoreCase))
                 return "Employee";
 
+            if (role.Equals("intern", StringComparison.OrdinalIgnoreCase))
+                return "Intern";
+
             if (role.Equals("manager", StringComparison.OrdinalIgnoreCase))
                 return "Manager";
 
@@ -466,6 +469,10 @@ namespace HRMS.Controllers
 
             switch (senderRole)
             {
+                case "Intern":
+                    allowedRoles.AddRange(new[] { "Manager", "GM", "VP", "Director" });
+                    break;
+
                 case "Employee":
                     allowedRoles.AddRange(new[] { "Manager", "GM", "VP", "Director" });
                     break;

@@ -43,7 +43,7 @@
             border-right: 1px solid #e5e7eb;
             box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
             padding: 25px 0;
-            border-radius: 0 20px 20px 0;
+            border-radius:0;
             transition: 0.35s ease;
             z-index: 1050;
         }
@@ -53,6 +53,7 @@
             }
 
         .sidebar-header {
+
             text-align: center;
             padding: 0 10px 25px;
             border-bottom: 1px solid #eaeaea;
@@ -80,9 +81,38 @@
             visibility: hidden;
         }
 
+        /* ===== SCROLLABLE SIDEBAR MENU ===== */
         .sidebar-menu {
-            margin-top: 25px;
+            max-height: calc(100vh - 170px); /* header + padding space */
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 20px;
         }
+
+            /* Smooth scrollbar (optional, professional look) */
+            .sidebar-menu::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .sidebar-menu::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .sidebar-menu::-webkit-scrollbar-thumb {
+                background: #c7cbe3;
+                border-radius: 10px;
+            }
+
+                .sidebar-menu::-webkit-scrollbar-thumb:hover {
+                    background: #9fa6d8;
+                }
+
+        /* Firefox */
+        .sidebar-menu {
+            scrollbar-width: thin;
+            scrollbar-color: #c7cbe3 transparent;
+        }
+
 
         .menu-item {
             margin: 10px 15px;

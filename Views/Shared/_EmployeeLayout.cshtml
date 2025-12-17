@@ -29,14 +29,32 @@
         var emp = db.Employees.FirstOrDefault(e => e.Id == loggedEmpId);
         if (emp != null)
         {
-            var all = db.Announcements.ToList();
+            var allAnnouncements = db.Announcements.ToList();
 
-            unreadCount = all.Count(a =>
-                a.IsGlobal ||
-                (!string.IsNullOrEmpty(a.TargetDepartments) &&
-                 a.TargetDepartments.Split(',').Contains(emp.Department)) ||
-                (!string.IsNullOrEmpty(a.TargetEmployees) &&
-                 a.TargetEmployees.Split(',').Contains(loggedEmpId.ToString()))
+            var filtered = allAnnouncements
+                .Where(a =>
+                    a.IsGlobal ||
+
+                    (!string.IsNullOrEmpty(a.TargetDepartments) &&
+                     a.TargetDepartments
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .Contains(emp.Department)) ||
+
+                    (!string.IsNullOrEmpty(a.TargetEmployees) &&
+                     a.TargetEmployees
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .Contains(loggedEmpId.ToString()))
+                )
+                .ToList();
+
+            unreadCount = filtered.Count(a =>
+                string.IsNullOrEmpty(a.ReadByEmployees) ||
+                !a.ReadByEmployees
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Trim())
+                    .Contains(loggedEmpId.ToString())
             );
         }
     }
@@ -66,6 +84,8 @@
 
         /* ======================= SIDEBAR ======================= */
 
+        /* ======================= SIDEBAR ======================= */
+
         .sidebar {
             width: 250px;
             height: 100vh;
@@ -78,17 +98,23 @@
             transition: 0.35s ease;
             z-index: 1200;
             box-shadow: 4px 0 16px rgba(0,0,0,0.07);
-            border-radius: 0 16px 16px 0;
         }
 
+            /* ===== COLLAPSED ===== */
             .sidebar.collapsed {
                 width: 82px;
+                padding: 20px 0;
             }
 
+        /* Header */
         .sidebar-header {
             text-align: center;
             padding-bottom: 15px;
             border-bottom: 1px solid #eee;
+        }
+
+        .sidebar.collapsed .sidebar-header {
+            padding-bottom: 10px;
         }
 
         .sidebar-logo {
@@ -97,19 +123,17 @@
         }
 
         .sidebar.collapsed .sidebar-logo {
-            width: 48px;
+            width: 42px;
         }
 
         .sidebar-header h4 {
             margin-top: 8px;
             font-size: 16px;
             font-weight: 700;
-            transition: .3s;
         }
 
         .sidebar.collapsed .sidebar-header h4 {
-            opacity: 0;
-            visibility: hidden;
+            display: none;
         }
 
         /* MENU */
@@ -124,7 +148,7 @@
             color: #111827;
             font-weight: 600;
             text-decoration: none;
-            transition: .25s;
+            transition: background .25s, border .25s;
         }
 
             .menu-item i {
@@ -133,25 +157,34 @@
                 color: #2F3D88;
             }
 
-            .menu-item:hover {
-                background: #eef2ff;
-                border-color: #cdd5ff;
-                transform: translateX(6px);
-            }
-
-        .sidebar.collapsed .menu-item {
-            justify-content: center;
+        /* Hover (expanded only) */
+        .sidebar:not(.collapsed) .menu-item:hover {
+            background: #eef2ff;
+            border-color: #cdd5ff;
+            transform: translateX(6px);
         }
 
-            .sidebar.collapsed .menu-item span {
-                display: none;
-            }
+        /* COLLAPSED MENU ITEM */
+        .sidebar.collapsed .menu-item {
+            justify-content: center;
+            padding: 14px 0;
+            margin: 10px auto;
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+        }
 
             .sidebar.collapsed .menu-item i {
-                margin-right: 0;
+                margin: 0;
+                font-size: 20px;
             }
 
-        /* ACTIVE MENU */
+            .sidebar.collapsed .menu-item span,
+            .sidebar.collapsed .toggle-icon {
+                display: none !important;
+            }
+
+        /* ACTIVE */
         .active-menu {
             background: #2F3D88 !important;
             color: #fff !important;
@@ -169,6 +202,10 @@
             margin: 0 15px 10px 35px;
         }
 
+        .sidebar.collapsed .submenu {
+            display: none !important;
+        }
+
         .submenu-item {
             padding: 9px 16px;
             margin: 4px 0;
@@ -176,18 +213,10 @@
             border: 1px solid #d6dafc;
             border-radius: 10px;
             font-size: 14px;
-            text-decoration: none;
             color: #2F3D88;
             display: flex;
             align-items: center;
-            transition: .25s;
         }
-
-            .submenu-item:hover {
-                background: #fce7b2;
-                border-color: #f9a826;
-                transform: translateX(6px);
-            }
 
             .submenu-item i {
                 margin-right: 8px;
@@ -200,7 +229,7 @@
 
         .active-submenu {
             background: #2F3D88 !important;
-            color: white !important;
+            color: #fff !important;
         }
 
         /* LOGOUT */
@@ -214,17 +243,16 @@
                 color: #b91c1c !important;
             }
 
-        /* ======================= PAGE CONTENT ======================= */
-
+        /* PAGE CONTENT */
         #page-content {
             margin-left: 250px;
-            padding: 0;
             transition: margin-left .35s ease;
         }
 
         .sidebar.collapsed ~ #page-content {
             margin-left: 82px !important;
         }
+
 
         .navbar {
             background: #fff;
@@ -234,7 +262,7 @@
 
         /* Bell animation */
         .bell-icon {
-            font-size: 22px;
+            font-size: 28px;
             transition: 0.3s ease;
         }
 
@@ -427,9 +455,9 @@
             @* /////bell notification////// *@
             <div>
                 <a href="/Announcements/MyNotifications"
-                   class="btn btn-secondary position-relative bell-icon @(ViewBag.UnreadCount > 0 ? "blink" : "")">
+                   class="btn btn-white position-relative bell-icon @(ViewBag.UnreadCount > 0 ? "blink" : "")">
 
-                    <i class="fa-solid fa-bell text-white"></i>
+                    <i class="fa-solid fa-bell text-warning"></i>
 
                     @if (ViewBag.UnreadCount > 0)
                     {
@@ -454,16 +482,50 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        /* ------- Submenu Toggle Function ------- */
-        function toggleSubmenu(id) {
-            const menu = document.getElementById(id);
-            const isOpen = menu.style.display === "flex";
-            menu.style.display = isOpen ? "none" : "flex";
+        /* ================= SUBMENU TOGGLE (ACCORDION) ================= */
 
-            menu.previousElementSibling.classList.toggle("submenu-open", !isOpen);
+        function toggleSubmenu(id) {
+            const sidebar = document.getElementById("sidebar-wrapper");
+            const targetMenu = document.getElementById(id);
+
+            // ✅ If sidebar is collapsed → expand first
+            if (sidebar.classList.contains("collapsed")) {
+                sidebar.classList.remove("collapsed");
+
+                setTimeout(() => {
+                    openMenuExclusive(targetMenu);
+                }, 300);
+
+                return;
+            }
+
+            const isOpen = targetMenu.style.display === "flex";
+
+            // Close all submenus first
+            closeAllSubmenus();
+
+            // Open only if it was closed
+            if (!isOpen) {
+                targetMenu.style.display = "flex";
+                targetMenu.previousElementSibling.classList.add("submenu-open");
+            }
         }
 
-        /* -------- Highlight Active Menu -------- */
+        function closeAllSubmenus() {
+            document.querySelectorAll(".submenu").forEach(menu => {
+                menu.style.display = "none";
+                menu.previousElementSibling?.classList.remove("submenu-open");
+            });
+        }
+
+        function openMenuExclusive(menu) {
+            closeAllSubmenus();
+            menu.style.display = "flex";
+            menu.previousElementSibling.classList.add("submenu-open");
+        }
+
+        /* ================= ACTIVE MENU HIGHLIGHT ================= */
+
         (function () {
             const url = window.location.href;
 
@@ -475,13 +537,13 @@
                 if (a.href === url) {
                     a.classList.add("active-submenu");
                     const submenu = a.closest(".submenu");
-                    submenu.style.display = "flex";
-                    submenu.previousElementSibling.classList.add("submenu-open");
+                    openMenuExclusive(submenu);
                 }
             });
         })();
 
-        /* ------- Sidebar Collapse Logic ------- */
+        /* ================= SIDEBAR COLLAPSE ================= */
+
         const sidebar = document.getElementById("sidebar-wrapper");
         const toggle = document.getElementById("sidebarToggle");
         const overlay = document.getElementById("sidebar-overlay");
@@ -492,6 +554,7 @@
                 overlay.classList.toggle("active");
             } else {
                 sidebar.classList.toggle("collapsed");
+                closeAllSubmenus(); // optional: close submenus on collapse
             }
         });
 
@@ -508,594 +571,9 @@
         });
     </script>
 
+
+
     @RenderSection("Scripts", required: false)
 
 </body>
 </html>
-
-
-@* @using Microsoft.AspNetCore.Http
-@using Microsoft.AspNetCore.Http.Features
-
-
-@inject IHttpContextAccessor HttpContextAccessor
-@{
-    Layout = null;
-    var empId = Context.Session.GetInt32("EmployeeId"); // SAFE: Works on all pages
-}
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Employee Panel</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-    <style>
-        body {
-            margin: 0;
-            font-family: "Poppins", "Segoe UI", sans-serif;
-            background: #f3f4f7;
-        }
-
-        /* =============================== */
-        /*            SIDEBAR             */
-        /* =============================== */
-
-        .sidebar {
-            width: 250px;
-            height: 100vh;
-            background: #ffffff;
-            border-right: 1px solid #e5e7eb;
-            padding: 25px 0;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-            transition: 0.35s ease;
-            border-radius: 0 20px 20px 0;
-            box-shadow: 4px 0 20px rgba(0,0,0,0.05);
-        }
-
-            .sidebar.collapsed {
-                width: 82px;
-            }
-
-        .sidebar-header {
-            text-align: center;
-            padding: 0 10px 20px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .sidebar-logo {
-            width: 120px;
-            transition: 0.3s ease;
-        }
-
-        .sidebar.collapsed .sidebar-logo {
-            width: 48px;
-        }
-
-        .sidebar-header h4 {
-            margin-top: 10px;
-            font-weight: 700;
-            font-size: 16px;
-            color: #1f2937;
-            transition: .3s;
-        }
-
-        .sidebar.collapsed .sidebar-header h4 {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        /* =============================== */
-        /*           MENU ITEMS            */
-        /* =============================== */
-
-        .menu-item {
-            margin: 10px 15px;
-            padding: 12px 18px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            color: #111827;
-            font-weight: 600;
-            border: 1px solid #e5e7eb;
-            background: #ffffff;
-            text-decoration: none;
-            transition: 0.25s ease-in-out;
-            position: relative;
-        }
-
-            .menu-item i {
-                margin-right: 14px;
-                font-size: 18px;
-                color: #2F3D88;
-            }
-
-            .menu-item:hover {
-                background: #f0f5ff;
-                transform: translateX(6px);
-                border-color: #c7d2fe;
-            }
-
-        .sidebar.collapsed .menu-item {
-            justify-content: center;
-            padding: 12px 0;
-        }
-
-            .sidebar.collapsed .menu-item span {
-                display: none;
-            }
-
-            .sidebar.collapsed .menu-item i {
-                margin: 0;
-            }
-
-        .submenu-toggle {
-            cursor: pointer;
-        }
-
-            .submenu-toggle .toggle-icon {
-                margin-left: auto;
-                font-size: 14px;
-                color: #9ca3af;
-                transition: transform .3s ease;
-            }
-
-        .submenu-open .toggle-icon {
-            transform: rotate(180deg);
-            color: #2F3D88;
-        }
-
-        /* Active menu */
-        .active-menu {
-            background: #2F3D88 !important;
-            border-color: #2F3D88 !important;
-            color: #ffffff !important;
-            transform: translateX(8px);
-        }
-
-            .active-menu i {
-                color: #ffffff !important;
-            }
-
-        /* Logout Button */
-        .logout .menu-item {
-            background: #fee2e2 !important;
-            color: #b91c1c !important;
-            border-color: #fecaca !important;
-        }
-
-            .logout .menu-item i {
-                color: #b91c1c !important;
-            }
-
-        /* =============================== */
-        /*              SUBMENUS           */
-        /* =============================== */
-
-        .submenu {
-            display: none;
-            flex-direction: column;
-            margin: 0 15px 5px 35px;
-        }
-
-        .submenu-item {
-            padding: 9px 16px;
-            margin: 4px 0;
-            font-size: 14px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            color: #2F3D88;
-            background: #eef2ff;
-            border: 1px solid #d6dafc;
-            transition: .25s;
-        }
-
-            .submenu-item i {
-                margin-right: 10px;
-                font-size: 14px;
-                color: #0E8376;
-            }
-
-            .submenu-item:hover {
-                background: rgba(249, 168, 38, 0.12);
-                border-color: #F9A826;
-                transform: translateX(6px);
-            }
-
-        .active-submenu {
-            background: #2F3D88;
-            color: #ffffff;
-            border-color: #2F3D88;
-        }
-
-            .active-submenu i {
-                color: #ffffff;
-            }
-
-        /* =============================== */
-        /*           PAGE CONTENT          */
-        /* =============================== */
-
-        #page-content {
-            margin-left: 250px;
-            transition: 0.35s;
-        }
-
-        .sidebar.collapsed ~ #page-content {
-            margin-left: 82px;
-        }
-
-        .navbar {
-            background: #ffffff;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-            .navbar button {
-                background: none;
-                border: none;
-                font-size: 22px;
-                cursor: pointer;
-                color: #374151;
-            }
-
-            .navbar span {
-                font-size: 16px;
-                color: #1f2937;
-            }
-        /* .topbar {
-            background: #ffffff;
-            padding: 14px 25px;
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.05);
-            border-radius: 12px;
-        }
-
-            .topbar span.fw-bold {
-                color: #2F3D88;
-                letter-spacing: .5px;
-            } */
-
-        /* Bell animation */
-        .bell-icon {
-            font-size: 22px;
-            transition: 0.3s ease;
-        }
-
-        .blink {
-            animation: shake 0.8s infinite;
-        }
-
-        @@keyframes shake {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            20% {
-                transform: rotate(-15deg);
-            }
-
-            40% {
-                transform: rotate(15deg);
-            }
-
-            60% {
-                transform: rotate(-10deg);
-            }
-
-            80% {
-                transform: rotate(10deg);
-            }
-
-            100% {
-                transform: rotate(0deg);
-            }
-        }
-        /* ---------- MOBILE SIDEBAR ---------- */
-        @@media (max-width: 992px) {
-            .sidebar {
-                position: fixed;
-                left: -250px;
-                top: 0;
-                height: 100%;
-                z-index: 2000;
-                border-radius: 0;
-                box-shadow: 6px 0 18px rgba(0, 0, 0, 0.15);
-            }
-
-                .sidebar.active {
-                    left: 0;
-                }
-
-            #page-content {
-                margin-left: 0 !important;
-            }
-
-            .navbar button {
-                font-size: 24px;
-            }
-
-            .sidebar.collapsed {
-                width: 250px;
-            }
-
-            .sidebar-overlay {
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 1500;
-                display: none;
-            }
-
-                .sidebar-overlay.active {
-                    display: block;
-                }
-        }
-        /* ---------- SMALL DEVICES ---------- */
-        @@media (max-width: 576px) {
-            .sidebar-header h4 {
-                font-size: 16px;
-            }
-
-            .menu-item {
-                font-size: 14px;
-                height: 44px;
-            }
-
-                .menu-item i {
-                    font-size: 18px;
-                    margin-right: 10px;
-                }
-
-            .navbar span {
-                font-size: 14px;
-            }
-
-            .container-fluid {
-                padding: 1rem !important;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <!-- Sidebar Overlay for Mobile -->
-    <div id="sidebar-overlay" class="sidebar-overlay"></div>
-    <!-- SIDEBAR -->
-    <div id="sidebar-wrapper" class="sidebar">
-
-        <div class="sidebar-header">
-            <img src="~/images/infinity-logo.png" class="sidebar-logo" />
-            <h4>Employee Panel</h4>
-        </div>
-
-        <div class="sidebar-menu">
-
-            <!-- Dashboard -->
-            <a asp-controller="Employees" asp-action="Dashboard" class="menu-item">
-                <i class="fa-solid fa-gauge"></i><span>Dashboard</span>
-            </a>
-
-            <!-- Profile -->
-            <a asp-controller="Employees" asp-action="MyProfile" class="menu-item">
-                <i class="fa-solid fa-id-card"></i><span>My Profile</span>
-            </a>
-
-            <!-- Attendance -->
-            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('attendanceMenu')">
-                <i class="fa-solid fa-calendar-check"></i>
-                <span>My Attendance</span>
-                <i class="fa-solid fa-chevron-down toggle-icon"></i>
-            </div>
-
-            <div id="attendanceMenu" class="submenu">
-                <a asp-controller="Attendance" asp-action="EmployeePanel" class="submenu-item">
-                    <i class="fa-solid fa-check-circle"></i>Mark Attendance
-                </a>
-
-                <a asp-controller="Attendance"
-                   asp-action="EmployeeSummary"
-                   asp-route-employeeId="@empId"
-                   class="submenu-item">
-                    <i class="fa-solid fa-chart-line"></i>Attendance Summary
-                </a>
-            </div>
-
-            <!-- Leaves -->
-            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('leaveMenu')">
-                <i class="fa-solid fa-plane"></i>
-                <span>Leaves</span>
-                <i class="fa-solid fa-chevron-down toggle-icon"></i>
-            </div>
-
-            <div id="leaveMenu" class="submenu">
-                <a asp-controller="Leave" asp-action="Create" class="submenu-item">
-                    <i class="fa-solid fa-paper-plane"></i>Apply Leave
-                </a>
-
-                <a asp-controller="Leave" asp-action="LeaveReport" class="submenu-item">
-                    <i class="fa-solid fa-list-check"></i>My Leaves
-                </a>
-
-              @*   <a asp-controller="Leave" asp-action="ApprovalDashboard" class="submenu-item position-relative">
-                    <i class="fa-solid fa-check-to-slot"></i>Leave Approvals
-                    <span id="approvalBubble"
-                          class="position-absolute top-0 end-0 translate-middle p-1 bg-danger rounded-circle"
-                          style="display:none; width:12px; height:12px;"></span>
-                </a> *@
-            </div>
-
-            <!-- Expenses -->
-            @*  <div class="menu-item submenu-toggle" onclick="toggleSubmenu('expenseMenu')">
-                <i class="fa-solid fa-wallet"></i>
-                <span>Expenses</span>
-                <i class="fa-solid fa-chevron-down toggle-icon"></i>
-            </div>
-
-            <div id="expenseMenu" class="submenu">
-                <a asp-controller="Expenses" asp-action="Create" class="submenu-item">
-                    <i class="fa-solid fa-plus-circle"></i>Add Expense
-                </a>
-            </div>  
-
-            <!-- Gurukul -->
-            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('gurukulMenu')">
-                <i class="fa-solid fa-graduation-cap"></i>
-                <span>Gurukul</span>
-                <i class="fa-solid fa-chevron-down toggle-icon"></i>
-            </div>
-
-            <div id="gurukulMenu" class="submenu">
-                <a asp-controller="Gurukul" asp-action="Index" class="submenu-item">
-                    <i class="fa-solid fa-book-open"></i>Gurukul Home
-                </a>
-            </div>
-
-            <!-- Announcements -->
-            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('announcementMenu')">
-                <i class="fa-solid fa-bullhorn"></i>
-                <span>Announcements</span>
-                <i class="fa-solid fa-chevron-down toggle-icon"></i>
-            </div>
-
-            <div id="announcementMenu" class="submenu">
-                <a asp-controller="Announcements" asp-action="MyNotifications" class="submenu-item">
-                    <i class="fa-solid fa-bell"></i>My Notifications
-                </a>
-            </div>
-
-            <!-- Logout -->
-            <div class="logout">
-                <a asp-controller="Account" asp-action="Logout" class="menu-item">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                    <span>Logout</span>
-                </a>
-            </div>
-
-        </div>
-    </div>
-    <div id="page-content">
-        <div class="topbar d-flex justify-content-between align-items-center mb-4">
-            <button id="sidebarToggle"
-                    class="btn btn-sm px-3"
-                    style="background:#2F3D88; color:white; border-radius:999px;">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-
-            <span class="fw-bold">Infinity Arthvishva</span>
-
-            <a href="/Announcements/MyNotifications"
-               class="btn btn-secondary position-relative bell-icon @(ViewBag.UnreadCount != null && ViewBag.UnreadCount > 0 ? "blink" : "")">
-
-                <i class="fa-solid fa-bell text-white"></i>
-
-                @if (ViewBag.UnreadCount != null && ViewBag.UnreadCount > 0)
-                {
-                    <span class="badge bg-danger rounded-circle position-absolute top-0 end-0"
-                          style="font-size: 11px; padding: 5px 7px;">
-                        @ViewBag.UnreadCount
-                    </span>
-                }
-            </a>
-        </div>
-
-        <div class="container-fluid p-4">
-            @RenderBody()
-        </div>
-    </div>
-    
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            var unread = parseInt('@ViewBag.UnreadAnnouncements');
-
-            if (unread > 0) {
-                document.querySelector(".bell-icon").classList.add("blink");
-            }
-        });
-    </script>
-
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        // document.getElementById("sidebarToggle").addEventListener("click", () => {
-        //     document.getElementById("sidebar-wrapper").classList.toggle("collapsed");
-        // });
-
-        fetch('/Leave/GetPendingCount')
-            .then(res => res.json())
-            .then(count => {
-                if (count > 0) document.getElementById('approvalBubble').style.display = 'block';
-            });
-
-        function toggleSubmenu(id) {
-            const submenu = document.getElementById(id);
-            const open = submenu.style.display === "flex";
-            submenu.style.display = open ? "none" : "flex";
-
-            const parent = submenu.previousElementSibling;
-            parent.classList.toggle("submenu-open", !open);
-        }
-
-        // highlight active page
-        (function () {
-            const url = window.location.href;
-
-            document.querySelectorAll('a.menu-item').forEach(item => {
-                if (item.href === url) item.classList.add("active-menu");
-            });
-
-            document.querySelectorAll('.submenu-item').forEach(item => {
-                if (item.href === url) {
-                    item.classList.add("active-submenu");
-                    const submenu = item.closest(".submenu");
-                    submenu.style.display = "flex";
-                    submenu.previousElementSibling.classList.add("submenu-open");
-                }
-            });
-        })();
-    
-        const sidebar = document.getElementById("sidebar-wrapper");
-        const sidebarToggle = document.getElementById("sidebarToggle");
-        const sidebarOverlay = document.getElementById("sidebar-overlay");
-
-        // Desktop collapse toggle
-        sidebarToggle.addEventListener("click", () => {
-            if (window.innerWidth <= 992) {
-                sidebar.classList.toggle("active");
-                sidebarOverlay.classList.toggle("active");
-            } else {
-                sidebar.classList.toggle("collapsed");
-            }
-        });
-
-        // Close sidebar when overlay clicked
-        sidebarOverlay.addEventListener("click", () => {
-            sidebar.classList.remove("active");
-            sidebarOverlay.classList.remove("active");
-        });
-
-        // Auto close sidebar on resize
-        window.addEventListener("resize", () => {
-            if (window.innerWidth > 992) {
-                sidebar.classList.remove("active");
-                sidebarOverlay.classList.remove("active");
-            }
-        });
-    </script>
-
-    @RenderSection("Scripts", required: false)
-</body>
-</html> *@
