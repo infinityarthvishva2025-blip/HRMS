@@ -39,32 +39,3 @@
 
 </form>
 
-@* @model HRMS.Models.Attendance
-@{
-    var role = ViewBag.UserRole as string;
-
-    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
-    {
-        Layout = "~/Views/Shared/_HrLayout.cshtml";
-    }
-    else
-    {
-        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
-    }
-}
-<form method="post" asp-action="RequestCorrection" asp-controller="Attendance">
-
-    <!-- IMPORTANT: lowercase 'id' -->
-    <input type="hidden" name="empCode" value="@Model.Emp_Code" />
-    <input type="hidden" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" />
-    <input type="hidden" name="employeeId" value="@ViewBag.EmployeeId" />
-
-    <div class="mb-3">
-        <label class="fw-bold">Why do you want correction?</label>
-        <textarea name="CorrectionRemark" class="form-control" required></textarea>
-    </div>
-
-    <button type="submit" class="btn btn-primary mt-2">Submit Request</button>
-
-</form>
- *@

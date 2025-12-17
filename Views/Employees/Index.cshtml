@@ -1,4 +1,5 @@
 ﻿@model List<HRMS.Models.Employee>
+@using HRMS.Helpers
 
 @{
     ViewData["Title"] = "Employees";
@@ -75,7 +76,7 @@
 
 
 <div class="container py-4">
-
+  
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
         <h2 class="fw-bold text-primary mb-2">
             <i class="fa-solid fa-users me-2"></i> Employee Directory
@@ -145,6 +146,15 @@
                     <tbody>
                         @foreach (var emp in Model)
                         {
+                             
+        var token = UrlEncryptionHelper.GenerateToken(
+        new Dictionary<string, string>
+        {
+            ["type"] = "EMP",
+            ["empId"] = emp.Id.ToString()
+        }
+        );
+    
                             <tr>
                                 <td>@emp.EmployeeCode</td>
                                 <td>@emp.Name</td>
@@ -153,13 +163,18 @@
                                 <td>@emp.Position</td>
 
                                 <td class="text-center">
-                                    <a class="btn btn-sm btn-primary me-1"
+                                    @* <a class="btn btn-sm btn-primary me-1"
                                        asp-action="Details" asp-route-id="@emp.Id">
                                         <i class="fa-solid fa-eye"></i>
+                                    </a> *@
+                                    <a asp-action="Details"
+                                       class="btn btn-sm btn-primary me-1"
+                                       asp-controller="Employees"
+                                       asp-route-token="@token">
+                                        <i class="fa-solid fa-eye"></i>
                                     </a>
-
                                     <a class="btn btn-sm btn-warning me-1"
-                                       asp-action="Edit" asp-route-id="@emp.Id">
+                                       asp-action="Edit" asp-route-token="@token">
                                         <i class="fa-solid fa-pen"></i>
                                     </a>
 

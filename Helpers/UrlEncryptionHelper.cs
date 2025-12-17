@@ -53,7 +53,7 @@ namespace HRMS.Helpers
         }
 
         // =====================================================
-        // ✅ NEW UNIVERSAL TOKEN GENERATOR (ANY FIELDS)
+        // ✅ UNIVERSAL TOKEN GENERATOR (ANY MODULE)
         // =====================================================
         public static string GenerateToken(
             Dictionary<string, string> fields,
@@ -97,13 +97,9 @@ namespace HRMS.Helpers
                     if (kv.Length != 2) continue;
 
                     if (kv[0] == "exp")
-                    {
                         expiryTicks = long.Parse(kv[1]);
-                    }
                     else
-                    {
                         fields[kv[0]] = kv[1];
-                    }
                 }
 
                 if (expiryTicks == 0 || DateTime.UtcNow.Ticks > expiryTicks)
@@ -122,7 +118,7 @@ namespace HRMS.Helpers
         }
 
         // =====================================================
-        // 🔐 AES ENCRYPTION (UNCHANGED)
+        // 🔐 AES ENCRYPTION
         // =====================================================
         private static string Encrypt(string plainText)
         {
@@ -130,7 +126,7 @@ namespace HRMS.Helpers
             aes.Key = Encoding.UTF8.GetBytes(Key);
             aes.IV = Encoding.UTF8.GetBytes(IV);
 
-            using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+            using var encryptor = aes.CreateEncryptor();
             using var ms = new MemoryStream();
             using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
             using (var sw = new StreamWriter(cs))
@@ -146,9 +142,7 @@ namespace HRMS.Helpers
 
         private static string Decrypt(string cipherText)
         {
-            cipherText = cipherText
-                .Replace("-", "+")
-                .Replace("_", "/");
+            cipherText = cipherText.Replace("-", "+").Replace("_", "/");
 
             switch (cipherText.Length % 4)
             {
@@ -162,7 +156,7 @@ namespace HRMS.Helpers
             aes.Key = Encoding.UTF8.GetBytes(Key);
             aes.IV = Encoding.UTF8.GetBytes(IV);
 
-            using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+            using var decryptor = aes.CreateDecryptor();
             using var ms = new MemoryStream(buffer);
             using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
             using var sr = new StreamReader(cs);
@@ -171,6 +165,7 @@ namespace HRMS.Helpers
         }
     }
 }
+
 
 //using System;
 //using System.IO;
