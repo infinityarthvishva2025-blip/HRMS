@@ -313,6 +313,7 @@ namespace HRMS.Controllers
                 return RedirectToAction("Login", "Account");
 
             ViewBag.UserRole = emp.Role?.ToString();
+
             int y = year ?? DateTime.Now.Year;
             int m = month ?? DateTime.Now.Month;
 
