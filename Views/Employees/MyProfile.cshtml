@@ -2,60 +2,60 @@
 @{
     ViewData["Title"] = "My Profile";
     Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+
+    string DocUrl(string file) =>
+        string.IsNullOrWhiteSpace(file)
+            ? ""
+            : Url.Action("ViewDocument", "Employees",
+                new { empCode = Model.EmployeeCode, fileName = file });
 }
 
 <div class="container py-4">
 
+    <!-- ===================== HEADER ===================== -->
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-        <h3 class="fw-bold text-dark">
+        <h3 class="fw-bold">
             <i class="fa-solid fa-id-card me-2"></i> My Profile
         </h3>
-
-        @* <a href="@Url.Action("Edit", "Employees", new { id = Model.Id })"
-           class="btn btn-secondary btn-sm">
-            <i class="fa-solid fa-pen-to-square me-1"></i> Edit Profile
-        </a> *@
-
     </div>
 
-    <!-- ===================== PROFILE HEADER ===================== -->
+    <!-- ===================== PROFILE ===================== -->
     <div class="card shadow-sm mb-4 p-4">
         <div class="row align-items-center">
-            <div class="col-md-3 text-center">
 
+            <!-- Profile Image -->
+            <div class="col-md-3 text-center">
                 @{
-                    string profileUrl = "";
-                    if (!string.IsNullOrEmpty(Model.ProfileImagePath))
-                    {
-                        profileUrl = Url.Action("ViewDocument", "Employees",
-                            new { empCode = Model.EmployeeCode, fileName = Model.ProfileImagePath });
-                    }
+                    var profileUrl = DocUrl(Model.ProfileImagePath);
                 }
 
                 @if (!string.IsNullOrEmpty(profileUrl))
                 {
-                    <img src="@profileUrl" class="rounded-circle shadow-sm" 
-                         style="width:150px;height:150px;object-fit:cover;" />
-                }
-                else
-                {
-                    <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center"
-                         style="width:150px;height:150px;">
-                        <i class="fa-solid fa-user fa-4x text-muted"></i>
-                    </div>
+                    <img src="@profileUrl"
+                         class="rounded-circle shadow"
+                         style="width:150px;height:150px;object-fit:cover"
+                         onerror="this.style.display='none';document.getElementById('noImg').style.display='flex';" />
                 }
 
-                <h5 class="mt-3 fw-semibold">@Model.Name</h5>
-                <p class="text-muted mb-1 small">@Model.EmployeeCode</p>
-                <span class="badge bg-dark">@Model.Role</span>
+                <div id="noImg"
+                     class="rounded-circle bg-light border d-flex align-items-center justify-content-center"
+                     style="width:150px;height:150px;@(string.IsNullOrEmpty(profileUrl) ? "" : "display:none")">
+                    <i class="fa-solid fa-user fa-4x text-muted"></i>
+                </div>
+
+                <h5 class="mt-3">@Model.Name</h5>
+                <small class="text-muted">@Model.EmployeeCode</small><br />
+                <span class="badge bg-dark mt-1">@Model.Role</span>
             </div>
 
+            <!-- Basic Details -->
             <div class="col-md-9 border-start ps-4">
                 <h5 class="fw-semibold mb-3"><i class="fa-solid fa-info-circle me-2"></i>Basic Details</h5>
+
                 <div class="row g-3 small">
                     <div class="col-md-4"><strong>Email:</strong><br />@Model.Email</div>
                     <div class="col-md-4"><strong>Mobile:</strong><br />@Model.MobileNumber</div>
-                    <div class="col-md-4"><strong>Alternate Mobile:</strong><br />@(Model.AlternateMobileNumber ?? "-")</div>
+                    <div class="col-md-4"><strong>Alt Mobile:</strong><br />@(Model.AlternateMobileNumber ?? "-")</div>
                     <div class="col-md-4"><strong>Gender:</strong><br />@Model.Gender</div>
                     <div class="col-md-4"><strong>DOB:</strong><br />@(Model.DOB_Date?.ToString("dd-MMM-yyyy") ?? "-")</div>
                     <div class="col-md-4"><strong>Marital Status:</strong><br />@Model.MaritalStatus</div>
@@ -67,17 +67,9 @@
     <!-- ===================== ADDRESS ===================== -->
     <div class="card shadow-sm mb-4 p-4">
         <h5 class="fw-semibold mb-3"><i class="fa-solid fa-location-dot me-2"></i>Address</h5>
-
         <div class="row g-3 small">
-            <div class="col-md-6">
-                <strong>Current Address:</strong>
-                <p>@(Model.Address ?? "-")</p>
-            </div>
-
-            <div class="col-md-6">
-                <strong>Permanent Address:</strong>
-                <p>@(Model.PermanentAddress ?? "-")</p>
-            </div>
+            <div class="col-md-6"><strong>Current:</strong><p>@(Model.Address ?? "-")</p></div>
+            <div class="col-md-6"><strong>Permanent:</strong><p>@(Model.PermanentAddress ?? "-")</p></div>
         </div>
     </div>
 
@@ -86,33 +78,12 @@
         <h5 class="fw-semibold mb-3"><i class="fa-solid fa-briefcase me-2"></i>Job Details</h5>
 
         <div class="row g-3 small">
-            <div class="col-md-4"><strong>Joining Date:</strong><br />@(Model.JoiningDate?.ToString("dd-MMM-yyyy") ?? "-")</div>
+            <div class="col-md-4"><strong>Joining:</strong><br />@(Model.JoiningDate?.ToString("dd-MMM-yyyy") ?? "-")</div>
             <div class="col-md-4"><strong>Department:</strong><br />@Model.Department</div>
             <div class="col-md-4"><strong>Position:</strong><br />@Model.Position</div>
             <div class="col-md-4"><strong>Salary:</strong><br />₹@Model.Salary?.ToString("N0")</div>
             <div class="col-md-4"><strong>Experience:</strong><br />@(Model.TotalExperienceYears > 0 ? $"{Model.TotalExperienceYears} Years" : "Fresher")</div>
         </div>
-
-        <!-- Experience Certificates -->
-        @if (!string.IsNullOrEmpty(Model.ExperienceCertificateFilePath))
-        {
-            <div class="mt-3">
-                <strong>Experience Certificates:</strong><br />
-                @{
-                    var expFiles = Model.ExperienceCertificateFilePath.Split(',');
-                    foreach (var f in expFiles)
-                    {
-                        var fileUrl = Url.Action("ViewDocument", "Employees",
-                            new { empCode = Model.EmployeeCode, fileName = f });
-
-                        <a href="@fileUrl" target="_blank" class="btn btn-outline-secondary btn-sm me-2 mt-2">
-                            View @f
-                        </a>
-                    }
-                }
-            </div>
-        }
-
     </div>
 
     <!-- ===================== EDUCATION ===================== -->
@@ -122,63 +93,37 @@
         <div class="row g-3 small">
 
             <div class="col-md-4"><strong>12th %:</strong> @Model.HSCPercent</div>
-
             <div class="col-md-6">
                 <strong>12th Marksheet:</strong><br />
-
-                @{
-                    string hscFile = Model.TwelfthMarksheetFilePath;
-                    string hscUrl = string.IsNullOrEmpty(hscFile) ? "" :
-                        Url.Action("ViewDocument", "Employees", new { empCode = Model.EmployeeCode, fileName = hscFile });
-                }
-
-                @if (!string.IsNullOrEmpty(hscUrl))
+                @if (!string.IsNullOrEmpty(DocUrl(Model.TwelfthMarksheetFilePath)))
                 {
-                    <a href="@hscUrl" target="_blank" class="btn btn-outline-secondary btn-sm mt-1">View File</a>
+                    <a href="@DocUrl(Model.TwelfthMarksheetFilePath)" target="_blank" class="btn btn-outline-secondary btn-sm mt-1">View</a>
                 }
                 else { <span>-</span> }
             </div>
 
-            <!-- Graduation -->
-            <div class="col-md-4"><strong>Graduation:</strong><br />@Model.GraduationCourse (@Model.GraduationPercent%)</div>
-
+            <div class="col-md-4"><strong>Graduation:</strong> @Model.GraduationCourse (@Model.GraduationPercent%)</div>
             <div class="col-md-6">
-                @{
-                    string gradFile = Model.GraduationMarksheetFilePath;
-                    string gradUrl = string.IsNullOrEmpty(gradFile) ? "" :
-                        Url.Action("ViewDocument", "Employees", new { empCode = Model.EmployeeCode, fileName = gradFile });
-                }
-
                 <strong>Graduation Marksheet:</strong><br />
-                @if (!string.IsNullOrEmpty(gradUrl))
+                @if (!string.IsNullOrEmpty(DocUrl(Model.GraduationMarksheetFilePath)))
                 {
-                    <a href="@gradUrl" target="_blank" class="btn btn-outline-secondary btn-sm mt-1">View File</a>
+                    <a href="@DocUrl(Model.GraduationMarksheetFilePath)" target="_blank" class="btn btn-outline-secondary btn-sm mt-1">View</a>
                 }
                 else { <span>-</span> }
             </div>
 
-            <!-- PG -->
             <div class="col-md-4"><strong>Post Graduation:</strong><br />
-                @(string.IsNullOrEmpty(Model.PostGraduationCourse)
-                    ? "-"
-                    : $"{Model.PostGraduationCourse} ({Model.PostGraduationPercent}%)")
+                @(string.IsNullOrEmpty(Model.PostGraduationCourse) ? "-" : $"{Model.PostGraduationCourse} ({Model.PostGraduationPercent}%)")
             </div>
 
             <div class="col-md-6">
-                @{
-                    string pgFile = Model.PostGraduationMarksheetFilePath;
-                    string pgUrl = string.IsNullOrEmpty(pgFile) ? "" :
-                        Url.Action("ViewDocument", "Employees", new { empCode = Model.EmployeeCode, fileName = pgFile });
-                }
-
                 <strong>PG Marksheet:</strong><br />
-                @if (!string.IsNullOrEmpty(pgUrl))
+                @if (!string.IsNullOrEmpty(DocUrl(Model.PostGraduationMarksheetFilePath)))
                 {
-                    <a href="@pgUrl" target="_blank" class="btn btn-outline-secondary btn-sm mt-1">View File</a>
+                    <a href="@DocUrl(Model.PostGraduationMarksheetFilePath)" target="_blank" class="btn btn-outline-secondary btn-sm mt-1">View</a>
                 }
                 else { <span>-</span> }
             </div>
-
         </div>
     </div>
 
@@ -190,100 +135,38 @@
 
             <div class="col-md-4"><strong>Aadhaar:</strong><br />@Model.AadhaarNumber</div>
             <div class="col-md-6">
-                @{
-                    string aFile = Model.AadhaarFilePath;
-                    string aUrl = string.IsNullOrEmpty(aFile) ? "" :
-                        Url.Action("ViewDocument", "Employees", new { empCode = Model.EmployeeCode, fileName = aFile });
-                }
-
-                @if (!string.IsNullOrEmpty(aUrl))
+                @if (!string.IsNullOrEmpty(DocUrl(Model.AadhaarFilePath)))
                 {
-                    <a href="@aUrl" target="_blank" class="btn btn-outline-secondary btn-sm mt-1">View Aadhaar</a>
+                    <a href="@DocUrl(Model.AadhaarFilePath)" target="_blank" class="btn btn-outline-secondary btn-sm mt-1">View Aadhaar</a>
                 }
             </div>
 
             <div class="col-md-4"><strong>PAN:</strong><br />@Model.PanNumber</div>
             <div class="col-md-6">
-                @{
-                    string pFile = Model.PanFilePath;
-                    string pUrl = string.IsNullOrEmpty(pFile) ? "" :
-                        Url.Action("ViewDocument", "Employees", new { empCode = Model.EmployeeCode, fileName = pFile });
-                }
-
-                @if (!string.IsNullOrEmpty(pUrl))
+                @if (!string.IsNullOrEmpty(DocUrl(Model.PanFilePath)))
                 {
-                    <a href="@pUrl" target="_blank" class="btn btn-outline-secondary btn-sm mt-1">View PAN</a>
+                    <a href="@DocUrl(Model.PanFilePath)" target="_blank" class="btn btn-outline-secondary btn-sm mt-1">View PAN</a>
                 }
             </div>
-
         </div>
     </div>
 
-    <!-- ===================== BANK DETAILS ===================== -->
+    <!-- ===================== BANK ===================== -->
     <div class="card shadow-sm mb-4 p-4">
         <h5 class="fw-semibold mb-3"><i class="fa-solid fa-building-columns me-2"></i>Bank Details</h5>
 
         <div class="row g-3 small">
-            <div class="col-md-4"><strong>Account Holder:</strong><br />@Model.AccountHolderName</div>
-            <div class="col-md-4"><strong>Bank:</strong><br />@Model.BankName</div>
-            <div class="col-md-4"><strong>Account Number:</strong><br />@Model.AccountNumber</div>
-            <div class="col-md-4"><strong>IFSC:</strong><br />@Model.IFSC</div>
-            <div class="col-md-4"><strong>Branch:</strong><br />@Model.Branch</div>
+            <div class="col-md-4"><strong>Account Holder:</strong>@Model.AccountHolderName</div>
+            <div class="col-md-4"><strong>Bank:</strong>@Model.BankName</div>
+            <div class="col-md-4"><strong>Account:</strong>@Model.AccountNumber</div>
+            <div class="col-md-4"><strong>IFSC:</strong>@Model.IFSC</div>
+            <div class="col-md-4"><strong>Branch:</strong>@Model.Branch</div>
         </div>
 
-        @{
-            string passFile = Model.PassbookFilePath;
-            string passUrl = string.IsNullOrEmpty(passFile) ? "" :
-                Url.Action("ViewDocument", "Employees", new { empCode = Model.EmployeeCode, fileName = passFile });
-        }
-
-        @if (!string.IsNullOrEmpty(passUrl))
+        @if (!string.IsNullOrEmpty(DocUrl(Model.PassbookFilePath)))
         {
-            <a href="@passUrl" target="_blank" class="btn btn-outline-secondary btn-sm mt-2">View Passbook</a>
-        }
-    </div>
-
-    <!-- ===================== HEALTH DETAILS ===================== -->
-    <div class="card shadow-sm mb-4 p-4">
-        <h5 class="fw-semibold mb-3 text-danger"><i class="fa-solid fa-heart-pulse me-2"></i>Health Information</h5>
-
-        <div class="row g-3 small">
-            <div class="col-md-4"><strong>Has Disease:</strong><br />@Model.HasDisease</div>
-            <div class="col-md-4"><strong>Disease Name:</strong><br />@Model.DiseaseName</div>
-            <div class="col-md-4"><strong>Since:</strong><br />@Model.DiseaseSince</div>
-            <div class="col-md-4"><strong>Medicines:</strong><br />@Model.MedicinesRequired</div>
-            <div class="col-md-4"><strong>Doctor:</strong><br />@Model.DoctorName</div>
-            <div class="col-md-4"><strong>Doctor Contact:</strong><br />@Model.DoctorContact</div>
-        </div>
-
-        @{
-            string medFile = Model.MedicalDocumentFilePath;
-            string medUrl = string.IsNullOrEmpty(medFile) ? "" :
-                Url.Action("ViewDocument", "Employees", new { empCode = Model.EmployeeCode, fileName = medFile });
-        }
-
-        @if (!string.IsNullOrEmpty(medUrl))
-        {
-            <a href="@medUrl" target="_blank" class="btn btn-outline-danger btn-sm mt-2">
-                View Medical Document
-            </a>
+            <a href="@DocUrl(Model.PassbookFilePath)" target="_blank" class="btn btn-outline-secondary btn-sm mt-2">View Passbook</a>
         }
     </div>
 
 </div>
-
-<style>
-    .card {
-        border-radius: 10px;
-        border: 1px solid #e5e5e5;
-    }
-
-    strong {
-        font-weight: 600;
-        color: #333;
-    }
-
-    h5.fw-semibold {
-        color: #444;
-    }
-</style>
