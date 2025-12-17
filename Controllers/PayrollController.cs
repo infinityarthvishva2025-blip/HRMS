@@ -301,8 +301,18 @@ namespace HRMS.Controllers
          //============================================================
          //ADMIN — MONTHLY PAYROLL
          //============================================================
-        public IActionResult Monthly(int? year, int? month, string search)
+        public async Task<IActionResult> Monthly(int? year, int? month, string search)
         {
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (!empId.HasValue)
+                return RedirectToAction("Login", "Account");
+
+            // 🔹 Validate employee
+            var emp = await _context.Employees.FindAsync(empId.Value);
+            if (emp == null)
+                return RedirectToAction("Login", "Account");
+
+            ViewBag.UserRole = emp.Role?.ToString();
             int y = year ?? DateTime.Now.Year;
             int m = month ?? DateTime.Now.Month;
 
