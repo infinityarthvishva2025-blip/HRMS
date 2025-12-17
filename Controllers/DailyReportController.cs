@@ -205,10 +205,8 @@ namespace HRMS.Controllers
             _db.SaveChanges();
 
             // ===============================
-            // ✅ AUTO CHECKOUT AFTER SUBMIT
+            // AUTO CHECKOUT AFTER SUBMIT
             // ===============================
-            // IMPORTANT: your old Attendance rows sometimes have OutTime = 00:00:00 (not null)
-            // so we check BOTH: null OR zero.
             var empCode = sender.EmployeeCode;
 
             if (!string.IsNullOrWhiteSpace(empCode))
@@ -227,13 +225,12 @@ namespace HRMS.Controllers
                     var worked = attendance.OutTime.Value - attendance.InTime.Value;
                     attendance.Total_Hours = Math.Round((decimal)worked.TotalHours, 2);
 
-                    // if you use Status column
-                    if (string.IsNullOrWhiteSpace(attendance.Status) || attendance.Status == "-")
-                        attendance.Status = "Present";
+                    attendance.Status = "P";
 
                     _db.SaveChanges();
                 }
             }
+
 
             return RedirectToAction("MySentReports");
         }

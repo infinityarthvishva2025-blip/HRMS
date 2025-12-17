@@ -97,71 +97,68 @@ namespace HRMS.Controllers
                 return RedirectToAction("Login", "Account");
 
             DateTime today = DateTime.Today;
-            var record = _context.Attendances
-                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
 
-            // No attendance found
-            if (record == null)
-            {
-                TempData["EarlyCheckout"] = "No active attendance found.";
-                TempData.Keep();
-                return RedirectToAction("EmployeePanel");
-            }
-
-            // Prevent double checkout
-            if (record.OutTime != null)
-            {
-                TempData["CheckoutSuccess"] = $"You already checked out at {record.OutTime.Value}.";
-                TempData.Keep();
-                return RedirectToAction("EmployeePanel");
-            }
-
-            // Set checkout time
-            record.OutTime = DateTime.Now.TimeOfDay;
-            record.Att_Date = record.Date;
-
-            if (record.InTime != null)
-            {
-                TimeSpan worked = record.OutTime.Value - record.InTime.Value;
-
-                // 🔥 SHIFT LOGIC
-                // Saturday = 7 hours (WOP)
-                // Other days = 8.5 hours
-                TimeSpan shift = (today.DayOfWeek == DayOfWeek.Saturday)
-                    ? TimeSpan.FromMinutes(420)   // 7 hours
-                    : TimeSpan.FromMinutes(510);  // 8.5 hours
-
-                if (worked < shift)
-                {
-                    TimeSpan remaining = shift - worked;
-
-                    TempData["EarlyTime"] = $"{remaining.Hours}h {remaining.Minutes}m";
-                    TempData["EarlyCheckout"] = "Remaining Time";
-                }
-                else
-                {
-                    TimeSpan extra = worked - shift;
-
-                    TempData["LateTime"] = $"{extra.Hours}h {extra.Minutes}m";
-                    TempData["LateCheckout"] = "Overtime";
-                    
-                }
-            }
-
-            _context.SaveChanges();
-            // ✅ CORRECT REDIRECT
-            // ✅ Director → STAY on same page
+            // =====================================================
+            // ✅ DIRECTOR → REAL CHECKOUT HERE
+            // =====================================================
             if (role.Equals("Director", StringComparison.OrdinalIgnoreCase))
             {
-                //  TempData["CheckoutSuccess"] = "Checked out successfully.";
+                var record = _context.Attendances
+                    .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+
+                if (record == null)
+                {
+                    TempData["EarlyCheckout"] = "No active attendance found.";
+                    TempData.Keep();
+                    return RedirectToAction(nameof(EmployeePanel));
+                }
+
+                if (record.OutTime != null)
+                {
+                    TempData["CheckoutSuccess"] =
+                        $"You already checked out at {record.OutTime.Value}.";
+                    TempData.Keep();
+                    return RedirectToAction(nameof(EmployeePanel));
+                }
+
+                // ✅ REAL CHECKOUT FOR DIRECTOR
+                record.OutTime = DateTime.Now.TimeOfDay;
+                record.Att_Date = record.Date;
+
+                if (record.InTime != null)
+                {
+                    TimeSpan worked = record.OutTime.Value - record.InTime.Value;
+
+                    TimeSpan shift = (today.DayOfWeek == DayOfWeek.Saturday)
+                        ? TimeSpan.FromMinutes(420)
+                        : TimeSpan.FromMinutes(510);
+
+                    if (worked < shift)
+                    {
+                        TimeSpan remaining = shift - worked;
+                        TempData["EarlyTime"] = $"{remaining.Hours}h {remaining.Minutes}m";
+                        TempData["EarlyCheckout"] = "Remaining Time";
+                    }
+                    else
+                    {
+                        TimeSpan extra = worked - shift;
+                        TempData["LateTime"] = $"{extra.Hours}h {extra.Minutes}m";
+                        TempData["LateCheckout"] = "Overtime";
+                    }
+                }
+
+                _context.SaveChanges();
                 return RedirectToAction(nameof(EmployeePanel));
             }
 
-            // ✅ Others → Daily Report
+            // =====================================================
+            // ✅ ALL OTHERS → NO CHECKOUT HERE
+            // =====================================================
+            // JUST SEND TO DAILY REPORT
             return RedirectToAction("Send", "DailyReport");
         }
 
-        
+
         public IActionResult MySummary()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
