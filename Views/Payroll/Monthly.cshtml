@@ -1,9 +1,20 @@
 ﻿@model IEnumerable<HRMS.Models.ViewModels.PayrollSummaryVm>
 
+@using HRMS.Helpers
 @{
     decimal totalNetPay = Model?.Sum(x => x.NetSalary) ?? 0;
     ViewData["Title"] = "Monthly Payroll";
-    Layout = "~/Views/Shared/_HrLayout.cshtml";
+   // Layout = "~/Views/Shared/_HrLayout.cshtml";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
 
     int year = ViewBag.Year;
     int month = ViewBag.Month;
@@ -74,7 +85,16 @@
                         var halfLoss = (p.PresentHalfDays * 0.5m) * p.PerDaySalary;
                         var absentLoss = p.AbsentDays * p.PerDaySalary;
                         var leaveLoss = halfLoss + absentLoss;
-
+                        var token = UrlEncryptionHelper.GenerateToken(
+                        new Dictionary<string, string>
+                        {
+                            ["type"] = "PAY",
+                            ["empCode"] = p.EmpCode,
+                            ["year"] = year.ToString(),
+                            ["month"] = month.ToString()
+                        },
+                        30
+                        );
                         <tr>
                             <td>@p.EmpCode</td>
                             <td class="text-start">@p.EmpName</td>
@@ -90,10 +110,15 @@
                             <td class="text-danger">@p.TotalDeductions.ToString("0.00")</td>
                             <td class="fw-bold text-success">@p.NetSalary.ToString("0.00")</td>
                             <td>
-                                <a asp-action="Payslip"
+                                @* <a asp-action="Payslip"
                                    asp-route-empCode="@p.EmpCode"
                                    asp-route-year="@year"
                                    asp-route-month="@month"
+                                   class="btn btn-success btn-sm">
+                                    Slip
+                                </a> *@
+                                <a asp-action="Payslip"
+                                   asp-route-token="@token"
                                    class="btn btn-success btn-sm">
                                     Slip
                                 </a>

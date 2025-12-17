@@ -1,4 +1,5 @@
 ﻿using HRMS.Data;
+using HRMS.Helpers;
 using HRMS.Models;
 using HRMS.Models.ViewModels;
 using HRMS.Services;
@@ -245,10 +246,61 @@ namespace HRMS.Controllers
                 return ms.ToArray();
             }
         }
+        [HttpGet]
+        public async Task<IActionResult> Payslip(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return BadRequest("Missing token");
 
-        // ============================================================
-        // ADMIN — MONTHLY PAYROLL
-        // ============================================================
+            // 🔓 Decrypt token (NEW LOGIC)
+            if (!UrlEncryptionHelper.TryDecryptToken(
+                    token,
+                    out Dictionary<string, string> data,
+                    out string error))
+            {
+                return StatusCode(403, error);
+            }
+
+            // 🔐 Validate token type
+            if (!data.TryGetValue("type", out var type) || type != "PAY")
+                return StatusCode(403, "Invalid token type");
+
+            // 🔓 Extract values safely
+            string empCode = data["empCode"];
+            int year = int.Parse(data["year"]);
+            int month = int.Parse(data["month"]);
+
+            // 🔹 Session check
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (!empId.HasValue)
+                return RedirectToAction("Login", "Account");
+
+            // 🔹 Validate employee
+            var emp = await _context.Employees.FindAsync(empId.Value);
+            if (emp == null)
+                return RedirectToAction("Login", "Account");
+
+            ViewBag.UserRole = emp.Role?.ToString();
+            var payslip = _payrollService
+    .GetMonthlySummaries(year, month)
+    .FirstOrDefault(x => x.EmpCode == empCode);
+
+            if (payslip == null)
+                return NotFound("Payslip not found");
+
+            return View(payslip);
+            // 🧾 Load payslip (IMPORTANT FIX)
+           // var payslip = _payrollService.GetMonthlySummaries(year, month);
+            if (payslip == null)
+                return NotFound("Payslip not found");
+
+            return View(payslip);
+        }
+
+
+         //============================================================
+         //ADMIN — MONTHLY PAYROLL
+         //============================================================
         public IActionResult Monthly(int? year, int? month, string search)
         {
             int y = year ?? DateTime.Now.Year;
@@ -274,9 +326,9 @@ namespace HRMS.Controllers
             return View(list);
         }
 
-        // ============================================================
-        // ADMIN — VIEW PAYSLIP
-        // ============================================================
+         //============================================================
+         //ADMIN — VIEW PAYSLIP
+         //============================================================
         public IActionResult Payslip(string empCode, int year, int month)
         {
             var vm = _payrollService.BuildMonthlySummary(empCode, year, month);
