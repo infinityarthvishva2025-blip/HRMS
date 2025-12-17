@@ -1,10 +1,35 @@
 ﻿@model HRMS.Models.ViewModels.HighDensityCalendarVM
 @using Newtonsoft.Json
+@using HRMS.Helpers
+
+@{
+    var calendarToken = UrlEncryptionHelper.GenerateToken(
+        new Dictionary<string, string>
+        {
+            ["type"] = "CAL",
+            ["year"] = Model.Year.ToString(),
+            ["month"] = Model.Month.ToString(),
+            ["search"] = Model.Search ?? "",
+            ["department"] = Model.Department ?? "All",
+            ["pageSize"] = Model.PageSize.ToString()
+        },
+        expiryMinutes: 30
+    );
+}
 
 @{
      ViewData["Title"] = "Attendance Records";
-    Layout = "~/Views/Shared/_HrLayout.cshtml";
-   
+    //Layout = "~/Views/Shared/_HrLayout.cshtml";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
     var monthName = System.Globalization.CultureInfo.CurrentCulture
         .DateTimeFormat.GetMonthName(Model.Month);
 
@@ -61,9 +86,9 @@
     <h2>Employee Attendance Calendar</h2>
     <div>@monthName @Model.Year</div>
 </div>
-
+<input type="hidden" id="calendarToken" value="@calendarToken" />
 <div class="controls">
-    <form method="get" asp-action="HighDensityCalendar">
+ <form id="calendarForm" onsubmit="return submitEncryptedCalendar();">
         <label>Month:</label>
         <select name="month">
             @for (int m = 1; m <= 12; m++)
@@ -210,57 +235,7 @@
     attachTooltips();
 }
 
-    // function buildCalendar() {
-    //     const grid = document.getElementById("calendarGrid");
-    //     grid.innerHTML = "";
-
-    //     // header
-    //     grid.style.gridTemplateColumns = `200px repeat(${daysInMonth}, 1fr)`;
-    //     grid.innerHTML += `<div class='calendar-cell calendar-header employee-cell'>Employee</div>`;
-    //     for (let d = 1; d <= daysInMonth; d++) {
-    //         grid.innerHTML += `<div class='calendar-cell calendar-header'>${d}</div>`;
-    //     }
-
-    //     // rows
-    //     employees.forEach(emp => {
-    //         grid.innerHTML += `<div class='calendar-cell employee-cell'><b>${emp.Name}</b><br><small>${emp.EmployeeCode}</small><br><small>${emp.Department || ""}</small></div>`;
-
-    //         for (let d = 1; d <= daysInMonth; d++) {
-    //             const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    //             const att = attendances.find(a =>
-    //                 a.Emp_Code === emp.EmployeeCode &&
-    //                 a.Date && a.Date.startsWith(dateStr)
-    //             );
-
-    //             let status = "-";
-    //             let inTime = "", outTime = "", hours = "";
-
-    //             if (att) {
-    //                 status = att.Status || "-";
-    //                 if (att.InTime && !att.OutTime) status = "NC";
-    //                 inTime = att.InTime ? att.InTime.substring(0, 5) : "";
-    //                 outTime = att.OutTime ? att.OutTime.substring(0, 5) : "";
-    //                 hours = att.Total_Hours ?? "";
-    //             }
-
-    //             const color = statusColors[status] || "#95a5a6";
-
-    //             grid.innerHTML += `
-    //                 <div class='calendar-cell'>
-    //                     <div class='status-icon'
-    //                          style='background:${color}'
-    //                          data-emp='${emp.Name}'
-    //                          data-date='${dateStr}'
-    //                          data-status='${status}'
-    //                          data-in='${inTime}'
-    //                          data-out='${outTime}'
-    //                          data-hours='${hours}'>${status}</div>
-    //                 </div>`;
-    //         }
-    //     });
-
-    //     attachTooltips();
-    // }
+    
 
     function attachTooltips() {
         const tooltip = document.getElementById("tooltip");
@@ -284,3 +259,28 @@
 
     document.addEventListener("DOMContentLoaded", buildCalendar);
 </script>
+<script>
+function submitEncryptedCalendar() {
+
+    const month = document.querySelector("select[name='month']").value;
+    const year = document.querySelector("select[name='year']").value;
+    const search = document.querySelector("input[name='search']").value || "";
+    const department = document.querySelector("select[name='department']").value;
+    const pageSize = document.querySelector("select[name='pageSize']").value;
+
+    const url =
+        `/Attendance/HighDensityCalendarEncrypt?` +
+        `year=${year}` +
+        `&month=${month}` +
+        `&search=${encodeURIComponent(search)}` +
+        `&department=${encodeURIComponent(department)}` +
+        `&pageSize=${pageSize}`;
+
+    console.log("Encrypted redirect →", url); // debug
+
+    window.location.href = url;
+    return false; // STOP normal submit
+}
+</script>
+
+<

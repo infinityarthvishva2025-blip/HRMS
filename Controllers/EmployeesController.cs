@@ -1,4 +1,5 @@
 ﻿using HRMS.Data;
+using HRMS.Helpers;
 using HRMS.Models;
 using HRMS.Models.ViewModels;
 using HRMS.ViewModels;
@@ -51,17 +52,46 @@ namespace HRMS.Controllers
             return View(await _context.Employees.ToListAsync());    
         }
 
-        // ================================
-        // DETAILS
-        // ================================
-        public async Task<IActionResult> Details(int? id)
+      
+        public async Task<IActionResult> Details(int? id, string token)
         {
-            if (id == null) return NotFound();
+            int empId;
 
-            var emp = await _context.Employees.FirstOrDefaultAsync(x => x.Id == id);
-            if (emp == null) return NotFound();
+            // =====================================================
+            // 🔐 CASE 1: Encrypted token is provided (NEW / SECURE)
+            // =====================================================
+            if (!string.IsNullOrEmpty(token))
+            {
+                if (!UrlEncryptionHelper.TryDecryptToken(token, out var fields, out var error))
+                    return StatusCode(403, error);
 
-            // Server folder: C:\HRMSFiles\{EmployeeCode}\
+                if (!fields.TryGetValue("type", out var type) || type != "EMP")
+                    return BadRequest("Invalid token type");
+
+                if (!fields.TryGetValue("empId", out var empIdStr) || !int.TryParse(empIdStr, out empId))
+                    return BadRequest("Invalid employee id");
+            }
+            // =====================================================
+            // 🔓 CASE 2: Plain ID is provided (OLD / BACKWARD COMPATIBLE)
+            // =====================================================
+            else
+            {
+                if (id == null)
+                    return NotFound();
+
+                empId = id.Value;
+            }
+
+            // =====================================================
+            // 🔍 LOAD EMPLOYEE (COMMON LOGIC)
+            // =====================================================
+            var emp = await _context.Employees.FirstOrDefaultAsync(x => x.Id == empId);
+            if (emp == null)
+                return NotFound();
+
+            // =====================================================
+            // 📁 FILE PATH LOGIC (UNCHANGED)
+            // =====================================================
             string physicalFolder = Path.Combine(@"C:\HRMSFiles", emp.EmployeeCode);
             string urlFolder = "/HRMSFiles/" + emp.EmployeeCode + "/";
 
@@ -275,13 +305,46 @@ namespace HRMS.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int id)
+        public async Task<IActionResult> Edit(int? id, string token)
         {
-            var emp = await _context.Employees.FirstOrDefaultAsync(e => e.Id == id);
+            int empId;
+
+            // =====================================================
+            // 🔐 TOKEN LOGIC (ADDED – DECRYPT LINK)
+            // =====================================================
+            if (!string.IsNullOrEmpty(token))
+            {
+                if (!UrlEncryptionHelper.TryDecryptToken(token, out var fields, out var error))
+                    return StatusCode(403, error);
+
+                if (!fields.TryGetValue("type", out var type) || type != "EMP")
+                    return BadRequest("Invalid token type");
+
+                if (!fields.TryGetValue("empId", out var empIdStr) ||
+                    !int.TryParse(empIdStr, out empId))
+                    return BadRequest("Invalid employee token");
+            }
+            // =====================================================
+            // 🔓 ORIGINAL LOGIC (UNCHANGED)
+            // =====================================================
+            else
+            {
+                if (id == null)
+                    return NotFound();
+
+                empId = id.Value;
+            }
+
+            // =====================================================
+            // 🔍 LOAD EMPLOYEE (UNCHANGED)
+            // =====================================================
+            var emp = await _context.Employees.FirstOrDefaultAsync(e => e.Id == empId);
             if (emp == null)
                 return NotFound();
 
-            // Load departments
+            // =====================================================
+            // 📋 ORIGINAL VIEWBAG LOAD (UNCHANGED)
+            // =====================================================
             ViewBag.Departments = await _context.Employees
                 .Where(e => e.Department != null && e.Department.Trim() != "")
                 .Select(e => e.Department.Trim())
@@ -289,7 +352,6 @@ namespace HRMS.Controllers
                 .OrderBy(x => x)
                 .ToListAsync();
 
-            // Load positions
             ViewBag.Positions = await _context.Employees
                 .Where(e => e.Position != null && e.Position.Trim() != "")
                 .Select(e => e.Position.Trim())
@@ -297,6 +359,9 @@ namespace HRMS.Controllers
                 .OrderBy(x => x)
                 .ToListAsync();
 
+            // =====================================================
+            // 🧾 ORIGINAL VIEWMODEL MAPPING (UNCHANGED)
+            // =====================================================
             var vm = new EmployeeEditVm
             {
                 Id = emp.Id,
@@ -326,7 +391,7 @@ namespace HRMS.Controllers
                 Position = emp.Position,
                 Role = emp.Role,
                 Salary = emp.Salary,
-               ReportingManager = emp.ReportingManager,
+                ReportingManager = emp.ReportingManager,
                 HSCPercent = emp.HSCPercent,
                 GraduationCourse = emp.GraduationCourse,
                 GraduationPercent = emp.GraduationPercent,
@@ -349,17 +414,46 @@ namespace HRMS.Controllers
         }
 
 
-
         // ================================
-        // EDIT (POST)
+        // EDIT (POST) — TOKEN ENABLED
         // ================================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(EmployeeEditVm model)
+        public async Task<IActionResult> Edit(EmployeeEditVm model, string token)
         {
-            var emp = await _context.Employees.FirstOrDefaultAsync(e => e.Id == model.Id);
+            int empId;
+
+            // =====================================================
+            // 🔐 TOKEN LOGIC (ADDED)
+            // =====================================================
+            if (!string.IsNullOrEmpty(token))
+            {
+                if (!UrlEncryptionHelper.TryDecryptToken(token, out var fields, out var error))
+                    return StatusCode(403, error);
+
+                if (!fields.TryGetValue("type", out var type) || type != "EMP")
+                    return BadRequest("Invalid token type");
+
+                if (!fields.TryGetValue("empId", out var empIdStr) ||
+                    !int.TryParse(empIdStr, out empId))
+                    return BadRequest("Invalid employee token");
+            }
+            else
+            {
+                // 🔓 ORIGINAL ID FLOW
+                empId = model.Id;
+            }
+
+            // =====================================================
+            // 🔍 ORIGINAL LOAD EMPLOYEE (UNCHANGED)
+            // =====================================================
+            var emp = await _context.Employees.FirstOrDefaultAsync(e => e.Id == empId);
             if (emp == null)
                 return NotFound();
+
+            // ================================
+            // 🔁 ORIGINAL UPDATE LOGIC (UNCHANGED)
+            // ================================
 
             // BASIC
             emp.Name = model.Name;
@@ -401,24 +495,22 @@ namespace HRMS.Controllers
             emp.DoctorName = model.DoctorName;
             emp.DoctorContact = model.DoctorContact;
 
-            // JOB DETAILS
+            // JOB
             emp.JoiningDate = model.JoiningDate;
             emp.Department = model.Department;
             emp.Position = model.Position;
             emp.Role = model.Role;
             emp.Salary = model.Salary;
-            emp.ReportingManager = model.ReportingManager; // NEW FIELD
+            emp.ReportingManager = model.ReportingManager;
 
             // EDUCATION
             emp.HSCPercent = model.HSCPercent;
             emp.GraduationCourse = model.GraduationCourse;
             emp.GraduationPercent = model.GraduationPercent;
-
-            // PG OPTIONAL
             emp.PostGraduationCourse = model.PostGraduationCourse;
             emp.PostGraduationPercent = model.PostGraduationPercent;
 
-            // ID NUMBERS
+            // ID
             emp.AadhaarNumber = model.AadhaarNumber;
             emp.PanNumber = model.PanNumber;
 
@@ -435,40 +527,38 @@ namespace HRMS.Controllers
             emp.EmergencyContactMobile = model.EmergencyContactMobile;
             emp.EmergencyContactAddress = model.EmergencyContactAddress;
 
-            // FILES — stored in C:\HRMSFiles
+            // FILES
             emp.ProfileImagePath = await SaveEmployeeFile(model.ProfilePhoto, emp.EmployeeCode, "Profile", emp.ProfileImagePath);
             emp.AadhaarFilePath = await SaveEmployeeFile(model.AadhaarFile, emp.EmployeeCode, "Aadhaar", emp.AadhaarFilePath);
             emp.PanFilePath = await SaveEmployeeFile(model.PanFile, emp.EmployeeCode, "Pan", emp.PanFilePath);
             emp.PassbookFilePath = await SaveEmployeeFile(model.PassbookFile, emp.EmployeeCode, "Passbook", emp.PassbookFilePath);
             emp.MedicalDocumentFilePath = await SaveEmployeeFile(model.MedicalDocumentFile, emp.EmployeeCode, "Medical", emp.MedicalDocumentFilePath);
 
-            // EDUCATION FILES (10th removed)
             emp.TwelfthMarksheetFilePath = await SaveEmployeeFile(model.TwelfthMarksheetFile, emp.EmployeeCode, "12th", emp.TwelfthMarksheetFilePath);
             emp.GraduationMarksheetFilePath = await SaveEmployeeFile(model.GraduationMarksheetFile, emp.EmployeeCode, "Graduation", emp.GraduationMarksheetFilePath);
-
-            // PG OPTIONAL
             emp.PostGraduationMarksheetFilePath = await SaveEmployeeFile(model.PostGraduationMarksheetFile, emp.EmployeeCode, "PG", emp.PostGraduationMarksheetFilePath);
 
-            // MULTIPLE EXPERIENCE CERTIFICATES
             if (model.ExperienceCertificateFiles != null && model.ExperienceCertificateFiles.Any())
             {
-                List<string> certFiles = new();
-
+                var certFiles = new List<string>();
                 foreach (var file in model.ExperienceCertificateFiles)
                 {
                     certFiles.Add(await SaveEmployeeFile(file, emp.EmployeeCode, "Experience", null));
                 }
-
                 emp.ExperienceCertificateFilePath = string.Join(",", certFiles);
             }
 
             await _context.SaveChangesAsync();
 
             TempData["success"] = "Employee updated successfully!";
-            return RedirectToAction("Edit", new { id = emp.Id });
+
+            // 🔁 Redirect using token if used
+            return RedirectToAction("Edit", new
+            {
+                id = string.IsNullOrEmpty(token) ? (int?)emp.Id : null,
+                token = token
+            });
         }
-
-
         private async Task<string> SaveEmployeeFile(IFormFile file, string empCode, string name, string existing = null)
         {
             if (file == null) return existing;
@@ -573,10 +663,6 @@ namespace HRMS.Controllers
 
             return Json(departments);
         }
-
-
-
-
         public async Task<IActionResult> Dashboard()
         {
             var empId = HttpContext.Session.GetInt32("EmployeeId");
@@ -804,5 +890,5 @@ public IActionResult ExportExcel()
 
 
 
-    }
+    }    
 }

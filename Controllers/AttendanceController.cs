@@ -88,70 +88,6 @@ namespace HRMS.Controllers
             TempData["CheckedIn"] = true;
             return RedirectToAction("EmployeePanel");
         }
-
-
-        // =========================================================
-        // CHECK OUT (UPDATED FOR DAILY REPORT REDIRECT)
-        // =========================================================
-        //public ActionResult CheckOut()
-        //{
-        //    string role = HttpContext.Session.GetString("Role") ?? "Employee";
-        //    string empCode = HttpContext.Session.GetString("EmpCode") ?? "";
-
-
-        //    if (string.IsNullOrWhiteSpace(empCode))
-        //        return RedirectToAction("Login", "Account");
-
-        //    DateTime today = DateTime.Today;
-
-        //    var record = _context.Attendances
-        //        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
-
-        //    if (record == null)
-        //    {
-        //        TempData["EarlyCheckout"] = "No active attendance found.";
-        //        return RedirectToAction("EmployeePanel");
-        //    }
-
-        //    if (record.OutTime != null)
-        //    {
-        //        TempData["CheckoutSuccess"] = $"You already checked out at {record.OutTime.Value}.";
-        //        return RedirectToAction("EmployeePanel");
-        //    }
-
-        //    record.OutTime = DateTime.Now.TimeOfDay;
-        //    record.Att_Date = record.Date;
-
-        //    if (record.InTime != null)
-        //    {
-        //        TimeSpan worked = record.OutTime.Value - record.InTime.Value;
-        //        TimeSpan shift = TimeSpan.FromMinutes(510);
-
-        //        if (worked < shift)
-        //        {
-        //            TimeSpan remaining = shift - worked;
-        //            TempData["EarlyTime"] = $"{remaining.Hours}h {remaining.Minutes}m";
-        //            TempData["EarlyCheckout"] = "Early Checkout";
-        //        }
-        //        else
-        //        {
-        //            TimeSpan extra = worked - shift;
-        //            TempData["LateTime"] = $"{extra.Hours}h {extra.Minutes}m";
-        //            TempData["LateCheckout"] = "Great! Overtime";
-        //        }
-        //    }
-
-        //    _context.SaveChanges();
-
-        //    // -------------------------
-        //    // Redirect for Daily Report
-        //    // -------------------------
-        //    if (role != "Director")
-        //        return RedirectToAction("Send", "DailyReport");
-
-        //    return RedirectToAction("EmployeePanel");
-        //}
-
         public IActionResult CheckOut()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
@@ -678,25 +614,7 @@ namespace HRMS.Controllers
             return View(pending);
         }
 
-        //[HttpPost]
-        //public IActionResult RequestCorrection(string empCode, string date, string CorrectionRemark, int employeeId)
-        //{
-        //    DateTime parsedDate = DateTime.ParseExact(date, "yyyy-MM-dd", null);
-
-        //    var att = _context.Attendances
-        //        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == parsedDate);
-
-        //    if (att == null)
-        //        return RedirectToAction("EmployeeSummary", new { employeeId });
-
-        //    att.CorrectionRequested = true;
-        //    att.CorrectionRemark = CorrectionRemark;
-        //    att.CorrectionStatus = "Pending";
-
-        //    _context.SaveChanges();
-
-        //    return RedirectToAction("EmployeeSummary", new { employeeId });
-        //}
+        
 
         public async Task<IActionResult> CalendarView(int? year, int? month, string department = "all", int itemsPerPage = 50)
         {
@@ -760,54 +678,78 @@ namespace HRMS.Controllers
         // -------------------------------------------------------------
         // HIGH DENSITY CALENDAR
         // -------------------------------------------------------------
-        public IActionResult HighDensityCalendar(
- int year = 0,
- int month = 0,
- string? search = null,
- string? department = "All",
- int page = 1,
- int pageSize = 20)
+        [HttpGet]
+        public async Task<IActionResult> HighDensityCalendar(
+        string? token,
+        int year = 0,
+        int month = 0,
+        string? search = null,
+        string? department = "All",
+        int page = 1,
+        int pageSize = 20)
         {
+            // ============================
+            // 🔐 TOKEN DECRYPT
+            // ============================
+            if (!string.IsNullOrEmpty(token))
+            {
+                if (!UrlEncryptionHelper.TryDecryptToken(token, out var fields, out var error))
+                    return StatusCode(403, error);
+
+                if (!fields.TryGetValue("type", out var type) || type != "CAL")
+                    return BadRequest("Invalid token");
+
+                if (fields.TryGetValue("month", out var m)) month = int.Parse(m);
+                if (fields.TryGetValue("year", out var y)) year = int.Parse(y);
+                if (fields.TryGetValue("search", out var s)) search = s;
+                if (fields.TryGetValue("department", out var d)) department = d;
+                if (fields.TryGetValue("pageSize", out var ps)) pageSize = int.Parse(ps);
+            }
+
+            // 🔹 Get logged-in employee
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (!empId.HasValue)
+                return RedirectToAction("Login", "Account");
+
+            // 🔹 Await FindAsync (NOW VALID)
+            var emp = await _context.Employees.FindAsync(empId.Value);
+
+            if (emp == null)
+                return RedirectToAction("Login", "Account");
+
+            // 🔹 SAFE string cast
+            ViewBag.UserRole = emp.Role?.ToString();
+            // Defaults
             if (year == 0) year = DateTime.Now.Year;
             if (month == 0) month = DateTime.Now.Month;
             if (page < 1) page = 1;
 
-            // ---------------- EMPLOYEE FILTER ----------------
-            var empQuery = _context.Employees.AsQueryable();
+            // ACTIVE employees only
+            var empQuery = _context.Employees
+                .Where(e => e.Status == "Active")
+                .AsQueryable();
 
-            // ✅ Search by name or code
             if (!string.IsNullOrWhiteSpace(search))
-            {
-                search = search.Trim();
                 empQuery = empQuery.Where(e =>
                     e.EmployeeCode.Contains(search) ||
                     e.Name.Contains(search));
-            }
 
-            // ✅ Department filter
             if (!string.IsNullOrWhiteSpace(department) && department != "All")
-            {
                 empQuery = empQuery.Where(e => e.Department == department);
-            }
 
-            // ✅ NEW — Hide employees who haven’t joined yet
+            // Hide not-joined employees
             empQuery = empQuery.Where(e =>
                 !e.JoiningDate.HasValue ||
                 (e.JoiningDate.Value.Year < year ||
-                 (e.JoiningDate.Value.Year == year && e.JoiningDate.Value.Month <= month)));
+                (e.JoiningDate.Value.Year == year &&
+                 e.JoiningDate.Value.Month <= month)));
 
-            int totalEmployees = empQuery.Count();
-            int totalPages = (int)Math.Ceiling(totalEmployees / (double)pageSize);
-            if (totalPages > 0 && page > totalPages) page = totalPages;
-
-            var employeesPage = empQuery
+            var employees = empQuery
                 .OrderBy(e => e.Name)
-                .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
 
-            // ---------------- ATTENDANCE DATA ----------------
-            var empCodes = employeesPage.Select(e => e.EmployeeCode).ToList();
+            var empCodes = employees.Select(e => e.EmployeeCode).ToList();
 
             var attendance = _context.Attendances
                 .Where(a => a.Date.Year == year &&
@@ -815,15 +757,13 @@ namespace HRMS.Controllers
                             empCodes.Contains(a.Emp_Code))
                 .ToList();
 
-            // ---------------- DEPARTMENT LIST ----------------
             var departments = _context.Employees
-                .Where(e => !string.IsNullOrEmpty(e.Department))
+                .Where(e => e.Status == "Active" && !string.IsNullOrEmpty(e.Department))
                 .Select(e => e.Department)
                 .Distinct()
                 .OrderBy(d => d)
                 .ToList();
 
-            // ---------------- VIEWMODEL ----------------
             var vm = new HighDensityCalendarVM
             {
                 Year = year,
@@ -831,16 +771,119 @@ namespace HRMS.Controllers
                 Search = search,
                 Department = department,
                 Departments = departments,
-                Page = page,
                 PageSize = pageSize,
-                TotalPages = totalPages,
-                TotalEmployees = totalEmployees,
-                Employees = employeesPage,
+                Employees = employees,
                 Attendance = attendance
             };
 
             return View(vm);
         }
+
+        [HttpGet]
+        public IActionResult HighDensityCalendarEncrypt(
+            int year,
+            int month,
+            string? search,
+            string? department,
+            int pageSize)
+        {
+            var token = UrlEncryptionHelper.GenerateToken(
+                new Dictionary<string, string>
+                {
+                    ["type"] = "CAL",
+                    ["year"] = year.ToString(),
+                    ["month"] = month.ToString(),
+                    ["search"] = search ?? "",
+                    ["department"] = department ?? "All",
+                    ["pageSize"] = pageSize.ToString()
+                },
+                expiryMinutes: 30
+            );
+
+            return RedirectToAction("HighDensityCalendar", new { token });
+        }
+
+        //       public IActionResult HighDensityCalendar(
+        //int year = 0,
+        //int month = 0,
+        //string? search = null,
+        //string? department = "All",
+        //int page = 1,
+        //int pageSize = 20)
+        //       {
+        //           if (year == 0) year = DateTime.Now.Year;
+        //           if (month == 0) month = DateTime.Now.Month;
+        //           if (page < 1) page = 1;
+
+        //           // ---------------- EMPLOYEE FILTER ----------------
+        //           var empQuery = _context.Employees.AsQueryable();
+
+        //           // ✅ Search by name or code
+        //           if (!string.IsNullOrWhiteSpace(search))
+        //           {
+        //               search = search.Trim();
+        //               empQuery = empQuery.Where(e =>
+        //                   e.EmployeeCode.Contains(search) ||
+        //                   e.Name.Contains(search));
+        //           }
+
+        //           // ✅ Department filter
+        //           if (!string.IsNullOrWhiteSpace(department) && department != "All")
+        //           {
+        //               empQuery = empQuery.Where(e => e.Department == department);
+        //           }
+
+        //           // ✅ NEW — Hide employees who haven’t joined yet
+        //           empQuery = empQuery.Where(e =>
+        //               !e.JoiningDate.HasValue ||
+        //               (e.JoiningDate.Value.Year < year ||
+        //                (e.JoiningDate.Value.Year == year && e.JoiningDate.Value.Month <= month)));
+
+        //           int totalEmployees = empQuery.Count();
+        //           int totalPages = (int)Math.Ceiling(totalEmployees / (double)pageSize);
+        //           if (totalPages > 0 && page > totalPages) page = totalPages;
+
+        //           var employeesPage = empQuery
+        //               .OrderBy(e => e.Name)
+        //               .Skip((page - 1) * pageSize)
+        //               .Take(pageSize)
+        //               .ToList();
+
+        //           // ---------------- ATTENDANCE DATA ----------------
+        //           var empCodes = employeesPage.Select(e => e.EmployeeCode).ToList();
+
+        //           var attendance = _context.Attendances
+        //               .Where(a => a.Date.Year == year &&
+        //                           a.Date.Month == month &&
+        //                           empCodes.Contains(a.Emp_Code))
+        //               .ToList();
+
+        //           // ---------------- DEPARTMENT LIST ----------------
+        //           var departments = _context.Employees
+        //               .Where(e => !string.IsNullOrEmpty(e.Department))
+        //               .Select(e => e.Department)
+        //               .Distinct()
+        //               .OrderBy(d => d)
+        //               .ToList();
+
+        //           // ---------------- VIEWMODEL ----------------
+        //           var vm = new HighDensityCalendarVM
+        //           {
+        //               Year = year,
+        //               Month = month,
+        //               Search = search,
+        //               Department = department,
+        //               Departments = departments,
+        //               Page = page,
+        //               PageSize = pageSize,
+        //               TotalPages = totalPages,
+        //               TotalEmployees = totalEmployees,
+        //               Employees = employeesPage,
+        //               Attendance = attendance
+        //           };
+
+        //           return View(vm);
+        //       }
 
 
         // -------------------------------------------------------------
