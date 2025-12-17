@@ -1,0 +1,37 @@
+﻿@{
+    ViewBag.Title = "Holiday List";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+}
+
+<h4 class="mb-3">Company Holidays</h4>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Date</th>
+            <th>Day</th>
+            <th>Holiday Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>26-01-2025</td>
+            <td>Sunday</td>
+            <td>Republic Day</td>
+        </tr>
+        <tr>
+            <td>15-08-2025</td>
+            <td>Friday</td>
+            <td>Independence Day</td>
+        </tr>
+    </tbody>
+</table>
