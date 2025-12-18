@@ -126,10 +126,14 @@
                 </div>
 
                 <!-- CHECKOUT BUTTON -->
-                <a href="#" class="att-btn att-btn-checkout mt-3"
-                   data-bs-toggle="modal" data-bs-target="#checkoutModal">
+                <a href="#"
+                   class="att-btn att-btn-checkout text-center"
+                   data-bs-toggle="modal"
+                   data-bs-target="#checkoutModal">
                     <i class="fa-solid fa-stop me-2"></i> Check Out
                 </a>
+
+
             }
         }
 
@@ -339,10 +343,14 @@
 
     /* Buttons */
     .att-btn {
-        display: block;
+        display: flex; /* 🔥 */
+        align-items: center; /* 🔥 vertical center */
+        justify-content: center; /* 🔥 horizontal center */
+        gap: 8px; /* nice space between icon & text */
+
         width: 100%;
         max-width: 260px;
-        margin: auto;
+        margin: 0 auto;
         padding: 12px;
         border-radius: 999px;
         font-size: 16px;
@@ -350,6 +358,7 @@
         color: white;
         text-decoration: none;
     }
+
 
     .att-btn-checkin {
         background: linear-gradient(135deg,#10b981,#059669);
