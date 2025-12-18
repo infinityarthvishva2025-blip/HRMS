@@ -36,10 +36,19 @@
                 <strong>My Sent Daily Reports</strong>
             </div>
 
-            <button class="btn btn-sm btn-danger"
+            @* <button class="btn btn-sm btn-danger"
                     onclick="deleteAllReports()">
                 <i class="fa-solid fa-trash"></i> Delete All
-            </button>
+            </button> *@
+
+            <form method="get" class="d-flex gap-2">
+                <input type="date"
+                       name="selectedDate"
+                       value="@ViewBag.SelectedDate"
+                       class="form-control form-control-sm"
+                       onchange="this.form.submit();" />
+            </form>
+
         </div>
 
         <div class="card-body p-0">
@@ -99,10 +108,10 @@
                                         View
                                     </button>
 
-                                    <button class="btn btn-sm btn-outline-danger ms-1"
+                                   @*  <button class="btn btn-sm btn-outline-danger ms-1"
                                             onclick="deleteOne(@r.ReportId)">
                                         Delete
-                                    </button>
+                                    </button> *@
 
                                     <!-- MODAL -->
                                     <div class="modal fade" id="@modalId" tabindex="-1">
@@ -198,7 +207,7 @@
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script>
+   @*  <script>
         function deleteOne(reportId) {
             if (!confirm("Delete this report?")) return;
 
@@ -237,5 +246,5 @@
                 }
             });
         }
-    </script>
+    </script> *@
 }

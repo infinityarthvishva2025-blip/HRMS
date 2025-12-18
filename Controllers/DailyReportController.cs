@@ -238,61 +238,80 @@ namespace HRMS.Controllers
         // =========================
         // GET: DailyReport/MySentReports
         // =========================
-        public IActionResult MySentReports()
+        public IActionResult MySentReports(DateTime? selectedDate)
         {
             int senderId = GetCurrentUserId();
             if (senderId == 0)
                 return RedirectToAction("Login", "Account");
 
-            var reports = _db.DailyReports
-                .Where(r => r.SenderId == senderId)
+            DateTime today = DateTime.Today;
+
+            IQueryable<DailyReport> query = _db.DailyReports
                 .Include(r => r.Recipients)
                     .ThenInclude(rr => rr.Receiver)
+                .Where(r => r.SenderId == senderId);
+
+            // ✅ Calendar selected → exact date
+            if (selectedDate.HasValue)
+            {
+                DateTime date = selectedDate.Value.Date;
+                query = query.Where(r => r.CreatedDate.Date == date);
+            }
+            // ✅ Default → last 7 days
+            else
+            {
+                query = query.Where(r => r.CreatedDate.Date >= today.AddDays(-7));
+            }
+
+            var reports = query
                 .OrderByDescending(r => r.CreatedDate)
                 .ToList();
+
+            ViewBag.SelectedDate = selectedDate?.ToString("yyyy-MM-dd");
 
             return View(reports);
         }
 
+
         ///  DeleteSentreport  ////
-        [HttpPost]
-        public IActionResult DeleteSentReport(int reportId)
-        {
-            int userId = GetCurrentUserId();
+        //[HttpPost]
+        //public IActionResult DeleteSentReport(int reportId)
+        //{
+        //    int userId = GetCurrentUserId();
 
-            var report = _db.DailyReports
-                .Include(r => r.Recipients)
-                .FirstOrDefault(r => r.ReportId == reportId && r.SenderId == userId);
+        //    var report = _db.DailyReports
+        //        .Include(r => r.Recipients)
+        //        .FirstOrDefault(r => r.ReportId == reportId && r.SenderId == userId);
 
-            if (report == null)
-                return Json(new { success = false });
+        //    if (report == null)
+        //        return Json(new { success = false });
 
-            _db.DailyReportRecipients.RemoveRange(report.Recipients);
-            _db.DailyReports.Remove(report);
-            _db.SaveChanges();
+        //    _db.DailyReportRecipients.RemoveRange(report.Recipients);
+        //    _db.DailyReports.Remove(report);
+        //    _db.SaveChanges();
 
-            return Json(new { success = true });
-        }
+        //    return Json(new { success = true });
+        //}
 
         ///  DeleteAllsentreports  ///
-        [HttpPost]
-        public IActionResult DeleteAllSentReports()
-        {
-            int userId = GetCurrentUserId();
+        //[HttpPost]
+        //public IActionResult DeleteAllSentReports()
+        //{
+        //    int userId = GetCurrentUserId();
 
-            var reports = _db.DailyReports
-                .Include(r => r.Recipients)
-                .Where(r => r.SenderId == userId)
-                .ToList();
+        //    var reports = _db.DailyReports
+        //        .Include(r => r.Recipients)
+        //        .Where(r => r.SenderId == userId)
+        //        .ToList();
 
-            foreach (var r in reports)
-                _db.DailyReportRecipients.RemoveRange(r.Recipients);
+        //    foreach (var r in reports)
+        //        _db.DailyReportRecipients.RemoveRange(r.Recipients);
 
-            _db.DailyReports.RemoveRange(reports);
-            _db.SaveChanges();
+        //    _db.DailyReports.RemoveRange(reports);
+        //    _db.SaveChanges();
 
-            return Json(new { success = true });
-        }
+        //    return Json(new { success = true });
+        //}
 
 
         // =========================
@@ -301,11 +320,11 @@ namespace HRMS.Controllers
         // range = today | yesterday | last7 | all
         // search = employee name
         // =========================
-        public IActionResult Inbox(string? search, string range = "today")
+        public IActionResult Inbox(string? search, DateTime? selectedDate)
         {
             var role = GetCurrentRole();
 
-            // Only Manager/GM/VP/Director allowed (HR denied as per your rule)
+            // Only Manager / GM / VP / Director allowed (HR denied)
             if (role == "Employee" || role == "HR")
                 return RedirectToAction("AccessDenied", "Account");
 
@@ -313,37 +332,19 @@ namespace HRMS.Controllers
             if (userId == 0)
                 return RedirectToAction("Login", "Account");
 
-            DateTime startDate = DateTime.Today;
-
-            switch ((range ?? "today").ToLower())
-            {
-                case "yesterday":
-                    startDate = DateTime.Today.AddDays(-1);
-                    break;
-
-                case "last7":
-                    startDate = DateTime.Today.AddDays(-7);
-                    break;
-
-                case "all":
-                    startDate = DateTime.MinValue;
-                    break;
-
-                default:
-                    startDate = DateTime.Today;
-                    break;
-            }
+            // ✅ DEFAULT: TODAY
+            DateTime filterDate = selectedDate?.Date ?? DateTime.Today;
 
             var query = _db.DailyReportRecipients
-                .AsNoTracking()
                 .Include(r => r.Report)
                     .ThenInclude(rep => rep.Sender)
                 .Where(r =>
                     r.ReceiverId == userId &&
                     r.Report != null &&
-                    r.Report.CreatedDate >= startDate
+                    r.Report.CreatedDate.Date == filterDate
                 );
 
+            // 🔍 SEARCH BY EMPLOYEE NAME
             if (!string.IsNullOrWhiteSpace(search))
             {
                 search = search.Trim().ToLower();
@@ -354,14 +355,18 @@ namespace HRMS.Controllers
             }
 
             var inbox = query
-                .OrderByDescending(r => r.Report.CreatedDate)
-                .ToList();
+    .ToList() // ⬅️ execute SQL first
+    .OrderByDescending(r => r.Report.CreatedDate)
+    .ToList();
 
+
+            // View data
             ViewBag.Search = search ?? "";
-            ViewBag.Range = range ?? "today";
+            ViewBag.SelectedDate = filterDate.ToString("yyyy-MM-dd");
 
             return View(inbox);
         }
+
 
         // =========================
         // POST: MarkAsRead
@@ -386,74 +391,74 @@ namespace HRMS.Controllers
         // =========================
         // DELETE ONE (Inbox item)
         // =========================
-        [HttpPost]
-        public IActionResult DeleteOne(int id, string? search, string range = "today")
-        {
-            int userId = GetCurrentUserId();
-            if (userId == 0) return Json(new { success = false });
+        //[HttpPost]
+        //public IActionResult DeleteOne(int id, string? search, string range = "today")
+        //{
+        //    int userId = GetCurrentUserId();
+        //    if (userId == 0) return Json(new { success = false });
 
-            var rec = _db.DailyReportRecipients.FirstOrDefault(r => r.Id == id && r.ReceiverId == userId);
-            if (rec != null)
-            {
-                _db.DailyReportRecipients.Remove(rec);
-                _db.SaveChanges();
-            }
+        //    var rec = _db.DailyReportRecipients.FirstOrDefault(r => r.Id == id && r.ReceiverId == userId);
+        //    if (rec != null)
+        //    {
+        //        _db.DailyReportRecipients.Remove(rec);
+        //        _db.SaveChanges();
+        //    }
 
-            return Json(new { success = true });
-        }
+        //    return Json(new { success = true });
+        //}
 
         // =========================
         // DELETE ALL (Inbox filtered)
         // =========================
-        [HttpPost]
-        public IActionResult DeleteAll(string? search, string range = "today")
-        {
-            int userId = GetCurrentUserId();
-            if (userId == 0) return Json(new { success = false });
+        //[HttpPost]
+        //public IActionResult DeleteAll(string? search, string range = "today")
+        //{
+        //    int userId = GetCurrentUserId();
+        //    if (userId == 0) return Json(new { success = false });
 
-            DateTime startDate = DateTime.Today;
+        //    DateTime startDate = DateTime.Today;
 
-            switch ((range ?? "today").ToLower())
-            {
-                case "yesterday":
-                    startDate = DateTime.Today.AddDays(-1);
-                    break;
+        //    switch ((range ?? "today").ToLower())
+        //    {
+        //        case "yesterday":
+        //            startDate = DateTime.Today.AddDays(-1);
+        //            break;
 
-                case "last7":
-                    startDate = DateTime.Today.AddDays(-7);
-                    break;
+        //        case "last7":
+        //            startDate = DateTime.Today.AddDays(-7);
+        //            break;
 
-                case "all":
-                    startDate = DateTime.MinValue;
-                    break;
+        //        case "all":
+        //            startDate = DateTime.MinValue;
+        //            break;
 
-                default:
-                    startDate = DateTime.Today;
-                    break;
-            }
+        //        default:
+        //            startDate = DateTime.Today;
+        //            break;
+        //    }
 
-            var query = _db.DailyReportRecipients
-                .Include(r => r.Report)
-                .Where(r =>
-                    r.ReceiverId == userId &&
-                    r.Report.CreatedDate >= startDate
-                );
+        //    var query = _db.DailyReportRecipients
+        //        .Include(r => r.Report)
+        //        .Where(r =>
+        //            r.ReceiverId == userId &&
+        //            r.Report.CreatedDate >= startDate
+        //        );
 
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                string s = search.Trim().ToLower();
-                query = query.Where(r =>
-                    r.Report.Sender.Name.ToLower().Contains(s)
-                );
-            }
+        //    if (!string.IsNullOrWhiteSpace(search))
+        //    {
+        //        string s = search.Trim().ToLower();
+        //        query = query.Where(r =>
+        //            r.Report.Sender.Name.ToLower().Contains(s)
+        //        );
+        //    }
 
-            var list = query.ToList();
+        //    var list = query.ToList();
 
-            _db.DailyReportRecipients.RemoveRange(list);
-            _db.SaveChanges();
+        //    _db.DailyReportRecipients.RemoveRange(list);
+        //    _db.SaveChanges();
 
-            return Json(new { success = true });
-        }
+        //    return Json(new { success = true });
+        //}
 
         // =========================
         // Build allowed recipient list based on sender role
