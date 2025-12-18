@@ -1,0 +1,239 @@
+﻿@model Holiday
+@{
+    ViewBag.Title = "Add Holiday";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+}
+
+<style>
+    .page-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 80vh;
+        padding: 20px;
+    }
+
+    .form-container {
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        width: 100%;
+        max-width: 700px;
+        text-align: center;
+    }
+
+    .form-header {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f1f5f9;
+        text-align: center;
+        font-size: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #4a5568;
+        margin-bottom: 10px;
+        display: block;
+        text-align: center;
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .form-control-custom {
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 12px 15px;
+        transition: all 0.3s;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        margin: 0 auto;
+    }
+
+        .form-control-custom:focus {
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+            outline: none;
+        }
+
+    .btn-container {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 40px;
+        padding-top: 25px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .btn-save {
+        background-color: #10b981;
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: background-color 0.3s;
+        cursor: pointer;
+        min-width: 120px;
+    }
+
+        .btn-save:hover {
+            background-color: #059669;
+            transform: translateY(-1px);
+        }
+
+    .btn-back {
+        background-color: #6b7280;
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: background-color 0.3s;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        min-width: 120px;
+    }
+
+        .btn-back:hover {
+            background-color: #4b5563;
+            color: white;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+
+    .validation-message {
+        color: #e53e3e;
+        font-size: 0.875rem;
+        margin-top: 8px;
+        text-align: center;
+        width: 100%;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .form-row {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .holiday-field-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    input[type="date"] {
+        text-align: center;
+    }
+</style>
+
+<div class="page-container">
+    <div class="form-container">
+        <h4 class="form-header">Add Holiday</h4>
+
+        @using (Html.BeginForm())
+        {
+            <div class="form-row">
+                <div class="holiday-field-group">
+                    <label class="form-label">Holiday Date</label>
+                    @Html.TextBoxFor(m => m.HolidayDate,
+                    new { @class = "form-control-custom", type = "date" })
+                <span class="validation-message">@Html.ValidationMessageFor(m => m.HolidayDate)</span>
+            </div>
+
+            <div class="holiday-field-group">
+                <label class="form-label">Holiday Name</label>
+                @Html.TextBoxFor(m => m.HolidayName,
+                                new { @class = "form-control-custom" })
+                <span class="validation-message">@Html.ValidationMessageFor(m => m.HolidayName)</span>
+            </div>
+
+            <div class="holiday-field-group">
+                <label class="form-label">Description</label>
+                @Html.TextBoxFor(m => m.Description,
+                                new { @class = "form-control-custom" })
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <button type="submit" class="btn-save">Save</button>
+            <a href="@Url.Action("Index")" class="btn-back">Back</a>
+        </div>
+                }
+    </div>
+</div>
+@* @model Holiday
+@{
+    ViewBag.Title = "Add Holiday";
+    ViewBag.Title = "Holidays";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+}
+
+<h4>Add Holiday</h4>
+
+@using (Html.BeginForm())
+{
+    <form class=" form-control ">
+        <div class="row">
+    <div class="col-md-3 mb-3">
+        @Html.LabelFor(m => m.HolidayDate)
+        @Html.TextBoxFor(m => m.HolidayDate,
+        new { @class = "form-control", type = "date" })
+    @Html.ValidationMessageFor(m => m.HolidayDate)
+</div>
+
+    <div class="col-md-3 mb-3">
+    @Html.LabelFor(m => m.HolidayName)
+    @Html.TextBoxFor(m => m.HolidayName,
+        new { @class = "form-control" })
+    @Html.ValidationMessageFor(m => m.HolidayName)
+</div>
+    </div>
+    <div class="row">
+<div class="col-md-3 mb-3">
+    @Html.LabelFor(m => m.Description)
+    @Html.TextBoxFor(m => m.Description,
+        new { @class = "form-control" })
+</div>
+    </div>
+<button class="btn btn-success">Save</button>
+<a href="@Url.Action("Index")" class="btn btn-secondary">Back</a>
+</form>
+}
+ *@

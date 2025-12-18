@@ -1,5 +1,7 @@
-﻿@{
-    ViewBag.Title = "Holiday List";
+﻿@model List<Holiday>
+
+@{
+    ViewBag.Title = "Holidays";
     var role = ViewBag.UserRole as string;
 
     if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
@@ -12,7 +14,20 @@
     }
 }
 
+
 <h4 class="mb-3">Company Holidays</h4>
+
+@if (role==("HR"))
+{
+    <a href="@Url.Action("Create", "Holidays")"
+       class="btn btn-success mb-3">
+        + Add Holiday
+    </a>
+}
+
+<a href="@Url.Action("Calendar")" class="btn btn-info mb-3 ms-2">
+    View Calendar
+</a>
 
 <table class="table table-bordered table-striped">
     <thead class="table-dark">
@@ -20,18 +35,34 @@
             <th>Date</th>
             <th>Day</th>
             <th>Holiday Name</th>
+            @if (role == ("HR"))
+            {
+                <th>Action</th>
+            }
         </tr>
     </thead>
     <tbody>
-        <tr>
-            <td>26-01-2025</td>
-            <td>Sunday</td>
-            <td>Republic Day</td>
-        </tr>
-        <tr>
-            <td>15-08-2025</td>
-            <td>Friday</td>
-            <td>Independence Day</td>
-        </tr>
+        @foreach (var h in Model)
+        {
+            <tr>
+                <td>@h.HolidayDate.ToString("dd-MM-yyyy")</td>
+                <td>@h.HolidayDate.DayOfWeek</td>
+                <td>@h.HolidayName</td>
+                @if (role == ("HR"))
+                {
+                    <td>
+                        <a href="@Url.Action("Edit", new { id = h.Id })"
+                           class="btn btn-sm btn-warning">Edit</a>
+
+                        <a href="@Url.Action("Delete", new { id = h.Id })"
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('Delete this holiday?');">
+                            Delete
+                        </a>
+                    </td>
+                }
+            </tr>
+        }
     </tbody>
 </table>
+

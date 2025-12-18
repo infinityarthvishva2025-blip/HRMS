@@ -32,7 +32,7 @@ namespace HRMS.Data
 
         // DbSets
         public DbSet<Attendance> Attendances { get; set; }
-       
+        public DbSet<Holiday> Holidays { get; set; }
         public DbSet<Attendance> AttendanceRecords { get; set; }
         public DbSet<Payroll> Payrolls { get; set; }
         public DbSet<Employee> Employees { get; set; }
