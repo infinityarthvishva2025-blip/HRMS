@@ -51,8 +51,10 @@
                 @if (role == ("HR"))
                 {
                     <td>
-                        <a href="@Url.Action("Edit", new { id = h.Id })"
-                           class="btn btn-sm btn-warning">Edit</a>
+                        <a href="@Url.Action("Edit", "Holidays", new { id = h.Id })"
+                           class="btn btn-sm btn-warning">
+                            Edit
+                        </a>
 
                         <a href="@Url.Action("Delete", new { id = h.Id })"
                            class="btn btn-sm btn-danger"
