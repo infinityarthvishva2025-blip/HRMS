@@ -1,20 +1,23 @@
 ﻿
 using HRMS.Data;
 using HRMS.Services;
+using HRMS.Jobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using OfficeOpenXml;
+using Quartz;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // EPPLUS
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
-var env = builder.Environment;
 
+var env = builder.Environment;
 // SERVICES
 builder.Services.AddControllersWithViews();
 
+// DB CONTEXT
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
@@ -25,6 +28,10 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<INotificationService, EmailNotificationService>();
 
+
+
+
+
 // SESSION
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -33,17 +40,51 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 
-    // 🔥 ADD THESE TWO LINES
+
     options.Cookie.SameSite = SameSiteMode.Lax;
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
 
-
 // Razor auto-refresh
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 
-var app = builder.Build();
+// AUTH
+builder.Services.AddAuthentication("Cookies")
+    .AddCookie("Cookies", options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+    });
 
+builder.Services.AddAuthorization();
+
+// ===============================
+// 🔥 QUARTZ CONFIGURATION (AUTO)
+// ===============================
+builder.Services.AddQuartz(q =>
+{
+    var jobKey = new JobKey("MonthlyAttendanceJob");
+
+    q.AddJob<MonthlyAttendanceJob>(opts =>
+        opts.WithIdentity(jobKey)
+    );
+
+    q.AddTrigger(opts => opts
+        .ForJob(jobKey)
+        .WithIdentity("MonthlyAttendanceTrigger")
+       // Runs EVERY MONTH on 25th at 02:00 AM
+       // .WithCronSchedule("0 0 2 25 * ?")
+       .WithCronSchedule("0 */1 * * * ?")
+    );
+});
+
+// 🔹 Quartz hosted service
+builder.Services.AddQuartzHostedService(q =>
+{
+    q.WaitForJobsToComplete = true;
+});
+
+var app = builder.Build();
 
 // MIDDLEWARE
 app.UseHttpsRedirection();
@@ -55,11 +96,15 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+
 //app.UseStaticFiles(new StaticFileOptions
 //{
 //    FileProvider = new PhysicalFileProvider(@"C:\HRMSFiles"),
 //    RequestPath = "/HRMSFiles"
-//});
+//}); 
+
+
+
 
 // ROUTING
 app.MapControllerRoute(

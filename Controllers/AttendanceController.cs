@@ -173,14 +173,14 @@ namespace HRMS.Controllers
                 CorrectionRequested = false,
                 CorrectionStatus = "None"
             };
-            var attendance = await _context.Attendances.FirstOrDefaultAsync(a =>
-    a.Emp_Code == empCode &&
-    a.Date == attendanceDate);
+    //        var attendance = await _context.Attendances.FirstOrDefaultAsync(a =>
+    //a.Emp_Code == empCode &&
+    //a.Date == attendanceDate);
 
-            if (attendance != null && attendance.Status == "HO")
-            {
-                attendance.Status = "P";   // Worked on holiday
-            }
+    //        if (attendance != null && attendance.Status == "HO")
+    //        {
+    //            attendance.Status = "P";   // Worked on holiday
+    //        }
 
             _context.Attendances.Add(att);
             _context.SaveChanges();

@@ -52,10 +52,6 @@ public class HolidaysController : Controller
 
         return View();
     }
-
-    // =========================
-    // CREATE (POST)
-    // =========================
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Holiday model)
@@ -63,20 +59,90 @@ public class HolidaysController : Controller
         if (!await ValidateSessionAsync())
             return RedirectToAction("Login", "Account");
 
-        //if (!ModelState.IsValid)
-        //    return View(model);
-
         // 🔥 AUTO-FILL SYSTEM FIELDS
         model.CreatedOn = DateTime.Now;
-        model.Status = "Active";          // or "Approved"
-        model.ApprovedBy = "Admin";           // HR/Admin later
+        model.Status = "Active";
+        model.ApprovedBy = "Admin";
         model.ApprovedOn = null;
 
+        // =========================
+        // 1️⃣ SAVE HOLIDAY
+        // =========================
         _context.Holidays.Add(model);
         await _context.SaveChangesAsync();
 
+        // =========================
+        // 2️⃣ INSERT ATTENDANCE (HO)
+        // =========================
+        DateTime holidayDate = model.HolidayDate.Date;
+
+        // ❌ Skip Sunday (already WO)
+        if (holidayDate.DayOfWeek != DayOfWeek.Sunday)
+        {
+            // Get all ACTIVE employees
+            var employees = await _context.Employees
+                .Where(e => e.Status == "Active")
+                .ToListAsync();
+
+            foreach (var emp in employees)
+            {
+                // ❗ Prevent duplicate attendance
+                bool exists = await _context.Attendances.AnyAsync(a =>
+                    a.Emp_Code == emp.EmployeeCode &&
+                    a.Date == holidayDate);
+
+                if (exists)
+                    continue;
+
+                Attendance att = new Attendance
+                {
+                    Emp_Code = emp.EmployeeCode,
+                    Date = holidayDate,
+                    Status = "HO",           // ✅ HOLIDAY
+                    InTime = null,
+                    OutTime = null,
+                    Total_Hours = 0,
+                    IsLate = false,
+                    LateMinutes = 0,
+                    Att_Date = holidayDate,
+                    CorrectionRequested = false,
+                    CorrectionStatus = "None",
+                    IsGeoAttendance = false
+                };
+
+                _context.Attendances.Add(att);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
         return RedirectToAction(nameof(Index));
     }
+
+    // =========================
+    // CREATE (POST)
+    // =========================
+    //[HttpPost]
+    //[ValidateAntiForgeryToken]
+    //public async Task<IActionResult> Create(Holiday model)
+    //{
+    //    if (!await ValidateSessionAsync())
+    //        return RedirectToAction("Login", "Account");
+
+    //    //if (!ModelState.IsValid)
+    //    //    return View(model);
+
+    //    // 🔥 AUTO-FILL SYSTEM FIELDS
+    //    model.CreatedOn = DateTime.Now;
+    //    model.Status = "Active";          // or "Approved"
+    //    model.ApprovedBy = "Admin";           // HR/Admin later
+    //    model.ApprovedOn = null;
+
+    //    _context.Holidays.Add(model);
+    //    await _context.SaveChangesAsync();
+
+    //    return RedirectToAction(nameof(Index));
+    //}
 
     // =========================
     // EDIT (GET)
