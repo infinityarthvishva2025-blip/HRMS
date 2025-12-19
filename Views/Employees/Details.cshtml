@@ -10,6 +10,17 @@
             ? ""
             : Url.Action("ViewDocument", "Employees",
                 new { empCode = Model.EmployeeCode, fileName = file });
+
+    // ===== INITIALS LOGIC (SAFE) =====
+    var nameParts = Model.Name?
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+
+    string initials = nameParts.Length switch
+    {
+        0 => "",
+        1 => nameParts[0][0].ToString().ToUpper(),
+        _ => (nameParts[0][0].ToString() + nameParts[^1][0].ToString()).ToUpper()
+    };
 }
 
 <style>
@@ -53,6 +64,22 @@
     .doc-actions a {
         margin-left: 6px;
     }
+
+    /* ===== INITIAL AVATAR ===== */
+    .initial-avatar {
+        width: 110px;
+        height: 110px;
+        border-radius: 6px;
+        background: #f1f5f9;
+        border: 1px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 42px;
+        font-weight: 700;
+        color: #475569;
+        user-select: none;
+    }
 </style>
 
 <div class="container py-4">
@@ -71,22 +98,47 @@
     <!-- PROFILE -->
     <div class="box">
         <div class="row align-items-center">
+
+            @{
+                var profileUrl = DocUrl(Model.ProfileImagePath);
+                bool hasPhoto = !string.IsNullOrWhiteSpace(profileUrl);
+            }
+
             <div class="col-md-2 text-center">
-                @if (!string.IsNullOrEmpty(DocUrl(Model.ProfileImagePath)))
-                {
-                    <img src="@DocUrl(Model.ProfileImagePath)" class="img-thumbnail" style="max-height:110px;" />
-                }
-                else
-                {
-                    <i class="fa-solid fa-user fa-4x text-muted"></i>
-                }
+
+                <a href="@profileUrl"
+                   target="_blank"
+                   style="@(hasPhoto ? "" : "pointer-events:none;")">
+
+                    <img src="@profileUrl"
+                         class="img-thumbnail profile-img"
+                         style="max-height:110px; display:@(hasPhoto ? "block" : "none");"
+                         onerror="
+            this.style.display='none';
+            document.getElementById('initials_@Model.Id').style.display='flex';
+         " />
+                </a>
+
+                <div id="initials_@Model.Id"
+                     class="initial-avatar"
+                     style="display:@(hasPhoto ? "none" : "flex"); cursor:@(hasPhoto ? "pointer" : "default");"
+                     ">
+                    @initials
+                </div>
+
+
             </div>
+
+
 
             <div class="col-md-10">
                 <h5>@Model.Name</h5>
-                <div class="text-muted">Employee Code: <strong>@Model.EmployeeCode</strong></div>
+                <div class="text-muted">
+                    Employee Code: <strong>@Model.EmployeeCode</strong>
+                </div>
                 <span class="badge bg-secondary">@Model.Role</span>
             </div>
+
         </div>
     </div>
 
@@ -162,7 +214,6 @@
     <!-- ID / BANK / HEALTH -->
     <div class="box">
         <div class="box-title">ID / Bank / Health Documents</div>
-
         @Document("Aadhaar Card", Model.AadhaarFilePath)
         @Document("PAN Card", Model.PanFilePath)
         @Document("Bank Passbook", Model.PassbookFilePath)
@@ -210,3 +261,4 @@
         </div>");
     }
 }
+    

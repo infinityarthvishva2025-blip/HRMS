@@ -24,8 +24,84 @@ namespace HRMS.Controllers
         public AttendanceController(ApplicationDbContext context, ILogger<AttendanceController> logger)
         {
             _context = context;
-            _logger = logger;
+            _logger = logger;   
         }
+
+        [HttpPost]
+        public IActionResult GeoCheckIn([FromBody] GeoAttendanceVm vm)
+        {
+            string empCode = HttpContext.Session.GetString("EmpCode");
+            if (string.IsNullOrEmpty(empCode))
+                return Unauthorized();
+
+            // Fetch employee
+            var employee = _context.Employees
+                .FirstOrDefault(e => e.EmployeeCode == empCode);
+
+            if (employee == null)
+                return Unauthorized();
+
+            // =========================
+            // OFFICE GEOFENCE 18.534202, 73.839556 
+
+            //js=const OFFICE_LOCATION = { lat: 18.533956586914105,lng: 73.83953090610281};
+        // =========================
+        const double officeLat = 18.534202;
+            const double officeLng = 73.839556;
+            const double radiusMeters = 1600;
+
+            double distance = GeoHelper.DistanceInMeters(
+                officeLat, officeLng,
+                vm.Latitude, vm.Longitude
+            );
+
+            if (distance > radiusMeters)
+                return BadRequest("You are outside office premises");
+
+            DateTime today = DateTime.Today;
+
+            // ❗ Prevent duplicate check-in
+            var existing = _context.Attendances
+                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+
+            if (existing != null)
+                return BadRequest("Already checked in today");
+
+            // =========================
+            // CREATE ATTENDANCE
+            // =========================
+            Attendance att = new Attendance
+            {
+                Id = employee.Id,                 // manual employee ID
+                Emp_Code = empCode,
+                Date = today,
+                Status = "P",
+
+                InTime = DateTime.Now.TimeOfDay,
+                OutTime = null,
+
+                Att_Date = DateTime.Now,
+                Total_Hours = null,
+
+                IsLate = false,
+                LateMinutes = 0,
+
+                IsGeoAttendance = true,           // ✅ GEO FLAG
+                CorrectionRequested = false,
+                CorrectionStatus = "None"
+            };
+
+            _context.Attendances.Add(att);
+            _context.SaveChanges();
+
+            return Ok(new { success = true });
+        }
+
+
+
+
+
+
         public async Task<IActionResult> EmployeePanel()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
@@ -56,28 +132,44 @@ namespace HRMS.Controllers
         public IActionResult CheckIn()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
-            if (empCode == null)
+            if (string.IsNullOrEmpty(empCode))
                 return RedirectToAction("Login", "Account");
 
-            // Get employee using Emp_Code
+            // Fetch employee
             var employee = _context.Employees
                                    .FirstOrDefault(e => e.EmployeeCode == empCode);
 
             if (employee == null)
                 return RedirectToAction("Login", "Account");
 
+            DateTime today = DateTime.Today;
+
+            // ❗ Prevent multiple check-ins for same day
+            var existingAttendance = _context.Attendances
+                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+
+            if (existingAttendance != null)
+            {
+                TempData["CheckoutSuccess"] = "You have already checked in today.";
+                return RedirectToAction("EmployeePanel");
+            }
+
             Attendance att = new Attendance
             {
-                Id = employee.Id,                  // ← store employee id manually
+                Id = employee.Id,            // 🔑 Manual employee ID (NO auto-increment)
                 Emp_Code = empCode,
-                Date = DateTime.Today,
+                Date = today,
                 Status = "P",
+
                 InTime = DateTime.Now.TimeOfDay,
-                Att_Date = DateTime.Now,           // ← store attendance datetime
                 OutTime = null,
+
+                Att_Date = DateTime.Now,     // Full attendance datetime
                 Total_Hours = null,
+
                 IsLate = false,
                 LateMinutes = 0,
+                IsGeoAttendance = false,
                 CorrectionRequested = false,
                 CorrectionStatus = "None"
             };
@@ -88,6 +180,9 @@ namespace HRMS.Controllers
             TempData["CheckedIn"] = true;
             return RedirectToAction("EmployeePanel");
         }
+
+
+
         public IActionResult CheckOut()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
