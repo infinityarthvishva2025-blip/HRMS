@@ -14,28 +14,32 @@
     }
 }
 
-
 <h4 class="mb-3">Company Holidays</h4>
 
-@if (role==("HR"))
-{
-    <a href="@Url.Action("Create", "Holidays")"
-       class="btn btn-success mb-3">
-        + Add Holiday
+<!-- 🔹 RIGHT ALIGNED BUTTONS -->
+<div class="d-flex justify-content-end align-items-center mb-3">
+    @if (role == "HR")
+    {
+        <a href="@Url.Action("Create", "Holidays")"
+           class="btn btn-success me-2">
+            + Add Holiday
+        </a>
+    }
+
+    <a href="@Url.Action("Calendar", "Holidays")"
+       class="btn btn-info">
+        View Calendar
     </a>
-}
+</div>
 
-<a href="@Url.Action("Calendar")" class="btn btn-info mb-3 ms-2">
-    View Calendar
-</a>
-
+<!-- 🔹 HOLIDAY TABLE -->
 <table class="table table-bordered table-striped">
     <thead class="table-dark">
         <tr>
             <th>Date</th>
             <th>Day</th>
             <th>Holiday Name</th>
-            @if (role == ("HR"))
+            @if (role == "HR")
             {
                 <th>Action</th>
             }
@@ -48,11 +52,12 @@
                 <td>@h.HolidayDate.ToString("dd-MM-yyyy")</td>
                 <td>@h.HolidayDate.DayOfWeek</td>
                 <td>@h.HolidayName</td>
-                @if (role == ("HR"))
+
+                @if (role == "HR")
                 {
                     <td>
                         <a href="@Url.Action("Edit", "Holidays", new { id = h.Id })"
-                           class="btn btn-sm btn-warning">
+                           class="btn btn-sm btn-warning me-1">
                             Edit
                         </a>
 
@@ -67,4 +72,3 @@
         }
     </tbody>
 </table>
-
