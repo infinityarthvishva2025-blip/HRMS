@@ -21,25 +21,23 @@
                 Daily Report Inbox
             </h5>
 
-            <form method="get" class="d-flex gap-2">
+            <form method="get" id="filterForm" class="d-flex gap-2">
+
                 <input type="text"
                        name="search"
                        value="@ViewBag.Search"
                        class="form-control form-control-sm"
                        placeholder="Search employee..." />
 
-                <select name="range"
-                        class="form-select form-select-sm">
-                    <option value="today" selected="@("today" == ViewBag.Range)">Today</option>
-                    <option value="yesterday" selected="@("yesterday" == ViewBag.Range)">Yesterday</option>
-                    <option value="last7" selected="@("last7" == ViewBag.Range)">Last 7 Days</option>
-                    <option value="all" selected="@("all" == ViewBag.Range)">All</option>
-                </select>
+                <input type="date"
+                       name="selectedDate"
+                       value="@ViewBag.SelectedDate"
+                       class="form-control form-control-sm"
+                       onchange="document.getElementById('filterForm').submit();" />
 
-                <button class="btn btn-light btn-sm">
-                    <i class="fa-solid fa-filter"></i>
-                </button>
             </form>
+
+
         </div>
 
         <!-- ================= DESKTOP TABLE ================= -->
@@ -50,9 +48,8 @@
                         <th>From</th>
                         <th>Role</th>
                         <th>Date</th>
-                        <th>Report Summary</th>
+                        <th>Report</th>
                         <th class="text-center">Status</th>
-                        <th class="text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -72,36 +69,57 @@
                                 <small class="text-muted">@item.Report.CreatedDate.ToString("hh:mm tt")</small>
                             </td>
 
+                            <!-- ✅ VIEW BUTTON INSTEAD OF LONG TEXT -->
                             <td>
-                                <div><strong>Today's Work:</strong> @item.Report.TodaysWork</div>
-                                <div><strong>Pending:</strong> @item.Report.PendingWork</div>
-                                <div><strong>Issues:</strong> @item.Report.Issues</div>
+                                <button class="btn btn-sm btn-outline-primary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#reportModal-@item.Id">
+                                    <i class="fa-solid fa-eye me-1"></i> View Report
+                                </button>
                             </td>
 
+                            <!-- ✅ STATUS -->
                             <td class="text-center">
                                 <input type="checkbox"
                                        onchange="markAsRead(@item.Id, this)"
                                        @(item.IsRead ? "checked" : "") />
 
                                 <div class="mt-1">
-                                    @if (item.IsRead)
-                                    {
-                                        <span class="badge bg-success">Read</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-warning text-dark">Unread</span>
-                                    }
+                                    <span class="badge status-badge @(item.IsRead ? "bg-success" : "bg-warning text-dark")">
+                                        @(item.IsRead ? "Read" : "Unread")
+                                    </span>
                                 </div>
                             </td>
-
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-danger"
-                                        onclick="deleteOne(@item.Id)">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </td>
                         </tr>
+
+                        <!-- ================= MODAL ================= -->
+                        <div class="modal fade" id="reportModal-@item.Id" tabindex="-1">
+                            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            Daily Report — @item.Report.Sender.Name
+                                        </h5>
+                                        <button class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <p><strong>Today's Work</strong></p>
+                                        <p>@item.Report.TodaysWork</p>
+
+                                        <hr />
+
+                                        <p><strong>Pending Work</strong></p>
+                                        <p>@item.Report.PendingWork</p>
+
+                                        <hr />
+
+                                        <p><strong>Issues</strong></p>
+                                        <p>@item.Report.Issues</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     }
                 </tbody>
             </table>
@@ -114,76 +132,82 @@
                 <div class="card mb-3 shadow-sm @(item.IsRead ? "" : "border-primary")">
                     <div class="card-body">
 
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex justify-content-between align-items-center">
                             <strong>@item.Report.Sender.Name</strong>
-                            <span class="badge @(item.IsRead ? "bg-success" : "bg-warning text-dark")">
+
+                            <span class="badge status-badge @(item.IsRead ? "bg-success" : "bg-warning text-dark")">
                                 @(item.IsRead ? "Read" : "Unread")
                             </span>
                         </div>
 
-                        <small class="text-muted">@item.Report.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")</small>
-                        <hr />
+                        <small class="text-muted d-block mb-2">
+                            @item.Report.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                        </small>
 
-                        <div><strong>Today's Work:</strong> @item.Report.TodaysWork</div>
-                        <div><strong>Pending:</strong> @item.Report.PendingWork</div>
-                        <div><strong>Issues:</strong> @item.Report.Issues</div>
+                        <!-- ✅ VIEW BUTTON -->
+                        <button class="btn btn-sm btn-outline-primary w-100 mb-2"
+                                data-bs-toggle="modal"
+                                data-bs-target="#reportModal-@item.Id">
+                            <i class="fa-solid fa-eye me-1"></i> View Report
+                        </button>
 
-                        <div class="d-flex justify-content-between mt-3">
-                            <div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <label class="d-flex align-items-center gap-2">
                                 <input type="checkbox"
                                        onchange="markAsRead(@item.Id, this)"
                                        @(item.IsRead ? "checked" : "") />
                                 Mark Read
-                            </div>
-
-                            <button class="btn btn-sm btn-outline-danger"
-                                    onclick="deleteOne(@item.Id)">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
+                            </label>
                         </div>
                     </div>
                 </div>
             }
         </div>
-    </div>
 
-    <!-- DELETE ALL -->
-    <div class="text-end">
-        <button class="btn btn-danger btn-sm"
-                onclick="deleteAll()">
-            <i class="fa-solid fa-trash"></i> Delete All (Filtered)
-        </button>
-    </div>
-</div>
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+     <script>
+            function markAsRead(id, checkbox) {
+        if (!checkbox.checked) return;
 
-    <script>
-        function markAsRead(id, checkbox) {
-            if (!checkbox.checked) return;
+        $.post('@Url.Action("MarkAsRead", "DailyReport")',
+            { id: id },
+            function (res) {
+                if (res && res.success) {
+                    const row = $(checkbox).closest('tr');
 
-            $.post('@Url.Action("MarkAsRead", "DailyReport")',
-                { id: id });
-        }
+                    // remove unread background
+                    row.removeClass('table-info');
 
-        function deleteOne(id) {
-            if (!confirm("Delete this report?")) return;
-
-            $.post('@Url.Action("DeleteOne", "DailyReport")',
-                { id: id },
-                () => location.reload());
-        }
-
-        function deleteAll() {
-            if (!confirm("Delete all filtered reports?")) return;
-
-            $.post('@Url.Action("DeleteAll", "DailyReport")',
-                {
-                    search: '@ViewBag.Search',
-                    range: '@ViewBag.Range'
-                },
-                () => location.reload());
-        }
+                    // update badge instantly
+                    row.find('.status-badge')
+                        .removeClass('bg-warning text-dark')
+                        .addClass('bg-success')
+                        .text('Read');
+                }
+            });
+    }
     </script>
 }
+
+@* 
+        // function deleteOne(id) {
+        //     if (!confirm("Delete this report?")) return;
+
+        //     $.post('@Url.Action("DeleteOne", "DailyReport")',
+        //         { id: id },
+        //         () => location.reload());
+        // }
+
+        // function deleteAll() {
+        //     if (!confirm("Delete all filtered reports?")) return;
+
+        //     $.post('@Url.Action("DeleteAll", "DailyReport")',
+        //         {
+        //             search: '@ViewBag.Search',
+        //             range: '@ViewBag.Range'
+        //         },
+        //         () => location.reload());
+        // } *@
+ 

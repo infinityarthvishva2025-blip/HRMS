@@ -1,0 +1,145 @@
+﻿@model Holiday
+@{
+    ViewBag.Title = "Edit Holiday";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+}
+
+<style>
+    .page-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 80vh;
+        padding: 20px;
+    }
+
+    .form-container {
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        width: 100%;
+        max-width: 700px;
+        text-align: center;
+    }
+
+    .form-header {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f1f5f9;
+        font-size: 1.5rem;
+    }
+
+    .holiday-field-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 10px;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+    }
+
+    .form-control-custom {
+        width: 100%;
+        max-width: 400px;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        text-align: center;
+    }
+
+    .btn-container {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 30px;
+    }
+
+    .btn-save {
+        background-color: #2563eb;
+        color: #fff;
+        padding: 12px 30px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-back {
+        background-color: #6b7280;
+        color: #fff;
+        padding: 12px 30px;
+        border-radius: 6px;
+        text-decoration: none;
+    }
+</style>
+
+<div class="page-container">
+    <div class="form-container">
+        <h4 class="form-header">Edit Holiday</h4>
+
+        @using (Html.BeginForm())
+        {
+            @Html.HiddenFor(m => m.Id)
+
+            <div class="holiday-field-group">
+                 <div class="col-md-3">
+                    <label asp-for="HolidayDate">Holiday Date</label>
+                    <input asp-for="HolidayDate" type="date" class="form-control" />
+                </div>
+               @*  <label class="form-label">Holiday Date</label>
+                @Html.TextBoxFor(
+                    m => m.HolidayDate,
+                    "{0:dd-MM-yyyy}",
+                    new {
+                        @class = "form-control-custom",
+                        id = "HolidayDate",
+                        autocomplete = "off"
+                    }) *@
+            </div>
+
+            <div class="holiday-field-group">
+                <label class="form-label">Holiday Name</label>
+                @Html.TextBoxFor(m => m.HolidayName,
+                    new { @class = "form-control-custom" })
+            </div>
+
+            <div class="holiday-field-group">
+                <label class="form-label">Description</label>
+                @Html.TextBoxFor(m => m.Description,
+                    new { @class = "form-control-custom" })
+            </div>
+
+            <div class="btn-container">
+                <button type="submit" class="btn-save">Update</button>
+                <a href="@Url.Action("Index")" class="btn-back">Back</a>
+            </div>
+        }
+    </div>
+</div>
+
+<link rel="stylesheet"
+      href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<script>
+    
+</script>
