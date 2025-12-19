@@ -32,7 +32,9 @@ namespace HRMS.Models
         public string? CorrectionRemark { get; set; }
         public string CorrectionStatus { get; set; } = "None"; // None, Pending, Approved, Rejected
 
-        
+        public bool? IsGeoAttendance { get; set; }
+
+
 
     }
 
