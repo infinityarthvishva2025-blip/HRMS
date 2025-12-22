@@ -34,21 +34,15 @@ namespace HRMS.Controllers
             if (string.IsNullOrEmpty(empCode))
                 return Unauthorized();
 
-            // Fetch employee
             var employee = _context.Employees
                 .FirstOrDefault(e => e.EmployeeCode == empCode);
 
             if (employee == null)
                 return Unauthorized();
 
-            // =========================
-            // OFFICE GEOFENCE 18.534202, 73.839556 
-
-            //js=const OFFICE_LOCATION = { lat: 18.533956586914105,lng: 73.83953090610281};
-        // =========================
-        const double officeLat = 18.534202;
+            const double officeLat = 18.534202;
             const double officeLng = 73.839556;
-            const double radiusMeters = 1600;
+            const double radiusMeters = 2000;
 
             double distance = GeoHelper.DistanceInMeters(
                 officeLat, officeLng,
@@ -56,37 +50,29 @@ namespace HRMS.Controllers
             );
 
             if (distance > radiusMeters)
-                return BadRequest("You are outside office premises");
+                return BadRequest($"You are outside office premises ({Math.Round(distance)} meters)");
 
             DateTime today = DateTime.Today;
 
-            // ❗ Prevent duplicate check-in
             var existing = _context.Attendances
                 .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
 
             if (existing != null)
                 return BadRequest("Already checked in today");
 
-            // =========================
-            // CREATE ATTENDANCE
-            // =========================
             Attendance att = new Attendance
             {
-                Id = employee.Id,                 // manual employee ID
+                Id = employee.Id,
                 Emp_Code = empCode,
                 Date = today,
                 Status = "P",
-
                 InTime = DateTime.Now.TimeOfDay,
                 OutTime = null,
-
                 Att_Date = DateTime.Now,
                 Total_Hours = null,
-
                 IsLate = false,
                 LateMinutes = 0,
-
-                IsGeoAttendance = true,           // ✅ GEO FLAG
+                IsGeoAttendance = true,
                 CorrectionRequested = false,
                 CorrectionStatus = "None"
             };
@@ -99,6 +85,83 @@ namespace HRMS.Controllers
 
 
 
+
+        [HttpPost]
+        public IActionResult GeoCheckOut([FromBody] GeoAttendanceVm vm)
+        {
+            string empCode = HttpContext.Session.GetString("EmpCode");
+            string role = HttpContext.Session.GetString("Role") ?? "Employee";
+
+            if (string.IsNullOrWhiteSpace(empCode))
+                return Unauthorized("Session expired");
+
+            // =========================
+            // 📍 OFFICE GEOFENCE
+            // =========================
+            const double officeLat = 18.534202;
+            const double officeLng = 73.839556;
+            const double radiusMeters = 2000;
+
+            double distance = GeoHelper.DistanceInMeters(
+                officeLat, officeLng,
+                vm.Latitude, vm.Longitude
+            );
+
+            if (distance > radiusMeters)
+                return BadRequest($"You are outside office premises ({Math.Round(distance)} meters)");
+
+            DateTime today = DateTime.Today;
+
+            // =====================================================
+            // ✅ DIRECTOR → REAL GEO CHECKOUT
+            // =====================================================
+            if (role.Equals("Director", StringComparison.OrdinalIgnoreCase))
+            {
+                var record = _context.Attendances
+                    .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+
+                if (record == null)
+                    return BadRequest("No active attendance found");
+
+                if (record.OutTime != null)
+                    return BadRequest("Already checked out");
+
+                // ✅ GEO CHECKOUT
+                record.OutTime = DateTime.Now.TimeOfDay;
+                record.Att_Date = DateTime.Now;
+                record.IsGeoAttendance = true;
+
+                if (record.InTime != null)
+                {
+                    TimeSpan worked = record.OutTime.Value - record.InTime.Value;
+
+                    TimeSpan shift = (today.DayOfWeek == DayOfWeek.Saturday)
+                        ? TimeSpan.FromMinutes(420)   // 7 hrs
+                        : TimeSpan.FromMinutes(510);  // 8.5 hrs
+
+                    if (worked < shift)
+                    {
+                        TimeSpan remaining = shift - worked;
+                        TempData["EarlyTime"] = $"{remaining.Hours}h {remaining.Minutes}m";
+                        TempData["EarlyCheckout"] = "Remaining Time";
+                    }
+                    else
+                    {
+                        TimeSpan extra = worked - shift;
+                        TempData["LateTime"] = $"{extra.Hours}h {extra.Minutes}m";
+                        TempData["LateCheckout"] = "Overtime";
+                    }
+                }
+
+                _context.SaveChanges();
+                return Ok(new { success = true });
+            }
+
+            // =====================================================
+            // ✅ ALL OTHERS → DAILY REPORT (SAME AS MANUAL)
+            // =====================================================
+            return Ok(new { redirect = "/DailyReport/Send" });
+        }
 
 
 

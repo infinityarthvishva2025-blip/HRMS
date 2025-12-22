@@ -107,24 +107,34 @@
                 <div id="countdownContainer" class="att-card neon-card mt-3">
                     <div class="att-label text-center">
                         <i class="fa-solid fa-hourglass-half me-2 text-warning"></i>
+                 
                         Time Remaining (8-Hour 30-Minute shift)
                     </div>
                     <div id="countdown" class="countdown-digits">00:00:00</div>
                 </div>
 
-                <!-- CHECKOUT BUTTON -->
-                <a href="#"
+                <!-- MANUAL CHECKOUT BUTTON -->
+               @*  <a href="#"
                    class="att-btn att-btn-checkout mt-3"
                    data-bs-toggle="modal"
                    data-bs-target="#checkoutModal">
                     <i class="fa-solid fa-stop me-2"></i> Check Out
+                </a> *@
+
+
+                <!-- GEO CHECKOUT BUTTON -->
+                <a href="#"
+                   class="att-btn att-btn-checkout mt-3"
+                   data-bs-toggle="modal"
+                   data-bs-target="#geoCheckoutModal">
+                    <i class="fa-solid fa-location-dot me-2"></i> Geo Check Out
                 </a>
             }
         }
     </div>
 </div>
 
-<!-- CHECKOUT MODAL -->
+<!-- MANUAL CHECKOUT MODAL -->
 <div class="modal fade" id="checkoutModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content custom-modal">
@@ -147,6 +157,164 @@
         </div>
     </div>
 </div>
+
+<!-- GEO CHECKOUT MODAL -->
+<div class="modal fade" id="geoCheckoutModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-modal">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-danger">
+                    <i class="fa-solid fa-location-dot me-2"></i> Confirm Geo Checkout
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center">
+                <p class="fs-5 mb-3">
+                    Are you sure you want to <strong>Geo Check Out</strong>?
+                </p>
+            </div>
+
+            <div class="modal-footer border-0 d-flex justify-content-between">
+                <button class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button class="btn btn-danger px-4"
+                        onclick="confirmGeoCheckout(this)">
+                    Yes, Check Out
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- GEO CHECK-OUT SCRIPT -->
+<script>
+        function confirmGeoCheckout(btn) {
+
+        const errorDiv = document.getElementById("geoError");
+        errorDiv.classList.add("d-none");
+        errorDiv.innerText = "";
+
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+
+        if (!navigator.geolocation) {
+            errorDiv.innerText = "Geolocation not supported.";
+            errorDiv.classList.remove("d-none");
+            btn.disabled = false;
+            btn.innerText = "Yes, Check Out";
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+
+                fetch('/Attendance/GeoCheckOut', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude
+                    })
+                })
+                .then(async r => {
+                    if (!r.ok) {
+                        const msg = await r.text();
+
+                        // ❗ CLOSE MODAL BEFORE showing error
+                        bootstrap.Modal.getInstance(
+                            document.getElementById('geoCheckoutModal')
+                        ).hide();
+
+                        // SHOW ERROR BELOW HEADER
+                        errorDiv.innerText = msg;
+                        errorDiv.classList.remove("d-none");
+
+                        btn.disabled = false;
+                        btn.innerText = "Yes, Check Out";
+                        throw msg;
+                    }
+
+                    // SUCCESS → CLOSE MODAL
+                    bootstrap.Modal.getInstance(
+                        document.getElementById('geoCheckoutModal')
+                    ).hide();
+
+                    // Redirect
+                    window.location.href = "/DailyReport/Send";
+                })
+                .catch(() => {});
+            },
+            () => {
+                bootstrap.Modal.getInstance(
+                    document.getElementById('geoCheckoutModal')
+                ).hide();
+
+                errorDiv.innerText = "Location permission denied.";
+                errorDiv.classList.remove("d-none");
+
+                btn.disabled = false;
+                btn.innerText = "Yes, Check Out";
+            }
+        );
+    }
+
+</script>
+
+
+
+<!-- GEO CHECK-IN SCRIPT -->
+<script>
+        function geoCheckIn() {
+
+        const errorDiv = document.getElementById("geoError");
+        errorDiv.classList.add("d-none");
+        errorDiv.innerText = "";
+
+        if (!navigator.geolocation) {
+            errorDiv.innerText = "Geolocation is not supported.";
+            errorDiv.classList.remove("d-none");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                fetch('/Attendance/GeoCheckIn', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude
+                    })
+                })
+                .then(async r => {
+                    if (!r.ok) {
+                        const msg = await r.text();
+
+                        errorDiv.innerText = msg;  // Shows: You are outside office premises (1248 meters)
+                        errorDiv.classList.remove("d-none");
+
+                        throw msg;
+                    }
+
+                    location.reload();
+                })
+                .catch(() => {});
+            },
+            () => {
+                errorDiv.innerText = "Location permission denied.";
+                errorDiv.classList.remove("d-none");
+            }
+        );
+    }
+
+</script>
+
+
 
 <!-- COUNTDOWN SCRIPT -->
 <script>
@@ -187,45 +355,6 @@
     });
 </script>
 
-<!-- GEO CHECK-IN SCRIPT -->
-<script>
-    function geoCheckIn() {
-
-        const errorDiv = document.getElementById("geoError");
-        errorDiv.classList.add("d-none");
-
-        if (!navigator.geolocation) {
-            errorDiv.innerText = "Geolocation is not supported.";
-            errorDiv.classList.remove("d-none");
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            pos => {
-                fetch('/Attendance/GeoCheckIn', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        latitude: pos.coords.latitude,
-                        longitude: pos.coords.longitude
-                    })
-                })
-                .then(r => {
-                    if (!r.ok) return r.text().then(t => { throw t; });
-                    location.reload();
-                })
-                .catch(err => {
-                    errorDiv.innerText = err;
-                    errorDiv.classList.remove("d-none");
-                });
-            },
-            () => {
-                errorDiv.innerText = "Location permission denied.";
-                errorDiv.classList.remove("d-none");
-            }
-        );
-    }
-</script>
 
 <style>
     .att-page {
