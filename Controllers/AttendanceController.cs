@@ -171,7 +171,9 @@ namespace HRMS.Controllers
             att.CheckInLongitude = vm.Longitude;
 
             // Optional safety defaults (if newly created)
-            att.Status ??= "P";
+            //att.Status ??= "P";
+
+            att.Status = "P";
             att.CorrectionRequested = false;
             att.CorrectionStatus ??= "None";
 
@@ -180,75 +182,8 @@ namespace HRMS.Controllers
             return Ok(new { success = true });
         }
 
-        //[HttpPost]
-        //public IActionResult GeoCheckIn([FromBody] GeoAttendanceVm vm)
-        //{
-        //    string empCode = HttpContext.Session.GetString("EmpCode");
-        //    if (string.IsNullOrEmpty(empCode))
-        //        return Unauthorized();
-
-        //    var employee = _context.Employees
-        //        .FirstOrDefault(e => e.EmployeeCode == empCode);
-
-        //    if (employee == null)
-        //        return Unauthorized();
-
-        //    DateTime today = DateTime.Today;
-
-        //    // 🔹 GET OR CREATE
-        //    var att = GetOrCreateTodayAttendance(empCode, employee.Id, today);
-
-        //    // ❌ BLOCK DOUBLE CHECK-IN
-        //    if (att.InTime != null)
-        //        return BadRequest("Already checked in today");
-
-        //    // ✅ UPDATE ONLY
-        //    att.InTime = DateTime.Now.TimeOfDay;
-        //    att.Att_Date = DateTime.Now;
-        //    att.IsGeoAttendance = true;
-        //    att.CheckInLatitude = vm.Latitude;
-        //    att.CheckInLongitude = vm.Longitude;
-
-        //    _context.SaveChanges();
-        //    return Ok(new { success = true });
-        //}
-
-        //[HttpPost]
-        //public IActionResult GeoCheckOut([FromBody] GeoAttendanceVm vm)
-        //{
-        //    string empCode = HttpContext.Session.GetString("EmpCode");
-        //    string role = HttpContext.Session.GetString("Role") ?? "Employee";
-
-        //    if (string.IsNullOrWhiteSpace(empCode))
-        //        return Unauthorized();
-
-        //    var emp = _context.Employees
-        //        .FirstOrDefault(e => e.EmployeeCode == empCode);
-
-        //    if (emp == null)
-        //        return Unauthorized();
-
-        //    DateTime today = DateTime.Today;
-
-        //    // 🔹 GET OR CREATE
-        //    var att = GetOrCreateTodayAttendance(empCode, emp.Id, today);
-
-        //    if (att.OutTime != null)
-        //        return BadRequest("Already checked out");
-
-        //    // ✅ UPDATE ONLY
-        //    att.OutTime = DateTime.Now.TimeOfDay;
-        //    att.Att_Date = DateTime.Now;
-        //    att.IsGeoAttendance = true;
-        //    att.CheckOutLatitude = vm.Latitude;
-        //    att.CheckOutLongitude = vm.Longitude;
-
-        //    // 🔁 AUTO COMP-OFF (HO / WO)
-        //    TryAutoCompOff(att);
-
-        //    _context.SaveChanges();
-        //    return Ok(new { success = true });
-        //}
+        
+        
 
         //[HttpPost]
         //public IActionResult GeoCheckIn([FromBody] GeoAttendanceVm vm)
@@ -308,10 +243,6 @@ namespace HRMS.Controllers
 
         //    return Ok(new { success = true });
         //}
-
-
-
-
         //[HttpPost]
         //public IActionResult GeoCheckOut([FromBody] GeoAttendanceVm vm)
         //{
@@ -489,9 +420,6 @@ namespace HRMS.Controllers
             TempData["CheckedIn"] = true;
             return RedirectToAction("EmployeePanel");
         }
-
-
-
         public IActionResult CheckOut()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
@@ -1210,92 +1138,7 @@ namespace HRMS.Controllers
             return RedirectToAction("HighDensityCalendar", new { token });
         }
 
-        //       public IActionResult HighDensityCalendar(
-        //int year = 0,
-        //int month = 0,
-        //string? search = null,
-        //string? department = "All",
-        //int page = 1,
-        //int pageSize = 20)
-        //       {
-        //           if (year == 0) year = DateTime.Now.Year;
-        //           if (month == 0) month = DateTime.Now.Month;
-        //           if (page < 1) page = 1;
-
-        //           // ---------------- EMPLOYEE FILTER ----------------
-        //           var empQuery = _context.Employees.AsQueryable();
-
-        //           // ✅ Search by name or code
-        //           if (!string.IsNullOrWhiteSpace(search))
-        //           {
-        //               search = search.Trim();
-        //               empQuery = empQuery.Where(e =>
-        //                   e.EmployeeCode.Contains(search) ||
-        //                   e.Name.Contains(search));
-        //           }
-
-        //           // ✅ Department filter
-        //           if (!string.IsNullOrWhiteSpace(department) && department != "All")
-        //           {
-        //               empQuery = empQuery.Where(e => e.Department == department);
-        //           }
-
-        //           // ✅ NEW — Hide employees who haven’t joined yet
-        //           empQuery = empQuery.Where(e =>
-        //               !e.JoiningDate.HasValue ||
-        //               (e.JoiningDate.Value.Year < year ||
-        //                (e.JoiningDate.Value.Year == year && e.JoiningDate.Value.Month <= month)));
-
-        //           int totalEmployees = empQuery.Count();
-        //           int totalPages = (int)Math.Ceiling(totalEmployees / (double)pageSize);
-        //           if (totalPages > 0 && page > totalPages) page = totalPages;
-
-        //           var employeesPage = empQuery
-        //               .OrderBy(e => e.Name)
-        //               .Skip((page - 1) * pageSize)
-        //               .Take(pageSize)
-        //               .ToList();
-
-        //           // ---------------- ATTENDANCE DATA ----------------
-        //           var empCodes = employeesPage.Select(e => e.EmployeeCode).ToList();
-
-        //           var attendance = _context.Attendances
-        //               .Where(a => a.Date.Year == year &&
-        //                           a.Date.Month == month &&
-        //                           empCodes.Contains(a.Emp_Code))
-        //               .ToList();
-
-        //           // ---------------- DEPARTMENT LIST ----------------
-        //           var departments = _context.Employees
-        //               .Where(e => !string.IsNullOrEmpty(e.Department))
-        //               .Select(e => e.Department)
-        //               .Distinct()
-        //               .OrderBy(d => d)
-        //               .ToList();
-
-        //           // ---------------- VIEWMODEL ----------------
-        //           var vm = new HighDensityCalendarVM
-        //           {
-        //               Year = year,
-        //               Month = month,
-        //               Search = search,
-        //               Department = department,
-        //               Departments = departments,
-        //               Page = page,
-        //               PageSize = pageSize,
-        //               TotalPages = totalPages,
-        //               TotalEmployees = totalEmployees,
-        //               Employees = employeesPage,
-        //               Attendance = attendance
-        //           };
-
-        //           return View(vm);
-        //       }
-
-
-        // -------------------------------------------------------------
-        // EXPORT CALENDAR TO EXCEL
-        // -------------------------------------------------------------
+        
         [HttpGet]
             public IActionResult ExportCalendar(
                 int year,
@@ -1546,69 +1389,46 @@ namespace HRMS.Controllers
 
             return RedirectToAction("CorrectionRequests");
         }
-        //private void TryAutoCompOff(Attendance att)
-        //{
-        //    // Safety checks
-        //    if (att == null || att.IsCompOffCredited)
-        //        return;
-
-        //    if (!att.InTime.HasValue || !att.OutTime.HasValue)
-        //        return;
-
-        //    var workedHours = (att.OutTime.Value - att.InTime.Value).TotalHours;
-
-        //    // Minimum hours rule (configurable)
-        //    if (workedHours < 4)
-        //        return;
-
-        //    bool isWeeklyOff =
-        //        att.Date.DayOfWeek == DayOfWeek.Sunday ||
-        //        att.Date.DayOfWeek == DayOfWeek.Saturday;
-
-        //    bool isHoliday = att.Status == "HO";
-
-        //    if (!isWeeklyOff && !isHoliday)
-        //        return;
-
-        //    // Fetch employee
-        //    var emp = _context.Employees
-        //        .FirstOrDefault(e => e.EmployeeCode == att.Emp_Code);
-
-        //    if (emp == null)
-        //        return;
-
-        //    // ✅ CREDIT COMP-OFF
-        //    emp.CompOffBalance += 1;
-        //    emp.LastCompOffEarnedDate = att.Date;
-
-        //    att.IsCompOffCredited = true;
-
-        //    _logger.LogInformation(
-        //        $"Comp-Off credited to {emp.EmployeeCode} for {att.Date:dd-MM-yyyy}");
-        //}
         private void TryAutoCompOff(Attendance att)
         {
-            if (att.IsCompOffCredited)
+            // Safety checks
+            if (att == null || att.IsCompOffCredited)
+                return;
+
+            if (!att.InTime.HasValue || !att.OutTime.HasValue)
+                return;
+
+            var workedHours = (att.OutTime.Value - att.InTime.Value).TotalHours;
+
+            // Minimum hours rule (configurable)
+            if (workedHours < 4)
                 return;
 
             bool isWeeklyOff =
-               // att.Date.DayOfWeek == DayOfWeek.Saturday ||
                 att.Date.DayOfWeek == DayOfWeek.Sunday;
+                //att.Date.DayOfWeek == DayOfWeek.Saturday;
 
-            bool isHoliday =
-                _context.Holidays.Any(h => h.HolidayDate == att.Date);
+            bool isHoliday = att.Status == "HO";
 
             if (!isWeeklyOff && !isHoliday)
                 return;
 
-            var emp = _context.Employees.FirstOrDefault(e => e.EmployeeCode == att.Emp_Code);
-            if (emp == null) return;
+            // Fetch employee
+            var emp = _context.Employees
+                .FirstOrDefault(e => e.EmployeeCode == att.Emp_Code);
 
+            if (emp == null)
+                return;
+
+            // ✅ CREDIT COMP-OFF
             emp.CompOffBalance += 1;
-            emp.LastCompOffEarnedDate = DateTime.Today;
-            att.IsCompOffCredited = true;
-        }
+            emp.LastCompOffEarnedDate = att.Date;
 
+            att.IsCompOffCredited = true;
+
+            _logger.LogInformation(
+                $"Comp-Off credited to {emp.EmployeeCode} for {att.Date:dd-MM-yyyy}");
+        }
         private Attendance GetOrCreateTodayAttendance(
             string empCode,
             int empId,
