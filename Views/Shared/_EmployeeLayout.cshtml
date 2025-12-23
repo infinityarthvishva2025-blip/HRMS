@@ -432,6 +432,25 @@
 
             </div>
 
+            
+
+            <a asp-controller="Resignation" asp-action="Apply" class="menu-item">
+                <i class="fa-solid fa-gauge"></i><span>Resignation</span>
+            </a>
+              
+            @if (role == "Manager" || role == "GM" || role == "VP" || role == "Director")
+            {
+
+                <a asp-controller="Resignation" asp-action="PendingApprovals" class="menu-item">
+                    <i class="fa-solid fa-file-lines"></i><span> Resignation Approvals</span>
+                </a>
+
+            }
+
+            <a asp-controller="Resignation" asp-action="Track" class="menu-item">
+                <i class="fa-solid fa-gauge"></i><span>ResignationTrack</span>
+            </a>
+            
 
 
             <!-- Logout -->

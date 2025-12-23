@@ -1,0 +1,98 @@
+﻿@model ResignationApplyVM
+
+@{
+    Layout = "_EmployeeLayout";
+}
+
+<form method="post" enctype="multipart/form-data">
+
+    <label>Resignation Date</label>
+    <input asp-for="ResignationDate"
+           type="date"
+           min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+
+    <span asp-validation-for="ResignationDate" class="text-danger"></span>
+
+
+    <label>Notice Period</label>
+    <input value="@($"{Model.NoticePeriodDays} days")" readonly />
+
+    @if (!Model.IsProvisionalCompleted)
+    {
+        <p class="text-warning">
+            You are under provisional period. No notice period applicable.
+        </p>
+    }
+
+    <label>Suggested Last Working Day</label>
+
+    <input type="hidden"
+           asp-for="SuggestedLastWorkingDay"
+           id="SuggestedLwdHidden" />
+
+    <span id="SuggestedLwdText">
+        @Model.SuggestedLastWorkingDay.ToString("dd-MMM-yyyy")
+    </span>
+
+
+    <label>Proposed Last Working Day</label>
+    @if (Model.NoticePeriodDays == 0)
+    {
+        <input asp-for="ProposedLastWorkingDay" type="date" readonly />
+    }
+    else
+    {
+        <input asp-for="ProposedLastWorkingDay" type="date" />
+    }
+
+    <label>Reason</label>
+    <select asp-for="ReasonCode" required>
+        <option value="">-- Select Reason --</option>
+        <option value="Better Opportunity">Better Opportunity</option>
+        <option value="Higher Studies">Higher Studies</option>
+        <option value="Personal">Personal</option>
+        <option value="Health">Health</option>
+        <option value="Other">Other</option>
+    </select>
+    <span asp-validation-for="ReasonCode" class="text-danger"></span>
+
+
+    <label>Details</label>
+    <textarea asp-for="DetailedReason"></textarea>
+
+    <button type="submit">Submit Resignation</button>
+
+</form>
+<script>
+    const resignationInput = document.querySelector('[name="ResignationDate"]');
+    const proposedInput = document.querySelector('[name="ProposedLastWorkingDay"]');
+    const suggestedHidden = document.getElementById('SuggestedLwdHidden');
+    const suggestedText = document.getElementById('SuggestedLwdText');
+
+    const noticeDays = @Model.NoticePeriodDays;
+
+    resignationInput.addEventListener('change', function () {
+        if (!this.value) return;
+
+        const resDate = new Date(this.value);
+        const lwd = new Date(resDate);
+        lwd.setDate(lwd.getDate() + noticeDays);
+
+        const yyyy = lwd.getFullYear();
+        const mm = String(lwd.getMonth() + 1).padStart(2, '0');
+        const dd = String(lwd.getDate()).padStart(2, '0');
+
+        const formatted = `${yyyy}-${mm}-${dd}`;
+        const display = lwd.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
+
+        // ✅ update BOTH
+        proposedInput.value = formatted;
+        suggestedHidden.value = formatted;
+        suggestedText.innerText = display;
+    });
+</script>
+

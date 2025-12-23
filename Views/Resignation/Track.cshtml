@@ -1,0 +1,22 @@
+﻿@model List<ResignationRequest>
+
+@foreach (var req in Model)
+{
+    <div class="card mb-3 p-3">
+        <p><b>Resignation Date:</b> @req.ResignationDate?.ToString("dd-MMM-yyyy")</p>
+        <p><b>Proposed LWD:</b> @req.ProposedLastWorkingDay?.ToString("dd-MMM-yyyy")</p>
+        <p><b>Status:</b> @req.Status</p>
+        <p><b>Current Step:</b> @req.CurrentStep</p>
+
+        <h5>Approval Flow</h5>
+        <ul>
+            @foreach (var step in ((List<ResignationApprovalStep>)ViewBag.Steps)
+                    .Where(s => s.ResignationRequestId == req.Id))
+            {
+                <li>
+                    <b>@step.RoleName</b> — @step.Status
+                </li>
+            }
+        </ul>
+    </div>
+}

@@ -2,6 +2,9 @@
 using HRMS.Models;
 using HRMS.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 
 namespace HRMS.Controllers
 {
@@ -20,7 +23,6 @@ namespace HRMS.Controllers
         [HttpGet]
         public IActionResult Login()
         {
-
             return View(new LoginViewModel());
         }
 
@@ -29,16 +31,14 @@ namespace HRMS.Controllers
         // ============================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Find employee (HR or normal employee)
-            var emp = _context.Employees
-                .FirstOrDefault(e =>
-                    e.EmployeeCode == model.UserId &&
-                    e.Password == model.Password);
+            var emp = _context.Employees.FirstOrDefault(e =>
+                e.EmployeeCode == model.UserId &&
+                e.Password == model.Password);
 
             if (emp == null)
             {
@@ -46,46 +46,66 @@ namespace HRMS.Controllers
                 return View(model);
             }
 
-
-            // Normalize Role
+            // ============================
+            // NORMALIZE ROLE
+            // ============================
             string role = emp.Role?.Trim() ?? "Employee";
-
-            // Normalize role formatting (optional)
             if (role.Equals("admin", StringComparison.OrdinalIgnoreCase))
                 role = "HR";
 
-
-
-            // Store session
+            // ============================
+            // KEEP EXISTING SESSION (SAFE)
+            // ============================
             HttpContext.Session.SetString("Role", role);
             HttpContext.Session.SetInt32("EmployeeId", emp.Id);
             HttpContext.Session.SetString("EmployeeName", emp.Name);
             HttpContext.Session.SetString("EmpCode", emp.EmployeeCode);
 
-            // ===========================================
-            // ROLE-BASED REDIRECT
-            // ===========================================
-             role = (emp.Role ?? "Employee").Trim();
+            // ============================
+            // COOKIE AUTH (EMPLOYEE ID BASED)
+            // ============================
+            var claims = new List<Claim>
+{
+    new Claim(ClaimTypes.NameIdentifier, emp.Id.ToString()),
+    new Claim(ClaimTypes.Role, role),
+    new Claim("EmployeeCode", emp.EmployeeCode),
+    new Claim("EmployeeName", emp.Name)
+};
 
+            var identity = new ClaimsIdentity(
+                claims,
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal);
+
+            // ============================
+            // REDIRECT (UNCHANGED LOGIC)
+            // ============================
             if (role.Equals("HR", StringComparison.OrdinalIgnoreCase) ||
                 role.Equals("VP", StringComparison.OrdinalIgnoreCase) ||
                 role.Equals("GM", StringComparison.OrdinalIgnoreCase) ||
-                role.Equals("Director", StringComparison.OrdinalIgnoreCase) )
-                //role.Equals("Manager", StringComparison.OrdinalIgnoreCase)
+                role.Equals("Director", StringComparison.OrdinalIgnoreCase))
             {
                 return RedirectToAction("Index", "Home");
             }
 
             return RedirectToAction("Dashboard", "Employees");
-
         }
 
         // ============================
         // LOGOUT
         // ============================
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
             HttpContext.Session.Clear();
+
+            await HttpContext.SignOutAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
             return RedirectToAction("Login", "Account");
         }
     }

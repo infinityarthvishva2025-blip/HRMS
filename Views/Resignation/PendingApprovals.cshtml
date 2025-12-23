@@ -1,0 +1,44 @@
+﻿@model List<ResignationApprovalStep>
+@{
+    Layout = "_HrLayout";
+}
+
+<h2>Pending Resignation Approvals</h2>
+
+@if (!Model.Any())
+{
+    <p>No pending approvals.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Emp Code</th>
+                <th>Employee Name</th>
+                <th>Resignation Date</th>
+                <th>Proposed LWD</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var step in Model)
+            {
+                <tr>
+                    <td>@step.ResignationRequest.Employee.EmployeeCode</td>
+                    <td>@step.ResignationRequest.Employee.Name</td>
+                    <td>@step.ResignationRequest.ResignationDate?.ToString("dd-MMM-yyyy")</td>
+                    <td>@step.ResignationRequest.ProposedLastWorkingDay?.ToString("dd-MMM-yyyy")</td>
+                    <td>
+                        <form asp-action="ApproveReject" method="post">
+                            <input type="hidden" name="stepId" value="@step.Id" />
+                            <input type="text" name="remarks" class="form-control mb-1" />
+                            <button name="approve" value="true" class="btn btn-success btn-sm">Approve</button>
+                            <button name="approve" value="false" class="btn btn-danger btn-sm">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
