@@ -39,7 +39,7 @@ namespace HRMS.Models
 
         public double? CheckOutLatitude { get; set; }
         public double? CheckOutLongitude { get; set; }
-
+        public bool IsCompOffCredited { get; set; } = false;
 
     }
 

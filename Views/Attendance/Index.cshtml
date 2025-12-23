@@ -148,13 +148,47 @@
                                     <td>@a.TotalHours</td>
 
                                     <td>
-                                        @if (a.Status == "L") { <span class="badge bg-info">Leave</span> }
-                                        else if (a.AttDate.DayOfWeek == DayOfWeek.Sunday) { <span class="badge bg-secondary">WO</span> }
-                                        else if (a.AttDate.DayOfWeek == DayOfWeek.Saturday) { <span class="badge bg-primary">WOP</span> }
-                                        else if (a.Status == "P") { <span class="badge bg-success">Present</span> }
-                                        else if (!a.InTime.HasValue && !a.OutTime.HasValue) { <span class="badge bg-danger">Absent</span> }
-                                        else if (a.InTime.HasValue && !a.OutTime.HasValue) { <span class="badge bg-warning text-dark">Not Checked Out</span> }
-                                        else { <span class="badge bg-success">Present</span> }
+                                        @if (a.Status == "L")
+                                        {
+                                            <span class="badge bg-info">Leave</span>
+                                        }
+                                        else if (a.Status == "HO")
+                                        {
+
+                                            <span class="badge bg-info">Holiday</span>
+                                        }
+                                        else if (a.AttDate.DayOfWeek == DayOfWeek.Sunday)
+                                        {
+
+                                            <span class="badge bg-secondary">WO</span>
+                                        }
+                                        else if (a.AttDate.DayOfWeek == DayOfWeek.Saturday)
+                                        {
+
+                                            <span class="badge bg-success">Present</span>
+                                        }
+                                        else if (!a.InTime.HasValue && !a.OutTime.HasValue)
+                                        {
+
+                                            <span class="badge bg-danger">Absent</span>
+                                        }
+                                        else if (a.InTime.HasValue && !a.OutTime.HasValue)
+                                        {
+
+                                            <span class="badge bg-warning text-dark">Not Checked Out</span>
+                                        }
+                                        else if (a.Status == "P")
+                                        {
+
+                                            <span class="badge bg-success">Present</span>
+                                        }
+
+
+                                        else
+                                        {
+
+                                            <span class="badge bg-success">Present</span>
+                                        }
                                     </td>
 
                                     <td>
@@ -171,11 +205,11 @@
                                     <td class="text-center">
                                         <button class="btn btn-sm btn-info"
                                                 onclick="viewLocation(
-                        '@a.CheckInLatitude',
-                        '@a.CheckInLongitude',
-                        '@a.CheckOutLatitude',
-                        '@a.CheckOutLongitude'
-                    )">
+                                '@a.CheckInLatitude',
+                                '@a.CheckInLongitude',
+                                '@a.CheckOutLatitude',
+                                '@a.CheckOutLongitude'
+                            )">
                                             <i class="fa-solid fa-location-dot"></i> View
                                         </button>
                                     </td>

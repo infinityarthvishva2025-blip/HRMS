@@ -26,69 +26,6 @@ namespace HRMS.Controllers
             _context = context;
             _logger = logger;   
         }
-
-        [HttpPost]
-        public IActionResult GeoCheckIn([FromBody] GeoAttendanceVm vm)
-        {
-            string empCode = HttpContext.Session.GetString("EmpCode");
-            if (string.IsNullOrEmpty(empCode))
-                return Unauthorized();
-
-            var employee = _context.Employees
-                .FirstOrDefault(e => e.EmployeeCode == empCode);
-
-            if (employee == null)
-                return Unauthorized();
-
-            const double officeLat = 18.534202;
-            const double officeLng = 73.839556;
-            const double radiusMeters = 2000;
-
-            double distance = GeoHelper.DistanceInMeters(
-                officeLat, officeLng,
-                vm.Latitude, vm.Longitude
-            );
-
-            if (distance > radiusMeters)
-                return BadRequest($"You are outside office premises ({Math.Round(distance)} meters)");
-
-            DateTime today = DateTime.Today;
-
-            var existing = _context.Attendances
-                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
-
-            if (existing != null)
-                return BadRequest("Already checked in today");
-
-            Attendance att = new Attendance
-            {
-                Id = employee.Id,
-                Emp_Code = empCode,
-                Date = today,
-                Status = "P",
-                InTime = DateTime.Now.TimeOfDay,
-                OutTime = null,
-                Att_Date = DateTime.Now,
-                Total_Hours = null,
-                IsLate = false,
-                LateMinutes = 0,
-                IsGeoAttendance = true,
-
-                CheckInLatitude = vm.Latitude,
-                CheckInLongitude = vm.Longitude,
-                CorrectionRequested = false,
-                CorrectionStatus = "None"
-            };
-
-            _context.Attendances.Add(att);
-            _context.SaveChanges();
-
-            return Ok(new { success = true });
-        }
-
-
-
-
         [HttpPost]
         public IActionResult GeoCheckOut([FromBody] GeoAttendanceVm vm)
         {
@@ -97,6 +34,12 @@ namespace HRMS.Controllers
 
             if (string.IsNullOrWhiteSpace(empCode))
                 return Unauthorized("Session expired");
+
+            var emp = _context.Employees
+                .FirstOrDefault(e => e.EmployeeCode == empCode);
+
+            if (emp == null)
+                return Unauthorized();
 
             // =========================
             // 📍 OFFICE GEOFENCE
@@ -115,31 +58,29 @@ namespace HRMS.Controllers
 
             DateTime today = DateTime.Today;
 
-            var record = _context.Attendances
-                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+            // =====================================================
+            // 🔹 GET OR CREATE ATTENDANCE (NO DUPLICATES)
+            // =====================================================
+            var att = GetOrCreateTodayAttendance(empCode, emp.Id, today);
 
-            if (record == null)
-                return BadRequest("No active attendance found");
-
-            if (record.OutTime != null)
+            if (att.OutTime != null)
                 return BadRequest("Already checked out");
 
             // =====================================================
-            // ✅ DIRECTOR → REAL CHECKOUT (UNCHANGED LOGIC)
+            // ✅ DIRECTOR → REAL CHECKOUT (SAVE TO DB)
             // =====================================================
             if (role.Equals("Director", StringComparison.OrdinalIgnoreCase))
             {
-                record.OutTime = DateTime.Now.TimeOfDay;
-                record.Att_Date = DateTime.Now;
-                record.IsGeoAttendance = true;
+                att.OutTime = DateTime.Now.TimeOfDay;
+                att.Att_Date = DateTime.Now;
+                att.IsGeoAttendance = true;
 
-                // ✅ STORE LOCATION
-                record.CheckOutLatitude = vm.Latitude;
-                record.CheckOutLongitude = vm.Longitude;
+                att.CheckOutLatitude = vm.Latitude;
+                att.CheckOutLongitude = vm.Longitude;
 
-                if (record.InTime != null)
+                if (att.InTime != null)
                 {
-                    TimeSpan worked = record.OutTime.Value - record.InTime.Value;
+                    TimeSpan worked = att.OutTime.Value - att.InTime.Value;
 
                     TimeSpan shift = (today.DayOfWeek == DayOfWeek.Saturday)
                         ? TimeSpan.FromMinutes(420)   // 7 hrs
@@ -159,24 +100,306 @@ namespace HRMS.Controllers
                     }
                 }
 
+                // 🔁 AUTO COMP-OFF (HO / WO)
+                TryAutoCompOff(att);
+
                 _context.SaveChanges();
                 return Ok(new { success = true });
             }
 
             // =====================================================
-            // ✅ EMPLOYEE → TEMP STORE ONLY (NEW, SAFE LOGIC)
+            // ✅ EMPLOYEE → TEMP STORE (DAILY REPORT FLOW)
             // =====================================================
-            // ❌ DO NOT SET OutTime
-            // ❌ DO NOT SAVE DB
-            // ✔ STORE CHECKOUT DATA TEMPORARILY
-            HttpContext.Session.SetString("CheckoutTime", DateTime.Now.TimeOfDay.ToString());
+            HttpContext.Session.SetString(
+                "CheckoutTime",
+                DateTime.Now.TimeOfDay.ToString(@"hh\:mm"));
+
             HttpContext.Session.SetString("CheckoutLat", vm.Latitude.ToString());
             HttpContext.Session.SetString("CheckoutLng", vm.Longitude.ToString());
-
-            // ✔ REDIRECT TO DAILY REPORT
+            // 🔁 AUTO COMP-OFF (HO / WO)
+            TryAutoCompOff(att);
             return Ok(new { redirect = "/DailyReport/Send" });
         }
-    
+        [HttpPost]
+        public IActionResult GeoCheckIn([FromBody] GeoAttendanceVm vm)
+        {
+            string empCode = HttpContext.Session.GetString("EmpCode");
+            if (string.IsNullOrEmpty(empCode))
+                return Unauthorized("Session expired");
+
+            var employee = _context.Employees
+                .FirstOrDefault(e => e.EmployeeCode == empCode);
+
+            if (employee == null)
+                return Unauthorized();
+
+            // =========================
+            // 📍 OFFICE GEOFENCE
+            // =========================
+            const double officeLat = 18.534202;
+            const double officeLng = 73.839556;
+            const double radiusMeters = 2000;
+
+            double distance = GeoHelper.DistanceInMeters(
+                officeLat, officeLng,
+                vm.Latitude, vm.Longitude
+            );
+
+            if (distance > radiusMeters)
+                return BadRequest(
+                    $"You are outside office premises ({Math.Round(distance)} meters)");
+
+            DateTime today = DateTime.Today;
+
+            // =====================================================
+            // 🔹 GET OR CREATE ATTENDANCE (NO DUPLICATES)
+            // =====================================================
+            var att = GetOrCreateTodayAttendance(empCode, employee.Id, today);
+
+            // ❌ BLOCK DOUBLE CHECK-IN
+            if (att.InTime != null)
+                return BadRequest("Already checked in today");
+
+            // =====================================================
+            // ✅ UPDATE ATTENDANCE
+            // =====================================================
+            att.InTime = DateTime.Now.TimeOfDay;
+            att.Att_Date = DateTime.Now;
+            att.IsGeoAttendance = true;
+
+            att.CheckInLatitude = vm.Latitude;
+            att.CheckInLongitude = vm.Longitude;
+
+            // Optional safety defaults (if newly created)
+            att.Status ??= "P";
+            att.CorrectionRequested = false;
+            att.CorrectionStatus ??= "None";
+
+            _context.SaveChanges();
+
+            return Ok(new { success = true });
+        }
+
+        //[HttpPost]
+        //public IActionResult GeoCheckIn([FromBody] GeoAttendanceVm vm)
+        //{
+        //    string empCode = HttpContext.Session.GetString("EmpCode");
+        //    if (string.IsNullOrEmpty(empCode))
+        //        return Unauthorized();
+
+        //    var employee = _context.Employees
+        //        .FirstOrDefault(e => e.EmployeeCode == empCode);
+
+        //    if (employee == null)
+        //        return Unauthorized();
+
+        //    DateTime today = DateTime.Today;
+
+        //    // 🔹 GET OR CREATE
+        //    var att = GetOrCreateTodayAttendance(empCode, employee.Id, today);
+
+        //    // ❌ BLOCK DOUBLE CHECK-IN
+        //    if (att.InTime != null)
+        //        return BadRequest("Already checked in today");
+
+        //    // ✅ UPDATE ONLY
+        //    att.InTime = DateTime.Now.TimeOfDay;
+        //    att.Att_Date = DateTime.Now;
+        //    att.IsGeoAttendance = true;
+        //    att.CheckInLatitude = vm.Latitude;
+        //    att.CheckInLongitude = vm.Longitude;
+
+        //    _context.SaveChanges();
+        //    return Ok(new { success = true });
+        //}
+
+        //[HttpPost]
+        //public IActionResult GeoCheckOut([FromBody] GeoAttendanceVm vm)
+        //{
+        //    string empCode = HttpContext.Session.GetString("EmpCode");
+        //    string role = HttpContext.Session.GetString("Role") ?? "Employee";
+
+        //    if (string.IsNullOrWhiteSpace(empCode))
+        //        return Unauthorized();
+
+        //    var emp = _context.Employees
+        //        .FirstOrDefault(e => e.EmployeeCode == empCode);
+
+        //    if (emp == null)
+        //        return Unauthorized();
+
+        //    DateTime today = DateTime.Today;
+
+        //    // 🔹 GET OR CREATE
+        //    var att = GetOrCreateTodayAttendance(empCode, emp.Id, today);
+
+        //    if (att.OutTime != null)
+        //        return BadRequest("Already checked out");
+
+        //    // ✅ UPDATE ONLY
+        //    att.OutTime = DateTime.Now.TimeOfDay;
+        //    att.Att_Date = DateTime.Now;
+        //    att.IsGeoAttendance = true;
+        //    att.CheckOutLatitude = vm.Latitude;
+        //    att.CheckOutLongitude = vm.Longitude;
+
+        //    // 🔁 AUTO COMP-OFF (HO / WO)
+        //    TryAutoCompOff(att);
+
+        //    _context.SaveChanges();
+        //    return Ok(new { success = true });
+        //}
+
+        //[HttpPost]
+        //public IActionResult GeoCheckIn([FromBody] GeoAttendanceVm vm)
+        //{
+        //    string empCode = HttpContext.Session.GetString("EmpCode");
+        //    if (string.IsNullOrEmpty(empCode))
+        //        return Unauthorized();
+
+        //    var employee = _context.Employees
+        //        .FirstOrDefault(e => e.EmployeeCode == empCode);
+
+        //    if (employee == null)
+        //        return Unauthorized();
+
+        //    const double officeLat = 18.534202;
+        //    const double officeLng = 73.839556;
+        //    const double radiusMeters = 2000;
+
+        //    double distance = GeoHelper.DistanceInMeters(
+        //        officeLat, officeLng,
+        //        vm.Latitude, vm.Longitude
+        //    );
+
+        //    if (distance > radiusMeters)
+        //        return BadRequest($"You are outside office premises ({Math.Round(distance)} meters)");
+
+        //    DateTime today = DateTime.Today;
+
+        //    var existing = _context.Attendances
+        //        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+
+        //    if (existing != null)
+        //        return BadRequest("Already checked in today");
+
+        //    Attendance att = new Attendance
+        //    {
+        //        Id = employee.Id,
+        //        Emp_Code = empCode,
+        //        Date = today,
+        //        Status = "P",
+        //        InTime = DateTime.Now.TimeOfDay,
+        //        OutTime = null,
+        //        Att_Date = DateTime.Now,
+        //        Total_Hours = null,
+        //        IsLate = false,
+        //        LateMinutes = 0,
+        //        IsGeoAttendance = true,
+
+        //        CheckInLatitude = vm.Latitude,
+        //        CheckInLongitude = vm.Longitude,
+        //        CorrectionRequested = false,
+        //        CorrectionStatus = "None"
+        //    };
+
+        //    _context.Attendances.Add(att);
+        //    _context.SaveChanges();
+
+        //    return Ok(new { success = true });
+        //}
+
+
+
+
+        //[HttpPost]
+        //public IActionResult GeoCheckOut([FromBody] GeoAttendanceVm vm)
+        //{
+        //    string empCode = HttpContext.Session.GetString("EmpCode");
+        //    string role = HttpContext.Session.GetString("Role") ?? "Employee";
+
+        //    if (string.IsNullOrWhiteSpace(empCode))
+        //        return Unauthorized("Session expired");
+
+        //    // =========================
+        //    // 📍 OFFICE GEOFENCE
+        //    // =========================
+        //    const double officeLat = 18.534202;
+        //    const double officeLng = 73.839556;
+        //    const double radiusMeters = 2000;
+
+        //    double distance = GeoHelper.DistanceInMeters(
+        //        officeLat, officeLng,
+        //        vm.Latitude, vm.Longitude
+        //    );
+
+        //    if (distance > radiusMeters)
+        //        return BadRequest($"You are outside office premises ({Math.Round(distance)} meters)");
+
+        //    DateTime today = DateTime.Today;
+
+        //    var record = _context.Attendances
+        //        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+
+        //    if (record == null)
+        //        return BadRequest("No active attendance found");
+
+        //    if (record.OutTime != null)
+        //        return BadRequest("Already checked out");
+
+        //    // =====================================================
+        //    // ✅ DIRECTOR → REAL CHECKOUT (UNCHANGED LOGIC)
+        //    // =====================================================
+        //    if (role.Equals("Director", StringComparison.OrdinalIgnoreCase))
+        //    {
+        //        record.OutTime = DateTime.Now.TimeOfDay;
+        //        record.Att_Date = DateTime.Now;
+        //        record.IsGeoAttendance = true;
+
+        //        // ✅ STORE LOCATION
+        //        record.CheckOutLatitude = vm.Latitude;
+        //        record.CheckOutLongitude = vm.Longitude;
+
+        //        if (record.InTime != null)
+        //        {
+        //            TimeSpan worked = record.OutTime.Value - record.InTime.Value;
+
+        //            TimeSpan shift = (today.DayOfWeek == DayOfWeek.Saturday)
+        //                ? TimeSpan.FromMinutes(420)   // 7 hrs
+        //                : TimeSpan.FromMinutes(510);  // 8.5 hrs
+
+        //            if (worked < shift)
+        //            {
+        //                TimeSpan remaining = shift - worked;
+        //                TempData["EarlyTime"] = $"{remaining.Hours}h {remaining.Minutes}m";
+        //                TempData["EarlyCheckout"] = "Remaining Time";
+        //            }
+        //            else
+        //            {
+        //                TimeSpan extra = worked - shift;
+        //                TempData["LateTime"] = $"{extra.Hours}h {extra.Minutes}m";
+        //                TempData["LateCheckout"] = "Overtime";
+        //            }
+        //        }
+        //        TryAutoCompOff(record);
+        //        _context.SaveChanges();
+        //        return Ok(new { success = true });
+        //    }
+
+        //    // =====================================================
+        //    // ✅ EMPLOYEE → TEMP STORE ONLY (NEW, SAFE LOGIC)
+        //    // =====================================================
+        //    // ❌ DO NOT SET OutTime
+        //    // ❌ DO NOT SAVE DB
+        //    // ✔ STORE CHECKOUT DATA TEMPORARILY
+        //    HttpContext.Session.SetString("CheckoutTime", DateTime.Now.TimeOfDay.ToString());
+        //    HttpContext.Session.SetString("CheckoutLat", vm.Latitude.ToString());
+        //    HttpContext.Session.SetString("CheckoutLng", vm.Longitude.ToString());
+
+        //    // ✔ REDIRECT TO DAILY REPORT
+        //    return Ok(new { redirect = "/DailyReport/Send" });
+        //}
+
 
 
 
@@ -327,7 +550,7 @@ namespace HRMS.Controllers
                         TempData["LateCheckout"] = "Overtime";
                     }
                 }
-
+                TryAutoCompOff(record);
                 _context.SaveChanges();
                 return RedirectToAction(nameof(EmployeePanel));
             }
@@ -1322,6 +1545,96 @@ namespace HRMS.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction("CorrectionRequests");
+        }
+        //private void TryAutoCompOff(Attendance att)
+        //{
+        //    // Safety checks
+        //    if (att == null || att.IsCompOffCredited)
+        //        return;
+
+        //    if (!att.InTime.HasValue || !att.OutTime.HasValue)
+        //        return;
+
+        //    var workedHours = (att.OutTime.Value - att.InTime.Value).TotalHours;
+
+        //    // Minimum hours rule (configurable)
+        //    if (workedHours < 4)
+        //        return;
+
+        //    bool isWeeklyOff =
+        //        att.Date.DayOfWeek == DayOfWeek.Sunday ||
+        //        att.Date.DayOfWeek == DayOfWeek.Saturday;
+
+        //    bool isHoliday = att.Status == "HO";
+
+        //    if (!isWeeklyOff && !isHoliday)
+        //        return;
+
+        //    // Fetch employee
+        //    var emp = _context.Employees
+        //        .FirstOrDefault(e => e.EmployeeCode == att.Emp_Code);
+
+        //    if (emp == null)
+        //        return;
+
+        //    // ✅ CREDIT COMP-OFF
+        //    emp.CompOffBalance += 1;
+        //    emp.LastCompOffEarnedDate = att.Date;
+
+        //    att.IsCompOffCredited = true;
+
+        //    _logger.LogInformation(
+        //        $"Comp-Off credited to {emp.EmployeeCode} for {att.Date:dd-MM-yyyy}");
+        //}
+        private void TryAutoCompOff(Attendance att)
+        {
+            if (att.IsCompOffCredited)
+                return;
+
+            bool isWeeklyOff =
+               // att.Date.DayOfWeek == DayOfWeek.Saturday ||
+                att.Date.DayOfWeek == DayOfWeek.Sunday;
+
+            bool isHoliday =
+                _context.Holidays.Any(h => h.HolidayDate == att.Date);
+
+            if (!isWeeklyOff && !isHoliday)
+                return;
+
+            var emp = _context.Employees.FirstOrDefault(e => e.EmployeeCode == att.Emp_Code);
+            if (emp == null) return;
+
+            emp.CompOffBalance += 1;
+            emp.LastCompOffEarnedDate = DateTime.Today;
+            att.IsCompOffCredited = true;
+        }
+
+        private Attendance GetOrCreateTodayAttendance(
+            string empCode,
+            int empId,
+            DateTime date)
+        {
+            var att = _context.Attendances
+                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == date);
+
+            if (att != null)
+                return att;
+
+            // 🔹 CREATE ONLY IF MISSING
+            att = new Attendance
+            {
+                Id = empId,
+                Emp_Code = empCode,
+                Date = date,
+                Status = "P",
+                IsGeoAttendance = false,
+                CorrectionRequested = false,
+                CorrectionStatus = "None",
+                IsCompOffCredited = false
+            };
+
+            _context.Attendances.Add(att);
+            return att;
         }
 
     }
