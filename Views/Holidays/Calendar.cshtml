@@ -1,0 +1,97 @@
+﻿@{
+    ViewData["Title"] = "Holiday Calendar";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+}
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<div class="container mt-4">
+    <h3>Holiday Calendar</h3>
+    <div id="calendar"></div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        var calendarEl = document.getElementById("calendar");
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: "dayGridMonth",
+
+            headerToolbar: {
+                left: "",
+                center: "title",              // ✅ Month title CENTER
+                right: "backButton today prev,next" // ✅ Buttons RIGHT
+            },
+
+            customButtons: {
+                backButton: {
+                    text: "Back",
+                    click: function () {
+                        window.location.href = '@Url.Action("Index", "Holidays")';
+                    }
+                }
+            },
+
+            events: "/Holidays/CalendarData"
+        });
+
+        calendar.render();
+    });
+</script>
+
+<style>
+    /* Back button */
+    .fc-backButton-button {
+        background-color: #6b7280 !important;
+        border: none !important;
+        color: #fff !important;
+        padding: 6px 14px !important;
+        border-radius: 6px !important;
+        font-size: 13px;
+    }
+
+        .fc-backButton-button:hover {
+            background-color: #4b5563 !important;
+        }
+
+    /* Highlight day with holiday */
+    .fc-daygrid-day.fc-day-has-event {
+        background-color: #fff7cc !important;
+    }
+
+    /* Holiday event */
+    .fc-event {
+        background-color: #facc15 !important;
+        border: none !important;
+        color: #1f2937 !important;
+        font-weight: 600;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+
+        .fc-event:hover {
+            background-color: #f59e0b !important;
+            color: #000 !important;
+        }
+
+    .fc-event-title {
+        white-space: normal !important;
+    }
+
+    /* Today highlight */
+    .fc-day-today {
+        background-color: #e0f2fe !important;
+    }
+</style>

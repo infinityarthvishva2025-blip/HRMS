@@ -38,6 +38,9 @@
             </div>
         </div>
 
+        <!-- GEO ERROR -->
+        <div id="geoError" class="alert alert-danger text-center d-none mt-3"></div>
+
         <!-- SUCCESS MESSAGE -->
         @if (hasCheckedOut && TempData["CheckoutSuccess"] != null)
         {
@@ -47,41 +50,25 @@
             </div>
         }
 
-        <!-- EARLY / LATE MESSAGE (ONLY AFTER CHECK-IN) -->
-        @if (hasCheckedIn && !hasCheckedOut &&
-                TempData["EarlyCheckout"] != null &&
-                TempData["EarlyTime"] != null &&
-                role != "Intern" && role != "Employee" && role != "Manager" && role != "GM" && role != "VP" &&
-                role != "Director")
-
-        {
-            <div class="alert alert-danger text-center fw-bold mb-3">
-                <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                @TempData["EarlyCheckout"] — remaining @TempData["EarlyTime"]
-            </div>
-        }
-
-        @if (hasCheckedIn && !hasCheckedOut &&
-                TempData["LateCheckout"] != null &&
-                TempData["LateTime"] != null &&
-                role != "Intern" && role != "Employee" && role != "Manager" && role != "GM" && role != "VP" &&
-                role != "Director")
-
-        {
-            <div class="alert alert-success text-center fw-bold mb-3">
-                <i class="fa-solid fa-circle-check me-2"></i>
-                @TempData["LateCheckout"] — extra @TempData["LateTime"]
-            </div>
-        }
-
         <!-- NO CHECK-IN -->
         @if (!hasCheckedIn)
         {
             <div class="att-empty-state text-center">
                 <p>You haven't checked in yet today.</p>
-                <a asp-action="CheckIn" class="att-btn att-btn-checkin">
-                    <i class="fa-solid fa-play me-2"></i>Check In
+
+                @* manual attendance *@
+                @* <a asp-action="CheckIn" class="att-btn att-btn-checkin">
+                    <i class="fa-solid fa-play me-2"></i> Check In
                 </a>
+ *@
+
+ @* Geo Attendance *@
+
+                <button type="button"
+                        onclick="geoCheckIn()"
+                        class="att-btn att-btn-checkin">
+                    <i class="fa-solid fa-play me-2"></i> Geo Check In
+                </button>
             </div>
         }
         else
@@ -116,31 +103,38 @@
             }
             else
             {
-                <!-- COUNTDOWN (ONLY AFTER CHECK-IN) -->
+                <!-- COUNTDOWN -->
                 <div id="countdownContainer" class="att-card neon-card mt-3">
                     <div class="att-label text-center">
                         <i class="fa-solid fa-hourglass-half me-2 text-warning"></i>
+                 
                         Time Remaining (8-Hour 30-Minute shift)
                     </div>
                     <div id="countdown" class="countdown-digits">00:00:00</div>
                 </div>
 
-                <!-- CHECKOUT BUTTON -->
-                <a href="#"
-                   class="att-btn att-btn-checkout text-center"
+                <!-- MANUAL CHECKOUT BUTTON -->
+               @*  <a href="#"
+                   class="att-btn att-btn-checkout mt-3"
                    data-bs-toggle="modal"
                    data-bs-target="#checkoutModal">
                     <i class="fa-solid fa-stop me-2"></i> Check Out
+                </a> *@
+
+
+                <!-- GEO CHECKOUT BUTTON -->
+                <a href="#"
+                   class="att-btn att-btn-checkout mt-3"
+                   data-bs-toggle="modal"
+                   data-bs-target="#geoCheckoutModal">
+                    <i class="fa-solid fa-location-dot me-2"></i> Geo Check Out
                 </a>
-
-
             }
         }
-
     </div>
 </div>
 
-<!-- CHECKOUT MODAL -->
+<!-- MANUAL CHECKOUT MODAL -->
 <div class="modal fade" id="checkoutModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content custom-modal">
@@ -155,9 +149,8 @@
             </div>
             <div class="modal-footer border-0 d-flex justify-content-between">
                 <button class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-                <a href="@Url.Action("Checkout", "Attendance")"
-                   class="btn btn-danger px-4"
-                   onclick="this.classList.add('disabled');">
+                <a href="@Url.Action("CheckOut", "Attendance")"
+                   class="btn btn-danger px-4">
                     Yes, Check Out
                 </a>
             </div>
@@ -165,43 +158,195 @@
     </div>
 </div>
 
+<!-- GEO CHECKOUT MODAL -->
+<div class="modal fade" id="geoCheckoutModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-modal">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-danger">
+                    <i class="fa-solid fa-location-dot me-2"></i> Confirm Geo Checkout
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center">
+                <p class="fs-5 mb-3">
+                    Are you sure you want to <strong>Geo Check Out</strong>?
+                </p>
+            </div>
+
+            <div class="modal-footer border-0 d-flex justify-content-between">
+                <button class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button class="btn btn-danger px-4"
+                        onclick="confirmGeoCheckout(this)">
+                    Yes, Check Out
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- GEO CHECK-OUT SCRIPT -->
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    function confirmGeoCheckout(btn) {
 
-        // 🚫 Stop JS completely if NOT checked in
-        if ('@(Model?.InTime == null ? "true" : "false")' === 'true') return;
+        const errorDiv = document.getElementById("geoError");
+        errorDiv.classList.add("d-none");
+        errorDiv.innerText = "";
 
-        let countdown = document.getElementById("countdownContainer");
-        let label = document.getElementById("countdown");
+        btn.disabled = true;
+        btn.innerText = "Processing...";
 
-        if (!countdown || !label) return;
-
-        let inTime  = '@(Model?.InTime?.ToString() ?? "")';
-        let outTime = '@(Model?.OutTime?.ToString() ?? "")';
-
-        if (outTime !== "" || inTime === "") {
-            countdown.style.display = "none";
+        if (!navigator.geolocation) {
+            errorDiv.innerText = "Geolocation not supported.";
+            errorDiv.classList.remove("d-none");
+            btn.disabled = false;
+            btn.innerText = "Yes, Check Out";
             return;
         }
 
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+
+                fetch('/Attendance/GeoCheckOut', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude
+                    })
+                })
+                .then(async r => {
+                    if (!r.ok) {
+                        const msg = await r.text();
+
+                        bootstrap.Modal.getInstance(
+                            document.getElementById('geoCheckoutModal')
+                        ).hide();
+
+                        errorDiv.innerText = msg;
+                        errorDiv.classList.remove("d-none");
+
+                        btn.disabled = false;
+                        btn.innerText = "Yes, Check Out";
+                        throw msg;
+                    }
+
+                    // ✅ PARSE RESPONSE
+                    const res = await r.json();
+
+                    // ✅ CLOSE MODAL
+                    bootstrap.Modal.getInstance(
+                        document.getElementById('geoCheckoutModal')
+                    ).hide();
+
+                    // ✅ ROLE-AWARE REDIRECT
+                    if (res.redirect) {
+                        // Employee / Manager / GM / VP
+                        window.location.href = res.redirect;
+                    } else {
+                        // Director → stay on panel
+                        window.location.reload();
+                    }
+                })
+                .catch(() => {});
+            },
+            () => {
+                bootstrap.Modal.getInstance(
+                    document.getElementById('geoCheckoutModal')
+                ).hide();
+
+                errorDiv.innerText = "Location permission denied.";
+                errorDiv.classList.remove("d-none");
+
+                btn.disabled = false;
+                btn.innerText = "Yes, Check Out";
+            }
+        );
+    }
+</script>
+
+
+
+
+<!-- GEO CHECK-IN SCRIPT -->
+<script>
+        function geoCheckIn() {
+
+        const errorDiv = document.getElementById("geoError");
+        errorDiv.classList.add("d-none");
+        errorDiv.innerText = "";
+
+        if (!navigator.geolocation) {
+            errorDiv.innerText = "Geolocation is not supported.";
+            errorDiv.classList.remove("d-none");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                fetch('/Attendance/GeoCheckIn', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude
+                    })
+                })
+                .then(async r => {
+                    if (!r.ok) {
+                        const msg = await r.text();
+
+                        errorDiv.innerText = msg;  // Shows: You are outside office premises (1248 meters)
+                        errorDiv.classList.remove("d-none");
+
+                        throw msg;
+                    }
+
+                    location.reload();
+                })
+                .catch(() => {});
+            },
+            () => {
+                errorDiv.innerText = "Location permission denied.";
+                errorDiv.classList.remove("d-none");
+            }
+        );
+    }
+
+</script>
+
+
+
+<!-- COUNTDOWN SCRIPT -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        if ('@(Model?.InTime == null ? "true" : "false")' === 'true') return;
+
+        let label = document.getElementById("countdown");
+        if (!label) return;
+
+        let inTime = '@(Model?.InTime?.ToString() ?? "")';
+        if (!inTime) return;
+
         let today = new Date();
-        let day = today.getDay(); // Sunday=0 ... Saturday=6
+        let shiftMinutes = (today.getDay() === 6) ? 420 : 510;
 
-        // Saturday = 7h, others = 8.5h
-        let shiftMinutes = (day === 6) ? 420 : 510;
-        let shiftMs = shiftMinutes * 60 * 1000;
+        let start = new Date(today.toISOString().split("T")[0] + "T" + inTime);
+        let end = new Date(start.getTime() + shiftMinutes * 60000);
 
-        let dateStr = today.toISOString().split("T")[0];
-        let start = new Date(`${dateStr}T${inTime}`);
-        let endTime = new Date(start.getTime() + shiftMs);
-
-        function updateCountdown() {
-            let diff = endTime - new Date();
+        function tick() {
+            let diff = end - new Date();
             if (diff <= 0) {
                 label.textContent = "00:00:00";
                 return;
             }
-
             let h = Math.floor(diff / 3600000);
             let m = Math.floor((diff % 3600000) / 60000);
             let s = Math.floor((diff % 60000) / 1000);
@@ -212,59 +357,13 @@
                 s.toString().padStart(2, '0');
         }
 
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
+        tick();
+        setInterval(tick, 1000);
     });
 </script>
 
+
 <style>
-    /* EARLY / LATE Checkout cards */
-    .status-card {
-        width: 100%;
-        padding: 14px 18px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-top: 20px;
-    }
-
-    .early-card {
-        background: #fde2e2;
-        border-left: 6px solid #f87171;
-        color: #b91c1c;
-    }
-
-    .late-card {
-        background: #dcfce7;
-        border-left: 6px solid #34d399;
-        color: #065f46;
-    }
-
-    .status-icon {
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-        .status-icon i {
-            font-size: 18px;
-        }
-
-    .status-icon {
-        background: #fee2e2;
-        color: #dc2626;
-    }
-
-        .status-icon.late {
-            background: #bbf7d0;
-            color: #047857;
-        }
-
-    /* Layout */
     .att-page {
         display: flex;
         justify-content: center;
@@ -272,8 +371,8 @@
     }
 
     .att-container {
-        width: 100%;
         max-width: 760px;
+        width: 100%;
         background: #fff;
         border-radius: 24px;
         padding: 24px;
@@ -293,72 +392,23 @@
         border-radius: 50%;
         background: linear-gradient(135deg,#fde68a,#f97316);
         display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .att-btn {
+        display: flex;
         justify-content: center;
         align-items: center;
-    }
-
-    .att-title {
-        font-size: 22px;
-        font-weight: 800;
-    }
-
-    .att-subtitle {
-        color: #6b7280;
-        font-size: 13px;
-    }
-
-    /* Cards */
-    .neon-card {
-        background: #f9fafb;
-        padding: 16px;
-        border-radius: 18px;
-        border: 1px solid #eee;
-    }
-
-    .att-entry {
-        display: flex;
-        gap: 15px;
-        align-items: center;
-    }
-
-    .att-label {
-        font-size: 12px;
-        text-transform: uppercase;
-        color: #6b7280;
-    }
-
-    .att-value {
-        font-size: 18px;
-        font-weight: 800;
-    }
-
-    /* Countdown */
-    .countdown-digits {
-        text-align: center;
-        font-size: 36px;
-        font-weight: 900;
-        color: #ef4444;
-        letter-spacing: 3px;
-    }
-
-    /* Buttons */
-    .att-btn {
-        display: flex; /* 🔥 */
-        align-items: center; /* 🔥 vertical center */
-        justify-content: center; /* 🔥 horizontal center */
-        gap: 8px; /* nice space between icon & text */
-
-        width: 100%;
+        gap: 8px;
         max-width: 260px;
-        margin: 0 auto;
+        margin: auto;
         padding: 12px;
         border-radius: 999px;
-        font-size: 16px;
         font-weight: 700;
         color: white;
         text-decoration: none;
     }
-
 
     .att-btn-checkin {
         background: linear-gradient(135deg,#10b981,#059669);
@@ -368,9 +418,14 @@
         background: linear-gradient(135deg,#ef4444,#b91c1c);
     }
 
-    /* Modal */
-    .custom-modal {
-        border-radius: 18px;
-        padding: 10px;
+    .geo-checkin-btn {
+        background: linear-gradient(135deg,#2563eb,#1e40af);
+    }
+
+    .countdown-digits {
+        font-size: 36px;
+        font-weight: 900;
+        color: #ef4444;
+        text-align: center;
     }
 </style>

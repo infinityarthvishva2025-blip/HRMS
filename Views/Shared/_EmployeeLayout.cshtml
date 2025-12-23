@@ -184,6 +184,38 @@
                 display: none !important;
             }
 
+
+        /* ===== SCROLLABLE SIDEBAR MENU ===== */
+        .sidebar-menu {
+            max-height: calc(100vh - 170px); /* header + padding space */
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 20px;
+        }
+
+            /* Smooth scrollbar (optional, professional look) */
+            .sidebar-menu::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .sidebar-menu::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .sidebar-menu::-webkit-scrollbar-thumb {
+                background: #c7cbe3;
+                border-radius: 10px;
+            }
+
+                .sidebar-menu::-webkit-scrollbar-thumb:hover {
+                    background: #9fa6d8;
+                }
+
+        /* Firefox */
+        .sidebar-menu {
+            scrollbar-width: thin;
+            scrollbar-color: #c7cbe3 transparent;
+        }
         /* ACTIVE */
         .active-menu {
             background: #2F3D88 !important;
@@ -380,6 +412,9 @@
 
                 <a asp-controller="Leave" asp-action="LeaveReport" class="submenu-item">
                     <i class="fa-solid fa-list-check"></i>My Leaves
+                </a>
+                <a asp-controller="Holidays" asp-action="Index" class="submenu-item">
+                    <i class="fa-solid fa-list-check"></i>Holidays
                 </a>
             </div>
 
