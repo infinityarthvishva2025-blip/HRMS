@@ -12,7 +12,9 @@ public class HolidaysController : Controller
         _context = context;
     }
 
-    // 🔹 COMMON SESSION CHECK METHOD
+    // =========================
+    // COMMON SESSION CHECK
+    // =========================
     private async Task<bool> ValidateSessionAsync()
     {
         var empId = HttpContext.Session.GetInt32("EmployeeId");
@@ -52,6 +54,10 @@ public class HolidaysController : Controller
 
         return View();
     }
+
+    // =========================
+    // CREATE (POST)
+    // =========================
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Holiday model)
@@ -59,90 +65,28 @@ public class HolidaysController : Controller
         if (!await ValidateSessionAsync())
             return RedirectToAction("Login", "Account");
 
-        // 🔥 AUTO-FILL SYSTEM FIELDS
+        // ❌ BLOCK SUNDAY
+        if (model.HolidayDate.DayOfWeek == DayOfWeek.Sunday)
+        {
+            ModelState.AddModelError(
+                "HolidayDate",
+                "Sunday is already Weekly Off. Holiday cannot be added."
+            );
+            return View(model);
+        }
+
         model.CreatedOn = DateTime.Now;
         model.Status = "Active";
         model.ApprovedBy = "Admin";
         model.ApprovedOn = null;
 
-        // =========================
-        // 1️⃣ SAVE HOLIDAY
-        // =========================
         _context.Holidays.Add(model);
         await _context.SaveChangesAsync();
 
-        // =========================
-        // 2️⃣ INSERT ATTENDANCE (HO)
-        // =========================
-        DateTime holidayDate = model.HolidayDate.Date;
-
-        // ❌ Skip Sunday (already WO)
-        if (holidayDate.DayOfWeek != DayOfWeek.Sunday)
-        {
-            // Get all ACTIVE employees
-            var employees = await _context.Employees
-                .Where(e => e.Status == "Active")
-                .ToListAsync();
-
-            foreach (var emp in employees)
-            {
-                // ❗ Prevent duplicate attendance
-                bool exists = await _context.Attendances.AnyAsync(a =>
-                    a.Emp_Code == emp.EmployeeCode &&
-                    a.Date == holidayDate);
-
-                if (exists)
-                    continue;
-
-                Attendance att = new Attendance
-                {
-                    Emp_Code = emp.EmployeeCode,
-                    Date = holidayDate,
-                    Status = "HO",           // ✅ HOLIDAY
-                    InTime = null,
-                    OutTime = null,
-                    Total_Hours = 0,
-                    IsLate = false,
-                    LateMinutes = 0,
-                    Att_Date = holidayDate,
-                    CorrectionRequested = false,
-                    CorrectionStatus = "None",
-                    IsGeoAttendance = false
-                };
-
-                _context.Attendances.Add(att);
-            }
-
-            await _context.SaveChangesAsync();
-        }
+        await ApplyHolidayToAttendance(model.HolidayDate);
 
         return RedirectToAction(nameof(Index));
     }
-
-    // =========================
-    // CREATE (POST)
-    // =========================
-    //[HttpPost]
-    //[ValidateAntiForgeryToken]
-    //public async Task<IActionResult> Create(Holiday model)
-    //{
-    //    if (!await ValidateSessionAsync())
-    //        return RedirectToAction("Login", "Account");
-
-    //    //if (!ModelState.IsValid)
-    //    //    return View(model);
-
-    //    // 🔥 AUTO-FILL SYSTEM FIELDS
-    //    model.CreatedOn = DateTime.Now;
-    //    model.Status = "Active";          // or "Approved"
-    //    model.ApprovedBy = "Admin";           // HR/Admin later
-    //    model.ApprovedOn = null;
-
-    //    _context.Holidays.Add(model);
-    //    await _context.SaveChangesAsync();
-
-    //    return RedirectToAction(nameof(Index));
-    //}
 
     // =========================
     // EDIT (GET)
@@ -169,13 +113,24 @@ public class HolidaysController : Controller
         if (!await ValidateSessionAsync())
             return RedirectToAction("Login", "Account");
 
-        //if (!ModelState.IsValid)
-        //    return View(model);
+        // ❌ BLOCK SUNDAY
+        if (model.HolidayDate.DayOfWeek == DayOfWeek.Sunday)
+        {
+            ModelState.AddModelError(
+                "HolidayDate",
+                "Sunday is already Weekly Off. Holiday cannot be added."
+            );
+            return View(model);
+        }
+
         model.CreatedOn = DateTime.Now;
-        model.Status = "Active";          // or "Approved"
+        model.Status = "Active";
         model.ApprovedBy = "Admin";
+
         _context.Holidays.Update(model);
         await _context.SaveChangesAsync();
+
+        await ApplyHolidayToAttendance(model.HolidayDate);
 
         return RedirectToAction(nameof(Index));
     }
@@ -210,7 +165,7 @@ public class HolidaysController : Controller
     }
 
     // =========================
-    // CALENDAR DATA (JSON)
+    // CALENDAR DATA
     // =========================
     public async Task<IActionResult> CalendarData()
     {
@@ -226,5 +181,61 @@ public class HolidaysController : Controller
             .ToListAsync();
 
         return Json(data);
+    }
+
+    // =========================================================
+    // APPLY HOLIDAY → ATTENDANCE
+    // =========================================================
+    private async Task ApplyHolidayToAttendance(DateTime holidayDate)
+    {
+        DateTime date = holidayDate.Date;
+
+        var employees = await _context.Employees
+            .Where(e => e.Status == "Active")
+            .ToListAsync();
+
+        foreach (var emp in employees)
+        {
+            var att = await _context.Attendances
+                .FirstOrDefaultAsync(a =>
+                    a.Emp_Code == emp.EmployeeCode &&
+                    a.Date == date);
+
+            // ➕ INSERT
+            if (att == null)
+            {
+                _context.Attendances.Add(new Attendance
+                {
+                    Emp_Code = emp.EmployeeCode,
+                    Date = date,
+                    Status = "HO",
+                    InTime = null,
+                    OutTime = null,
+                    Total_Hours = 0,
+                    IsLate = false,
+                    LateMinutes = 0,
+                    Att_Date = date,
+                    CorrectionRequested = false,
+                    CorrectionStatus = "None",
+                    IsGeoAttendance = false
+                });
+                continue;
+            }
+
+            // ❌ DO NOT OVERRIDE WORKED DAY
+            if (att.InTime.HasValue)
+                continue;
+
+            // 🔁 UPDATE
+            att.Status = "HO";
+            att.OutTime = null;
+            att.Total_Hours = 0;
+            att.IsLate = false;
+            att.LateMinutes = 0;
+            att.CorrectionRequested = false;
+            att.CorrectionStatus = "None";
+        }
+
+        await _context.SaveChangesAsync();
     }
 }

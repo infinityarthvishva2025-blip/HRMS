@@ -204,30 +204,30 @@
                 }
             });
 
-            // === PAYROLL REPORT ===
-            const payRes = await fetch('/Reports/GetPayrollReport');
-            const payData = await payRes.json();
+        //     // === PAYROLL REPORT ===
+        //     const payRes = await fetch('/Reports/GetPayrollReport');
+        //     const payData = await payRes.json();
 
-            new Chart(document.getElementById('payrollChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: payData.map(x => x.month),
-                    datasets: [{
-                        data: payData.map(x => x.total),
-                        backgroundColor: ['#1976d2','#009688','#9c27b0','#f44336','#ff9800','#4caf50'],
-                        borderColor: '#fff',
-                        hoverOffset: 6
-                    }]
-                },
-                options: {
-                    plugins: { legend: { position: 'bottom' } },
-                    cutout: '65%',
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
+        //     new Chart(document.getElementById('payrollChart'), {
+        //         type: 'doughnut',
+        //         data: {
+        //             labels: payData.map(x => x.month),
+        //             datasets: [{
+        //                 data: payData.map(x => x.total),
+        //                 backgroundColor: ['#1976d2','#009688','#9c27b0','#f44336','#ff9800','#4caf50'],
+        //                 borderColor: '#fff',
+        //                 hoverOffset: 6
+        //             }]
+        //         },
+        //         options: {
+        //             plugins: { legend: { position: 'bottom' } },
+        //             cutout: '65%',
+        //             responsive: true,
+        //             maintainAspectRatio: false
+        //         }
+        //     });
 
-        });
+         });
     </script>
 
 }
