@@ -43,9 +43,9 @@
                 data-bs-toggle="modal"
                 data-bs-target="#salarySlipModal">
             <i class="fa-solid fa-file-invoice-dollar me-2"></i> View Salary Slip
-        </button> 
+        </button>
 
-      
+
     </div>
 
 </div>
@@ -257,12 +257,11 @@
                         var att = item.Attendance;
 
                         <tr>
-                            <td>@emp.EmployeeCode</td>
-                            <td>@emp.Name</td>
-                            <td>@emp.Department</td>
-                            <td>@emp.Position</td>
-
-                            <td>
+                            <td data-label="Code">@emp.EmployeeCode</td>
+                            <td data-label="Name">@emp.Name</td>
+                            <td data-label="Department">@emp.Department</td>
+                            <td data-label="Position">@emp.Position</td>
+                            <td data-label="Status">
                                 @if (att == null)
                                 {
                                     <span class="badge bg-danger">Absent</span>
@@ -277,6 +276,7 @@
                                 }
                             </td>
                         </tr>
+
                     }
                 }
             </tbody>
@@ -373,10 +373,12 @@
 
 <!-- ======================= CUSTOM STYLES ======================= -->
 <style>
-
-    /* ================== GLOBAL ================== */
+    /* =====================================================
+           GLOBAL
+        ===================================================== */
     body {
         font-family: 'Poppins', sans-serif !important;
+        background: #eef3fb;
     }
 
     .page-title {
@@ -385,7 +387,20 @@
         font-size: 1.75rem;
     }
 
-    /* ================== SUMMARY CARDS ================== */
+    /* =====================================================
+           DASHBOARD HEADER
+        ===================================================== */
+    .dashboard-header {
+        background: linear-gradient(135deg, #0d47a1, #00897b);
+        padding: 50px 30px;
+        border-radius: 20px;
+        color: white;
+        text-align: center;
+    }
+
+    /* =====================================================
+           SUMMARY CARDS
+        ===================================================== */
     .summary-card {
         padding: 20px;
         text-align: center;
@@ -421,7 +436,9 @@
         color: #e63946;
     }
 
-    /* ================== CARDS ================== */
+    /* =====================================================
+           CARDS
+        ===================================================== */
     .custom-card {
         border-radius: 12px;
         border: 0;
@@ -435,46 +452,12 @@
         font-size: 1.05rem;
     }
 
-    /* ================== CELEBRATIONS ================== */
-    .cele-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 12px;
-    }
-
-    .cele-icon {
-        width: 42px;
-        height: 42px;
-        display: flex;
-        border-radius: 8px;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-    }
-
-    .celebration-box {
-        padding: 10px;
-    }
-
-    .section-title {
-        font-weight: 600;
-        margin-bottom: 12px;
-    }
-
-    .primary-text {
-        color: #2F3D88;
-    }
-
-    .secondary-text {
-        color: #0E8376;
-    }
-
-    /* ================== BUTTONS ================== */
+    /* =====================================================
+           BUTTONS
+        ===================================================== */
     .btn {
         border-radius: 10px !important;
         padding: 10px 20px;
-        transition: .2s ease-in-out;
         font-weight: 500;
     }
 
@@ -482,10 +465,6 @@
         background: #2F3D88;
         color: #fff;
     }
-
-        .custom-btn-primary:hover {
-            background: #25306e;
-        }
 
     .custom-btn-secondary {
         background: #0E8376;
@@ -506,101 +485,115 @@
             background: #2F3D88;
             color: #fff;
         }
-    /* Reports Button */
-    .custom-btn-outline-dark {
-        border: 1px solid #333;
-        color: #333;
-        background: transparent;
-        font-weight: 500;
-    }
 
-        .custom-btn-outline-dark:hover {
-            background: #333;
-            color: #fff;
-        }
-
-    /* ================== TABLE ================== */
+    /* =====================================================
+           TABLE
+        ===================================================== */
     .table-responsive {
         overflow-x: auto;
-    }
-
-    .table thead th {
-        white-space: nowrap;
     }
 
     .table td, .table th {
         vertical-align: middle;
     }
 
-    /* ================== MEDIA QUERIES ================== */
-
-    /* Tablets (≤1024px) */
-    @@media (max-width: 1024px) {
-        .summary-card {
-            padding: 16px;
-        }
-
-        .page-title {
-            font-size: 1.5rem;
-        }
-
-        .custom-header {
-            font-size: 1rem;
-        }
-    }
-
-    /* Mobile Landscape & Small Tablets (≤768px) */
+    /* =====================================================
+           RESPONSIVE – TABLETS & MOBILE
+        ===================================================== */
     @@media (max-width: 768px) {
-        .row.g-3 > div,
-        .row.g-4 > div {
+        /* Layout */
+        .container,
+        .container-fluid {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+        /* Header */
+        .dashboard-header {
+            padding: 30px 16px;
+        }
+
+            .dashboard-header .btn {
+                width: 100%;
+                margin: 6px 0;
+            }
+        /* Summary Cards */
+        .row.g-3 > div {
             flex: 0 0 100%;
             max-width: 100%;
         }
 
         .summary-card {
-            margin-bottom: 10px;
-            padding: 18px 10px;
+            padding: 16px;
+        }
+        /* Quick Actions */
+        .custom-card .card-body .d-flex {
+            flex-direction: column;
         }
 
-            .summary-card h4 {
-                font-size: 1.4rem;
-            }
-
-        .custom-card {
-            margin-bottom: 20px;
-        }
-
-        .d-flex.flex-wrap.gap-3.justify-content-start {
-            justify-content: center !important;
-        }
-
-        .btn {
+        .custom-card .btn {
             width: 100%;
             text-align: center;
         }
-
-        .celebration-box {
-            border: none !important;
-            text-align: center;
-        }
-
-        .cele-item {
-            justify-content: center;
-        }
-
-        .cele-icon {
-            width: 36px;
-            height: 36px;
-            font-size: 14px;
-        }
-
+        /* Chart */
         canvas#deptChart {
-            height: 220px !important;
+            height: 240px !important;
         }
+        /* =================================================
+               RECENT EMPLOYEES – MOBILE CARD VIEW (FIXED)
+            ================================================= */
+        .custom-card table thead {
+            display: none;
+        }
+
+        .custom-card table,
+        .custom-card tbody,
+        .custom-card tr,
+        .custom-card td {
+            display: block;
+            width: 100%;
+        }
+
+            .custom-card tbody tr {
+                background: #fff;
+                border: 1px solid #dee2e6;
+                border-radius: 12px;
+                padding: 12px 14px;
+                margin-bottom: 12px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+                max-width: 420px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+                .custom-card tbody tr td {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 6px 0;
+                    font-size: 14px;
+                    gap: 12px;
+                    word-break: break-word;
+                    text-align: right;
+                }
+
+                    .custom-card tbody tr td::before {
+                        content: attr(data-label);
+                        font-weight: 600;
+                        color: #6c757d;
+                        flex-shrink: 0;
+                        text-align: left;
+                    }
+
+                    .custom-card tbody tr td[data-label="Status"] {
+                        justify-content: flex-end;
+                    }
     }
 
-    /* Mobile Portrait (≤480px) */
+    /* =====================================================
+           SMALL MOBILE
+        ===================================================== */
     @@media (max-width: 480px) {
+
         .page-title {
             font-size: 1.25rem;
             text-align: center;
@@ -610,64 +603,17 @@
             font-size: 1.2rem;
         }
 
-        .custom-card {
-            border-radius: 10px;
-        }
-
-        .custom-header {
-            text-align: center;
-        }
-
         .btn {
             font-size: 0.9rem;
             padding: 8px 14px;
         }
 
-        .cele-item div strong {
-            font-size: 0.9rem;
+        .custom-header {
+            text-align: center;
         }
     }
-
 </style>
-<style>
-    body {
-        background: #eef3fb;
-    }
 
-    .dashboard-header {
-        background: linear-gradient(135deg, #0d47a1, #00897b);
-        padding: 50px 30px;
-        border-radius: 20px;
-        color: white;
-    }
-
-    .info-card {
-        background: white;
-        border-radius: 15px;
-        transition: all .3s ease;
-    }
-
-        .info-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
-        }
-
-    .icon-circle {
-        width: 75px;
-        height: 75px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: auto;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.2);
-    }
-
-    .btn-gradient-primary {
-        background: linear-gradient(90deg, #0d47a1, #00acc1);
-        color: white !important;
-    }
-</style>
 <script>
        document.getElementById("salarySlipForm").addEventListener("submit", function (e) {
         e.preventDefault();
