@@ -119,6 +119,7 @@
                             <th>Total Hours</th>
                             <th>Status</th>
                             <th>Ticket</th>
+                            <th>Location</th>
                         </tr>
                     </thead>
 
@@ -127,7 +128,7 @@
                         @if (Model == null || !Model.Any())
                         {
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-danger fw-bold">
+                                <td colspan="9" class="text-center py-4 text-danger fw-bold">
                                     No records found...
                                 </td>
                             </tr>
@@ -166,11 +167,62 @@
                                             <span class="badge bg-secondary">No Ticket</span>
                                         }
                                     </td>
+
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-info"
+                                                onclick="viewLocation(
+                        '@a.CheckInLatitude',
+                        '@a.CheckInLongitude',
+                        '@a.CheckOutLatitude',
+                        '@a.CheckOutLongitude'
+                    )">
+                                            <i class="fa-solid fa-location-dot"></i> View
+                                        </button>
+                                    </td>
                                 </tr>
                             }
                         }
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOCATION MODAL -->
+    <div class="modal fade" id="locationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fa-solid fa-map-location-dot me-2"></i>
+                        Attendance Location
+                    </h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <h6 class="fw-bold">📍 Check-In Location</h6>
+                        <iframe id="checkInMap"
+                                width="100%"
+                                height="220"
+                                style="border:0;"
+                                loading="lazy"></iframe>
+                    </div>
+
+                    <div>
+                        <h6 class="fw-bold">📍 Check-Out Location</h6>
+                        <iframe id="checkOutMap"
+                                width="100%"
+                                height="220"
+                                style="border:0;"
+                                loading="lazy"></iframe>
+                    </div>
+
+                </div>
+
             </div>
         </div>
     </div>
@@ -247,3 +299,30 @@
     });
 </script>
 
+<script>
+    function viewLocation(inLat, inLng, outLat, outLng) {
+
+        const inMap = document.getElementById("checkInMap");
+        const outMap = document.getElementById("checkOutMap");
+
+        // CHECK-IN MAP
+        if (inLat && inLng && inLat !== "NULL") {
+            inMap.src = `https://www.google.com/maps?q=${inLat},${inLng}&output=embed`;
+        } else {
+            inMap.src = "";
+            inMap.parentElement.innerHTML = "<p class='text-muted'>No Check-In location available</p>";
+        }
+
+        // CHECK-OUT MAP
+        if (outLat && outLng && outLat !== "NULL") {
+            outMap.src = `https://www.google.com/maps?q=${outLat},${outLng}&output=embed`;
+        } else {
+            outMap.src = "";
+            outMap.parentElement.innerHTML = "<p class='text-muted'>No Check-Out location available</p>";
+        }
+
+        new bootstrap.Modal(
+            document.getElementById("locationModal")
+        ).show();
+    }
+</script>

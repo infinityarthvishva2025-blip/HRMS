@@ -193,7 +193,7 @@
 
 <!-- GEO CHECK-OUT SCRIPT -->
 <script>
-        function confirmGeoCheckout(btn) {
+    function confirmGeoCheckout(btn) {
 
         const errorDiv = document.getElementById("geoError");
         errorDiv.classList.add("d-none");
@@ -225,12 +225,10 @@
                     if (!r.ok) {
                         const msg = await r.text();
 
-                        // ❗ CLOSE MODAL BEFORE showing error
                         bootstrap.Modal.getInstance(
                             document.getElementById('geoCheckoutModal')
                         ).hide();
 
-                        // SHOW ERROR BELOW HEADER
                         errorDiv.innerText = msg;
                         errorDiv.classList.remove("d-none");
 
@@ -239,13 +237,22 @@
                         throw msg;
                     }
 
-                    // SUCCESS → CLOSE MODAL
+                    // ✅ PARSE RESPONSE
+                    const res = await r.json();
+
+                    // ✅ CLOSE MODAL
                     bootstrap.Modal.getInstance(
                         document.getElementById('geoCheckoutModal')
                     ).hide();
 
-                    // Redirect
-                    window.location.href = "/DailyReport/Send";
+                    // ✅ ROLE-AWARE REDIRECT
+                    if (res.redirect) {
+                        // Employee / Manager / GM / VP
+                        window.location.href = res.redirect;
+                    } else {
+                        // Director → stay on panel
+                        window.location.reload();
+                    }
                 })
                 .catch(() => {});
             },
@@ -262,8 +269,8 @@
             }
         );
     }
-
 </script>
+
 
 
 

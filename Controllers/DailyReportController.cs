@@ -149,7 +149,7 @@ namespace HRMS.Controllers
             // =========================
             // FILE UPLOAD (OPTIONAL)
             // =========================
-            string attachmentPath = null; // store RELATIVE PATH
+            string attachmentPath = null;
 
             if (model.Attachment != null && model.Attachment.Length > 0)
             {
@@ -171,7 +171,6 @@ namespace HRMS.Controllers
                 using var stream = new FileStream(fullPath, FileMode.Create);
                 model.Attachment.CopyTo(stream);
 
-                // Save as url-friendly relative path
                 attachmentPath = $"/uploads/dailyreports/{fileName}";
             }
 
@@ -220,19 +219,54 @@ namespace HRMS.Controllers
 
                 if (attendance != null)
                 {
-                    attendance.OutTime = DateTime.Now.TimeOfDay;
+                    // ===============================
+                    // ✅ ADDED: FETCH GEO DATA FROM SESSION
+                    // ===============================
+                    var checkoutTimeStr = HttpContext.Session.GetString("CheckoutTime");
+                    var checkoutLatStr = HttpContext.Session.GetString("CheckoutLat");
+                    var checkoutLngStr = HttpContext.Session.GetString("CheckoutLng");
 
-                    var worked = attendance.OutTime.Value - attendance.InTime.Value;
-                    attendance.Total_Hours = Math.Round((decimal)worked.TotalHours, 2);
+                    if (!string.IsNullOrEmpty(checkoutTimeStr) &&
+                        TimeSpan.TryParse(checkoutTimeStr, out TimeSpan checkoutTime))
+                    {
+                        attendance.OutTime = checkoutTime;
+                    }
+                    else
+                    {
+                        attendance.OutTime = DateTime.Now.TimeOfDay;
+                    }
+
+                    if (double.TryParse(checkoutLatStr, out double lat))
+                        attendance.CheckOutLatitude = lat;
+
+                    if (double.TryParse(checkoutLngStr, out double lng))
+                        attendance.CheckOutLongitude = lng;
+
+                    attendance.IsGeoAttendance = true;
+
+                    // ===============================
+                    // EXISTING LOGIC (UNCHANGED)
+                    // ===============================
+                    attendance.Total_Hours =
+                        Math.Round((decimal)(attendance.OutTime.Value - attendance.InTime.Value).TotalHours, 2);
 
                     attendance.Status = "P";
 
                     _db.SaveChanges();
+
+                    // ===============================
+                    // ✅ ADDED: CLEAR SESSION
+                    // ===============================
+                    HttpContext.Session.Remove("CheckoutTime");
+                    HttpContext.Session.Remove("CheckoutLat");
+                    HttpContext.Session.Remove("CheckoutLng");
                 }
             }
 
+            TempData["Success"] = "Daily report submitted successfully.";
 
-            return RedirectToAction("MySentReports");
+            // ✅ CORRECT REDIRECT
+            return RedirectToAction("EmployeePanel", "Attendance");
         }
 
         // =========================

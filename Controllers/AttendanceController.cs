@@ -73,6 +73,9 @@ namespace HRMS.Controllers
                 IsLate = false,
                 LateMinutes = 0,
                 IsGeoAttendance = true,
+
+                CheckInLatitude = vm.Latitude,
+                CheckInLongitude = vm.Longitude,
                 CorrectionRequested = false,
                 CorrectionStatus = "None"
             };
@@ -112,24 +115,27 @@ namespace HRMS.Controllers
 
             DateTime today = DateTime.Today;
 
+            var record = _context.Attendances
+                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
+
+            if (record == null)
+                return BadRequest("No active attendance found");
+
+            if (record.OutTime != null)
+                return BadRequest("Already checked out");
+
             // =====================================================
-            // ✅ DIRECTOR → REAL GEO CHECKOUT
+            // ✅ DIRECTOR → REAL CHECKOUT (UNCHANGED LOGIC)
             // =====================================================
             if (role.Equals("Director", StringComparison.OrdinalIgnoreCase))
             {
-                var record = _context.Attendances
-                    .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
-
-                if (record == null)
-                    return BadRequest("No active attendance found");
-
-                if (record.OutTime != null)
-                    return BadRequest("Already checked out");
-
-                // ✅ GEO CHECKOUT
                 record.OutTime = DateTime.Now.TimeOfDay;
                 record.Att_Date = DateTime.Now;
                 record.IsGeoAttendance = true;
+
+                // ✅ STORE LOCATION
+                record.CheckOutLatitude = vm.Latitude;
+                record.CheckOutLongitude = vm.Longitude;
 
                 if (record.InTime != null)
                 {
@@ -158,10 +164,19 @@ namespace HRMS.Controllers
             }
 
             // =====================================================
-            // ✅ ALL OTHERS → DAILY REPORT (SAME AS MANUAL)
+            // ✅ EMPLOYEE → TEMP STORE ONLY (NEW, SAFE LOGIC)
             // =====================================================
+            // ❌ DO NOT SET OutTime
+            // ❌ DO NOT SAVE DB
+            // ✔ STORE CHECKOUT DATA TEMPORARILY
+            HttpContext.Session.SetString("CheckoutTime", DateTime.Now.TimeOfDay.ToString());
+            HttpContext.Session.SetString("CheckoutLat", vm.Latitude.ToString());
+            HttpContext.Session.SetString("CheckoutLng", vm.Longitude.ToString());
+
+            // ✔ REDIRECT TO DAILY REPORT
             return Ok(new { redirect = "/DailyReport/Send" });
         }
+    
 
 
 
@@ -547,7 +562,13 @@ namespace HRMS.Controllers
                         : "--",
 
                     CorrectionRequested = a.CorrectionRequested,
-                    CorrectionStatus = a.CorrectionStatus
+                    CorrectionStatus = a.CorrectionStatus,
+
+                    CheckInLatitude = a.CheckInLatitude,
+                    CheckInLongitude = a.CheckInLongitude,
+                    CheckOutLatitude = a.CheckOutLatitude,
+                    CheckOutLongitude = a.CheckOutLongitude,
+
                 })
                 .ToList();
 

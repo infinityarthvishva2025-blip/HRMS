@@ -34,6 +34,11 @@ namespace HRMS.Models
 
         public bool? IsGeoAttendance { get; set; }
 
+        public double? CheckInLatitude { get; set; }
+        public double? CheckInLongitude { get; set; }
+
+        public double? CheckOutLatitude { get; set; }
+        public double? CheckOutLongitude { get; set; }
 
 
     }

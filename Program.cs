@@ -97,11 +97,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 
-//app.UseStaticFiles(new StaticFileOptions
-//{
-//    FileProvider = new PhysicalFileProvider(@"C:\HRMSFiles"),
-//    RequestPath = "/HRMSFiles"
-//}); 
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(@"C:\HRMSFiles"),
+    RequestPath = "/HRMSFiles"
+});
 
 
 
