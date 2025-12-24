@@ -7,11 +7,11 @@ namespace HRMS.ViewModels
 {
     public class DailyReportViewModel
     {
-        [Required(ErrorMessage = "Today's Work is required")]
+        [Required(ErrorMessage = "⚠ Please enter today's work details.")]
         public string TodaysWork { get; set; }
-
+        [Required(ErrorMessage = "⚠ Please mention pending work (enter 'None' if not applicable).")]
         public string PendingWork { get; set; }
-
+        [Required(ErrorMessage = "⚠ Please describe issues or challenges (enter 'None' if not applicable).")]
         public string Issues { get; set; }
 
         // ✅ OPTIONAL attachment
