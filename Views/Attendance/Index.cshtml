@@ -22,8 +22,7 @@
         ?? new List<HRMS.Models.Employee>();
 }
 
-<div class="container-fluid py-3 px-2 px-md-4">
-
+<div class="container py-4">
 
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
         <h2 class="fw-bold page-title m-0">
@@ -140,18 +139,23 @@
                             {
                                 var emp = employees.FirstOrDefault(e => e.EmployeeCode == a.Emp_Code);
 
-                                <tr class="attendance-row">
-                                    <td data-label="Employee Code">@a.Emp_Code</td>
-                                    <td data-label="Name">@(emp?.Name ?? "--")</td>
-                                    <td data-label="Date">@a.AttDate.ToString("dd-MM-yyyy")</td>
-                                    <td data-label="Check In">@(a.InTime?.ToString(@"hh\:mm") ?? "--")</td>
-                                    <td data-label="Check Out">@(a.OutTime?.ToString(@"hh\:mm") ?? "--")</td>
-                                    <td data-label="Total Hours">@a.TotalHours</td>
+                                <tr>
+                                    <td>@a.Emp_Code</td>
+                                    <td>@(emp?.Name ?? "--")</td>
+                                    <td>@a.AttDate.ToString("dd-MM-yyyy")</td>
+                                    <td>@(a.InTime?.ToString(@"hh\:mm") ?? "--")</td>
+                                    <td>@(a.OutTime?.ToString(@"hh\:mm") ?? "--")</td>
+                                    <td>@a.TotalHours</td>
 
-                                    <td data-label="Status">
+                                    <td>
                                         @if (a.Status == "L")
                                         {
                                             <span class="badge bg-info">Leave</span>
+                                        }
+                                        else if (a.Status == "HO")
+                                        {
+
+                                            <span class="badge bg-info">Holiday</span>
                                         }
                                         else if (a.AttDate.DayOfWeek == DayOfWeek.Sunday)
                                         {
@@ -159,11 +163,6 @@
                                             <span class="badge bg-secondary">WO</span>
                                         }
                                         else if (a.AttDate.DayOfWeek == DayOfWeek.Saturday)
-                                        {
-
-                                            <span class="badge bg-primary">WOP</span>
-                                        }
-                                        else if (a.Status == "P")
                                         {
 
                                             <span class="badge bg-success">Present</span>
@@ -178,6 +177,13 @@
 
                                             <span class="badge bg-warning text-dark">Not Checked Out</span>
                                         }
+                                        else if (a.Status == "P")
+                                        {
+
+                                            <span class="badge bg-success">Present</span>
+                                        }
+
+
                                         else
                                         {
 
@@ -185,7 +191,7 @@
                                         }
                                     </td>
 
-                                    <td data-label="Ticket">
+                                    <td>
                                         @if (a.CorrectionRequested)
                                         {
                                             <span class="badge bg-info">@a.CorrectionStatus</span>
@@ -196,20 +202,18 @@
                                         }
                                     </td>
 
-                                    <td data-label="Location">
+                                    <td class="text-center">
                                         <button class="btn btn-sm btn-info"
-                                                onclick="event.stopPropagation(); viewLocation(
-                                    '@a.CheckInLatitude',
-                                    '@a.CheckInLongitude',
-                                    '@a.CheckOutLatitude',
-                                    '@a.CheckOutLongitude'
-                                )">
+                                                onclick="viewLocation(
+                                '@a.CheckInLatitude',
+                                '@a.CheckInLongitude',
+                                '@a.CheckOutLatitude',
+                                '@a.CheckOutLongitude'
+                            )">
                                             <i class="fa-solid fa-location-dot"></i> View
                                         </button>
                                     </td>
                                 </tr>
-
-
                             }
                         }
                     </tbody>
@@ -335,45 +339,20 @@
         const inMap = document.getElementById("checkInMap");
         const outMap = document.getElementById("checkOutMap");
 
-        const inContainer = inMap.closest("div");
-        const outContainer = outMap.closest("div");
-
-        // RESET VISIBILITY
-        inMap.style.display = "block";
-        outMap.style.display = "block";
-
-        // -----------------------
         // CHECK-IN MAP
-        // -----------------------
         if (inLat && inLng && inLat !== "NULL") {
             inMap.src = `https://www.google.com/maps?q=${inLat},${inLng}&output=embed`;
         } else {
             inMap.src = "";
-            inMap.style.display = "none";
-
-            if (!inContainer.querySelector(".no-location")) {
-                inContainer.insertAdjacentHTML(
-                    "beforeend",
-                    "<p class='text-muted no-location'>No Check-In location available</p>"
-                );
-            }
+            inMap.parentElement.innerHTML = "<p class='text-muted'>No Check-In location available</p>";
         }
 
-        // -----------------------
         // CHECK-OUT MAP
-        // -----------------------
         if (outLat && outLng && outLat !== "NULL") {
             outMap.src = `https://www.google.com/maps?q=${outLat},${outLng}&output=embed`;
         } else {
             outMap.src = "";
-            outMap.style.display = "none";
-
-            if (!outContainer.querySelector(".no-location")) {
-                outContainer.insertAdjacentHTML(
-                    "beforeend",
-                    "<p class='text-muted no-location'>No Check-Out location available</p>"
-                );
-            }
+            outMap.parentElement.innerHTML = "<p class='text-muted'>No Check-Out location available</p>";
         }
 
         new bootstrap.Modal(
@@ -381,126 +360,3 @@
         ).show();
     }
 </script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        if (window.innerWidth > 768) return;
-
-        document.querySelectorAll(".attendance-row").forEach(row => {
-            row.addEventListener("click", () => {
-                row.classList.toggle("expanded");
-            });
-        });
-    });
-</script>
-
-
-<style>
-    /* ================================
-           MOBILE VIEW – ATTENDANCE CARDS
-        ================================ */
-    @@media (max-width: 768px) {
-        /* Hide table header */
-        table thead {
-            display: none;
-        }
-        /* Convert table to block layout */
-        table,
-        tbody,
-        tr,
-        td {
-            display: block;
-            width: 100%;
-        }
-            /* Attendance card */
-            tr.attendance-row {
-                background: #ffffff;
-                border: 1px solid #dee2e6;
-                border-radius: 12px;
-                margin-bottom: 14px;
-                padding: 12px 14px;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-            }
-                /* Each field row */
-                tr.attendance-row td {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 6px 0;
-                    font-size: 14px;
-                    color: #212529;
-                    border: none;
-                }
-                    /* Field label (left) */
-                    tr.attendance-row td::before {
-                        content: attr(data-label);
-                        font-weight: 600;
-                        color: #6c757d;
-                        padding-right: 10px;
-                        white-space: nowrap;
-                    }
-                    /* Field value (right) */
-                    tr.attendance-row td > * {
-                        text-align: right;
-                    }
-                    /* Location button alignment */
-                    tr.attendance-row td[data-label="Location"] {
-                        justify-content: flex-start;
-                        padding-top: 10px;
-                    }
-        /* Pagination */
-        .pagination {
-            justify-content: center !important;
-        }
-
-        #pageInfo {
-            width: 100%;
-            text-align: center;
-            margin-bottom: 8px;
-        }
-        /* ================================
-               FILTER SECTION (TOP FORM)
-            ================================ */
-        /* Reduce padding */
-        form.row.g-3 {
-            padding: 12px !important;
-        }
-        /* Labels */
-        .form-label {
-            font-size: 13px;
-            margin-bottom: 4px;
-        }
-        /* Inputs */
-        .form-control,
-        .form-select {
-            font-size: 14px;
-            padding: 8px 10px;
-        }
-        /* Apply + Export buttons full width */
-        form .btn-primary,
-        form .btn-success {
-            width: 100%;
-            margin-top: 6px;
-        }
-        /* Status + buttons column stack */
-        .col-12.col-md-6.col-lg-4 {
-            flex-direction: column;
-            align-items: stretch !important;
-        }
-        /* Action buttons group */
-        .col-12.d-flex.flex-wrap.gap-2 {
-            justify-content: center;
-        }
-
-            .col-12.d-flex.flex-wrap.gap-2 .btn {
-                width: 100%;
-                text-align: center;
-            }
-        /* Center cards on very small screens */
-        tr.attendance-row {
-            margin-left: auto;
-            margin-right: auto;
-            max-width: 420px;
-        }
-    }
-</style>
