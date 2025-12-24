@@ -75,8 +75,108 @@
                         expiryMinutes: 30
                         );
                     }
+                    <tr>
+                        <td>@a.Date.ToString("dd-MM-yyyy")</td>
+                        <td>@(a.InTime?.ToString(@"hh\:mm") ?? "--")</td>
+                        <td>@(a.OutTime?.ToString(@"hh\:mm") ?? "--")</td>
+                        <td>
+                            @if (a.InTime.HasValue && a.OutTime.HasValue)
+                            {
+                                var diff = a.OutTime.Value - a.InTime.Value;
+                                @($"{diff.Hours}h {diff.Minutes}m")
+                            }
+                            else
+                            {
+                                <span>--</span>
+                            }
+                        </td>
+                        <td>
+                            @if (a.Status == "L")
+                            {
+                                <span class="badge bg-info">Leave</span>
+                            }
+                            else if (a.Status == "HO")
+                            {
 
-                <tr>
+                                <span class="badge bg-info">Holiday</span>
+                            }
+
+                            else if (a.Date.DayOfWeek == DayOfWeek.Sunday)
+                            {
+
+                                <span class="badge bg-secondary">WO</span>
+                            }
+
+
+                            else if ((a.InTime.HasValue && !a.OutTime.HasValue ) )
+                            {
+
+                                <span class="badge bg-warning text-dark">Not Checked Out</span>
+                            }
+                            else if (a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "A")
+                            {
+
+                                <span class="badge bg-warning text-dark">Not Checked Out</span>
+                            }
+                            else if (!a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "A")
+                            {
+
+                                <span class="badge bg-danger">Absent</span>
+                            }
+                            else if (a.Status == "P")
+                            {
+
+                                <span class="badge bg-success">Present</span>
+                            }
+                            else
+                            {
+
+                                <span class="badge bg-danger">Absent</span>
+                            }
+
+                            @*  @if (a.Status == "P")
+                            {
+                                <span class="badge bg-success">Present</span>
+                            }
+                            else if (a.Status == "WO" || a.Status == "WOP")
+                            {
+                                <span class="badge bg-secondary">@a.Status</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Absent</span>
+                            }
+                     
+                       *@
+                        </td>
+                        <td>
+
+                            @if (!a.CorrectionRequested && !isHr)
+                            {
+                                <a asp-controller="Attendance"
+                                   asp-action="RequestCorrection"
+                                   asp-route-token="@token"
+                                   asp-route-employeeId="@Model.Employee.Id"
+                                   class="btn btn-warning btn-sm">
+                                    Request
+                                </a>
+                            }
+
+                            else if (canResolve)
+                            {
+                                <a class="btn btn-success btn-sm"
+                                   href="@Url.Action("ResolveCorrection", "Attendance", new { token })">
+                                    Resolve
+                                </a>
+                            }
+
+                            else if (a.CorrectionRequested)
+                            {
+                                <span class="badge bg-info">@a.CorrectionStatus</span>
+                            }
+                        </td>
+                    </tr>
+                    @*  <tr>
                     <td>@a.Date.ToString("dd-MMM-yyyy")</td>
 
                     <td>
@@ -104,7 +204,50 @@
                         </td>
 
                         <td>
-                            @if (a.Status == "P")
+                            @if (a.Status == "L")
+                            {
+                                <span class="badge bg-info">Leave</span>
+                            }
+                            else if (a.Status == "HO")
+                            {
+
+                                <span class="badge bg-info">Holiday</span>
+                            }
+
+                            else if (a.Date.DayOfWeek == DayOfWeek.Sunday)
+                            {
+
+                                <span class="badge bg-secondary">WO</span>
+                            }
+                          
+                           
+                            else if ((a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "P") || (a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "A"))
+                            {
+
+                                <span class="badge bg-warning text-dark">Not Checked Out</span>
+                            }
+                            else if (a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "A")
+                            {
+
+                                <span class="badge bg-warning text-dark">Not Checked Out</span>
+                            }
+                            else if (!a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "A")
+                            {
+
+                                <span class="badge bg-danger">Absent</span>
+                            }
+                            else if (a.Status == "P")
+                            {
+
+                                <span class="badge bg-success">Present</span>
+                            }
+                            else
+                            {
+
+                                <span class="badge bg-danger">Absent</span>
+                            }
+
+                            @*  @if (a.Status == "P")
                             {
                                 <span class="badge bg-success">Present</span>
                             }
@@ -116,10 +259,11 @@
                             {
                                 <span class="badge bg-danger">Absent</span>
                             }
+                     
                         </td>
 
                         <td>
-                            @* EMPLOYEE: Request *@
+                           
                             @if (!a.CorrectionRequested && !isHr)
                             {
                                 <a asp-controller="Attendance"
@@ -130,7 +274,7 @@
                                     Request
                                 </a>
                             }
-                            @* HR: Resolve *@
+                           
                             else if (canResolve)
                             {
                                 <a class="btn btn-success btn-sm"
@@ -138,13 +282,13 @@
                                     Resolve
                                 </a>
                             }
-                            @* Others *@
+                           
                             else if (a.CorrectionRequested)
                             {
                                 <span class="badge bg-info">@a.CorrectionStatus</span>
                             }
                         </td>
-                    </tr>
+                    </tr> *@
                 }
             </tbody>
         </table>
@@ -177,7 +321,7 @@
     }
 </style>
 
-<script>
+ <script>
     document.addEventListener("DOMContentLoaded", function () {
 
         const rowsPerPage = 10;
@@ -233,4 +377,4 @@
 
         if (rows.length > 0) showPage(1);
     });
-</script>
+</script> 
