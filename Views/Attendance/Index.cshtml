@@ -157,22 +157,23 @@
 
                                             <span class="badge bg-info">Holiday</span>
                                         }
+                                        
                                         else if (a.AttDate.DayOfWeek == DayOfWeek.Sunday)
                                         {
 
                                             <span class="badge bg-secondary">WO</span>
                                         }
-                                        else if (a.AttDate.DayOfWeek == DayOfWeek.Saturday)
+                                       @*  else if (a.AttDate.DayOfWeek == DayOfWeek.Saturday)
                                         {
 
                                             <span class="badge bg-success">Present</span>
-                                        }
-                                        else if (!a.InTime.HasValue && !a.OutTime.HasValue)
+                                        } *@
+                                        else if (!a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "A")
                                         {
 
                                             <span class="badge bg-danger">Absent</span>
                                         }
-                                        else if (a.InTime.HasValue && !a.OutTime.HasValue)
+                                        else if (a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "P")
                                         {
 
                                             <span class="badge bg-warning text-dark">Not Checked Out</span>
