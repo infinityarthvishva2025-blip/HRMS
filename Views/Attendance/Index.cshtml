@@ -157,22 +157,23 @@
 
                                             <span class="badge bg-info">Holiday</span>
                                         }
+                                        
                                         else if (a.AttDate.DayOfWeek == DayOfWeek.Sunday)
                                         {
 
                                             <span class="badge bg-secondary">WO</span>
                                         }
-                                        else if (a.AttDate.DayOfWeek == DayOfWeek.Saturday)
+                                       @*  else if (a.AttDate.DayOfWeek == DayOfWeek.Saturday)
                                         {
 
                                             <span class="badge bg-success">Present</span>
-                                        }
-                                        else if (!a.InTime.HasValue && !a.OutTime.HasValue)
+                                        } *@
+                                        else if (!a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "A")
                                         {
 
                                             <span class="badge bg-danger">Absent</span>
                                         }
-                                        else if (a.InTime.HasValue && !a.OutTime.HasValue)
+                                        else if (a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "P")
                                         {
 
                                             <span class="badge bg-warning text-dark">Not Checked Out</span>
@@ -339,20 +340,45 @@
         const inMap = document.getElementById("checkInMap");
         const outMap = document.getElementById("checkOutMap");
 
+        const inContainer = inMap.closest("div");
+        const outContainer = outMap.closest("div");
+
+        // RESET VISIBILITY
+        inMap.style.display = "block";
+        outMap.style.display = "block";
+
+        // -----------------------
         // CHECK-IN MAP
+        // -----------------------
         if (inLat && inLng && inLat !== "NULL") {
             inMap.src = `https://www.google.com/maps?q=${inLat},${inLng}&output=embed`;
         } else {
             inMap.src = "";
-            inMap.parentElement.innerHTML = "<p class='text-muted'>No Check-In location available</p>";
+            inMap.style.display = "none";
+
+            if (!inContainer.querySelector(".no-location")) {
+                inContainer.insertAdjacentHTML(
+                    "beforeend",
+                    "<p class='text-muted no-location'>No Check-In location available</p>"
+                );
+            }
         }
 
+        // -----------------------
         // CHECK-OUT MAP
+        // -----------------------
         if (outLat && outLng && outLat !== "NULL") {
             outMap.src = `https://www.google.com/maps?q=${outLat},${outLng}&output=embed`;
         } else {
             outMap.src = "";
-            outMap.parentElement.innerHTML = "<p class='text-muted'>No Check-Out location available</p>";
+            outMap.style.display = "none";
+
+            if (!outContainer.querySelector(".no-location")) {
+                outContainer.insertAdjacentHTML(
+                    "beforeend",
+                    "<p class='text-muted no-location'>No Check-Out location available</p>"
+                );
+            }
         }
 
         new bootstrap.Modal(
@@ -360,3 +386,4 @@
         ).show();
     }
 </script>
+

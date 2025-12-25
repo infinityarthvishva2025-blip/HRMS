@@ -5,6 +5,7 @@
 @{
     Layout = "_EmployeeLayout";
 }
+
 <div class="container-fluid daily-report-wrapper">
 
     <div class="row justify-content-center">
@@ -30,9 +31,19 @@
 
                     <form asp-action="Send"
                           asp-controller="DailyReport"
-                          method="post">
+                          method="post"
+                          novalidate>
 
                         @Html.AntiForgeryToken()
+
+                        <!-- GLOBAL WARNING -->
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-warning mb-4">
+                                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                                Please fill all mandatory fields before submitting the report.
+                            </div>
+                        }
 
                         <!-- SECTION : WORK -->
                         <div class="section-box">
@@ -41,8 +52,11 @@
                                 Work Summary
                             </h6>
 
+                            <!-- Today's Work -->
                             <div class="mb-3">
-                                <label class="form-label">Today's Work</label>
+                                <label class="form-label">
+                                    Today's Work <span class="text-danger">*</span>
+                                </label>
                                 <textarea asp-for="TodaysWork"
                                           class="form-control form-control-lg"
                                           rows="4"
@@ -50,20 +64,28 @@
                                 <span asp-validation-for="TodaysWork" class="text-danger small"></span>
                             </div>
 
+                            <!-- Pending Work -->
                             <div class="mb-3">
-                                <label class="form-label">Pending Work</label>
+                                <label class="form-label">
+                                    Pending Work <span class="text-danger">*</span>
+                                </label>
                                 <textarea asp-for="PendingWork"
                                           class="form-control"
                                           rows="3"
                                           placeholder="Mention work that is still pending..."></textarea>
+                                <span asp-validation-for="PendingWork" class="text-danger small"></span>
                             </div>
 
+                            <!-- Issues -->
                             <div class="mb-0">
-                                <label class="form-label">Issues / Challenges</label>
+                                <label class="form-label">
+                                    Issues / Challenges <span class="text-danger">*</span>
+                                </label>
                                 <textarea asp-for="Issues"
                                           class="form-control"
                                           rows="3"
                                           placeholder="Any blockers, delays, or issues faced..."></textarea>
+                                <span asp-validation-for="Issues" class="text-danger small"></span>
                             </div>
                         </div>
 
@@ -71,7 +93,7 @@
                         <div class="section-box mt-4">
                             <h6 class="section-title">
                                 <i class="fa-solid fa-users me-2"></i>
-                                Select Recipients
+                                Select Recipients <span class="text-danger">*</span>
                             </h6>
 
                             <div class="recipient-container">
@@ -79,7 +101,7 @@
                                 {
                                     <label class="recipient-item">
                                         <input type="checkbox"
-                                               name="SelectedRecipientIds[]"
+                                               name="SelectedRecipientIds"
                                                value="@item.Value" />
                                         <span class="recipient-name">
                                             @item.Text
@@ -159,6 +181,11 @@
             border-color: #4A5FC1;
             box-shadow: 0 0 0 0.15rem rgba(74,95,193,0.25);
         }
+
+    /* ===== VALIDATION ===== */
+    .input-validation-error {
+        border-color: #dc2626 !important;
+    }
 
     /* ===== RECIPIENTS ===== */
     .recipient-container {

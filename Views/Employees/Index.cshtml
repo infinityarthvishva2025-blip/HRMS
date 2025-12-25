@@ -7,6 +7,150 @@
 }
 
 <style>
+    @@media (max-width: 768px) {
+
+        table thead {
+            display: none;
+        }
+
+        table,
+        table tbody,
+        table tr,
+        table td {
+            display: block;
+            width: 100%;
+        }
+            /* Card row */
+            table tbody tr {
+                margin-bottom: 14px;
+                border: 1px solid #dee2e6;
+                border-radius: 10px;
+                padding: 10px 12px;
+                background: #ffffff;
+            }
+                /* Field row */
+                table tbody tr td {
+                    display: flex;
+                    flex-wrap: wrap; /* 🔑 IMPORTANT */
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 6px 0;
+                    border: none;
+                    color: #212529; /* 🔑 FORCE TEXT COLOR */
+                    font-size: 14px;
+                }
+                    /* Label */
+                    table tbody tr td::before {
+                        content: attr(data-label);
+                        font-weight: 600;
+                        color: #6c757d;
+                        margin-right: 10px;
+                        flex: 0 0 40%;
+                    }
+                    /* Value */
+                    table tbody tr td > * {
+                        flex: 1 0 55%;
+                        text-align: right;
+                        word-break: break-word;
+                    }
+                    /* Actions */
+                    table tbody tr td[data-label="Actions"] {
+                        justify-content: flex-start;
+                    }
+
+                        table tbody tr td[data-label="Actions"] > * {
+                            flex: unset;
+                            text-align: left;
+                        }
+                    /* Status center */
+                    table tbody tr td[data-label="Status"] {
+                        justify-content: center;
+                    }
+        /* Buttons full width */
+        .btn-group-mobile {
+            width: 100%;
+        }
+
+            .btn-group-mobile .btn {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+
+        .pagination-right {
+            justify-content: center !important;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        td .btn {
+            margin-right: 4px !important;
+        }
+    }
+
+
+    @@media (max-width: 768px) {
+        /* Hide table header */
+        table thead {
+            display: none;
+        }
+
+        table,
+        table tbody,
+        table tr,
+        table td {
+            display: block;
+            width: 100%;
+        }
+            /* Card style row */
+            table tbody tr {
+                margin-bottom: 15px;
+                border: 1px solid #dee2e6;
+                border-radius: 10px;
+                padding: 12px;
+                background: #fff;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+                /* Each field */
+                table tbody tr td {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 8px 0;
+                    border: none;
+                    font-size: 14px;
+                }
+                    /* Field label */
+                    table tbody tr td::before {
+                        content: attr(data-label);
+                        font-weight: 600;
+                        color: #6c757d;
+                    }
+                    /* Actions align */
+                    table tbody tr td[data-label="Actions"] {
+                        justify-content: flex-start;
+                        gap: 10px;
+                        padding-top: 10px;
+                    }
+                    /* Status center */
+                    table tbody tr td[data-label="Status"] {
+                        justify-content: center;
+                    }
+        /* Buttons full width */
+        .btn-group-mobile {
+            width: 100%;
+        }
+
+            .btn-group-mobile .btn {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+        /* Pagination center */
+        .pagination-right {
+            justify-content: center !important;
+        }
+    }
+
+
+
     .table-responsive {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -75,8 +219,7 @@
 </style>
 
 
-<div class="container py-4">
-  
+<div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
         <h2 class="fw-bold text-primary mb-2">
             <i class="fa-solid fa-users me-2"></i> Employee Directory
@@ -146,55 +289,44 @@
                     <tbody>
                         @foreach (var emp in Model)
                         {
-                             
-        var token = UrlEncryptionHelper.GenerateToken(
-        new Dictionary<string, string>
-        {
-            ["type"] = "EMP",
-            ["empId"] = emp.Id.ToString()
-        }
-        );
-    
-                            <tr>
-                                <td>@emp.EmployeeCode</td>
-                                <td>@emp.Name</td>
-                                <td>@emp.Email</td>
-                                <td>@emp.Department</td>
-                                <td>@emp.Position</td>
 
-                                <td class="text-center">
-                                    @* <a class="btn btn-sm btn-primary me-1"
-                                       asp-action="Details" asp-route-id="@emp.Id">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </a> *@
+                            var token = UrlEncryptionHelper.GenerateToken(
+                            new Dictionary<string, string>
+                            {
+                                ["type"] = "EMP",
+                                ["empId"] = emp.Id.ToString()
+                            }
+                            );
+
+                            <tr>
+                                <td data-label="Employee Code">@emp.EmployeeCode</td>
+                                <td data-label="Name">@emp.Name</td>
+                                <td data-label="Email">@emp.Email</td>
+                                <td data-label="Department">@emp.Department</td>
+                                <td data-label="Position">@emp.Position</td>
+
+                                <td data-label="Actions" class="text-center">
                                     <a asp-action="Details"
                                        class="btn btn-sm btn-primary me-1"
-                                       asp-controller="Employees"
                                        asp-route-token="@token">
                                         <i class="fa-solid fa-eye"></i>
                                     </a>
-                                    <a class="btn btn-sm btn-warning me-1"
-                                       asp-action="Edit" asp-route-token="@token">
+                                    <a class="btn btn-sm btn-warning"
+                                       asp-action="Edit"
+                                       asp-route-token="@token">
                                         <i class="fa-solid fa-pen"></i>
                                     </a>
-
-                                    <a class="btn btn-sm btn-danger"
-                                       asp-action="Delete" asp-route-id="@emp.Id"
-                                       onclick="return confirm('Are you sure?');">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </a>
                                 </td>
 
-                                <td class="text-center">
+                                <td data-label="Status" class="text-center">
                                     <span id="status-badge-@emp.Id"
                                           class="badge @(emp.Status == "Active" ? "bg-success" : "bg-danger") px-3 py-2"
-                                          style="cursor:pointer;"
                                           onclick="openStatusModal(@emp.Id, '@emp.Status')">
-                                        @(emp.Status == "Active" ? "Active" : "Inactive")
+                                        @(emp.Status)
                                     </span>
                                 </td>
-
                             </tr>
+
                         }
                     </tbody>
 

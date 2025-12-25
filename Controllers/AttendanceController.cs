@@ -502,10 +502,6 @@ namespace HRMS.Controllers
 
             return RedirectToAction(nameof(EmployeeSummary), new { employeeId = employee.Id });
         }
-
-        // =========================================================
-        // EMPLOYEE SUMMARY PAGE
-        // =========================================================
         [HttpGet]
         public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
         {
@@ -516,142 +512,205 @@ namespace HRMS.Controllers
             if (emp == null)
                 return NotFound("Employee not found.");
 
-            string empCode = emp.EmployeeCode;
-            // ✅ Await FindAsync
-           
+            ViewBag.UserRole = emp.Role;
 
-            // ✅ SAFE string cast
-            ViewBag.UserRole = emp.Role?.ToString();
             // Default date range
-            if (!from.HasValue)
-                from = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            DateTime start = from?.Date ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            DateTime end = to?.Date ?? DateTime.Today;
 
-            if (!to.HasValue)
-                to = DateTime.Now.Date;
+            // ✅ FETCH ONLY DB RECORDS
+            var attendance = _context.Attendances
+                .Where(a => a.Emp_Code == emp.EmployeeCode &&
+                            a.Date >= start && a.Date <= end)
+                .OrderByDescending(a => a.Date)
+                .Select(a => new AttendanceRecordVm
+                {
+                    Emp_Code = a.Emp_Code,
+                    Date = a.Date,
+                    InTime = a.InTime,
+                    OutTime = a.OutTime,
+                    CorrectionRequested = a.CorrectionRequested,
+                    CorrectionStatus = a.CorrectionStatus,
 
-            DateTime start = from.Value.Date;
-            DateTime end = to.Value.Date;
-
-            // Fetch DB attendance
-            var dbAttendance = _context.Attendances
-                .Where(a => a.Emp_Code == empCode && a.Date >= start && a.Date <= end)
+                    Status =
+                        a.Status == "L" ? "L" :
+                        a.Status == "HO" ? "HO" :
+                        a.Date.DayOfWeek == DayOfWeek.Sunday ? "WO" :
+                        a.Date.DayOfWeek == DayOfWeek.Saturday ? "WOP" :
+                        (a.InTime.HasValue && a.OutTime.HasValue) ? "P" :
+                        (a.InTime.HasValue && !a.OutTime.HasValue) ? "AUTO" :
+                        "A"
+                })
                 .ToList();
 
-            List<AttendanceRecordVm> finalList = new List<AttendanceRecordVm>();
-
-            // Loop through date range to fill missing days
-            for (var date = start; date <= end; date = date.AddDays(1))
-            {
-                var rec = dbAttendance.FirstOrDefault(a => a.Date == date);
-
-                // -------- WEEKLY OFF (Sunday = WO) ----------
-                if (date.DayOfWeek == DayOfWeek.Sunday)
-                {
-                    finalList.Add(new AttendanceRecordVm
-                    {
-                        Emp_Code= empCode,
-                        Date = date,
-                        Status = "WO",          // Weekly Off
-                        InTime = null,
-                        OutTime = null,
-                        CorrectionRequested = false
-                    });
-                    continue;
-                }
-
-                
-                // -------- WEEKLY OFF (Saturday = WOP) ----------
-                if (date.DayOfWeek == DayOfWeek.Saturday)
-                {
-                    if (rec != null) // Attendance exists on Saturday
-                    {
-                        finalList.Add(new AttendanceRecordVm
-                        {
-                            Emp_Code = empCode,
-                            Date = rec.Date,
-                            Status = "WOP",
-                            InTime = rec.InTime,            // ✅ KEEP TIME
-                            OutTime = rec.OutTime,          // ✅ KEEP TIME
-                            CorrectionRequested = rec.CorrectionRequested,
-                            CorrectionStatus = rec.CorrectionStatus
-                        });
-                    }
-                    else
-                    {
-                        finalList.Add(new AttendanceRecordVm
-                        {
-                            Emp_Code = empCode,
-                            Date = date,
-                            Status = "WOP",
-                            InTime = null,
-                            OutTime = null,
-                            CorrectionRequested = false
-                        });
-                    }
-                    continue;
-                }
-
-
-                // -------- ATTENDANCE EXISTS ----------
-                if (rec != null)
-                {
-                    string finalStatus;
-
-                    if (rec.Status == "L")
-                        finalStatus = "L";              // Leave
-                    else if (rec.InTime.HasValue && rec.OutTime.HasValue)
-                        finalStatus = "P";              // Present
-                    else if (rec.InTime.HasValue && !rec.OutTime.HasValue)
-                        finalStatus = "AUTO";           // Auto checkout
-                    else
-                        finalStatus = "A";              // Absent
-
-                    finalList.Add(new AttendanceRecordVm
-                    {
-                        Emp_Code = empCode,
-                        Date = rec.Date,
-                        Status = finalStatus,
-                        InTime = rec.InTime,
-                        OutTime = rec.OutTime,
-                        CorrectionRequested = rec.CorrectionRequested,
-                        CorrectionStatus = rec.CorrectionStatus
-                    });
-                }
-                else
-                {
-                    // -------- NO ATTENDANCE → Absent --------
-                    finalList.Add(new AttendanceRecordVm
-                    {
-                        Emp_Code = empCode,
-                        Date = date,
-                        Status = "A",
-                        InTime = null,
-                        OutTime = null,
-                        CorrectionRequested = false
-                    });
-                }
-            }
-
-            // Calculate summary
             var summary = new EmployeeAttendanceSummaryViewModel
             {
                 Employee = emp,
-                AttendanceRecords = finalList.OrderByDescending(d => d.Date).ToList(),
+                AttendanceRecords = attendance,
                 FromDate = start,
                 ToDate = end,
-
-                TotalDays = finalList.Count,
-
+                TotalDays = attendance.Count,
                 AverageWorkingHours =
-        finalList
-            .Where(a => a.InTime.HasValue && a.OutTime.HasValue)
-            .Select(a => (a.OutTime.Value - a.InTime.Value).TotalHours)
-            .DefaultIfEmpty(0)
-            .Average()
-            .ToString("0.0") + " Hrs"
+                    attendance
+                        .Where(a => a.InTime.HasValue && a.OutTime.HasValue)
+                        .Select(a => (a.OutTime.Value - a.InTime.Value).TotalHours)
+                        .DefaultIfEmpty(0)
+                        .Average()
+                        .ToString("0.0") + " Hrs"
             };
+
             return View(summary);
         }
+
+        // =========================================================
+        // EMPLOYEE SUMMARY PAGE
+        // =========================================================
+        //[HttpGet]
+        //public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
+        //{
+        //    if (employeeId <= 0)
+        //        return BadRequest("Invalid employee ID.");
+
+        //    var emp = _context.Employees.FirstOrDefault(e => e.Id == employeeId);
+        //    if (emp == null)
+        //        return NotFound("Employee not found.");
+
+        //    string empCode = emp.EmployeeCode;
+        //    // ✅ Await FindAsync
+
+
+        //    // ✅ SAFE string cast
+        //    ViewBag.UserRole = emp.Role?.ToString();
+        //    // Default date range
+        //    if (!from.HasValue)
+        //        from = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+
+        //    if (!to.HasValue)
+        //        to = DateTime.Now.Date;
+
+        //    DateTime start = from.Value.Date;
+        //    DateTime end = to.Value.Date;
+
+        //    // Fetch DB attendance
+        //    var dbAttendance = _context.Attendances
+        //        .Where(a => a.Emp_Code == empCode && a.Date >= start && a.Date <= end)
+        //        .ToList();
+
+        //    List<AttendanceRecordVm> finalList = new List<AttendanceRecordVm>();
+
+        //    // Loop through date range to fill missing days
+        //    for (var date = start; date <= end; date = date.AddDays(1))
+        //    {
+        //        var rec = dbAttendance.FirstOrDefault(a => a.Date == date);
+
+        //        // -------- WEEKLY OFF (Sunday = WO) ----------
+        //        if (date.DayOfWeek == DayOfWeek.Sunday)
+        //        {
+        //            finalList.Add(new AttendanceRecordVm
+        //            {
+        //                Emp_Code= empCode,
+        //                Date = date,
+        //                Status = "WO",          // Weekly Off
+        //                InTime = null,
+        //                OutTime = null,
+        //                CorrectionRequested = false
+        //            });
+        //            continue;
+        //        }
+
+
+        //        // -------- WEEKLY OFF (Saturday = WOP) ----------
+        //        if (date.DayOfWeek == DayOfWeek.Saturday)
+        //        {
+        //            if (rec != null) // Attendance exists on Saturday
+        //            {
+        //                finalList.Add(new AttendanceRecordVm
+        //                {
+        //                    Emp_Code = empCode,
+        //                    Date = rec.Date,
+        //                    Status = "WOP",
+        //                    InTime = rec.InTime,            // ✅ KEEP TIME
+        //                    OutTime = rec.OutTime,          // ✅ KEEP TIME
+        //                    CorrectionRequested = rec.CorrectionRequested,
+        //                    CorrectionStatus = rec.CorrectionStatus
+        //                });
+        //            }
+        //            else
+        //            {
+        //                finalList.Add(new AttendanceRecordVm
+        //                {
+        //                    Emp_Code = empCode,
+        //                    Date = date,
+        //                    Status = "WOP",
+        //                    InTime = null,
+        //                    OutTime = null,
+        //                    CorrectionRequested = false
+        //                });
+        //            }
+        //            continue;
+        //        }
+
+
+        //        // -------- ATTENDANCE EXISTS ----------
+        //        if (rec != null)
+        //        {
+        //            string finalStatus;
+
+        //            if (rec.Status == "L")
+        //                finalStatus = "L";              // Leave
+        //            else if (rec.InTime.HasValue && rec.OutTime.HasValue)
+        //                finalStatus = "P";              // Present
+        //            else if (rec.InTime.HasValue && !rec.OutTime.HasValue)
+        //                finalStatus = "AUTO";           // Auto checkout
+        //            else
+        //                finalStatus = "A";              // Absent
+
+        //            finalList.Add(new AttendanceRecordVm
+        //            {
+        //                Emp_Code = empCode,
+        //                Date = rec.Date,
+        //                Status = finalStatus,
+        //                InTime = rec.InTime,
+        //                OutTime = rec.OutTime,
+        //                CorrectionRequested = rec.CorrectionRequested,
+        //                CorrectionStatus = rec.CorrectionStatus
+        //            });
+        //        }
+        //        else
+        //        {
+        //            // -------- NO ATTENDANCE → Absent --------
+        //            finalList.Add(new AttendanceRecordVm
+        //            {
+        //                Emp_Code = empCode,
+        //                Date = date,
+        //                Status = "A",
+        //                InTime = null,
+        //                OutTime = null,
+        //                CorrectionRequested = false
+        //            });
+        //        }
+        //    }
+
+        //    // Calculate summary
+        //    var summary = new EmployeeAttendanceSummaryViewModel
+        //    {
+        //        Employee = emp,
+        //        AttendanceRecords = finalList.OrderByDescending(d => d.Date).ToList(),
+        //        FromDate = start,
+        //        ToDate = end,
+
+        //        TotalDays = finalList.Count,
+
+        //        AverageWorkingHours =
+        //finalList
+        //    .Where(a => a.InTime.HasValue && a.OutTime.HasValue)
+        //    .Select(a => (a.OutTime.Value - a.InTime.Value).TotalHours)
+        //    .DefaultIfEmpty(0)
+        //    .Average()
+        //    .ToString("0.0") + " Hrs"
+        //    };
+        //    return View(summary);
+        //}
 
         public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status)
         {

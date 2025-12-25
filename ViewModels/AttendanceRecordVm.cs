@@ -12,7 +12,7 @@
 
         public bool CorrectionRequested { get; set; }
         public string CorrectionStatus { get; set; }
-
+        public string TotalHours { get; set; } = "--";
         public string DisplayCheckIn =>
             InTime.HasValue ? DateTime.Today.Add(InTime.Value).ToString("hh:mm tt") : "--";
 
