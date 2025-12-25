@@ -39,7 +39,7 @@ public class ResignationController : Controller
             NoticePeriodDays = notice,
             IsProvisionalCompleted = confirmed,
             SuggestedLastWorkingDay = today.AddDays(notice),
-            ProposedLastWorkingDay = today.AddDays(notice)
+            //ProposedLastWorkingDay = today.AddDays(notice)
         };
 
         return View(vm);
@@ -49,6 +49,7 @@ public class ResignationController : Controller
     // APPLY (POST)
     // ==============================
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public IActionResult Apply(ResignationApplyVM vm)
     {
         var emp = GetLoggedInEmployee();
@@ -58,10 +59,16 @@ public class ResignationController : Controller
 
         vm.NoticePeriodDays = notice;
         vm.IsProvisionalCompleted = confirmed;
-        vm.SuggestedLastWorkingDay = vm.ResignationDate.AddDays(notice);
-        vm.ProposedLastWorkingDay = vm.SuggestedLastWorkingDay;
 
+        // ✅ always calculate suggested
+        vm.SuggestedLastWorkingDay = vm.ResignationDate.AddDays(notice);
+
+        // ✅ IMPORTANT: clear old posted values (fix refresh-only issue)
         ModelState.Clear();
+        TryValidateModel(vm);
+
+        if (!ModelState.IsValid)
+            return View(vm);
 
         var result = _service.Submit(vm, emp);
         if (!result.Success)
@@ -72,6 +79,8 @@ public class ResignationController : Controller
 
         return RedirectToAction("Track");
     }
+
+
 
     // ==============================
     // EMPLOYEE TRACK
@@ -112,13 +121,17 @@ public class ResignationController : Controller
         // 1️⃣ BASE QUERY (SQL SAFE)
         // ============================
         var baseQuery = _context.ResignationApprovalSteps
-            .Include(x => x.ResignationRequest)
-                .ThenInclude(r => r.Employee)
-            .Where(x =>
-                x.Status == StepStatus.Pending &&
-                x.StepNo == x.ResignationRequest.CurrentStep
-            )
-            .ToList(); // ✅ move to memory
+     .Include(x => x.ResignationRequest)
+         .ThenInclude(r => r.Employee)
+     .Where(x =>
+         x.Status == StepStatus.Pending &&
+         x.ResignationRequest != null &&
+         x.ResignationRequest.Employee != null &&
+         x.ResignationRequest.CurrentStep != null &&
+         x.StepNo == x.ResignationRequest.CurrentStep
+     )
+     .ToList(); // ✅ SAFE
+
 
         // ============================
         // 2️⃣ ROLE BASED FILTERING

@@ -1,44 +1,171 @@
-﻿@model List<ResignationApprovalStep>
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@model List<ResignationApprovalStep>
+
 @{
-    Layout = "_HrLayout";
+    var role = HttpContextAccessor.HttpContext?.Session.GetString("Role") ?? "Employee";
+    role = string.IsNullOrWhiteSpace(role) || role == "-" ? "Employee" : role;
+
+    Layout = (role == "HR" || role == "GM" || role == "VP" || role == "Director")
+        ? "~/Views/Shared/_HrLayout.cshtml"
+        : "~/Views/Shared/_EmployeeLayout.cshtml";
 }
 
-<h2>Pending Resignation Approvals</h2>
+<div class="container-fluid mt-3">
 
-@if (!Model.Any())
-{
-    <p>No pending approvals.</p>
-}
-else
-{
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Emp Code</th>
-                <th>Employee Name</th>
-                <th>Resignation Date</th>
-                <th>Proposed LWD</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var step in Model)
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fa fa-check-circle"></i>
+                Pending Resignation Approvals
+            </h5>
+        </div>
+
+        <div class="card-body p-0">
+
+            @if (!Model.Any())
             {
-                <tr>
-                    <td>@step.ResignationRequest.Employee.EmployeeCode</td>
-                    <td>@step.ResignationRequest.Employee.Name</td>
-                    <td>@step.ResignationRequest.ResignationDate?.ToString("dd-MMM-yyyy")</td>
-                    <td>@step.ResignationRequest.ProposedLastWorkingDay?.ToString("dd-MMM-yyyy")</td>
-                    <td>
-                        <form asp-action="ApproveReject" method="post">
-                            <input type="hidden" name="stepId" value="@step.Id" />
-                            <input type="text" name="remarks" class="form-control mb-1" />
-                            <button name="approve" value="true" class="btn btn-success btn-sm">Approve</button>
-                            <button name="approve" value="false" class="btn btn-danger btn-sm">Reject</button>
-                        </form>
-                    </td>
-                </tr>
+                <div class="alert alert-info m-3">
+                    No pending approvals.
+                </div>
             }
-        </tbody>
-    </table>
-}
+            else
+            {
+                <!-- DESKTOP TABLE -->
+                <div class="table-responsive d-none d-md-block">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Emp Code</th>
+                                <th>Employee</th>
+                                <th>Resignation</th>
+                                <th>Suggested LWD</th>
+                               @*  <th>Proposed LWD</th> *@
+                                <th>Reason</th>
+                                <th>Details</th>
+                                <th style="width:220px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var step in Model)
+                            {
+                                <tr>
+                                    <td>@step.ResignationRequest.Employee.EmployeeCode</td>
+                                    <td>@step.ResignationRequest.Employee.Name</td>
+                                    <td>@step.ResignationRequest.ResignationDate?.ToString("dd-MMM-yyyy")</td>
+                                    <td class="text-primary font-weight-bold">
+                                        @step.ResignationRequest.SuggestedLastWorkingDay.ToString("dd-MMM-yyyy")
+                                    </td>
+                                   @*  <td>
+                                        @if (step.ResignationRequest.ProposedLastWorkingDay.HasValue)
+                                        {
+                                            <span class="text-success font-weight-bold">
+                                                @step.ResignationRequest.ProposedLastWorkingDay.Value.ToString("dd-MMM-yyyy")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not Provided</span>
+                                        }
+                                    </td> *@
+                                    <td>@step.ResignationRequest.ReasonCode</td>
+                                    <td>@step.ResignationRequest.DetailedReason</td>
+                                    <td>
+                                        <form asp-action="ApproveReject" method="post">
+                                            <input type="hidden" name="stepId" value="@step.Id" />
+
+                                            <input type="text"
+                                                   name="remarks"
+                                                   class="form-control form-control-sm mb-2"
+                                                   placeholder="Remarks (optional)" />
+
+                                            <div class="d-flex justify-content-between">
+                                                <button type="submit"
+                                                        name="approve"
+                                                        value="true"
+                                                        class="btn btn-success btn-sm">
+                                                    Approve
+                                                </button>
+
+                                                <button type="submit"
+                                                        name="approve"
+                                                        value="false"
+                                                        class="btn btn-danger btn-sm">
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- MOBILE CARDS -->
+                <div class="d-md-none">
+                    @foreach (var step in Model)
+                    {
+                        <div class="card m-3 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="font-weight-bold mb-2">
+                                    @step.ResignationRequest.Employee.Name
+                                    <small class="text-muted">
+                                        (@step.ResignationRequest.Employee.EmployeeCode)
+                                    </small>
+                                </h6>
+
+                                <p class="mb-1">
+                                    <strong>Resignation:</strong>
+                                    @step.ResignationRequest.ResignationDate?.ToString("dd-MMM-yyyy")
+                                </p>
+
+                                <p class="mb-1 text-primary">
+                                    <strong>Suggested LWD:</strong>
+                                    @step.ResignationRequest.SuggestedLastWorkingDay.ToString("dd-MMM-yyyy")
+                                </p>
+
+                               @*  <p class="mb-1">
+                                    <strong>Proposed LWD:</strong>
+                                    @(
+                                                                step.ResignationRequest.ProposedLastWorkingDay.HasValue
+                                                                ? step.ResignationRequest.ProposedLastWorkingDay.Value.ToString("dd-MMM-yyyy")
+                                                                : "Not Provided"
+                                                                )
+                                </p> *@
+
+                                <p class="mb-1"><strong>Reason:</strong> @step.ResignationRequest.ReasonCode</p>
+                                <p class="mb-2"><strong>Details:</strong> @step.ResignationRequest.DetailedReason</p>
+
+                                <form asp-action="ApproveReject" method="post">
+                                    <input type="hidden" name="stepId" value="@step.Id" />
+
+                                    <input type="text"
+                                           name="remarks"
+                                           class="form-control mb-2"
+                                           placeholder="Remarks (optional)" />
+
+                                    <div class="d-flex justify-content-between">
+                                        <button type="submit"
+                                                name="approve"
+                                                value="true"
+                                                class="btn btn-success btn-sm">
+                                            Approve
+                                        </button>
+
+                                        <button type="submit"
+                                                name="approve"
+                                                value="false"
+                                                class="btn btn-danger btn-sm">
+                                            Reject
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

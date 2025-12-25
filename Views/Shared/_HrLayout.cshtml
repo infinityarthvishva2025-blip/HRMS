@@ -323,18 +323,22 @@
 
             }
            
-               
+              @*/////  Resignation  /////*@
+
              <a asp-controller="Resignation" asp-action="PendingApprovals" class="submenu-item">
                  <i class="fa-solid fa-inbox"></i>Resignation Approvals
              </a>
                 
+            <a asp-controller="Resignation" asp-action="Track" class="submenu-item">
+                <i class="fa-solid fa-paper-plane"></i>ResignationTrack
+            </a>
                 
-               @*  <a asp-controller="Resignation" asp-action="Apply" class="submenu-item">
+                <a asp-controller="Resignation" asp-action="Apply" class="submenu-item">
                     <i class="fa-solid fa-paper-plane"></i>Resignation
-                </a> *@
+                </a> 
                 
                 
-            </div>
+           
 
             <a asp-controller="Reports" asp-action="Index" class="menu-item">
                 <i class="fa-solid fa-file-alt"></i><span>Reports</span>
@@ -347,6 +351,7 @@
                 </a>
             </div>
         </div>
+       
     </div>
 
     <!-- MAIN CONTENT -->

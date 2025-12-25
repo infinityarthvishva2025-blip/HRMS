@@ -8,7 +8,8 @@ public class ResignationRequest
     public Employee Employee { get; set; }
 
     public DateTime? ResignationDate { get; set; }
-    public DateTime? ProposedLastWorkingDay { get; set; }
+    //public DateTime? ProposedLastWorkingDay { get; set; }
+    public DateTime SuggestedLastWorkingDay { get; set; }   // ✅ ADD THIS
     public DateTime? ApprovedLastWorkingDay { get; set; }
 
     // ✅ ADD THESE BACK
