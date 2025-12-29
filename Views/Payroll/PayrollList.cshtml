@@ -1,0 +1,355 @@
+﻿@model List<Payroll>
+@using HRMS.Helpers
+
+@{
+    ViewData["Title"] = "Monthly Payroll";
+    Layout = "~/Views/Shared/_HrLayout.cshtml";
+}
+
+<h2 class="mb-3">Payroll List</h2>
+
+<!-- ACTION BAR -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <button id="exportExcelBtn" class="btn btn-success">
+        📥 Export Excel (All Employees)
+    </button>
+
+    <select id="pageSize" class="form-select w-auto">
+        <option value="5">5 rows</option>
+        <option value="10" selected>10 rows</option>
+        <option value="20">20 rows</option>
+        <option value="50">50 rows</option>
+    </select>
+</div>
+
+<!-- TABLE -->
+<div class="table-responsive">
+    <table id="payrollTable" class="table table-bordered table-striped text-center align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Emp Code</th>
+                <th>Name</th>
+                <th>Working Days</th>
+                <th>Paid Days</th>
+                <th>Basic Salary</th>
+                <th>Gross Salary</th>
+                <th>Deduction</th>
+                <th>Net Salary</th>
+                <th>Payslip</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                var token = UrlEncryptionHelper.GenerateToken(
+                new Dictionary<string, string>
+                {
+                    ["type"] = "PAY",
+                    ["empCode"] = item.emp_code,
+                    ["year"] = item.year.ToString(),
+                    ["month"] = item.month.ToString()
+                }, 30);
+
+                <tr>
+                    <td>@item.emp_code</td>
+                    <td>@item.name</td>
+                    <td>@item.working_days</td>
+                    <td>@item.paid_days</td>
+                    <td>@item.base_salary</td>
+                    <td>@item.gross_salary</td>
+                    <td>@item.total_deduction</td>
+                    <td>@item.net_salary</td>
+                    <td>
+                        <a asp-action="Payslip"
+                           asp-route-token="@token"
+                           class="btn btn-primary btn-sm">
+                            Slip
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- INFO + PAGINATION -->
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <div id="recordInfo" class="text-muted"></div>
+    <ul id="pagination" class="pagination mb-0"></ul>
+</div>
+
+<!-- XLSX -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+    let currentPage = 1;
+    let rowsPerPage = 10;
+
+    const tbody = document.querySelector("#payrollTable tbody");
+    const allRows = Array.from(tbody.rows);
+    const pagination = document.getElementById("pagination");
+    const pageSizeSelect = document.getElementById("pageSize");
+    const recordInfo = document.getElementById("recordInfo");
+
+    function renderTable() {
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+
+        allRows.forEach((row, index) => {
+            row.style.display =
+                index >= start && index < end ? "" : "none";
+        });
+
+        recordInfo.innerText =
+            `Showing ${start + 1}-${Math.min(end, allRows.length)} of ${allRows.length} records`;
+    }
+
+    function setupPagination() {
+        pagination.innerHTML = "";
+        const pageCount = Math.ceil(allRows.length / rowsPerPage);
+
+        // ⬅ Previous
+        pagination.innerHTML += `
+            <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">&lt;</a>
+            </li>`;
+
+        for (let i = 1; i <= pageCount; i++) {
+            pagination.innerHTML += `
+                <li class="page-item ${i === currentPage ? "active" : ""}">
+                    <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                </li>`;
+        }
+
+        // ➡ Next
+        pagination.innerHTML += `
+            <li class="page-item ${currentPage === pageCount ? "disabled" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">&gt;</a>
+            </li>`;
+    }
+
+    function changePage(page) {
+        const pageCount = Math.ceil(allRows.length / rowsPerPage);
+        if (page < 1 || page > pageCount) return;
+        currentPage = page;
+        renderTable();
+        setupPagination();
+    }
+
+    pageSizeSelect.addEventListener("change", () => {
+        rowsPerPage = parseInt(pageSizeSelect.value);
+        currentPage = 1;
+        renderTable();
+        setupPagination();
+    });
+
+    // INIT
+    renderTable();
+    setupPagination();
+
+    // EXCEL EXPORT (ALL DATA)
+    document.getElementById("exportExcelBtn").onclick = function () {
+        const wb = XLSX.utils.book_new();
+        const wsData = [];
+
+        wsData.push([
+            "Emp Code","Name","Working Days","Paid Days",
+            "Gross Salary","Deduction","Net Salary"
+        ]);
+
+        allRows.forEach(r => {
+            const c = r.cells;
+            wsData.push([
+                c[0].innerText, c[1].innerText, c[2].innerText,
+                c[3].innerText, c[4].innerText,
+                c[5].innerText, c[6].innerText
+            ]);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        XLSX.utils.book_append_sheet(wb, ws, "Payroll");
+        XLSX.writeFile(wb, "Payroll_All_Employees.xlsx");
+    };
+</script>
+
+@* @model List<Payroll>
+@using HRMS.Helpers
+
+@{
+    ViewData["Title"] = "Monthly Payroll";
+    Layout = "~/Views/Shared/_HrLayout.cshtml";
+}
+
+<h2 class="mb-3">Payroll List</h2>
+
+<!-- ACTION BAR -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <button id="exportExcelBtn" class="btn btn-success">
+        📥 Export Excel (All Employees)
+    </button>
+
+    <select id="pageSize" class="form-select w-auto">
+        <option value="5">5 rows</option>
+        <option value="10" selected>10 rows</option>
+        <option value="20">20 rows</option>
+        <option value="50">50 rows</option>
+    </select>
+</div>
+
+<!-- PAYROLL TABLE -->
+<div class="table-responsive">
+    <table id="payrollTable" class="table table-bordered table-striped text-center align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Emp Code</th>
+                <th>Name</th>
+                <th>Working Days</th>
+                <th>Paid Days</th>
+                <th>Gross Salary</th>
+                <th>Deduction</th>
+                <th>Net Salary</th>
+                <th>Payslip</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                var token = UrlEncryptionHelper.GenerateToken(
+                new Dictionary<string, string>
+                {
+                    ["type"] = "PAY",
+                    ["empCode"] = item.emp_code,
+                    ["year"] = item.year.ToString(),
+                    ["month"] = item.month.ToString()
+                }, 30);
+
+                <tr>
+                    <td>@item.emp_code</td>
+                    <td>@item.name</td>
+                    <td>@item.working_days</td>
+                    <td>@item.paid_days</td>
+                    <td>@item.gross_salary</td>
+                    <td>@item.total_deduction</td>
+                    <td>@item.net_salary</td>
+                    <td>
+                        <a asp-action="Payslip"
+                           asp-route-token="@token"
+                           class="btn btn-primary btn-sm">
+                            Slip
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- PAGINATION -->
+<nav class="mt-3">
+    <ul id="pagination" class="pagination justify-content-center"></ul>
+</nav>
+
+<!-- XLSX LIBRARY -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- PAGINATION SCRIPT -->
+<script>
+    let currentPage = 1;
+    let rowsPerPage = 10;
+
+    const table = document.getElementById("payrollTable");
+    const tbody = table.querySelector("tbody");
+
+    // IMPORTANT: Store all rows once
+    const allRows = Array.from(tbody.querySelectorAll("tr"));
+
+    const pagination = document.getElementById("pagination");
+    const pageSizeSelect = document.getElementById("pageSize");
+
+    function renderTable() {
+        tbody.innerHTML = "";
+
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+
+        allRows.slice(start, end).forEach(row => {
+            tbody.appendChild(row);
+        });
+    }
+
+    function setupPagination() {
+        pagination.innerHTML = "";
+        const pageCount = Math.ceil(allRows.length / rowsPerPage);
+
+        for (let i = 1; i <= pageCount; i++) {
+            const li = document.createElement("li");
+            li.className = "page-item " + (i === currentPage ? "active" : "");
+
+            const a = document.createElement("a");
+            a.className = "page-link";
+            a.href = "#";
+            a.innerText = i;
+
+            a.onclick = function (e) {
+                e.preventDefault();
+                currentPage = i;
+                renderTable();
+                setupPagination();
+            };
+
+            li.appendChild(a);
+            pagination.appendChild(li);
+        }
+    }
+
+    pageSizeSelect.addEventListener("change", function () {
+        rowsPerPage = parseInt(this.value);
+        currentPage =allRows ;
+        renderTable();
+        setupPagination();
+    });
+
+    // INIT
+    renderTable();
+    setupPagination();
+</script>
+
+<!-- ✅ EXCEL EXPORT (ALL EMPLOYEES, FIXED) -->
+<script>
+    document.getElementById("exportExcelBtn").onclick = function () {
+
+        const wb = XLSX.utils.book_new();
+        const wsData = [];
+
+        // HEADER
+        wsData.push([
+            "Emp Code",
+            "Name",
+            "Working Days",
+            "Paid Days",
+            "Gross Salary",
+            "Deduction",
+            "Net Salary"
+        ]);
+
+        // ALL ROWS (NOT PAGINATED)
+        allRows.forEach(row => {
+            const cells = row.querySelectorAll("td");
+            wsData.push([
+                cells[0].innerText,
+                cells[1].innerText,
+                cells[2].innerText,
+                cells[3].innerText,
+                cells[4].innerText,
+                cells[5].innerText,
+                cells[6].innerText
+            ]);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        XLSX.utils.book_append_sheet(wb, ws, "Payroll");
+
+        XLSX.writeFile(wb, "Payroll_All_Employees.xlsx");
+    };
+</script>
+ *@

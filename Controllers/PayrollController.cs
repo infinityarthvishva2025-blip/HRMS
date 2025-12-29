@@ -1,353 +1,315 @@
 ﻿using HRMS.Data;
 using HRMS.Helpers;
 using HRMS.Models;
-using HRMS.Models.ViewModels;
 using HRMS.Services;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.IO;
-using System.Linq;
-
-namespace HRMS.Controllers
+using Microsoft.EntityFrameworkCore;
+using Rotativa.AspNetCore;
+public class PayrollController : Controller
 {
-    public class PayrollController : Controller
+    private readonly IPayrollService _payrollService;
+    private readonly ApplicationDbContext _context;
+
+    public PayrollController(IPayrollService payrollService, ApplicationDbContext context)
     {
-        private readonly ApplicationDbContext _context;
-        private readonly PayrollService _payrollService;
-
-        public PayrollController(ApplicationDbContext context)
-        {
-            _context = context;
-            _payrollService = new PayrollService(context);
-        }
-
-        // ============================================================
-        // EMPLOYEE — DOWNLOAD SALARY SLIP (PDF)
-        // ============================================================
-        public IActionResult DownloadSalarySlip(int month, int year, string empCode)
-        {
-            var data = _payrollService.BuildMonthlySummary(empCode, year, month);
-
-            if (data == null)
-                return Content("Salary slip not found.");
-
-            byte[] pdf = GenerateSalarySlipPdf(data);
-
-            return File(
-                pdf,
-                "application/pdf",
-                $"{empCode}_{month}_{year}_SalarySlip.pdf"
-            );
-        }
-
-        // ============================================================
-        // PDF GENERATION (iTextSharp)
-        // ============================================================
-        private byte[] GenerateSalarySlipPdf(PayrollSummaryVm m)
-        {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                Document doc = new Document(PageSize.A4, 40, 40, 40, 40);
-                PdfWriter.GetInstance(doc, ms);
-                doc.Open();
-
-                // FONTS
-                var titleFont = FontFactory.GetFont("Arial", 18, Font.BOLD);
-                var headerFont = FontFactory.GetFont("Arial", 12, Font.BOLD);
-                var boldFont = FontFactory.GetFont("Arial", 11, Font.BOLD);
-                var normalFont = FontFactory.GetFont("Arial", 11);
-
-                // ============================================================
-                // COMPANY HEADER
-                // ============================================================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 30, 70 });
-
-                string logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/infinity-logo.png");
-                if (System.IO.File.Exists(logoPath))
-                {
-                    iTextSharp.text.Image logo = iTextSharp.text.Image.GetInstance(logoPath);
-                    logo.ScaleAbsolute(80f, 55f);
-                    PdfPCell logoCell = new PdfPCell(logo)
-                    {
-                        Border = Rectangle.NO_BORDER,
-                        HorizontalAlignment = Element.ALIGN_LEFT
-                    };
-                    headerTable.AddCell(logoCell);
-                }
-                else
-                {
-                    headerTable.AddCell(new PdfPCell(new Phrase("Infinity Arthvishva", boldFont)) { Border = Rectangle.NO_BORDER });
-                }
-
-                PdfPCell companyCell = new PdfPCell { Border = Rectangle.NO_BORDER };
-                companyCell.AddElement(new Paragraph("Infinity Arthvishva", titleFont));
-                companyCell.AddElement(new Paragraph("Empowering Finance & Innovation", normalFont));
-                headerTable.AddCell(companyCell);
-                doc.Add(headerTable);
-
-                // ============================================================
-                // TITLE
-                // ============================================================
-                doc.Add(new Paragraph("\nSALARY SLIP", titleFont) { Alignment = Element.ALIGN_CENTER });
-                doc.Add(new Paragraph($"Month: {new DateTime(m.Year, m.Month, 1):MMMM yyyy}\n\n", boldFont));
-
-                // ============================================================
-                // EMPLOYEE INFORMATION
-                // ============================================================
-                PdfPTable empTable = new PdfPTable(2);
-                empTable.WidthPercentage = 100;
-                empTable.SetWidths(new float[] { 40, 60 });
-
-                void AddRow(PdfPTable t, string label, string value)
-                {
-                    t.AddCell(new PdfPCell(new Phrase(label, boldFont)) { Border = Rectangle.NO_BORDER });
-                    t.AddCell(new PdfPCell(new Phrase(value, normalFont)) { Border = Rectangle.NO_BORDER });
-                }
-
-                AddRow(empTable, "Employee Code:", m.EmpCode);
-                AddRow(empTable, "Name:", m.EmpName);
-                AddRow(empTable, "Department:", m.Department);
-                AddRow(empTable, "Designation:", m.Designation);
-                doc.Add(new Paragraph("\nEmployee Information", headerFont));
-                doc.Add(empTable);
-
-                // ============================================================
-                // BANK INFORMATION
-                // ============================================================
-                PdfPTable bankTable = new PdfPTable(2);
-                bankTable.WidthPercentage = 100;
-                bankTable.SetWidths(new float[] { 40, 60 });
-
-                AddRow(bankTable, "Bank Name:", m.BankName);
-                AddRow(bankTable, "Account No:", m.AccountNumber);
-                AddRow(bankTable, "IFSC Code:", m.IFSCCode);
-                AddRow(bankTable, "Branch:", m.BankBranch);
-                doc.Add(new Paragraph("\nBank Information", headerFont));
-                doc.Add(bankTable);
-
-                // ============================================================
-                // ATTENDANCE SUMMARY
-                // ============================================================
-                PdfPTable attTable = new PdfPTable(9);
-                attTable.WidthPercentage = 100;
-                attTable.SetWidths(new float[] { 11, 11, 11, 11, 11, 11, 11, 11, 12 });
-
-                void AddAtt(string text, bool header = false)
-                {
-                    attTable.AddCell(new PdfPCell(new Phrase(text, header ? boldFont : normalFont))
-                    {
-                        BackgroundColor = header ? BaseColor.LIGHT_GRAY : BaseColor.WHITE,
-                        HorizontalAlignment = Element.ALIGN_CENTER
-                    });
-                }
-
-                // Calculate Leave & Late Loss
-                decimal halfDayLoss = m.PresentHalfDays * 0.5m * m.PerDaySalary;
-                decimal absentLoss = m.AbsentDays * m.PerDaySalary;
-                decimal totalLeaveLoss = halfDayLoss + absentLoss;
-                decimal lateLoss = m.LateDeductionDays * m.PerDaySalary;
-
-                AddAtt("Work Days", true);
-                AddAtt("Half Days", true);
-                AddAtt("WO", true);
-                AddAtt("Sat(WOP)", true);
-                AddAtt("Absent", true);
-                AddAtt("Late Marks", true);
-                AddAtt("Late Ded (Days)", true);
-                AddAtt("Paid Days", true);
-                AddAtt("Leave Loss (₹)", true);
-
-                AddAtt(m.TotalDaysInMonth.ToString());
-                AddAtt(m.PresentHalfDays.ToString());
-                AddAtt(m.WeeklyOffDays.ToString());
-                AddAtt(m.TotalSaturdayPaid.ToString());
-                AddAtt(m.AbsentDays.ToString());
-                AddAtt(m.LateMarks.ToString());
-                AddAtt(m.LateDeductionDays.ToString("0.0"));
-                AddAtt(m.PaidDays.ToString("0.0"));
-                AddAtt(totalLeaveLoss.ToString("0.00"));
-
-                doc.Add(new Paragraph("\nAttendance Summary", headerFont));
-                doc.Add(attTable);
-
-                // ============================================================
-                // EARNINGS SECTION
-                // ============================================================
-                PdfPTable earnTable = new PdfPTable(2);
-                earnTable.WidthPercentage = 100;
-                earnTable.SetWidths(new float[] { 60, 40 });
-
-                void AddEarn(string lbl, decimal val, bool highlight = false)
-                {
-                    earnTable.AddCell(new PdfPCell(new Phrase(lbl, boldFont)) { Border = Rectangle.NO_BORDER });
-                    earnTable.AddCell(new PdfPCell(new Phrase(val.ToString("0.00"), highlight ? boldFont : normalFont))
-                    {
-                        Border = Rectangle.NO_BORDER,
-                        BackgroundColor = highlight ? new BaseColor(220, 240, 255) : BaseColor.WHITE,
-                        HorizontalAlignment = Element.ALIGN_RIGHT
-                    });
-                }
-
-                AddEarn("Base Salary", m.MonthlySalary);
-                //AddEarn("Per Day Salary", m.PerDaySalary);
-                AddEarn("Performance Allowance", m.PerformanceAllowance);
-                AddEarn("Other Allowances", m.OtherAllowances);
-                AddEarn("Petrol Allowance", m.PetrolAllowance);
-                AddEarn("Reimbursement", m.Reimbursement);
-                AddEarn("Gross Salary", m.GrossSalary, true);
-
-                doc.Add(new Paragraph("\nEarnings", headerFont));
-                doc.Add(earnTable);
-
-                // ============================================================
-                // DEDUCTIONS SECTION
-                // ============================================================
-                PdfPTable dedTable = new PdfPTable(2);
-                dedTable.WidthPercentage = 100;
-                dedTable.SetWidths(new float[] { 60, 40 });
-
-                void AddDed(string lbl, decimal val, bool red = false, bool green = false)
-                {
-                    BaseColor bg = BaseColor.WHITE;
-                    if (red) bg = new BaseColor(255, 225, 225);
-                    if (green) bg = new BaseColor(225, 255, 225);
-
-                    dedTable.AddCell(new PdfPCell(new Phrase(lbl, boldFont)) { Border = Rectangle.NO_BORDER });
-                    dedTable.AddCell(new PdfPCell(new Phrase(val.ToString("0.00"), boldFont))
-                    {
-                        Border = Rectangle.NO_BORDER,
-                        BackgroundColor = bg,
-                        HorizontalAlignment = Element.ALIGN_RIGHT
-                    });
-                }
-
-                AddDed("Professional Tax", m.ProfessionalTax);
-                AddDed("Leave Loss (Absents + Half-Days)", totalLeaveLoss, true);
-                AddDed("Late Deduction (Days × Per Day)", lateLoss, true);
-                AddDed("Other Deductions", m.OtherDeductions, true);
-                AddDed("Total Deductions", m.TotalDeductions + lateLoss, true);
-                AddDed("Net Salary", m.NetSalary - lateLoss, false, true);
-                AddDed("Total Payable", m.TotalPay, false, true);
-
-                doc.Add(new Paragraph("\nDeductions", headerFont));
-                doc.Add(dedTable);
-
-                // ============================================================
-                // FOOTER
-                // ===========================================================
-              
-                doc.Add(new Paragraph("Generated on: " + DateTime.Now.ToString("dd-MM-yyyy HH:mm"), normalFont));
-
-                doc.Close();
-                return ms.ToArray();
-            }
-        }
-        [HttpGet]
-        public async Task<IActionResult> Payslip(string token)
-        {
-            if (string.IsNullOrEmpty(token))
-                return BadRequest("Missing token");
-
-            // 🔓 Decrypt token (NEW LOGIC)
-            if (!UrlEncryptionHelper.TryDecryptToken(
-                    token,
-                    out Dictionary<string, string> data,
-                    out string error))
-            {
-                return StatusCode(403, error);
-            }
-
-            // 🔐 Validate token type
-            if (!data.TryGetValue("type", out var type) || type != "PAY")
-                return StatusCode(403, "Invalid token type");
-
-            // 🔓 Extract values safely
-            string empCode = data["empCode"];
-            int year = int.Parse(data["year"]);
-            int month = int.Parse(data["month"]);
-
-            // 🔹 Session check
-            var empId = HttpContext.Session.GetInt32("EmployeeId");
-            if (!empId.HasValue)
-                return RedirectToAction("Login", "Account");
-
-            // 🔹 Validate employee
-            var emp = await _context.Employees.FindAsync(empId.Value);
-            if (emp == null)
-                return RedirectToAction("Login", "Account");
-
-            ViewBag.UserRole = emp.Role?.ToString();
-            var payslip = _payrollService
-    .GetMonthlySummaries(year, month)
-    .FirstOrDefault(x => x.EmpCode == empCode);
-
-            if (payslip == null)
-                return NotFound("Payslip not found");
-
-            return View(payslip);
-            // 🧾 Load payslip (IMPORTANT FIX)
-           // var payslip = _payrollService.GetMonthlySummaries(year, month);
-            if (payslip == null)
-                return NotFound("Payslip not found");
-
-            return View(payslip);
-        }
-
-
-         //============================================================
-         //ADMIN — MONTHLY PAYROLL
-         //============================================================
-        public async Task<IActionResult> Monthly(int? year, int? month, string search)
-        {
-            var empId = HttpContext.Session.GetInt32("EmployeeId");
-            if (!empId.HasValue)
-                return RedirectToAction("Login", "Account");
-
-            // 🔹 Validate employee
-            var emp = await _context.Employees.FindAsync(empId.Value);
-            if (emp == null)
-                return RedirectToAction("Login", "Account");
-
-            ViewBag.UserRole = emp.Role?.ToString();
-
-            int y = year ?? DateTime.Now.Year;
-            int m = month ?? DateTime.Now.Month;
-
-            ViewBag.Year = y;
-            ViewBag.Month = m;
-            ViewBag.Search = search;
-
-            var list = _payrollService.GetMonthlySummaries(y, m);
-
-            // SEARCH
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                string s = search.ToLower();
-                list = list
-                    .Where(x =>
-                        (x.EmpCode != null && x.EmpCode.ToLower().Contains(s)) ||
-                        (x.EmpName != null && x.EmpName.ToLower().Contains(s)))
-                    .ToList();
-            }
-
-            return View(list);
-        }
-
-         //============================================================
-         //ADMIN — VIEW PAYSLIP
-         //============================================================
-        public IActionResult Payslip(string empCode, int year, int month)
-        {
-            var vm = _payrollService.BuildMonthlySummary(empCode, year, month);
-
-            if (vm == null)
-                return Content("Salary slip not found.");
-
-            return View(vm);
-        }
+        _payrollService = payrollService;
+        _context = context;
     }
+    // =========================
+    // GET : Generate Payroll
+    // =========================
+    [HttpGet]
+    public IActionResult Generate()
+    {
+        var model = new PayrollViewModel
+        {
+            FromDate = DateTime.Today,
+            ToDate = DateTime.Today,
+            Month = DateTime.Today.Month,
+            Year = DateTime.Today.Year
+        };
+
+        return View(model);
+    }
+
+    // =========================
+    // POST : Generate Payroll
+    // =========================
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Generate(PayrollViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        await _payrollService.GeneratePayrollAsync(
+            model.Month,
+            model.Year,
+            model.FromDate,
+            model.ToDate
+        );
+
+        return RedirectToAction("PayrollList",
+            new { month = model.Month, year = model.Year });
+    }
+
+    // ======================
+    // GENERATE PAYROLL
+    // ======================
+    //[HttpPost]
+    //public async Task<IActionResult> Generate(PayrollViewModel model)
+    //{
+    //    if (_payrollService.IsPayrollLocked(model.Month, model.Year))
+    //    {
+    //        TempData["Error"] = "Payroll already locked!";
+    //        return RedirectToAction("PayrollList", new { model.Month, model.Year });
+    //    }
+
+    //    await _payrollService.GeneratePayrollAsync(
+    //        model.Month, model.Year, model.FromDate, model.ToDate);
+
+    //    return RedirectToAction("PayrollList", new { model.Month, model.Year });
+    //}
+
+    // ======================
+    // LOCK PAYROLL
+    // ======================
+    [HttpPost]
+    public IActionResult LockPayroll(int month, int year)
+    {
+        _payrollService.LockPayroll(month, year, User.Identity.Name);
+        return RedirectToAction("PayrollList", new { month, year });
+    }
+
+    // ======================
+    // PAYROLL LIST
+    // ======================
+    [HttpGet]
+    public IActionResult PayrollList(int month, int year, int page = 1)
+    {
+        //int pageSize = 10;
+
+        bool isLocked = _context.PayrollLocks
+            .Any(x => x.Month == month && x.Year == year && x.IsLocked);
+
+        ViewBag.IsLocked = isLocked;
+        ViewBag.Month = month;
+        ViewBag.Year = year;
+
+        int totalRecords = _context.Payroll
+            .Count(x => x.month == month && x.year == year);
+
+        var data = _context.Payroll
+            .Where(x => x.month == month && x.year == year)
+            .OrderBy(x => x.emp_code)
+            //.Skip((page - 1) * pageSize)
+            //.Take(pageSize)
+            .ToList();
+
+        ViewBag.CurrentPage = page;
+       // ViewBag.TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+
+        return View(data);
+    }
+
+    public IActionResult ExportExcel(int month, int year)
+    {
+        var data = _context.Payroll
+            .Where(x => x.month == month && x.year == year)
+            .AsNoTracking()
+            .ToList();
+
+        var file = PayrollExportHelper.ExportToExcel(data);
+
+        return File(
+            file,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "Payroll.xlsx"
+        );
+    }
+
+    [HttpGet]
+    public IActionResult Payslip(string token)
+    {
+        if (string.IsNullOrEmpty(token))
+            return NotFound();
+
+        var payroll = _context.Payroll
+            .FirstOrDefault(x => x.emp_code == token);
+
+        if (payroll == null)
+            return NotFound();
+
+        return View(payroll);
+    }
+    [HttpGet]
+    public IActionResult PayslipPdf(string token)
+    {
+        if (string.IsNullOrEmpty(token))
+            return NotFound();
+
+        var payroll = _context.Payroll
+            .FirstOrDefault(x => x.emp_code == token);
+
+        if (payroll == null)
+            return NotFound();
+
+        return new ViewAsPdf("Payslip", payroll)
+        {
+            FileName = $"Payslip_{payroll.emp_code}.pdf"
+        };
+    }
+    public IActionResult PayslipPdf(int id)
+    {
+        var payroll = _context.Payroll.Find(id);
+        return new ViewAsPdf("Payslip", payroll)
+        {
+            FileName = "Payslip.pdf"
+        };
+    }
+
 }
+
+
+//using HRMS.Data;
+//using HRMS.Models;
+//using HRMS.Services;
+//using Microsoft.AspNetCore.Mvc;
+//using Microsoft.EntityFrameworkCore;
+
+//namespace HRMS.Controllers
+//{
+//    public class PayrollController : Controller
+//    {
+//        private readonly ApplicationDbContext _context;
+//        private readonly PayrollDeductionService _deductionService;
+//        private readonly PayslipEmailService _emailService;
+//        private readonly SalarySlipService _salarySlipService;
+
+//        public PayrollController(
+//            ApplicationDbContext context,
+//            PayrollDeductionService deductionService,
+//            PayslipEmailService emailService,
+//            SalarySlipService salarySlipService)
+//        {
+//            _context = context;
+//            _deductionService = deductionService;
+//            _emailService = emailService;
+//            _salarySlipService = salarySlipService;
+//        }
+
+//        // =========================================================
+//        // ✅ HR APPROVE
+//        // =========================================================
+//        [HttpPost]
+//        public IActionResult HrApprove(int id, string? remark)
+//        {
+//            var payroll = _context.Payrolls.Include(p => p.Employee).FirstOrDefault(p => p.Id == id);
+//            if (payroll == null) return NotFound();
+
+//            if (payroll.IsLocked) return BadRequest("Payroll is locked.");
+
+//            payroll.HrStatus = "Approved";
+//            payroll.HrRemark = remark;
+//            payroll.OverallStatus = "Pending";
+
+//            _context.SaveChanges();
+//            return RedirectToAction("Index");
+//        }
+
+//        [HttpPost]
+//        public IActionResult HrReject(int id, string? remark)
+//        {
+//            var payroll = _context.Payrolls.Include(p => p.Employee).FirstOrDefault(p => p.Id == id);
+//            if (payroll == null) return NotFound();
+
+//            if (payroll.IsLocked) return BadRequest("Payroll is locked.");
+
+//            payroll.HrStatus = "Rejected";
+//            payroll.HrRemark = remark;
+//            payroll.OverallStatus = "Rejected";
+
+//            _context.SaveChanges();
+//            return RedirectToAction("Index");
+//        }
+
+//        // =========================================================
+//        // ✅ DIRECTOR APPROVE (FINAL)
+//        // =========================================================
+//        [HttpPost]
+//        public IActionResult DirectorApprove(int id, string? remark)
+//        {
+//            var payroll = _context.Payrolls.Include(p => p.Employee).FirstOrDefault(p => p.Id == id);
+//            if (payroll == null) return NotFound();
+
+//            if (payroll.IsLocked) return BadRequest("Payroll is locked.");
+
+//            // ✅ MUST BE HR APPROVED FIRST
+//            if (payroll.HrStatus != "Approved")
+//                return BadRequest("HR approval required first.");
+
+//            payroll.DirectorStatus = "Approved";
+//            payroll.DirectorRemark = remark;
+
+//            // ✅ FINAL STATUS
+//            payroll.OverallStatus = "Approved";
+//            payroll.IsLocked = true;
+
+//            // ✅ Recalculate PF/ESI + totals safely before finalizing
+//            _deductionService.ApplyPFESI(payroll);
+
+//            _context.SaveChanges();
+
+//            // ✅ AUTO SEND PAYSLIP EMAIL
+//            TrySendPayslipEmail(payroll);
+
+//            return RedirectToAction("Index");
+//        }
+
+//        [HttpPost]
+//        public IActionResult DirectorReject(int id, string? remark)
+//        {
+//            var payroll = _context.Payrolls.Include(p => p.Employee).FirstOrDefault(p => p.Id == id);
+//            if (payroll == null) return NotFound();
+
+//            if (payroll.IsLocked) return BadRequest("Payroll is locked.");
+
+//            payroll.DirectorStatus = "Rejected";
+//            payroll.DirectorRemark = remark;
+//            payroll.OverallStatus = "Rejected";
+
+//            _context.SaveChanges();
+//            return RedirectToAction("Index");
+//        }
+
+//        // =========================================================
+//        // ✅ PAYSLIP EMAIL SENDER (Internal)
+//        // =========================================================
+//        private void TrySendPayslipEmail(Payroll payroll)
+//        {
+//            if (payroll.PayslipEmailSent) return;
+//            if (string.IsNullOrWhiteSpace(payroll.Employee.Email)) return;
+
+//            var pdf = _salarySlipService.Generate(payroll);
+
+//            string subject = $"Salary Slip - {payroll.Month}/{payroll.Year}";
+//            string body = $@"
+//                <p>Hello <b>{payroll.Employee.Name}</b>,</p>
+//                <p>Your salary slip for <b>{payroll.Month}/{payroll.Year}</b> is attached.</p>
+//                <p>Net Salary: <b>₹{payroll.NetSalary}</b></p>
+//                <p>Regards,<br/>HRMS Payroll</p>";
+
+//            _emailService.SendPayslip(
+//                payroll.Employee.Email,
+//                payroll.Employee.Name,
+//                subject,
+//                body,
+//                pdf,
+//                $"SalarySlip_{payroll.Employee.EmployeeCode}_{payroll.Month}_{payroll.Year}.pdf"
+//            );
+
+//            payroll.PayslipEmailSent = true;
+//            _context.SaveChanges();
+//        }
+//    }
+//}

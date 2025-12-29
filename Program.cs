@@ -1,11 +1,12 @@
 ﻿
 using HRMS.Data;
-using HRMS.Services;
 using HRMS.Jobs;
+using HRMS.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using OfficeOpenXml;
 using Quartz;
+using Rotativa.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,8 +29,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<INotificationService, EmailNotificationService>();
 
-
-
+builder.Services.AddScoped<PayslipEmailService>();
+builder.Services.AddScoped<IPayrollService, PayrollService>();
 
 
 // SESSION
@@ -97,15 +98,15 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(@"C:\HRMSFiles"),
-    RequestPath = "/HRMSFiles"
-});
+//app.UseStaticFiles(new StaticFileOptions
+//{
+//    FileProvider = new PhysicalFileProvider(@"C:\HRMSFiles"),
+//    RequestPath = "/HRMSFiles"
+//});
 
 
 
-
+app.UseRotativa();
 // ROUTING
 app.MapControllerRoute(
     name: "default",

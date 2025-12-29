@@ -60,21 +60,35 @@ namespace HRMS.Controllers
       
         public IActionResult GetPayrollReport()
         {
-            var result = _context.Payrolls
-                .AsEnumerable()   // ⭐ IMPORTANT → forces evaluation on C# side
-                .GroupBy(p => new { p.month, p.Year })
-                .Select(g => new
-                {
-                    monthNum = g.Key.month,
-                    month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key.month),
-                    year = g.Key.Year,
-                    total = g.Sum(x => x.net_salary)
-                })
-                .OrderBy(x => x.year)
-                .ThenBy(x => x.month)
-                .ToList();
-
-            return Json(result);
+            //    var result = _context.Payrolls
+            //        .AsEnumerable()   // ⭐ IMPORTANT → forces evaluation on C# side
+            //        .GroupBy(p => new { p.month, p.year })
+            //        .Select(g => new
+            //        {
+            //            monthNum = g.Key.month,
+            //            month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key.month),
+            //            year = g.Key.year,
+            //            total = g.Sum(x => x.net_salary)
+            //        })
+            //        .OrderBy(x => x.year)
+            //        .ThenBy(x => x.month)
+            //        .ToList();
+            var report = _context.Payroll
+        .AsEnumerable() // forces C# side evaluation
+        .GroupBy(p => new { p.month, p.year })
+        .Select(g => new
+        {
+            monthNum = (int)g.Key.month, // ✅ explicit cast
+            month = CultureInfo.CurrentCulture
+                        .DateTimeFormat
+                        .GetMonthName((int)g.Key.month), // ✅ FIX
+            year = (int)g.Key.year,
+            total = g.Sum(x => x.net_salary)
+        })
+        .OrderBy(x => x.year)
+        .ThenBy(x => x.monthNum)
+        .ToList();
+            return Json(report);
         }
 
     }

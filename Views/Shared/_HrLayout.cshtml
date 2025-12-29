@@ -297,8 +297,14 @@
             <a asp-controller="Leave" asp-action="ApprovalDashboard" class="menu-item">
                 <i class="fa-solid fa-check-to-slot"></i><span>Leave Approvals</span>
             </a>
-            <a asp-controller="Payroll" asp-action="Monthly" class="menu-item">
+           @*  <a asp-controller="Payroll" asp-action="Generate" class="menu-item">
                 <i class="fa-solid fa-wallet"></i><span>Payroll</span>
+            </a> *@
+            <a asp-controller="Payroll"
+               asp-action="Generate"
+               class="menu-item">
+                <i class="fa-solid fa-wallet"></i>
+                <span>Payroll</span>
             </a>
            @*  <a asp-controller="Expenses" asp-action="HRList" class="menu-item">
                 <i class="fa-solid fa-laptop"></i><span>Expenses</span>
