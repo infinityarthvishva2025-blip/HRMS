@@ -39,6 +39,7 @@
                         <th>Employee</th>
                         <th>Date</th>
                         <th>Reason</th>
+                        <th>Proof</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -61,6 +62,7 @@
                             var employees = ViewBag.Employees as List<HRMS.Models.Employee>;
                             var emp = employees?.FirstOrDefault(e => e.EmployeeCode == a.Emp_Code);
                             bool isHr = role == "HR";
+                            bool isGM = role == "GM";
                             bool canResolve = a.CorrectionRequested && isHr;
                             string token = null;
                             if (canResolve)
@@ -90,11 +92,28 @@
                                 </td>
 
                                 <td>
+                                    @if (!string.IsNullOrEmpty(a.CorrectionProofPath))
+                                    {
+                                        <a href="@a.CorrectionProofPath"
+                                           target="_blank"
+                                           class="btn btn-sm btn-outline-primary">
+                                            View Proof
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">--</span>
+                                    }
+                                </td>
+
+
+                                <td>
                                     @switch (a.CorrectionStatus)
                                     {
                                         case "Pending":
-                                            <span class="badge bg-warning text-dark">Pending</span>
+                                            <span class="badge bg-info">Pending</span>
                                             break;
+
                                         case "Approved":
                                             <span class="badge bg-success">Approved</span>
                                             break;

@@ -49,6 +49,10 @@ namespace HRMS.Data
 
         public DbSet<DailyReport> DailyReports { get; set; }
         public DbSet<DailyReportRecipient> DailyReportRecipients { get; set; }
+
+        public DbSet<ResignationRequest> ResignationRequests { get; set; }
+        public DbSet<ResignationApprovalStep> ResignationApprovalSteps { get; set; }
+
         public DbSet<LeaveApprovalRoute> LeaveApprovalRoutes { get; set; }
         public DbSet<Hr> Hrs { get; set; }
         public DbSet<GeoTag> GeoTags => Set<GeoTag>();

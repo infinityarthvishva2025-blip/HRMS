@@ -5,7 +5,9 @@ using HRMS.Jobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using OfficeOpenXml;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Quartz;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +19,20 @@ var env = builder.Environment;
 // SERVICES
 builder.Services.AddControllersWithViews();
 
-// DB CONTEXT
+builder.Services.AddScoped<ResignationService>();
+
+
+// 🔐 AUTHENTICATION (REQUIRED FOR [Authorize])
+//builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+//    .AddCookie(options =>
+//    {
+//        options.LoginPath = "/Account/Login";
+//        options.AccessDeniedPath = "/Account/AccessDenied";
+//        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+//        options.SlidingExpiration = true;
+//    });
+
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
@@ -97,11 +112,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(@"C:\HRMSFiles"),
-    RequestPath = "/HRMSFiles"
-});
+//app.UseStaticFiles(new StaticFileOptions
+//{
+//    FileProvider = new PhysicalFileProvider(@"C:\HRMSFiles"),
+//    RequestPath = "/HRMSFiles"
+//});
 
 
 

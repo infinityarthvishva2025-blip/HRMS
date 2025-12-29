@@ -1,9 +1,13 @@
 ﻿@using Microsoft.AspNetCore.Http
 @inject IHttpContextAccessor HttpContextAccessor
 @model HRMS.ViewModels.DailyReportViewModel
-
 @{
-    Layout = "_EmployeeLayout";
+    var role = HttpContextAccessor.HttpContext?.Session.GetString("Role") ?? "Employee";
+    role = string.IsNullOrWhiteSpace(role) || role == "-" ? "Employee" : role;
+
+    Layout = (role == "HR" || role == "GM" || role == "VP" || role == "Director")
+        ? "~/Views/Shared/_HrLayout.cshtml"
+        : "~/Views/Shared/_EmployeeLayout.cshtml";
 }
 
 <div class="container-fluid daily-report-wrapper">

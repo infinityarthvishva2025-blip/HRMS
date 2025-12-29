@@ -29,8 +29,14 @@ namespace HRMS.Models
         public int LateMinutes { get; set; }
         public DateTime? Att_Date { get; set; }
         public bool CorrectionRequested { get; set; } = false;
+        public string? CorrectionProofPath { get; set; }
+
         public string? CorrectionRemark { get; set; }
         public string CorrectionStatus { get; set; } = "None"; // None, Pending, Approved, Rejected
+
+        public DateTime? CorrectionRequestedOn { get; set; }
+        public string? ReviewedBy { get; set; }
+        public DateTime? ReviewedOn { get; set; }
 
         public bool? IsGeoAttendance { get; set; }
 

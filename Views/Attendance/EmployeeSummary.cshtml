@@ -14,6 +14,8 @@
     {
         Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
     }
+
+    bool isHr = role == "HR" || role == "VP" || role == "GM" || role == "Director";
 }
 
 <div class="container py-4">
@@ -44,9 +46,7 @@
         </div>
     </form>
 
-    <!-- Daily Attendance Log -->
-    <h4 class="fw-bold mb-3">Daily Attendance Log</h4>
-
+    <!-- Attendance Table -->
     <div class="table-responsive">
         <table class="table table-striped table-bordered">
             <thead class="table-dark">
@@ -56,18 +56,17 @@
                     <th>Check Out</th>
                     <th>Working Hours</th>
                     <th>Status</th>
-                    <th>Ticket</th>
+                    <th>Correction</th>
                 </tr>
             </thead>
 
             <tbody id="tableBody">
                 @foreach (var a in Model.AttendanceRecords)
                 {
-                    bool isHr = role == "HR";
                     bool canResolve = a.CorrectionRequested && isHr;
 
                     string token = null;
-                    if ((canResolve) || (!a.CorrectionRequested && !isHr))
+                    if (!isHr || canResolve)
                     {
                         token = UrlEncryptionHelper.GenerateToken(
                         a.Emp_Code,
@@ -75,10 +74,12 @@
                         expiryMinutes: 30
                         );
                     }
+
                     <tr>
                         <td>@a.Date.ToString("dd-MM-yyyy")</td>
                         <td>@(a.InTime?.ToString(@"hh\:mm") ?? "--")</td>
                         <td>@(a.OutTime?.ToString(@"hh\:mm") ?? "--")</td>
+
                         <td>
                             @if (a.InTime.HasValue && a.OutTime.HasValue)
                             {
@@ -90,6 +91,8 @@
                                 <span>--</span>
                             }
                         </td>
+
+                        <!-- STATUS -->
                         <td>
                             @if (a.Status == "L")
                             {
@@ -97,62 +100,63 @@
                             }
                             else if (a.Status == "HO")
                             {
-
                                 <span class="badge bg-info">Holiday</span>
                             }
-
                             else if (a.Date.DayOfWeek == DayOfWeek.Sunday)
                             {
-
                                 <span class="badge bg-secondary">WO</span>
                             }
-
-
-                            else if ((a.InTime.HasValue && !a.OutTime.HasValue ) )
+                            else if (a.InTime.HasValue && !a.OutTime.HasValue)
                             {
-
                                 <span class="badge bg-warning text-dark">Not Checked Out</span>
                             }
-                            else if (a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "A")
+                            else if (a.Status == "P" || a.Status == "WOP")
                             {
-
-                                <span class="badge bg-warning text-dark">Not Checked Out</span>
-                            }
-                            else if (!a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "A")
-                            {
-
-                                <span class="badge bg-danger">Absent</span>
-                            }
-                            else if (a.Status == "P")
-                            {
-
-                                <span class="badge bg-success">Present</span>
-                            }
-                            else if (a.Status == "WOP")
-                            {
-
                                 <span class="badge bg-success">Present</span>
                             }
                             else
                             {
-
                                 <span class="badge bg-danger">Absent</span>
                             }
-
                         </td>
-                        <td>
 
-                            @if (!a.CorrectionRequested && !isHr)
+                        <!-- CORRECTION LOGIC -->
+                        <td>
+                            @* EMPLOYEE *@
+                            @if (!isHr)
                             {
-                                <a asp-controller="Attendance"
-                                   asp-action="RequestCorrection"
-                                   asp-route-token="@token"
-                                   asp-route-employeeId="@Model.Employee.Id"
-                                   class="btn btn-warning btn-sm">
-                                    Request
-                                </a>
+                                if (a.CorrectionStatus == "Approved")
+                                {
+                                    <span class="badge bg-success">Approved</span>
+                                }
+                                else if (a.CorrectionStatus == "Pending")
+                                {
+                                    <span class="badge bg-info">Pending</span>
+
+                                }
+                                else if (a.CorrectionStatus == "Rejected")
+                                {
+                                    <a asp-controller="Attendance"
+                                       asp-action="RequestCorrection"
+                                       asp-route-token="@token"
+                                       asp-route-employeeId="@Model.Employee.Id"
+                                       class="btn btn-warning btn-sm">
+                                        Request Again
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Attendance"
+                                       asp-action="RequestCorrection"
+                                       asp-route-token="@token"
+                                       asp-route-employeeId="@Model.Employee.Id"
+                                       class="btn btn-warning btn-sm">
+                                        Request
+                                    </a>
+                                }
                             }
 
+                            @* HR *@
                             else if (canResolve)
                             {
                                 <a class="btn btn-success btn-sm"
@@ -160,8 +164,7 @@
                                     Resolve
                                 </a>
                             }
-
-                            else if (a.CorrectionRequested)
+                            else
                             {
                                 <span class="badge bg-info">@a.CorrectionStatus</span>
                             }
@@ -182,77 +185,12 @@
 </div>
 
 <style>
-    .pagination .page-item.active .page-link {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-        color: #fff;
-    }
-
-    .pagination .page-link {
-        cursor: pointer;
-        border-radius: 6px;
-        margin: 0 2px;
-    }
-
     table th, table td {
         vertical-align: middle;
     }
+
+    .badge {
+        font-size: 0.85rem;
+        padding: 6px 10px;
+    }
 </style>
-
- <script>
-    document.addEventListener("DOMContentLoaded", function () {
-
-        const rowsPerPage = 10;
-        const tableBody = document.getElementById("tableBody");
-        const rows = Array.from(tableBody.querySelectorAll("tr"));
-
-        const pagination = document.getElementById("pagination");
-        const pageInfo = document.getElementById("pageInfo");
-
-        let currentPage = 1;
-        const totalPages = Math.ceil(rows.length / rowsPerPage);
-
-        function showPage(page) {
-            currentPage = page;
-
-            rows.forEach((row, index) => {
-                row.style.display =
-                    index >= (page - 1) * rowsPerPage &&
-                    index < page * rowsPerPage ? "" : "none";
-            });
-
-            pageInfo.innerText = `Page ${currentPage} of ${totalPages || 1}`;
-            renderPagination();
-        }
-
-        function renderPagination() {
-            pagination.innerHTML = "";
-
-            const prev = document.createElement("li");
-            prev.className = "page-item " + (currentPage === 1 ? "disabled" : "");
-            prev.innerHTML = `<a class="page-link">&lsaquo;</a>`;
-            prev.onclick = () => {
-                if (currentPage > 1) showPage(currentPage - 1);
-            };
-            pagination.appendChild(prev);
-
-            for (let i = 1; i <= totalPages; i++) {
-                const li = document.createElement("li");
-                li.className = "page-item " + (i === currentPage ? "active" : "");
-                li.innerHTML = `<a class="page-link">${i}</a>`;
-                li.onclick = () => showPage(i);
-                pagination.appendChild(li);
-            }
-
-            const next = document.createElement("li");
-            next.className = "page-item " + (currentPage === totalPages ? "disabled" : "");
-            next.innerHTML = `<a class="page-link">&rsaquo;</a>`;
-            next.onclick = () => {
-                if (currentPage < totalPages) showPage(currentPage + 1);
-            };
-            pagination.appendChild(next);
-        }
-
-        if (rows.length > 0) showPage(1);
-    });
-</script> 
