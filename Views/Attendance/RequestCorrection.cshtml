@@ -13,29 +13,185 @@
     }
 }
 
-<form method="post"
-      asp-action="RequestCorrection"
-      asp-controller="Attendance">
+<div class="container correction-container">
 
-    @Html.AntiForgeryToken()
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-6">
 
-    <!-- 🔐 TOKEN (ENCRYPTED empCode + date) -->
-    <input type="hidden" name="token" value="@ViewBag.Token" />
+            <div class="card correction-card shadow-sm border-0">
+                <div class="card-header correction-header">
+                    <i class="fa-solid fa-pen-to-square me-2"></i>
+                    Attendance Correction Request
+                </div>
 
-    <!-- 🔁 Needed for redirect -->
-    <input type="hidden" name="employeeId" value="@ViewBag.EmployeeId" />
+                <div class="card-body">
 
-    <div class="mb-3">
-        <label class="fw-bold">Why do you want correction?</label>
-        <textarea name="CorrectionRemark"
-                  class="form-control"
-                  rows="4"
-                  required></textarea>
+                    <form method="post"
+                          asp-action="RequestCorrection"
+                          asp-controller="Attendance">
+
+                        @Html.AntiForgeryToken()
+
+                        <!-- 🔐 TOKEN -->
+                        <input type="hidden" name="token" value="@ViewBag.Token" />
+
+                        <!-- 🔁 Redirect helper -->
+                        <input type="hidden" name="employeeId" value="@ViewBag.EmployeeId" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                Reason for correction
+                            </label>
+
+                            <textarea name="CorrectionRemark"
+                                      class="form-control correction-textarea"
+                                      rows="4"
+                                      placeholder="Explain the issue clearly..."
+                                      required></textarea>
+                        </div>
+
+                        <div class="d-grid mt-3">
+                            <button type="submit" class="btn btn-primary btn-submit">
+                                <i class="fa-solid fa-paper-plane me-1"></i>
+                                Submit Request
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <button type="submit" class="btn btn-primary mt-2">
-        Submit Request
-    </button>
+</div>
 
-</form>
+<!-- ======================= STYLES ======================= -->
+<style>
+    /* ================= BASE ================= */
+    .correction-container {
+        padding: 0 12px;
+    }
 
+    .correction-card {
+        border-radius: 16px;
+    }
+
+    .correction-header {
+        background: #f8f9fa;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-align: center;
+        padding: 14px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .correction-textarea {
+        resize: none;
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .btn-submit {
+        padding: 12px;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    @@media (max-width: 768px) {
+        /* Page spacing */
+        .container,
+        .container-fluid,
+        .page-content {
+            padding-top: 8px !important;
+        }
+        /* Header alignment */
+        h4, h5, h6 {
+            text-align: center;
+        }
+        /* Hide table header */
+        table thead {
+            display: none;
+        }
+
+        table,
+        tbody,
+        tr,
+        td {
+            display: block;
+            width: 100%;
+        }
+            /* Card style rows */
+            table tbody tr {
+                background: #fff;
+                border-radius: 14px;
+                margin-bottom: 14px;
+                padding: 14px;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+                border: 1px solid #e5e7eb;
+            }
+
+                table tbody tr td {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 6px 0;
+                    font-size: 14px;
+                    gap: 10px;
+                    text-align: right;
+                    word-break: break-word;
+                }
+
+                    table tbody tr td::before {
+                        content: attr(data-label);
+                        font-weight: 600;
+                        color: #6b7280;
+                        text-align: left;
+                        flex-shrink: 0;
+                    }
+        /* Status badge spacing */
+        .badge {
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+        /* Actions buttons */
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        /* Empty state */
+        .text-danger {
+            text-align: center;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+        /* Pagination center */
+        .pagination {
+            justify-content: center !important;
+            margin-top: 10px;
+        }
+
+        #pageInfo {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+    }
+
+    /* -------- SMALL PHONES -------- */
+    @@media (max-width: 480px) {
+
+        table tbody tr {
+            padding: 12px;
+        }
+
+            table tbody tr td {
+                font-size: 13px;
+            }
+
+        .badge {
+            font-size: 11px;
+        }
+    }
+</style>

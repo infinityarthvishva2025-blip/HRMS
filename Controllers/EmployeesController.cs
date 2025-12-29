@@ -19,6 +19,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+
 namespace HRMS.Controllers
 {
    
@@ -26,6 +27,7 @@ namespace HRMS.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private const string FILE_ROOT = @"C:\HRMSFiles";
 
         private static readonly Dictionary<string, List<string>> DepartmentPositions =
              new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
@@ -49,17 +51,14 @@ namespace HRMS.Controllers
         // ================================
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Employees.ToListAsync());    
+            return View(await _context.Employees.ToListAsync());
         }
 
-      
+
         public async Task<IActionResult> Details(int? id, string token)
         {
             int empId;
 
-            // =====================================================
-            // 🔐 CASE 1: Encrypted token is provided (NEW / SECURE)
-            // =====================================================
             if (!string.IsNullOrEmpty(token))
             {
                 if (!UrlEncryptionHelper.TryDecryptToken(token, out var fields, out var error))
@@ -71,32 +70,16 @@ namespace HRMS.Controllers
                 if (!fields.TryGetValue("empId", out var empIdStr) || !int.TryParse(empIdStr, out empId))
                     return BadRequest("Invalid employee id");
             }
-            // =====================================================
-            // 🔓 CASE 2: Plain ID is provided (OLD / BACKWARD COMPATIBLE)
-            // =====================================================
             else
             {
-                if (id == null)
-                    return NotFound();
-
+                if (id == null) return NotFound();
                 empId = id.Value;
             }
 
-            // =====================================================
-            // 🔍 LOAD EMPLOYEE (COMMON LOGIC)
-            // =====================================================
             var emp = await _context.Employees.FirstOrDefaultAsync(x => x.Id == empId);
-            if (emp == null)
-                return NotFound();
+            if (emp == null) return NotFound();
 
-            // =====================================================
-            // 📁 FILE PATH LOGIC (UNCHANGED)
-            // =====================================================
-            string physicalFolder = Path.Combine(@"C:\HRMSFiles", emp.EmployeeCode);
-            string urlFolder = "/HRMSFiles/" + emp.EmployeeCode + "/";
-
-            ViewBag.PhysicalFolder = physicalFolder;
-            ViewBag.UrlFolder = urlFolder;
+            ViewBag.PhysicalFolder = Path.Combine(FILE_ROOT, emp.EmployeeCode);
 
             return View(emp);
         }
@@ -116,58 +99,43 @@ namespace HRMS.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
-            Employee model,
-            string? NewDepartment,
-            string? NewPosition,
-            IFormFile? ProfilePhoto,
-            IFormFile? AadhaarFile,
-            IFormFile? PanFile,
-            IFormFile? PassbookFile,
-            List<IFormFile>? ExperienceCertificateFiles,
-            IFormFile? MedicalDocumentFile,
-            IFormFile? TenthMarksheetFile,
-            IFormFile? TwelfthMarksheetFile,
-            IFormFile? GraduationMarksheetFile,
-            IFormFile? PostGraduationMarksheetFile
-        )
+     Employee model,
+     string? NewDepartment,
+     string? NewPosition,
+     IFormFile? ProfilePhoto,
+     IFormFile? AadhaarFile,
+     IFormFile? PanFile,
+     IFormFile? PassbookFile,
+     List<IFormFile>? ExperienceCertificateFiles,
+     IFormFile? MedicalDocumentFile,
+     IFormFile? TenthMarksheetFile,
+     IFormFile? TwelfthMarksheetFile,
+     IFormFile? GraduationMarksheetFile,
+     IFormFile? PostGraduationMarksheetFile
+ )
         {
-            // ==========================================
-            // CLEAR INITIAL MODELSTATE
-            // ==========================================
-            ModelState.Clear();
-
-            // ==========================================
-            // 🔥 MASTER FIX: REMOVE ALL FILE VALIDATION AUTO-ERRORS
-            // ==========================================
+            // 🔥 REMOVE FILE VALIDATION AUTO ERRORS
             foreach (var key in ModelState.Keys.ToList())
             {
                 if (key.Contains("File") || key.Contains("Marksheet") || key.Contains("Document"))
-                {
                     ModelState.Remove(key);
-                }
             }
 
-            // ==========================================
-            // APPLY MANUAL DEPARTMENT / POSITION
-            // ==========================================
+            // APPLY MANUAL FIELDS
             if (!string.IsNullOrWhiteSpace(NewDepartment))
                 model.Department = NewDepartment.Trim();
 
             if (!string.IsNullOrWhiteSpace(NewPosition))
                 model.Position = NewPosition.Trim();
 
-            // ==========================================
-            // REQUIRED FIELD VALIDATOR FUNCTION
-            // ==========================================
+            // REQUIRED FIELD HELPER
             void Require(string field, string? value, string message)
             {
                 if (string.IsNullOrWhiteSpace(value))
                     ModelState.AddModelError(field, message);
             }
 
-            // ==========================================
-            // ALWAYS REQUIRED
-            // ==========================================
+            // REQUIRED VALIDATIONS
             Require("Name", model.Name, "Full Name is required.");
             Require("Email", model.Email, "Email is required.");
             Require("MobileNumber", model.MobileNumber, "Mobile number is required.");
@@ -206,43 +174,17 @@ namespace HRMS.Controllers
             if (model.Salary == null)
                 ModelState.AddModelError("Salary", "Salary is required.");
 
-            // Experience (conditional)
-            if (model.ExperienceType == "Experienced")
-            {
-                if (model.TotalExperienceYears == null || model.TotalExperienceYears == 0)
-                    ModelState.AddModelError("TotalExperienceYears", "Total experience years required.");
-
-                Require("LastCompanyName", model.LastCompanyName, "Last company name required.");
-            }
-
-            // Disease (conditional)
-            if (model.HasDisease == "Yes")
-            {
-                Require("DiseaseName", model.DiseaseName, "Disease name required.");
-                Require("DiseaseSince", model.DiseaseSince, "Disease duration required.");
-                Require("MedicinesRequired", model.MedicinesRequired, "Medicines required.");
-                Require("DoctorName", model.DoctorName, "Doctor name required.");
-                Require("DoctorContact", model.DoctorContact, "Doctor contact required.");
-            }
-
-            // ==========================================
-            // STOP IF ERRORS
-            // ==========================================
             if (!ModelState.IsValid)
                 return View(model);
 
-            // ==========================================
             // DEFAULT DATA
-            // ==========================================
             if (string.IsNullOrEmpty(model.EmployeeCode))
                 model.EmployeeCode = GenerateNextEmployeeCode();
 
             model.Status = "Active";
             model.ManagerId = 36;
 
-            // ==========================================
             // UNIQUE CHECK
-            // ==========================================
             if (await _context.Employees.AnyAsync(x => x.Email == model.Email))
             {
                 ModelState.AddModelError("Email", "Email already exists.");
@@ -255,54 +197,46 @@ namespace HRMS.Controllers
                 return View(model);
             }
 
-            // ==========================================
-            // SAVE FILES
-            // ==========================================
-            string empFolder = Path.Combine(_env.WebRootPath, "uploads/employees", model.EmployeeCode);
+            // 📁 ENSURE EMPLOYEE FOLDER
+            string empFolder = Path.Combine(FILE_ROOT, model.EmployeeCode);
             if (!Directory.Exists(empFolder))
                 Directory.CreateDirectory(empFolder);
 
-            model.ProfileImagePath = await SaveEmployeeFile(ProfilePhoto, empFolder, "profile");
-            model.AadhaarFilePath = await SaveEmployeeFile(AadhaarFile, empFolder, "aadhaar");
-            model.PanFilePath = await SaveEmployeeFile(PanFile, empFolder, "pan");
-            model.PassbookFilePath = await SaveEmployeeFile(PassbookFile, empFolder, "passbook");
+            // SAVE FILES
+            model.ProfileImagePath = await SaveEmployeeFile(ProfilePhoto, model.EmployeeCode, "profile");
+            model.AadhaarFilePath = await SaveEmployeeFile(AadhaarFile, model.EmployeeCode, "aadhaar");
+            model.PanFilePath = await SaveEmployeeFile(PanFile, model.EmployeeCode, "pan");
+            model.PassbookFilePath = await SaveEmployeeFile(PassbookFile, model.EmployeeCode, "passbook");
 
-            if (ExperienceCertificateFiles?.Count > 0)
+            if (ExperienceCertificateFiles?.Any() == true)
             {
-                List<string> saved = new();
+                var saved = new List<string>();
                 foreach (var file in ExperienceCertificateFiles)
-                {
-                    var f = await SaveEmployeeFile(file, empFolder, $"exp_{Guid.NewGuid()}");
-                    if (f != null) saved.Add(f);
-                }
+                    saved.Add(await SaveEmployeeFile(file, model.EmployeeCode, "experience"));
+
                 model.ExperienceCertificateFilePath = string.Join(",", saved);
             }
 
             model.MedicalDocumentFilePath =
-                await SaveEmployeeFile(MedicalDocumentFile, empFolder, "medical");
+                await SaveEmployeeFile(MedicalDocumentFile, model.EmployeeCode, "medical");
 
             model.TenthMarksheetFilePath =
-                await SaveEmployeeFile(TenthMarksheetFile, empFolder, "10th");
+                await SaveEmployeeFile(TenthMarksheetFile, model.EmployeeCode, "10th");
 
             model.TwelfthMarksheetFilePath =
-                await SaveEmployeeFile(TwelfthMarksheetFile, empFolder, "12th");
+                await SaveEmployeeFile(TwelfthMarksheetFile, model.EmployeeCode, "12th");
 
             model.GraduationMarksheetFilePath =
-                await SaveEmployeeFile(GraduationMarksheetFile, empFolder, "grad");
+                await SaveEmployeeFile(GraduationMarksheetFile, model.EmployeeCode, "grad");
 
             model.PostGraduationMarksheetFilePath =
-                await SaveEmployeeFile(PostGraduationMarksheetFile, empFolder, "pg");
+                await SaveEmployeeFile(PostGraduationMarksheetFile, model.EmployeeCode, "pg");
 
-            // ==========================================
-            // SAVE TO DB
-            // ==========================================
             _context.Employees.Add(model);
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Index");
         }
-
-
 
         [HttpGet]
         public async Task<IActionResult> Edit(int? id, string token)
@@ -559,12 +493,14 @@ namespace HRMS.Controllers
                 token = token
             });
         }
-        private async Task<string> SaveEmployeeFile(IFormFile file, string empCode, string name, string existing = null)
+
+
+        private async Task<string> SaveEmployeeFile(
+      IFormFile file, string empCode, string name, string existing = null)
         {
             if (file == null) return existing;
 
-            // 👉 Save to C Drive instead of wwwroot
-            var uploadDir = Path.Combine("C:\\HRMSFiles", empCode);
+            string uploadDir = Path.Combine(FILE_ROOT, empCode);
 
             if (!Directory.Exists(uploadDir))
                 Directory.CreateDirectory(uploadDir);
@@ -572,33 +508,47 @@ namespace HRMS.Controllers
             var fileName = $"{name}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(file.FileName)}";
             var filePath = Path.Combine(uploadDir, fileName);
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
+            using var stream = new FileStream(filePath, FileMode.Create);
+            await file.CopyToAsync(stream);
 
             return fileName;
         }
+
 
         public IActionResult ViewDocument(string empCode, string fileName)
         {
             if (string.IsNullOrEmpty(empCode) || string.IsNullOrEmpty(fileName))
                 return NotFound();
 
-            string filePath = Path.Combine("C:\\HRMSFiles", empCode, fileName);
-
+            string filePath = Path.Combine(FILE_ROOT, empCode, fileName);
             if (!System.IO.File.Exists(filePath))
-                return NotFound("File not found");
+                return NotFound();
 
-            string contentType = "application/octet-stream";
+            return PhysicalFile(filePath, "application/octet-stream");
+        }
 
-            // Detect image type for preview
-            var ext = Path.GetExtension(fileName).ToLower();
-            if (ext == ".jpg" || ext == ".jpeg") contentType = "image/jpeg";
-            if (ext == ".png") contentType = "image/png";
-            if (ext == ".pdf") contentType = "application/pdf";
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == id);
+            if (employee == null)
+                return NotFound();
 
-            return PhysicalFile(filePath, contentType);
+            // EMPLOYEE FOLDER PATH
+            string empFolder = Path.Combine(_env.WebRootPath, "uploads/employees", employee.EmployeeCode);
+
+            // DELETE EMPLOYEE FROM DATABASE
+            _context.Employees.Remove(employee);
+            await _context.SaveChangesAsync();
+
+            // DELETE EMPLOYEE FOLDER AND FILES
+            if (Directory.Exists(empFolder))
+            {
+                Directory.Delete(empFolder, true);   // true = delete all files & subfolders
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
 
@@ -765,31 +715,7 @@ namespace HRMS.Controllers
             return View(employee);   // You need Delete.cshtml view
         }
 
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == id);
-            if (employee == null)
-                return NotFound();
-
-            // EMPLOYEE FOLDER PATH
-            string empFolder = Path.Combine(_env.WebRootPath, "uploads/employees", employee.EmployeeCode);
-
-            // DELETE EMPLOYEE FROM DATABASE
-            _context.Employees.Remove(employee);
-            await _context.SaveChangesAsync();
-
-            // DELETE EMPLOYEE FOLDER AND FILES
-            if (Directory.Exists(empFolder))
-            {
-                Directory.Delete(empFolder, true);   // true = delete all files & subfolders
-            }
-
-            return RedirectToAction(nameof(Index));
-        }
-
-
+       
 
 public IActionResult ExportExcel()
     {

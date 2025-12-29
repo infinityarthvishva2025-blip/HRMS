@@ -387,3 +387,223 @@
     }
 </script>
 
+
+<style>
+    /* =====================================================
+       ATTENDANCE PAGE – FINAL MOBILE POLISH (NO LOGIC CHANGE)
+    ===================================================== */
+
+    /* -----------------------------
+       MOBILE TABLE → CARD VIEW
+    ----------------------------- */
+    @@media (max-width: 768px) {
+        /* Hide table header */
+        table thead {
+            display: none;
+        }
+
+        table,
+        tbody,
+        tr,
+        td {
+            display: block;
+            width: 100%;
+        }
+        /* Card */
+        #tableBody tr {
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 14px;
+            margin-bottom: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+            max-width: 420px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #tableBody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 14px;
+            gap: 12px;
+            text-align: right;
+            word-break: break-word;
+        }
+            /* Auto labels */
+            #tableBody td::before {
+                font-weight: 600;
+                color: #6c757d;
+                text-align: left;
+                flex-shrink: 0;
+            }
+
+            #tableBody td:nth-child(1)::before {
+                content: "Employee Code";
+            }
+
+            #tableBody td:nth-child(2)::before {
+                content: "Name";
+            }
+
+            #tableBody td:nth-child(3)::before {
+                content: "Date";
+            }
+
+            #tableBody td:nth-child(4)::before {
+                content: "Check In";
+            }
+
+            #tableBody td:nth-child(5)::before {
+                content: "Check Out";
+            }
+
+            #tableBody td:nth-child(6)::before {
+                content: "Total Hours";
+            }
+
+            #tableBody td:nth-child(7)::before {
+                content: "Status";
+            }
+
+            #tableBody td:nth-child(8)::before {
+                content: "Ticket";
+            }
+
+            #tableBody td:nth-child(9)::before {
+                content: "Location";
+            }
+            /* Status alignment */
+            #tableBody td:nth-child(7) {
+                justify-content: flex-end;
+            }
+            /* Location button */
+            #tableBody td:nth-child(9) {
+                justify-content: flex-start;
+                padding-top: 10px;
+            }
+        /* -----------------------------
+           FILTER FORM – CLEAN FLOW
+        ----------------------------- */
+        form.row.g-3 {
+            padding: 14px !important;
+            margin-top: 8px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 14px;
+            height: 42px;
+        }
+        /* STATUS + APPLY + EXPORT */
+        .col-12.col-md-6.col-lg-4 {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: stretch !important;
+        }
+
+            .col-12.col-md-6.col-lg-4 .btn {
+                width: 100%;
+            }
+        /* Action buttons */
+        .col-12.d-flex.flex-wrap.gap-2 {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+            .col-12.d-flex.flex-wrap.gap-2 .btn {
+                width: 100%;
+                text-align: center;
+            }
+        /* -----------------------------
+           PAGINATION (VISIBLE & CENTERED)
+        ----------------------------- */
+        .pagination {
+            display: flex !important;
+            justify-content: center !important;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+            .pagination .page-item {
+                display: inline-block;
+            }
+
+        #pageInfo {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        /* Prevent navbar overlap */
+        .page-content,
+        .container,
+        .container-fluid {
+            padding-top: 72px !important;
+        }
+    }
+
+    /* -----------------------------
+       SMALL MOBILE
+    ----------------------------- */
+    @@media (max-width: 480px) {
+
+        #tableBody td {
+            font-size: 13px;
+        }
+
+        #tableBody tr {
+            padding: 12px;
+        }
+
+        .btn {
+            font-size: 13px;
+            padding: 8px 12px;
+        }
+    }
+
+    /* Desktop safeguard */
+    .pagination {
+        display: flex;
+    }
+
+    @@media (max-width: 768px) {
+        /* Remove extra top spacing from layout wrappers */
+        body {
+            padding-top: 0 !important;
+        }
+
+        .page-content,
+        .container,
+        .container-fluid {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }
+        /* Header row containing "Attendance Filters" */
+        .d-flex.align-items-center.justify-content-between.flex-wrap.gap-2.mb-3 {
+            margin-top: 0 !important;
+            padding-top: 6px !important;
+        }
+        /* Remove any accidental spacer divs */
+        .container > :first-child {
+            margin-top: 0 !important;
+        }
+    }
+
+    /* Small phones */
+    @@media (max-width: 480px) {
+        .d-flex.align-items-center.justify-content-between.flex-wrap.gap-2.mb-3 {
+            padding-top: 4px !important;
+        }
+    }
+</style>
+
+
