@@ -742,10 +742,22 @@ namespace HRMS.Controllers
             attendance = attendance.Where(a => a.Date >= start && a.Date <= end);
 
             // ---------------------------------------------
-            // 3️⃣ Search Filter
+            // 3️⃣ Search Filter (Employee Code + Name)
             // ---------------------------------------------
-            if (!string.IsNullOrEmpty(search))
-                attendance = attendance.Where(a => a.Emp_Code.Contains(search));
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim();
+
+                attendance =
+                    from a in attendance
+                    join e in _context.Employees
+                        on a.Emp_Code equals e.EmployeeCode into empJoin
+                    from e in empJoin.DefaultIfEmpty()
+                    where a.Emp_Code.Contains(search)
+                          || e.Name.Contains(search)
+                    select a;
+            }
+
 
             // ---------------------------------------------
             // 4️⃣ Status Filter
@@ -939,7 +951,8 @@ namespace HRMS.Controllers
         public async Task<IActionResult> RequestCorrection(
      string token,
      string CorrectionRemark,
-     int employeeId)
+     int employeeId,
+     IFormFile ProofFile)   // ✅ ADDED
         {
             if (string.IsNullOrEmpty(token))
                 return BadRequest("Missing token");
@@ -957,19 +970,47 @@ namespace HRMS.Controllers
             if (!empId.HasValue)
                 return RedirectToAction("Login", "Account");
 
-            var emp = await _context.Employees.FindAsync(empId.Value);
-            if (emp == null)
-                return RedirectToAction("Login", "Account");
-
             var att = _context.Attendances
                 .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == date);
 
             if (att == null)
                 return RedirectToAction("EmployeeSummary", new { employeeId });
 
-            att.CorrectionRequested = true;
-            att.CorrectionRemark = CorrectionRemark;
-            att.CorrectionStatus = "Pending";
+            // ===============================
+            // ✅ SAVE PROOF FILE (IF ANY)
+            // ===============================
+            if (ProofFile != null && ProofFile.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot/uploads/correction-proofs");
+
+                Directory.CreateDirectory(uploadsFolder);
+
+                var fileName = $"{empCode}_{date:yyyyMMdd}_{Guid.NewGuid()}{Path.GetExtension(ProofFile.FileName)}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await ProofFile.CopyToAsync(stream);
+                }
+
+                att.CorrectionProofPath = "/uploads/correction-proofs/" + fileName;
+            }
+
+            // ❌ Block if Pending OR Approved
+            if (att.CorrectionStatus == "Pending" || att.CorrectionStatus == "Approved")
+            {
+                TempData["Error"] = "You cannot request correction again for this date.";
+                return RedirectToAction("EmployeeSummary", new { employeeId });
+            }
+
+
+          att.CorrectionRequested = true;
+att.CorrectionRemark = CorrectionRemark;
+att.CorrectionStatus = "Pending";
+att.CorrectionRequestedOn = DateTime.Now;   // 🔥 ADD THIS
+
 
             await _context.SaveChangesAsync();
 
@@ -1008,7 +1049,76 @@ namespace HRMS.Controllers
             return View(pending);
         }
 
-        
+        ///  History Page for correctionrequest  ///
+        [HttpGet]
+        public async Task<IActionResult> CorrectionHistory(
+     string? search,
+     string status = "All",
+     DateTime? month = null)
+        {
+            // 🔐 Logged-in user
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (!empId.HasValue)
+                return RedirectToAction("Login", "Account");
+
+            var emp = await _context.Employees.FindAsync(empId.Value);
+            if (emp == null)
+                return RedirectToAction("Login", "Account");
+
+            ViewBag.UserRole = emp.Role?.ToString();
+
+            // 🧠 Base query (JOIN Employees)
+            var query =
+                from a in _context.Attendances
+                join e in _context.Employees on a.Emp_Code equals e.EmployeeCode
+                where a.CorrectionRequested == false
+                      && a.CorrectionStatus != "None"
+                select new
+                {
+                    Attendance = a,
+                    EmployeeName = e.Name
+                };
+
+            // 🔍 Search by Emp Code OR Name
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim();
+                query = query.Where(x =>
+                    x.Attendance.Emp_Code.Contains(search) ||
+                    x.EmployeeName.Contains(search));
+            }
+
+            // 📌 Status filter
+            if (status != "All")
+            {
+                query = query.Where(x => x.Attendance.CorrectionStatus == status);
+            }
+
+            // 📅 Month filter
+            if (month.HasValue)
+            {
+                query = query.Where(x =>
+                    x.Attendance.Date.Year == month.Value.Year &&
+                    x.Attendance.Date.Month == month.Value.Month);
+            }
+
+            // 🔽 Final list
+            var result = await query
+                .OrderByDescending(x => x.Attendance.Date)
+                .Select(x => x.Attendance)
+                .ToListAsync();
+
+            ViewBag.Search = search;
+            ViewBag.Status = status;
+            ViewBag.Month = month?.ToString("yyyy-MM");
+
+            ViewBag.Employees = await _context.Employees.ToListAsync();
+
+
+            return View(result);
+        }
+
+
 
         public async Task<IActionResult> CalendarView(int? year, int? month, string department = "all", int itemsPerPage = 50)
         {
@@ -1432,6 +1542,8 @@ namespace HRMS.Controllers
             if (emp == null)
                 return Unauthorized();
 
+            att.ReviewedBy = emp.Name;   // or emp.EmployeeCode
+
             if (actionType == "Approve")
             {
                 att.InTime = InTime;
@@ -1442,6 +1554,9 @@ namespace HRMS.Controllers
             {
                 att.CorrectionStatus = "Rejected";
             }
+
+            att.CorrectionRequested = false;
+
 
             att.CorrectionRequested = false;
             await _context.SaveChangesAsync();

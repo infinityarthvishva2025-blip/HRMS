@@ -454,7 +454,7 @@
             <div id="dailyReportMenu" class="submenu">
 
                 @* Inbox only for Manager / GM / VP / Director *@
-                @if (role == "Manager" || role == "GM" || role == "VP" || role == "Director")
+                @if (role == "Manager" || role == "GM" || role == "VP" || role == "Director" )
                 {
                     <a asp-controller="DailyReport" asp-action="Inbox" class="submenu-item">
                         <i class="fa-solid fa-inbox"></i>Daily Report Inbox
@@ -467,6 +467,57 @@
 
             </div>
 
+            
+
+            <!-- Resignation -->
+            @if (role == "Manager" || role == "Employee")
+            {
+                <div class="menu-item submenu-toggle" onclick="toggleSubmenu('ResignationMenu')">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span>Resignation</span>
+                    <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                </div>
+
+                <div id="ResignationMenu" class="submenu">
+
+                    @* Inbox only for Manager / GM / VP / Director *@
+                    @if (role == "Manager" || role == "Employee")
+                    {
+                    <a asp-controller="Resignation" asp-action="Apply" class="submenu-item">
+                        <i class="fa-solid fa-inbox"></i>Apply
+                    </a>
+
+                    <a asp-controller="Resignation" asp-action="Track" class="submenu-item">
+                        <i class="fa-solid fa-gauge"></i>ResignationTrack
+                    </a>
+                }
+                @if (role == "Manager")
+                {
+                    <a asp-controller="Resignation" asp-action="PendingApprovals" class="submenu-item">
+                        <i class="fa-solid fa-inbox"></i>Resignation Approvals
+                    </a>
+                }
+
+            </div>
+            }
+
+          @*   <a asp-controller="Resignation" asp-action="Apply" class="menu-item">
+                <i class="fa-solid fa-gauge"></i><span>Resignation</span>
+            </a>
+              
+            @if (role == "Manager" || role == "GM" || role == "VP" || role == "Director" || role == "Employee")
+            {
+
+                <a asp-controller="Resignation" asp-action="PendingApprovals" class="menu-item">
+                    <i class="fa-solid fa-file-lines"></i><span> Resignation Approvals</span>
+                </a>
+
+            }
+
+            <a asp-controller="Resignation" asp-action="Track" class="menu-item">
+                <i class="fa-solid fa-gauge"></i><span>ResignationTrack</span>
+            </a>
+             *@
 
 
             <!-- Logout -->

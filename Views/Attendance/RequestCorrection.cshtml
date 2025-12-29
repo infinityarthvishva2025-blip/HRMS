@@ -2,35 +2,36 @@
 
 @{
     var role = ViewBag.UserRole as string;
-
-    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
-    {
-        Layout = "~/Views/Shared/_HrLayout.cshtml";
-    }
-    else
-    {
-        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
-    }
+    Layout = (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+        ? "~/Views/Shared/_HrLayout.cshtml"
+        : "~/Views/Shared/_EmployeeLayout.cshtml";
 }
 
 <form method="post"
       asp-action="RequestCorrection"
-      asp-controller="Attendance">
+      asp-controller="Attendance"
+      enctype="multipart/form-data">
 
     @Html.AntiForgeryToken()
 
-    <!-- 🔐 TOKEN (ENCRYPTED empCode + date) -->
     <input type="hidden" name="token" value="@ViewBag.Token" />
-
-    <!-- 🔁 Needed for redirect -->
     <input type="hidden" name="employeeId" value="@ViewBag.EmployeeId" />
 
     <div class="mb-3">
         <label class="fw-bold">Why do you want correction?</label>
-        <textarea name="CorrectionRemark"
-                  class="form-control"
-                  rows="4"
-                  required></textarea>
+        <textarea name="CorrectionRemark" class="form-control" rows="4" required></textarea>
+    </div>
+
+    <!-- ✅ NEW: PROOF UPLOAD -->
+    <div class="mb-3">
+        <label class="fw-bold">Upload Proof (optional)</label>
+        <input type="file"
+               name="ProofFile"
+               class="form-control"
+               accept=".jpg,.jpeg,.png,.pdf" />
+        <small class="text-muted">
+            Allowed: JPG, PNG, PDF
+        </small>
     </div>
 
     <button type="submit" class="btn btn-primary mt-2">
@@ -38,4 +39,3 @@
     </button>
 
 </form>
-

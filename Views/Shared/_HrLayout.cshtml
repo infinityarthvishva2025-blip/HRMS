@@ -170,6 +170,45 @@
             border-color: #fecaca;
         }
 
+        /* ---------- SUBMENU ---------- */
+        .submenu {
+            display: none; /* IMPORTANT */
+            flex-direction: column;
+            margin: 0 15px 10px 15px;
+            padding-left: 52px;
+        }
+
+        .submenu-item {
+            display: flex;
+            align-items: center;
+            height: 42px;
+            padding: 0 14px;
+            margin: 6px 0;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #4b5563;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.2s ease-in-out;
+        }
+
+            .submenu-item i {
+                margin-right: 10px;
+                font-size: 14px;
+            }
+
+            .submenu-item:hover {
+                background: #eef2ff;
+                color: #3730a3;
+            }
+
+        /* active submenu */
+        .active-submenu {
+            background: #4f46e5;
+            color: white !important;
+        }
+
+
         /* ---------- PAGE CONTENT ---------- */
         #page-content {
             margin-left: 250px;
@@ -328,9 +367,38 @@
                     </a>
 
             }
-
            
+              @*/////  Resignation  /////*@
 
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('ResignationMenu')">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>Resignation</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="ResignationMenu" class="submenu">
+
+                @* Inbox only for Manager / GM / VP / Director *@
+                @if (role == "GM" || role == "HR" || role == "VP" )
+                {
+                    <a asp-controller="Resignation" asp-action="Apply" class="submenu-item">
+                        <i class="fa-solid fa-inbox"></i>Apply
+                    </a>
+
+                    <a asp-controller="Resignation" asp-action="Track" class="submenu-item">
+                        <i class="fa-solid fa-gauge"></i>ResignationTrack
+                    </a>
+                }
+                @if (role == "GM" || role == "HR" || role == "VP" || role == "Director")
+                {
+                    <a asp-controller="Resignation" asp-action="PendingApprovals" class="submenu-item">
+                        <i class="fa-solid fa-inbox"></i>Resignation Approvals
+                    </a>
+                }
+
+            </div>
+                
+          
             <a asp-controller="Reports" asp-action="Index" class="menu-item">
                 <i class="fa-solid fa-file-alt"></i><span>Reports</span>
             </a>
@@ -342,6 +410,7 @@
                 </a>
             </div>
         </div>
+       
     </div>
 
     <!-- MAIN CONTENT -->
@@ -358,32 +427,62 @@
 
     <script>
         const sidebar = document.getElementById("sidebar-wrapper");
-        const sidebarToggle = document.getElementById("sidebarToggle");
-        const sidebarOverlay = document.getElementById("sidebar-overlay");
+        const toggle = document.getElementById("sidebarToggle");
+        const overlay = document.getElementById("sidebar-overlay");
 
-        // Desktop collapse toggle
-        sidebarToggle.addEventListener("click", () => {
+        toggle.addEventListener("click", () => {
             if (window.innerWidth <= 992) {
                 sidebar.classList.toggle("active");
-                sidebarOverlay.classList.toggle("active");
+                overlay.classList.toggle("active");
             } else {
                 sidebar.classList.toggle("collapsed");
+                closeAllSubmenus();
             }
         });
 
-        // Close sidebar when overlay clicked
-        sidebarOverlay.addEventListener("click", () => {
+        overlay.addEventListener("click", () => {
             sidebar.classList.remove("active");
-            sidebarOverlay.classList.remove("active");
+            overlay.classList.remove("active");
         });
 
-        // Auto close sidebar on resize
         window.addEventListener("resize", () => {
             if (window.innerWidth > 992) {
                 sidebar.classList.remove("active");
-                sidebarOverlay.classList.remove("active");
+                overlay.classList.remove("active");
             }
         });
+
+        /* ---------- SUBMENU TOGGLE ---------- */
+        function toggleSubmenu(id) {
+            const targetMenu = document.getElementById(id);
+
+            if (sidebar.classList.contains("collapsed")) {
+                sidebar.classList.remove("collapsed");
+                setTimeout(() => openMenuExclusive(targetMenu), 300);
+                return;
+            }
+
+            const isOpen = targetMenu.style.display === "flex";
+            closeAllSubmenus();
+
+            if (!isOpen) {
+                targetMenu.style.display = "flex";
+                targetMenu.previousElementSibling.classList.add("submenu-open");
+            }
+        }
+
+        function closeAllSubmenus() {
+            document.querySelectorAll(".submenu").forEach(menu => {
+                menu.style.display = "none";
+                menu.previousElementSibling?.classList.remove("submenu-open");
+            });
+        }
+
+        function openMenuExclusive(menu) {
+            closeAllSubmenus();
+            menu.style.display = "flex";
+            menu.previousElementSibling.classList.add("submenu-open");
+        }
     </script>
 
     @RenderSection("Scripts", required: false)

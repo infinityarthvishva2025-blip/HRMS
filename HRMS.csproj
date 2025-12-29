@@ -42,6 +42,7 @@
 	 <Folder Include="wwwroot\Rotativa\" /> 
 	 <Folder Include="wwwroot\uploads\gurukul\" /> 
 	 <Folder Include="wwwroot\uploads\gurukul-thumbs\" /> 
+	 <Folder Include="wwwroot\uploads\correction-proofs\" /> 
 	 <Folder Include="wwwroot\Videos\" /> 
 	 <Folder Include="wwwroot\uploads\proofs\" /> 
 	 </ItemGroup> 

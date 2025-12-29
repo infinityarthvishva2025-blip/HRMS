@@ -1,0 +1,66 @@
+﻿@model List<ResignationRequest>
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    var role = HttpContextAccessor.HttpContext.Session.GetString("Role") ?? "Employee";
+    role = string.IsNullOrWhiteSpace(role) || role == "-" ? "Employee" : role;
+
+    Layout = (role == "HR" || role == "GM" || role == "VP" || role == "Director")
+        ? "~/Views/Shared/_HrLayout.cshtml"
+        : "~/Views/Shared/_EmployeeLayout.cshtml";
+}
+
+@foreach (var req in Model)
+{
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+
+            <p><strong>Resignation Date:</strong> @req.ResignationDate?.ToString("dd-MMM-yyyy")</p>
+
+            <p>
+                <strong>Suggested LWD:</strong>
+                @req.SuggestedLastWorkingDay.ToString("dd-MMM-yyyy")
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+                <span class="badge
+                        @(req.Status == ResignationStatus.Withdrawn ? "bg-secondary" :
+                                            req.Status == ResignationStatus.Approved ? "bg-success" :
+                                            req.Status == ResignationStatus.Rejected ? "bg-danger" : "bg-primary")">
+                    @req.Status
+                </span>
+            </p>
+
+            <p><strong>Current Step:</strong> @req.CurrentStep</p>
+            <p><strong>Reason:</strong> @req.ReasonCode</p>
+            <p><strong>Details:</strong> @req.DetailedReason</p>
+
+            @* ✅ Withdraw button only if InApproval *@
+            @if (req.Status == ResignationStatus.InApproval)
+            {
+                <form asp-action="Withdraw" method="post" class="mb-3">
+                    <input type="hidden" name="id" value="@req.Id" />
+                    <button type="submit"
+                            class="btn btn-warning btn-sm"
+                            onclick="return confirm('Are you sure you want to withdraw this resignation?');">
+                        Withdraw Resignation
+                    </button>
+                </form>
+            }
+
+            <hr />
+            <h6 class="fw-bold">Approval Flow</h6>
+
+            <ul class="mb-0">
+                @foreach (var step in ((List<ResignationApprovalStep>)ViewBag.Steps)
+                            .Where(s => s.ResignationRequestId == req.Id))
+                {
+                    <li>
+                        <strong>@step.RoleName</strong> — @step.Status
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+}

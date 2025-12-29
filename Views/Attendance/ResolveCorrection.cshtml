@@ -43,6 +43,18 @@
             <label class="fw-bold">Reason Provided</label>
             <textarea class="form-control" disabled>@Model.CorrectionRemark</textarea>
         </div>
+        @if (!string.IsNullOrEmpty(Model.CorrectionProofPath))
+        {
+            <div class="mb-3">
+                <label class="fw-bold">Uploaded Proof</label><br />
+                <a href="@Model.CorrectionProofPath"
+                   target="_blank"
+                   class="btn btn-outline-primary">
+                    View / Download Proof
+                </a>
+            </div>
+        }
+
 
         <div class="row">
             <div class="col-md-6 mb-3">
