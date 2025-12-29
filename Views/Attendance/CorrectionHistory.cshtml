@@ -1,0 +1,139 @@
+﻿@model IEnumerable<HRMS.Models.Attendance>
+
+@{
+    ViewData["Title"] = "Correction History";
+
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+
+    var employees = ViewBag.Employees as List<HRMS.Models.Employee>;
+}
+
+<div class="container py-4">
+
+    <h2 class="fw-bold mb-4">
+        <i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>
+        Attendance Correction History
+    </h2>
+
+    <!-- 🔍 FILTERS -->
+    <form method="get" class="row g-3 mb-3">
+
+        <div class="col-md-4">
+            <input type="text"
+                   name="search"
+                   value="@ViewBag.Search"
+                   class="form-control"
+                   placeholder="Employee name or code" />
+        </div>
+
+        <div class="col-md-3">
+            <input type="month"
+                   name="month"
+                   value="@ViewBag.Month"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="All" selected="@(ViewBag.Status == "All")">All</option>
+                <option value="Approved" selected="@(ViewBag.Status == "Approved")">Approved</option>
+                <option value="Rejected" selected="@(ViewBag.Status == "Rejected")">Rejected</option>
+                 @* <option value="Pending" selected="@(ViewBag.Status == "Pending")">Pending</option>  *@
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100">
+                <i class="fa-solid fa-filter me-1"></i> Filter
+            </button>
+        </div>
+
+    </form>
+
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+
+            <table class="table table-bordered table-striped mb-0 align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Employee</th>
+                        <th>Date</th>
+                        <th>Requested At</th>
+                        <th>Status</th>
+                        <th>Reason</th>
+                        <th>Reviewed By</th> 
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-danger fw-bold py-4">
+                                No correction history found.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var a in Model)
+                        {
+                            var emp = employees?.FirstOrDefault(e => e.EmployeeCode == a.Emp_Code);
+
+                            <tr>
+                                <td>
+                                    @a.Emp_Code - @(emp?.Name ?? "Unknown")
+                                </td>
+
+                                <td>@a.Date.ToString("dd-MMM-yyyy")</td>
+
+                                <td>
+                                    @(a.CorrectionRequestedOn != null
+                                                                ? a.CorrectionRequestedOn.Value.ToString("dd-MMM-yyyy hh:mm tt")
+                                                                : "--")
+                                </td>
+
+                                <td>
+                                    @if (a.CorrectionStatus == "Approved")
+                                    {
+                                        <span class="badge bg-success">Approved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Rejected</span>
+                                    }
+                                </td>
+
+                                <td>@(a.CorrectionRemark ?? "--")</td>
+
+                                <td>@(a.ReviewedBy ?? "--")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    table td, table th {
+        vertical-align: middle !important;
+    }
+
+    .badge {
+        font-size: 0.85rem;
+        padding: 6px 10px;
+    }
+</style>

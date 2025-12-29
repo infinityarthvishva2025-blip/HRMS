@@ -218,6 +218,43 @@ public class ResignationController : Controller
     }
 
 
+    [HttpPost]
+    [Authorize]
+    public IActionResult Withdraw(int id)
+    {
+        var emp = GetLoggedInEmployee();
+
+        var req = _context.ResignationRequests
+            .FirstOrDefault(r => r.Id == id && r.EmployeeId == emp.Id);
+
+        if (req == null)
+            return NotFound();
+
+        // ❌ Cannot withdraw after final approval
+        if (req.Status != ResignationStatus.InApproval)
+            return BadRequest("Cannot withdraw this resignation.");
+
+        // ✅ Mark withdrawn
+        req.Status = ResignationStatus.Withdrawn;
+
+        // 🔥 Stop approval flow
+        var steps = _context.ResignationApprovalSteps
+            .Where(s => s.ResignationRequestId == id && s.Status == StepStatus.Pending)
+            .ToList();
+
+        foreach (var step in steps)
+        {
+            step.Status = StepStatus.Cancelled; // create this enum if not exists
+            step.ActionOn = DateTime.Now;
+            step.Remarks = "Withdrawn by employee";
+        }
+
+        _context.SaveChanges();
+
+        return RedirectToAction("Track");
+    }
+
+
     // ==============================
     // LOGGED IN EMPLOYEE
     // ==============================

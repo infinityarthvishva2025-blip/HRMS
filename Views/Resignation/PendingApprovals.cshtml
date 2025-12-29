@@ -12,7 +12,6 @@
 }
 
 <div class="container-fluid mt-3">
-
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">
@@ -25,76 +24,77 @@
 
             @if (!Model.Any())
             {
-                <div class="alert alert-info m-3">
-                    No pending approvals.
-                </div>
+                <div class="alert alert-info m-3">No pending approvals.</div>
             }
             else
             {
-                <!-- DESKTOP TABLE -->
+                <!-- DESKTOP -->
                 <div class="table-responsive d-none d-md-block">
                     <table class="table table-bordered table-hover mb-0">
-                        <thead class="thead-light">
+                        <thead>
                             <tr>
                                 <th>Emp Code</th>
                                 <th>Employee</th>
+                                <th>Department</th>
+                                <th>Role</th>
                                 <th>Resignation</th>
                                 <th>Suggested LWD</th>
-                               @*  <th>Proposed LWD</th> *@
                                 <th>Reason</th>
-                                <th>Details</th>
+                                <th>Status</th>
                                 <th style="width:220px;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var step in Model)
                             {
+                                var req = step.ResignationRequest;
                                 <tr>
-                                    <td>@step.ResignationRequest.Employee.EmployeeCode</td>
-                                    <td>@step.ResignationRequest.Employee.Name</td>
-                                    <td>@step.ResignationRequest.ResignationDate?.ToString("dd-MMM-yyyy")</td>
-                                    <td class="text-primary font-weight-bold">
-                                        @step.ResignationRequest.SuggestedLastWorkingDay.ToString("dd-MMM-yyyy")
+                                    <td>@req.Employee.EmployeeCode</td>
+                                    <td>@req.Employee.Name</td>
+                                    <td>@req.Employee.Department</td>
+                                    <td>@req.Employee.Role</td>
+                                    <td>@req.ResignationDate?.ToString("dd-MMM-yyyy")</td>
+                                    <td class="text-primary fw-bold">
+                                        @req.SuggestedLastWorkingDay.ToString("dd-MMM-yyyy")
                                     </td>
-                                   @*  <td>
-                                        @if (step.ResignationRequest.ProposedLastWorkingDay.HasValue)
+                                    <td>@req.ReasonCode</td>
+                                    <td>
+                                        <span class="badge
+                                                    @(req.Status == ResignationStatus.Withdrawn ? "bg-secondary" : "bg-primary")">
+                                            @req.Status
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (req.Status == ResignationStatus.Withdrawn)
                                         {
-                                            <span class="text-success font-weight-bold">
-                                                @step.ResignationRequest.ProposedLastWorkingDay.Value.ToString("dd-MMM-yyyy")
-                                            </span>
+                                            <span class="text-muted">Withdrawn by employee</span>
                                         }
                                         else
                                         {
-                                            <span class="text-muted">Not Provided</span>
+                                            <form asp-action="ApproveReject" method="post">
+                                                <input type="hidden" name="stepId" value="@step.Id" />
+
+                                                <input type="text"
+                                                       name="remarks"
+                                                       class="form-control form-control-sm mb-2"
+                                                       placeholder="Remarks (optional)" />
+
+                                                <div class="d-flex justify-content-between">
+                                                    <button type="submit"
+                                                            name="approve"
+                                                            value="true"
+                                                            class="btn btn-success btn-sm">
+                                                        Approve
+                                                    </button>
+                                                    <button type="submit"
+                                                            name="approve"
+                                                            value="false"
+                                                            class="btn btn-danger btn-sm">
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            </form>
                                         }
-                                    </td> *@
-                                    <td>@step.ResignationRequest.ReasonCode</td>
-                                    <td>@step.ResignationRequest.DetailedReason</td>
-                                    <td>
-                                        <form asp-action="ApproveReject" method="post">
-                                            <input type="hidden" name="stepId" value="@step.Id" />
-
-                                            <input type="text"
-                                                   name="remarks"
-                                                   class="form-control form-control-sm mb-2"
-                                                   placeholder="Remarks (optional)" />
-
-                                            <div class="d-flex justify-content-between">
-                                                <button type="submit"
-                                                        name="approve"
-                                                        value="true"
-                                                        class="btn btn-success btn-sm">
-                                                    Approve
-                                                </button>
-
-                                                <button type="submit"
-                                                        name="approve"
-                                                        value="false"
-                                                        class="btn btn-danger btn-sm">
-                                                    Reject
-                                                </button>
-                                            </div>
-                                        </form>
                                     </td>
                                 </tr>
                             }
@@ -102,65 +102,65 @@
                     </table>
                 </div>
 
-                <!-- MOBILE CARDS -->
+                <!-- MOBILE -->
                 <div class="d-md-none">
                     @foreach (var step in Model)
                     {
+                        var req = step.ResignationRequest;
                         <div class="card m-3 shadow-sm">
                             <div class="card-body">
-                                <h6 class="font-weight-bold mb-2">
-                                    @step.ResignationRequest.Employee.Name
+                                <h6 class="fw-bold">
+                                    @req.Employee.Name
                                     <small class="text-muted">
-                                        (@step.ResignationRequest.Employee.EmployeeCode)
+                                        (@req.Employee.EmployeeCode)
                                     </small>
                                 </h6>
 
-                                <p class="mb-1">
-                                    <strong>Resignation:</strong>
-                                    @step.ResignationRequest.ResignationDate?.ToString("dd-MMM-yyyy")
-                                </p>
-
+                                <p class="mb-1"><strong>Dept:</strong> @req.Employee.Department</p>
+                                <p class="mb-1"><strong>Role:</strong> @req.Employee.Role</p>
+                                <p class="mb-1"><strong>Resignation:</strong> @req.ResignationDate?.ToString("dd-MMM-yyyy")</p>
                                 <p class="mb-1 text-primary">
-                                    <strong>Suggested LWD:</strong>
-                                    @step.ResignationRequest.SuggestedLastWorkingDay.ToString("dd-MMM-yyyy")
+                                    <strong>Suggested LWD:</strong> @req.SuggestedLastWorkingDay.ToString("dd-MMM-yyyy")
+                                </p>
+                                <p class="mb-1"><strong>Reason:</strong> @req.ReasonCode</p>
+
+                                <p>
+                                    <span class="badge
+                                                @(req.Status == ResignationStatus.Withdrawn ? "bg-secondary" : "bg-primary")">
+                                        @req.Status
+                                    </span>
                                 </p>
 
-                               @*  <p class="mb-1">
-                                    <strong>Proposed LWD:</strong>
-                                    @(
-                                                                step.ResignationRequest.ProposedLastWorkingDay.HasValue
-                                                                ? step.ResignationRequest.ProposedLastWorkingDay.Value.ToString("dd-MMM-yyyy")
-                                                                : "Not Provided"
-                                                                )
-                                </p> *@
+                                @if (req.Status != ResignationStatus.Withdrawn)
+                                {
+                                    <form asp-action="ApproveReject" method="post">
+                                        <input type="hidden" name="stepId" value="@step.Id" />
 
-                                <p class="mb-1"><strong>Reason:</strong> @step.ResignationRequest.ReasonCode</p>
-                                <p class="mb-2"><strong>Details:</strong> @step.ResignationRequest.DetailedReason</p>
+                                        <input type="text"
+                                               name="remarks"
+                                               class="form-control mb-2"
+                                               placeholder="Remarks (optional)" />
 
-                                <form asp-action="ApproveReject" method="post">
-                                    <input type="hidden" name="stepId" value="@step.Id" />
-
-                                    <input type="text"
-                                           name="remarks"
-                                           class="form-control mb-2"
-                                           placeholder="Remarks (optional)" />
-
-                                    <div class="d-flex justify-content-between">
-                                        <button type="submit"
-                                                name="approve"
-                                                value="true"
-                                                class="btn btn-success btn-sm">
-                                            Approve
-                                        </button>
-
-                                        <button type="submit"
-                                                name="approve"
-                                                value="false"
-                                                class="btn btn-danger btn-sm">
-                                            Reject
-                                        </button>
-                                    </div>
-                                </form>
+                                        <div class="d-flex justify-content-between">
+                                            <button type="submit"
+                                                    name="approve"
+                                                    value="true"
+                                                    class="btn btn-success btn-sm">
+                                                Approve
+                                            </button>
+                                            <button type="submit"
+                                                    name="approve"
+                                                    value="false"
+                                                    class="btn btn-danger btn-sm">
+                                                Reject
+                                            </button>
+                                        </div>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <p class="text-muted mb-0">Withdrawn by employee</p>
+                                }
                             </div>
                         </div>
                     }
