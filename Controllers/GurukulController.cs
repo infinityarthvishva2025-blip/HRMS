@@ -211,16 +211,15 @@ namespace HRMS.Controllers
         // =====================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(GurukulVideo model, IFormFile? VideoFile, string? ExternalLink)
+        public async Task<IActionResult> Create(
+    GurukulVideo model,
+    IFormFile? VideoFile,
+    string? ExternalLink)
         {
-
-
             var role = GetRole();
 
             if (!new[] { "HR", "DIRECTOR", "GM", "VP" }.Contains(role))
                 return RedirectToAction("AccessDenied", "Account");
-
-            // ❌ Removed HR role check
 
             model.Category = string.IsNullOrWhiteSpace(model.Category) ? "General" : model.Category.Trim();
             model.TitleGroup = string.IsNullOrWhiteSpace(model.TitleGroup) ? "General" : model.TitleGroup.Trim();
@@ -232,52 +231,67 @@ namespace HRMS.Controllers
                 return View(model);
             }
 
-            // ================================
-            // ⭐ CUSTOM SERVER STORAGE PATH
-            // ================================
+            // =====================================================
+            // ⭐ SERVER STORAGE PATHS (PHYSICAL)
+            // =====================================================
             string videoFolder = @"C:\HRMSFiles\Gurukul Videos";
             string thumbFolder = @"C:\HRMSFiles\Gurukul Videos\Thumbs";
-            string ffmpegPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "ffmpeg", "ffmpeg.exe");
+            string ffmpegPath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "ffmpeg",
+                "ffmpeg.exe"
+            );
 
             Directory.CreateDirectory(videoFolder);
             Directory.CreateDirectory(thumbFolder);
 
-            // ------------------------
-            // SAVE VIDEO OR LINK
-            // ------------------------
+            // =====================================================
+            // SAVE VIDEO OR EXTERNAL LINK
+            // =====================================================
             if (VideoFile != null && VideoFile.Length > 0)
             {
+                // ---------- VIDEO ----------
                 string fileName = Guid.NewGuid() + Path.GetExtension(VideoFile.FileName);
-                string fullVideoPath = Path.Combine(videoFolder, fileName);
+                string physicalVideoPath = Path.Combine(videoFolder, fileName);
 
-                using (var fs = new FileStream(fullVideoPath, FileMode.Create))
+                using (var fs = new FileStream(physicalVideoPath, FileMode.Create))
                 {
                     await VideoFile.CopyToAsync(fs);
                 }
 
-                // Store server path in DB OR a relative path — your choice:
-                model.VideoPath = fullVideoPath;   // ← FULL PATH stored
+                // ✅ STORE URL PATH (NOT C:\ PATH)
+                model.VideoPath = "/HRMSFiles/Gurukul Videos/" + fileName;
                 model.IsExternal = false;
 
-                // Create thumbnail
+                // ---------- THUMBNAIL ----------
                 string thumbFileName = Path.GetFileNameWithoutExtension(fileName) + ".jpg";
-                string fullThumbPath = Path.Combine(thumbFolder, thumbFileName);
+                string physicalThumbPath = Path.Combine(thumbFolder, thumbFileName);
 
-                var process = new Process();
-                process.StartInfo.FileName = ffmpegPath;
-                process.StartInfo.Arguments = $"-i \"{fullVideoPath}\" -ss 00:00:01 -vframes 1 \"{fullThumbPath}\"";
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.UseShellExecute = false;
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = ffmpegPath,
+                        Arguments = $"-i \"{physicalVideoPath}\" -ss 00:00:01 -vframes 1 \"{physicalThumbPath}\"",
+                        RedirectStandardError = true,
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
 
                 process.Start();
                 process.WaitForExit();
 
-                model.ThumbnailPath = fullThumbPath;   // Saving full server path
+                // ✅ STORE URL PATH
+                model.ThumbnailPath = "/HRMSFiles/Gurukul Videos/Thumbs/" + thumbFileName;
             }
             else if (!string.IsNullOrWhiteSpace(ExternalLink))
             {
+                // ---------- YOUTUBE / EXTERNAL ----------
                 string link = ExternalLink.Trim();
+
                 model.VideoPath = link;
                 model.IsExternal = true;
                 model.ThumbnailPath = GetYouTubeThumbnail(link);
@@ -285,18 +299,21 @@ namespace HRMS.Controllers
             else
             {
                 await PopulatePermissionDropdowns();
-                ModelState.AddModelError("", "Upload a file OR enter a link.");
+                ModelState.AddModelError("", "Upload a video file OR provide a video link.");
                 return View(model);
             }
 
             model.UploadedOn = DateTime.UtcNow;
 
+            // =====================================================
+            // SAVE VIDEO RECORD
+            // =====================================================
             _context.GurukulVideos.Add(model);
             await _context.SaveChangesAsync();
 
-            // ================================
+            // =====================================================
             // ⭐ AUTOMATIC ANNOUNCEMENT ⭐
-            // ================================
+            // =====================================================
             var announcement = new Announcement
             {
                 Title = "New Gurukul Video Added",

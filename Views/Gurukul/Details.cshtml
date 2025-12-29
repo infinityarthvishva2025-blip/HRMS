@@ -106,7 +106,12 @@
 
             @if (!Model.IsExternal)
             {
-                <video id="gurukulPlayer" width="100%" height="420">
+                <video id="gurukulPlayer"
+                       width="100%"
+                       height="420"
+                       playsinline
+                       controlsList="nodownload noremoteplayback">
+
                     <source src="@Model.VideoPath" type="video/mp4" />
                 </video>
             }

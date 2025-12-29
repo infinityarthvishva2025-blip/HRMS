@@ -46,7 +46,7 @@ namespace HRMS.Controllers
             // =========================
             const double officeLat = 18.534202;
             const double officeLng = 73.839556;
-            const double radiusMeters = 2000;
+            const double radiusMeters = 2500;
 
             double distance = GeoHelper.DistanceInMeters(
                 officeLat, officeLng,
@@ -120,6 +120,11 @@ namespace HRMS.Controllers
             TryAutoCompOff(att);
             return Ok(new { redirect = "/DailyReport/Send" });
         }
+
+
+
+
+
         [HttpPost]
         public IActionResult GeoCheckIn([FromBody] GeoAttendanceVm vm)
         {
@@ -138,7 +143,7 @@ namespace HRMS.Controllers
             // =========================
             const double officeLat = 18.534202;
             const double officeLng = 73.839556;
-            const double radiusMeters = 2000;
+            const double radiusMeters = 2500;
 
             double distance = GeoHelper.DistanceInMeters(
                 officeLat, officeLng,
@@ -502,6 +507,8 @@ namespace HRMS.Controllers
 
             return RedirectToAction(nameof(EmployeeSummary), new { employeeId = employee.Id });
         }
+
+
         [HttpGet]
         public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
         {
@@ -946,14 +953,21 @@ namespace HRMS.Controllers
             return View(att);
         }
 
+
+
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RequestCorrection(
-     string token,
-     string CorrectionRemark,
-     int employeeId,
-     IFormFile ProofFile)   // ✅ ADDED
+    string token,
+    string CorrectionRemark,
+    int employeeId,
+    IFormFile ProofFile)
         {
+            // -------------------------------
+            // 1️⃣ Validate Token
+            // -------------------------------
             if (string.IsNullOrEmpty(token))
                 return BadRequest("Missing token");
 
@@ -966,25 +980,38 @@ namespace HRMS.Controllers
                 return StatusCode(403, error);
             }
 
+            // -------------------------------
+            // 2️⃣ Validate Session
+            // -------------------------------
             var empId = HttpContext.Session.GetInt32("EmployeeId");
             if (!empId.HasValue)
                 return RedirectToAction("Login", "Account");
 
+            // -------------------------------
+            // 3️⃣ Get Attendance Record
+            // -------------------------------
             var att = _context.Attendances
                 .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == date);
 
             if (att == null)
                 return RedirectToAction("EmployeeSummary", new { employeeId });
 
-            // ===============================
-            // ✅ SAVE PROOF FILE (IF ANY)
-            // ===============================
+            // -------------------------------
+            // 4️⃣ Block Duplicate Requests
+            // -------------------------------
+            if (att.CorrectionStatus == "Pending" || att.CorrectionStatus == "Approved")
+            {
+                TempData["Error"] = "You cannot request correction again for this date.";
+                return RedirectToAction("EmployeeSummary", new { employeeId });
+            }
+
+            // -------------------------------
+            // 5️⃣ Save Proof File (Optional)
+            // -------------------------------
             if (ProofFile != null && ProofFile.Length > 0)
             {
-                var uploadsFolder = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot/uploads/correction-proofs");
-
+                // 🔥 Physical path (OUTSIDE wwwroot)
+                var uploadsFolder = @"C:\HRMSFiles\correction-proofs";
                 Directory.CreateDirectory(uploadsFolder);
 
                 var fileName = $"{empCode}_{date:yyyyMMdd}_{Guid.NewGuid()}{Path.GetExtension(ProofFile.FileName)}";
@@ -995,24 +1022,24 @@ namespace HRMS.Controllers
                     await ProofFile.CopyToAsync(stream);
                 }
 
-                att.CorrectionProofPath = "/uploads/correction-proofs/" + fileName;
+                // ✅ Store logical path in DB
+                att.CorrectionProofPath = $"correction-proofs/{fileName}";
             }
 
-            // ❌ Block if Pending OR Approved
-            if (att.CorrectionStatus == "Pending" || att.CorrectionStatus == "Approved")
-            {
-                TempData["Error"] = "You cannot request correction again for this date.";
-                return RedirectToAction("EmployeeSummary", new { employeeId });
-            }
+            // -------------------------------
+            // 6️⃣ Update Correction Fields
+            // -------------------------------
+            att.CorrectionRequested = true;
+            att.CorrectionRemark = CorrectionRemark;
+            att.CorrectionStatus = "Pending";
+            att.CorrectionRequestedOn = DateTime.Now;
 
-
-          att.CorrectionRequested = true;
-att.CorrectionRemark = CorrectionRemark;
-att.CorrectionStatus = "Pending";
-att.CorrectionRequestedOn = DateTime.Now;   // 🔥 ADD THIS
-
-
+            // -------------------------------
+            // 7️⃣ Save Changes
+            // -------------------------------
             await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Correction request submitted successfully.";
 
             return RedirectToAction("EmployeeSummary", new { employeeId });
         }
