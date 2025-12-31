@@ -60,6 +60,16 @@
         </div>
     </div>
 
+    @* Active*@
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+        <div class="summary-card">
+            <i class="fa-solid fa-user icon primary "></i>
+            <h4>@Model.ActiveEmployees</h4>
+            <span>Total Active </span>
+        </div>
+    </div>
+
+
     @* Present *@
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
         <div class="summary-card">
@@ -78,14 +88,7 @@
         </div>
     </div>
 
-    @* Not Checked Out *@
-    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
-        <div class="summary-card">
-            <i class="fa-solid fa-clock-rotate-left icon accent"></i>
-            <h4>@((int?)ViewBag.NotCheckedOutToday ?? 0)</h4>
-            <span>Not Checked-Out</span>
-        </div>
-    </div>
+
 </div>
 
 
@@ -113,7 +116,7 @@
                 <i class="fa-solid fa-plane-departure"></i> Manage Leaves
             </a>
 
-            <a asp-controller="Reports" asp-action="Index" class="btn custom-btn-outline-dark">
+            <a asp-controller="Reports" asp-action="Index" class="btn custom-btn-outline-primary">
                 <i class="fa-solid fa-chart-bar"></i> Reports
             </a>
         </div>
@@ -258,22 +261,20 @@
 
                         <tr>
                             <td data-label="Code">@emp.EmployeeCode</td>
-                            <td data-label="Name">@emp.Name</td>
+                            <td>
+                                @emp.Name
+
+                                @if (emp.JoiningDate.HasValue &&
+                                                        (DateTime.Today - emp.JoiningDate.Value).Days <= 7)
+                                {
+                                    <span class="badge bg-success ms-2">NEW JOINEE</span>
+                                }
+                            </td>
+
                             <td data-label="Department">@emp.Department</td>
                             <td data-label="Position">@emp.Position</td>
-                            <td data-label="Status">
-                                @if (att == null)
-                                {
-                                    <span class="badge bg-danger">Absent</span>
-                                }
-                                else if (att.OutTime == null)
-                                {
-                                    <span class="badge bg-warning text-dark">Not Checked Out</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success">Active</span>
-                                }
+                            <td data-label="Joining Date">
+                               @(emp.JoiningDate?.ToString("dd-MM-yyyy")??"-")
                             </td>
                         </tr>
 
@@ -612,6 +613,15 @@
             text-align: center;
         }
     }
+
+    .badge-new {
+        background-color: #28a745;
+        color: #fff;
+        font-size: 11px;
+        padding: 4px 6px;
+        border-radius: 6px;
+    }
+
 </style>
 
 <script>

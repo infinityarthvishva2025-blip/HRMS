@@ -1,315 +1,213 @@
 ﻿using HRMS.Data;
-using HRMS.Helpers;
-using HRMS.Models;
+using HRMS.Models.ViewModels;
 using HRMS.Services;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using iTextSharp.tool.xml;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Rotativa.AspNetCore;
-public class PayrollController : Controller
+using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewEngines;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using System;
+using System.IO;
+using System.Linq;
+using System.Text;
+
+
+namespace HRMS.Controllers
 {
-    private readonly IPayrollService _payrollService;
-    private readonly ApplicationDbContext _context;
+    public class PayrollController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly PayrollService _payrollService;
+        private readonly IRazorViewEngine _viewEngine;
+        private readonly ITempDataDictionaryFactory _tempDataFactory;
 
-    public PayrollController(IPayrollService payrollService, ApplicationDbContext context)
-    {
-        _payrollService = payrollService;
-        _context = context;
-    }
-    // =========================
-    // GET : Generate Payroll
-    // =========================
-    [HttpGet]
-    public IActionResult Generate()
-    {
-        var model = new PayrollViewModel
+        public PayrollController(
+            ApplicationDbContext context,
+            IRazorViewEngine viewEngine,
+            ITempDataDictionaryFactory tempDataFactory)
         {
-            FromDate = DateTime.Today,
-            ToDate = DateTime.Today,
-            Month = DateTime.Today.Month,
-            Year = DateTime.Today.Year
-        };
+            _context = context;
+            _payrollService = new PayrollService(context);
+            _viewEngine = viewEngine;
+            _tempDataFactory = tempDataFactory;
+        }
 
-        return View(model);
-    }
-
-    // =========================
-    // POST : Generate Payroll
-    // =========================
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Generate(PayrollViewModel model)
-    {
-        if (!ModelState.IsValid)
-            return View(model);
-
-        await _payrollService.GeneratePayrollAsync(
-            model.Month,
-            model.Year,
-            model.FromDate,
-            model.ToDate
-        );
-
-        return RedirectToAction("PayrollList",
-            new { month = model.Month, year = model.Year });
-    }
-
-    // ======================
-    // GENERATE PAYROLL
-    // ======================
-    //[HttpPost]
-    //public async Task<IActionResult> Generate(PayrollViewModel model)
-    //{
-    //    if (_payrollService.IsPayrollLocked(model.Month, model.Year))
-    //    {
-    //        TempData["Error"] = "Payroll already locked!";
-    //        return RedirectToAction("PayrollList", new { model.Month, model.Year });
-    //    }
-
-    //    await _payrollService.GeneratePayrollAsync(
-    //        model.Month, model.Year, model.FromDate, model.ToDate);
-
-    //    return RedirectToAction("PayrollList", new { model.Month, model.Year });
-    //}
-
-    // ======================
-    // LOCK PAYROLL
-    // ======================
-    [HttpPost]
-    public IActionResult LockPayroll(int month, int year)
-    {
-        _payrollService.LockPayroll(month, year, User.Identity.Name);
-        return RedirectToAction("PayrollList", new { month, year });
-    }
-
-    // ======================
-    // PAYROLL LIST
-    // ======================
-    [HttpGet]
-    public IActionResult PayrollList(int month, int year, int page = 1)
-    {
-        //int pageSize = 10;
-
-        bool isLocked = _context.PayrollLocks
-            .Any(x => x.Month == month && x.Year == year && x.IsLocked);
-
-        ViewBag.IsLocked = isLocked;
-        ViewBag.Month = month;
-        ViewBag.Year = year;
-
-        int totalRecords = _context.Payroll
-            .Count(x => x.month == month && x.year == year);
-
-        var data = _context.Payroll
-            .Where(x => x.month == month && x.year == year)
-            .OrderBy(x => x.emp_code)
-            //.Skip((page - 1) * pageSize)
-            //.Take(pageSize)
-            .ToList();
-
-        ViewBag.CurrentPage = page;
-       // ViewBag.TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
-
-        return View(data);
-    }
-
-    public IActionResult ExportExcel(int month, int year)
-    {
-        var data = _context.Payroll
-            .Where(x => x.month == month && x.year == year)
-            .AsNoTracking()
-            .ToList();
-
-        var file = PayrollExportHelper.ExportToExcel(data);
-
-        return File(
-            file,
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "Payroll.xlsx"
-        );
-    }
-
-    [HttpGet]
-    public IActionResult Payslip(string token)
-    {
-        if (string.IsNullOrEmpty(token))
-            return NotFound();
-
-        var payroll = _context.Payroll
-            .FirstOrDefault(x => x.emp_code == token);
-
-        if (payroll == null)
-            return NotFound();
-
-        return View(payroll);
-    }
-    [HttpGet]
-    public IActionResult PayslipPdf(string token)
-    {
-        if (string.IsNullOrEmpty(token))
-            return NotFound();
-
-        var payroll = _context.Payroll
-            .FirstOrDefault(x => x.emp_code == token);
-
-        if (payroll == null)
-            return NotFound();
-
-        return new ViewAsPdf("Payslip", payroll)
+        // ============================================================
+        // ADMIN — MONTHLY PAYROLL LIST
+        // ============================================================
+        public IActionResult Monthly(int? year, int? month, string search)
         {
-            FileName = $"Payslip_{payroll.emp_code}.pdf"
-        };
-    }
-    public IActionResult PayslipPdf(int id)
-    {
-        var payroll = _context.Payroll.Find(id);
-        return new ViewAsPdf("Payslip", payroll)
-        {
-            FileName = "Payslip.pdf"
-        };
-    }
+            int y = year ?? DateTime.Now.Year;
+            int m = month ?? DateTime.Now.Month;
 
+            ViewBag.Year = y;
+            ViewBag.Month = m;
+            ViewBag.Search = search;
+
+            var list = _payrollService.GetMonthlySummaries(y, m);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                string s = search.ToLower();
+                list = list.Where(x =>
+                    x.EmpCode.ToLower().Contains(s) ||
+                    x.EmpName.ToLower().Contains(s)
+                ).ToList();
+            }
+
+            return View(list);
+        }
+
+        // ============================================================
+        // VIEW PAYSLIP — MONTHLY (HTML)
+        // ============================================================
+        [HttpGet]
+        public IActionResult Payslip(string empCode, int year, int month)
+        {
+            var vm = _payrollService.BuildMonthlySummary(empCode, year, month);
+            if (vm == null) return Content("Salary slip not found");
+
+            return View("Payslip", vm);
+        }
+
+        // ============================================================
+        // DOWNLOAD PAYSLIP — MONTHLY (PDF)
+        // ============================================================
+        [HttpGet]
+        public IActionResult DownloadSalarySlip(string empCode, int year, int month)
+        {
+            var vm = _payrollService.BuildMonthlySummary(empCode, year, month);
+            if (vm == null) return Content("Salary slip not found");
+
+            return File(
+                GenerateSalarySlipPdf(vm),
+                "application/pdf",
+                $"{empCode}_{month}_{year}_SalarySlip.pdf"
+            );
+        }
+
+        // ============================================================
+        // GENERATE PAYROLL — DATE RANGE
+        // ============================================================
+        [HttpGet]
+        public IActionResult Generate()
+        {
+            return View(new PayrollViewModel
+            {
+                FromDate = DateTime.Today,
+                ToDate = DateTime.Today
+            });
+        }
+
+        [HttpPost]
+        public IActionResult Generate(PayrollViewModel model)
+        {
+            if (model.FromDate > model.ToDate)
+            {
+                ModelState.AddModelError("", "Invalid date range");
+                return View(model);
+            }
+
+            var empCodes = _context.Employees
+                .Select(e => e.EmployeeCode)
+                .ToList();
+
+            var list = empCodes
+                .Select(code =>
+                    _payrollService.BuildPayrollByDateRange(
+                        code,
+                        model.FromDate.Date,
+                        model.ToDate.Date))
+                .Where(x => x != null)
+                .ToList();
+
+            ViewBag.FromDate = model.FromDate;
+            ViewBag.ToDate = model.ToDate;
+
+            return View("PayrollList", list);
+        }
+
+        // ============================================================
+        // VIEW PAYSLIP — DATE RANGE (HTML)
+        // ============================================================
+        [HttpGet]
+        public IActionResult PayslipByDateRange(string empCode, DateTime fromDate, DateTime toDate)
+        {
+            var vm = _payrollService.BuildPayrollByDateRange(empCode, fromDate, toDate);
+            if (vm == null) return Content("Salary slip not found");
+
+            return View("Payslip", vm);
+        }
+
+        // ============================================================
+        // DOWNLOAD PAYSLIP — DATE RANGE (PDF)
+        // ============================================================
+        [HttpGet]
+        public IActionResult DownloadSalarySlipByDateRange(string empCode, DateTime fromDate, DateTime toDate)
+        {
+            var vm = _payrollService.BuildPayrollByDateRange(empCode, fromDate, toDate);
+            if (vm == null) return Content("Salary slip not found");
+
+            return File(
+                GenerateSalarySlipPdf(vm),
+                "application/pdf",
+                $"{empCode}_{fromDate:ddMMyyyy}_{toDate:ddMMyyyy}_SalarySlip.pdf"
+            );
+        }
+
+        // ============================================================
+        // RENDER RAZOR VIEW → STRING
+        // ============================================================
+        private string RenderViewToString(string viewName, object model)
+        {
+            ViewData.Model = model;
+
+            using var sw = new StringWriter();
+
+            var viewResult = _viewEngine.FindView(
+                ControllerContext,
+                viewName,
+                false);
+
+            if (viewResult.View == null)
+                throw new Exception($"View {viewName} not found");
+
+            var viewContext = new ViewContext(
+                ControllerContext,
+                viewResult.View,
+                ViewData,
+                _tempDataFactory.GetTempData(HttpContext),
+                sw,
+                new HtmlHelperOptions()
+            );
+
+            viewResult.View.RenderAsync(viewContext).GetAwaiter().GetResult();
+            return sw.ToString();
+        }
+
+        // ============================================================
+        // PDF GENERATION — RAZOR BASED
+        // ============================================================
+        private byte[] GenerateSalarySlipPdf(PayrollSummaryVm model)
+        {
+            using var ms = new MemoryStream();
+
+            string html = RenderViewToString("Payslip", model);
+
+            using var doc = new Document(PageSize.A4, 30, 30, 30, 30);
+            var writer = PdfWriter.GetInstance(doc, ms);
+            doc.Open();
+
+            using var sr = new StringReader(html);
+            XMLWorkerHelper.GetInstance().ParseXHtml(writer, doc, sr);
+
+            doc.Close();
+            return ms.ToArray();
+        }
+
+
+    }
 }
-
-
-//using HRMS.Data;
-//using HRMS.Models;
-//using HRMS.Services;
-//using Microsoft.AspNetCore.Mvc;
-//using Microsoft.EntityFrameworkCore;
-
-//namespace HRMS.Controllers
-//{
-//    public class PayrollController : Controller
-//    {
-//        private readonly ApplicationDbContext _context;
-//        private readonly PayrollDeductionService _deductionService;
-//        private readonly PayslipEmailService _emailService;
-//        private readonly SalarySlipService _salarySlipService;
-
-//        public PayrollController(
-//            ApplicationDbContext context,
-//            PayrollDeductionService deductionService,
-//            PayslipEmailService emailService,
-//            SalarySlipService salarySlipService)
-//        {
-//            _context = context;
-//            _deductionService = deductionService;
-//            _emailService = emailService;
-//            _salarySlipService = salarySlipService;
-//        }
-
-//        // =========================================================
-//        // ✅ HR APPROVE
-//        // =========================================================
-//        [HttpPost]
-//        public IActionResult HrApprove(int id, string? remark)
-//        {
-//            var payroll = _context.Payrolls.Include(p => p.Employee).FirstOrDefault(p => p.Id == id);
-//            if (payroll == null) return NotFound();
-
-//            if (payroll.IsLocked) return BadRequest("Payroll is locked.");
-
-//            payroll.HrStatus = "Approved";
-//            payroll.HrRemark = remark;
-//            payroll.OverallStatus = "Pending";
-
-//            _context.SaveChanges();
-//            return RedirectToAction("Index");
-//        }
-
-//        [HttpPost]
-//        public IActionResult HrReject(int id, string? remark)
-//        {
-//            var payroll = _context.Payrolls.Include(p => p.Employee).FirstOrDefault(p => p.Id == id);
-//            if (payroll == null) return NotFound();
-
-//            if (payroll.IsLocked) return BadRequest("Payroll is locked.");
-
-//            payroll.HrStatus = "Rejected";
-//            payroll.HrRemark = remark;
-//            payroll.OverallStatus = "Rejected";
-
-//            _context.SaveChanges();
-//            return RedirectToAction("Index");
-//        }
-
-//        // =========================================================
-//        // ✅ DIRECTOR APPROVE (FINAL)
-//        // =========================================================
-//        [HttpPost]
-//        public IActionResult DirectorApprove(int id, string? remark)
-//        {
-//            var payroll = _context.Payrolls.Include(p => p.Employee).FirstOrDefault(p => p.Id == id);
-//            if (payroll == null) return NotFound();
-
-//            if (payroll.IsLocked) return BadRequest("Payroll is locked.");
-
-//            // ✅ MUST BE HR APPROVED FIRST
-//            if (payroll.HrStatus != "Approved")
-//                return BadRequest("HR approval required first.");
-
-//            payroll.DirectorStatus = "Approved";
-//            payroll.DirectorRemark = remark;
-
-//            // ✅ FINAL STATUS
-//            payroll.OverallStatus = "Approved";
-//            payroll.IsLocked = true;
-
-//            // ✅ Recalculate PF/ESI + totals safely before finalizing
-//            _deductionService.ApplyPFESI(payroll);
-
-//            _context.SaveChanges();
-
-//            // ✅ AUTO SEND PAYSLIP EMAIL
-//            TrySendPayslipEmail(payroll);
-
-//            return RedirectToAction("Index");
-//        }
-
-//        [HttpPost]
-//        public IActionResult DirectorReject(int id, string? remark)
-//        {
-//            var payroll = _context.Payrolls.Include(p => p.Employee).FirstOrDefault(p => p.Id == id);
-//            if (payroll == null) return NotFound();
-
-//            if (payroll.IsLocked) return BadRequest("Payroll is locked.");
-
-//            payroll.DirectorStatus = "Rejected";
-//            payroll.DirectorRemark = remark;
-//            payroll.OverallStatus = "Rejected";
-
-//            _context.SaveChanges();
-//            return RedirectToAction("Index");
-//        }
-
-//        // =========================================================
-//        // ✅ PAYSLIP EMAIL SENDER (Internal)
-//        // =========================================================
-//        private void TrySendPayslipEmail(Payroll payroll)
-//        {
-//            if (payroll.PayslipEmailSent) return;
-//            if (string.IsNullOrWhiteSpace(payroll.Employee.Email)) return;
-
-//            var pdf = _salarySlipService.Generate(payroll);
-
-//            string subject = $"Salary Slip - {payroll.Month}/{payroll.Year}";
-//            string body = $@"
-//                <p>Hello <b>{payroll.Employee.Name}</b>,</p>
-//                <p>Your salary slip for <b>{payroll.Month}/{payroll.Year}</b> is attached.</p>
-//                <p>Net Salary: <b>₹{payroll.NetSalary}</b></p>
-//                <p>Regards,<br/>HRMS Payroll</p>";
-
-//            _emailService.SendPayslip(
-//                payroll.Employee.Email,
-//                payroll.Employee.Name,
-//                subject,
-//                body,
-//                pdf,
-//                $"SalarySlip_{payroll.Employee.EmployeeCode}_{payroll.Month}_{payroll.Year}.pdf"
-//            );
-
-//            payroll.PayslipEmailSent = true;
-//            _context.SaveChanges();
-//        }
-//    }
-//}

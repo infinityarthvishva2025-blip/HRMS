@@ -1,8 +1,7 @@
-﻿@model List<Payroll>
-@using HRMS.Helpers
+﻿@model List<HRMS.Models.ViewModels.PayrollSummaryVm>
 
 @{
-    ViewData["Title"] = "Monthly Payroll";
+    ViewData["Title"] = "Payroll List";
     Layout = "~/Views/Shared/_HrLayout.cshtml";
 }
 
@@ -19,6 +18,8 @@
         <option value="10" selected>10 rows</option>
         <option value="20">20 rows</option>
         <option value="50">50 rows</option>
+        <option value="100">100 rows</option>
+        <option value="500">500 rows</option>
     </select>
 </div>
 
@@ -30,6 +31,8 @@
                 <th>Emp Code</th>
                 <th>Name</th>
                 <th>Working Days</th>
+                <th>Half Days</th>
+                <th>Absent Days</th>
                 <th>Paid Days</th>
                 <th>Basic Salary</th>
                 <th>Gross Salary</th>
@@ -41,28 +44,40 @@
         <tbody>
             @foreach (var item in Model)
             {
-                var token = UrlEncryptionHelper.GenerateToken(
-                new Dictionary<string, string>
-                {
-                    ["type"] = "PAY",
-                    ["empCode"] = item.emp_code,
-                    ["year"] = item.year.ToString(),
-                    ["month"] = item.month.ToString()
-                }, 30);
-
                 <tr>
-                    <td>@item.emp_code</td>
-                    <td>@item.name</td>
-                    <td>@item.working_days</td>
-                    <td>@item.paid_days</td>
-                    <td>@item.base_salary</td>
-                    <td>@item.gross_salary</td>
-                    <td>@item.total_deduction</td>
-                    <td>@item.net_salary</td>
+                    <td>@item.EmpCode</td>
+                    <td class="text-start">@item.EmpName</td>
+
+                    <td>@item.TotalDaysInMonth</td>
+
+                    <!-- HALF DAYS -->
+                    <td class="text-warning fw-bold">
+                        @item.PresentHalfDays
+                    </td>
+
+                    <!-- ABSENT DAYS -->
+                    <td class="text-danger fw-bold">
+                        @item.AbsentDays
+                    </td>
+
+                    <!-- PAID DAYS -->
+                    <td class="text-primary fw-bold">
+                        @item.PaidDays.ToString("0.0")
+                    </td>
+
+                    <td>@item.MonthlySalary.ToString("0.00")</td>
+                    <td class="fw-bold">@item.GrossSalary.ToString("0.00")</td>
+                    <td class="text-danger">@item.TotalDeductions.ToString("0.00")</td>
+                    <td class="fw-bold text-success">@item.NetSalary.ToString("0.00")</td>
+
                     <td>
-                        <a asp-action="Payslip"
-                           asp-route-token="@token"
-                           class="btn btn-primary btn-sm">
+                        <a asp-action="DownloadSalarySlip"
+                           asp-controller="Payroll"
+                           asp-route-empCode="@item.EmpCode"
+                           asp-route-year="@item.Year"
+                           asp-route-month="@item.Month"
+                           class="btn btn-primary btn-sm"
+                           target="_blank">
                             Slip
                         </a>
                     </td>
@@ -108,7 +123,6 @@
         pagination.innerHTML = "";
         const pageCount = Math.ceil(allRows.length / rowsPerPage);
 
-        // ⬅ Previous
         pagination.innerHTML += `
             <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
                 <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">&lt;</a>
@@ -121,7 +135,6 @@
                 </li>`;
         }
 
-        // ➡ Next
         pagination.innerHTML += `
             <li class="page-item ${currentPage === pageCount ? "disabled" : ""}">
                 <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">&gt;</a>
@@ -143,26 +156,25 @@
         setupPagination();
     });
 
-    // INIT
     renderTable();
     setupPagination();
 
-    // EXCEL EXPORT (ALL DATA)
     document.getElementById("exportExcelBtn").onclick = function () {
         const wb = XLSX.utils.book_new();
         const wsData = [];
 
         wsData.push([
-            "Emp Code","Name","Working Days","Paid Days",
-            "Gross Salary","Deduction","Net Salary"
+            "Emp Code","Name","Working Days",
+            "Half Days","Absent Days","Paid Days",
+            "Basic Salary","Gross Salary","Deduction","Net Salary"
         ]);
 
         allRows.forEach(r => {
             const c = r.cells;
             wsData.push([
                 c[0].innerText, c[1].innerText, c[2].innerText,
-                c[3].innerText, c[4].innerText,
-                c[5].innerText, c[6].innerText
+                c[3].innerText, c[4].innerText, c[5].innerText,
+                c[6].innerText, c[7].innerText, c[8].innerText, c[9].innerText
             ]);
         });
 
@@ -171,185 +183,3 @@
         XLSX.writeFile(wb, "Payroll_All_Employees.xlsx");
     };
 </script>
-
-@* @model List<Payroll>
-@using HRMS.Helpers
-
-@{
-    ViewData["Title"] = "Monthly Payroll";
-    Layout = "~/Views/Shared/_HrLayout.cshtml";
-}
-
-<h2 class="mb-3">Payroll List</h2>
-
-<!-- ACTION BAR -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <button id="exportExcelBtn" class="btn btn-success">
-        📥 Export Excel (All Employees)
-    </button>
-
-    <select id="pageSize" class="form-select w-auto">
-        <option value="5">5 rows</option>
-        <option value="10" selected>10 rows</option>
-        <option value="20">20 rows</option>
-        <option value="50">50 rows</option>
-    </select>
-</div>
-
-<!-- PAYROLL TABLE -->
-<div class="table-responsive">
-    <table id="payrollTable" class="table table-bordered table-striped text-center align-middle">
-        <thead class="table-dark">
-            <tr>
-                <th>Emp Code</th>
-                <th>Name</th>
-                <th>Working Days</th>
-                <th>Paid Days</th>
-                <th>Gross Salary</th>
-                <th>Deduction</th>
-                <th>Net Salary</th>
-                <th>Payslip</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                var token = UrlEncryptionHelper.GenerateToken(
-                new Dictionary<string, string>
-                {
-                    ["type"] = "PAY",
-                    ["empCode"] = item.emp_code,
-                    ["year"] = item.year.ToString(),
-                    ["month"] = item.month.ToString()
-                }, 30);
-
-                <tr>
-                    <td>@item.emp_code</td>
-                    <td>@item.name</td>
-                    <td>@item.working_days</td>
-                    <td>@item.paid_days</td>
-                    <td>@item.gross_salary</td>
-                    <td>@item.total_deduction</td>
-                    <td>@item.net_salary</td>
-                    <td>
-                        <a asp-action="Payslip"
-                           asp-route-token="@token"
-                           class="btn btn-primary btn-sm">
-                            Slip
-                        </a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
-
-<!-- PAGINATION -->
-<nav class="mt-3">
-    <ul id="pagination" class="pagination justify-content-center"></ul>
-</nav>
-
-<!-- XLSX LIBRARY -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<!-- PAGINATION SCRIPT -->
-<script>
-    let currentPage = 1;
-    let rowsPerPage = 10;
-
-    const table = document.getElementById("payrollTable");
-    const tbody = table.querySelector("tbody");
-
-    // IMPORTANT: Store all rows once
-    const allRows = Array.from(tbody.querySelectorAll("tr"));
-
-    const pagination = document.getElementById("pagination");
-    const pageSizeSelect = document.getElementById("pageSize");
-
-    function renderTable() {
-        tbody.innerHTML = "";
-
-        const start = (currentPage - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-
-        allRows.slice(start, end).forEach(row => {
-            tbody.appendChild(row);
-        });
-    }
-
-    function setupPagination() {
-        pagination.innerHTML = "";
-        const pageCount = Math.ceil(allRows.length / rowsPerPage);
-
-        for (let i = 1; i <= pageCount; i++) {
-            const li = document.createElement("li");
-            li.className = "page-item " + (i === currentPage ? "active" : "");
-
-            const a = document.createElement("a");
-            a.className = "page-link";
-            a.href = "#";
-            a.innerText = i;
-
-            a.onclick = function (e) {
-                e.preventDefault();
-                currentPage = i;
-                renderTable();
-                setupPagination();
-            };
-
-            li.appendChild(a);
-            pagination.appendChild(li);
-        }
-    }
-
-    pageSizeSelect.addEventListener("change", function () {
-        rowsPerPage = parseInt(this.value);
-        currentPage =allRows ;
-        renderTable();
-        setupPagination();
-    });
-
-    // INIT
-    renderTable();
-    setupPagination();
-</script>
-
-<!-- ✅ EXCEL EXPORT (ALL EMPLOYEES, FIXED) -->
-<script>
-    document.getElementById("exportExcelBtn").onclick = function () {
-
-        const wb = XLSX.utils.book_new();
-        const wsData = [];
-
-        // HEADER
-        wsData.push([
-            "Emp Code",
-            "Name",
-            "Working Days",
-            "Paid Days",
-            "Gross Salary",
-            "Deduction",
-            "Net Salary"
-        ]);
-
-        // ALL ROWS (NOT PAGINATED)
-        allRows.forEach(row => {
-            const cells = row.querySelectorAll("td");
-            wsData.push([
-                cells[0].innerText,
-                cells[1].innerText,
-                cells[2].innerText,
-                cells[3].innerText,
-                cells[4].innerText,
-                cells[5].innerText,
-                cells[6].innerText
-            ]);
-        });
-
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        XLSX.utils.book_append_sheet(wb, ws, "Payroll");
-
-        XLSX.writeFile(wb, "Payroll_All_Employees.xlsx");
-    };
-</script>
- *@

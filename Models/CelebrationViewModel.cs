@@ -10,5 +10,6 @@
         public List<Employee> TomorrowsAnniversaries { get; set; } = new List<Employee>();
 
         public int TotalEmployees { get; set; }
+        public int ActiveEmployees { get; set; }
     }
 }

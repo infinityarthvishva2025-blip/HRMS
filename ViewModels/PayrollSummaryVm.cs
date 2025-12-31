@@ -42,7 +42,7 @@ namespace HRMS.Models.ViewModels
         // Optional additional items to avoid errors
         public int PresentHalfDays { get; set; }
         public int WeeklyOffDays { get; set; }
-       
+
 
         // Bank Details
         public string BankName { get; set; }
@@ -53,5 +53,8 @@ namespace HRMS.Models.ViewModels
         // Job details
         public string Department { get; set; }
         public string Designation { get; set; }
+
+        public DateTime FromDate { get; set; }
+        public DateTime ToDate { get; set; }
     }
 }

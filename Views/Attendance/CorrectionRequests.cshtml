@@ -94,11 +94,13 @@
                                 <td>
                                     @if (!string.IsNullOrEmpty(a.CorrectionProofPath))
                                     {
-                                        <a href="@a.CorrectionProofPath"
-                                           target="_blank"
-                                           class="btn btn-sm btn-outline-primary">
-                                            View Proof
-                                        </a>
+                                        <a href="@Url.Action("ViewCorrectionProof", "Attendance",
+                                                    new { fileName = a.CorrectionProofPath })"
+                               target="_blank"
+                               class="btn btn-sm btn-outline-primary">
+                                View Proof
+                            </a>
+
                                     }
                                     else
                                     {

@@ -4,7 +4,7 @@
 @{
     decimal totalNetPay = Model?.Sum(x => x.NetSalary) ?? 0;
     ViewData["Title"] = "Monthly Payroll";
-   // Layout = "~/Views/Shared/_HrLayout.cshtml";
+   Layout = "~/Views/Shared/_HrLayout.cshtml";
     var role = ViewBag.UserRole as string;
 
     if (role == "HR" || role == "VP" || role == "GM" || role == "Director")

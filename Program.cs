@@ -45,7 +45,8 @@ builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<INotificationService, EmailNotificationService>();
 
 builder.Services.AddScoped<PayslipEmailService>();
-builder.Services.AddScoped<IPayrollService, PayrollService>();
+
+builder.Services.AddScoped<PayrollService>();
 
 
 // SESSION

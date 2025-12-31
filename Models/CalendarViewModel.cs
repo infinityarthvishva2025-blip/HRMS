@@ -9,6 +9,7 @@
         public Dictionary<DateTime, List<Attendance>> DailyAttendance { get; set; } = new();
         public List<Employee> Employees { get; set; } = new();
         public int TotalEmployees { get; set; }
+      
         public string ViewMode { get; set; } = "all";
         public string SelectedDepartment { get; set; } // Changed to string
         public int ItemPerPage { get; set; } = 10;

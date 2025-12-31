@@ -1,11 +1,13 @@
 ﻿using HRMS.Data;
 using HRMS.Models;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
+using HRMS.Models.ViewModels;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace HRMS.Services
 {
-    public class PayrollService : IPayrollService
+    public class PayrollService
     {
         private readonly ApplicationDbContext _context;
 
@@ -14,369 +16,206 @@ namespace HRMS.Services
             _context = context;
         }
 
-        // ✅ MUST BE PUBLIC
-        public async Task GeneratePayrollAsync(int month, int year,DateTime FromDate,DateTime ToDate)
+        // ============================================================
+        // PROFESSIONAL TAX – MAHARASHTRA (FINAL & CORRECT)
+        // ============================================================
+        public decimal CalculatePT(decimal basicSalary, string gender, int month)
         {
-            var monthParam = new SqlParameter("@Month", month);
-            var yearParam = new SqlParameter("@Year", year);
-            var fromdateParam = new SqlParameter("@StartDate", FromDate);
-            var todateParam = new SqlParameter("@EndDate", ToDate);
+            gender = (gender ?? "male").Trim().ToLower();
 
-            await _context.Database.ExecuteSqlRawAsync(
-                "EXEC sp_GeneratePayroll @Month, @Year,@StartDate,@EndDate",
-                monthParam, yearParam, fromdateParam, todateParam
-            );
-        }
-        public bool IsPayrollLocked(int month, int year)
-        {
-            return _context.PayrollLocks
-                .Any(x => x.Month == month && x.Year == year && x.IsLocked);
-        }
+            //  February special Professional Tax (once per year)
+            if (month == 2)
+                return 300m;
 
-        public void LockPayroll(int month, int year, string user)
-        {
-            if (!IsPayrollLocked(month, year))
+            //  Female employees
+            if (gender == "female")
             {
-                _context.PayrollLocks.Add(new PayrollLock
-                {
-                    Month = month,
-                    Year = year,
-                    LockedBy = user,
-                    IsLocked = true
-                });
-                _context.SaveChanges();
+                return basicSalary <= 25000m ? 0m : 200m;
             }
+
+            // Male employees
+            if (basicSalary <= 7500m)
+                return 0m;
+
+            if (basicSalary <= 10000m)
+                return 175m;
+
+            return 200m;
         }
 
-        //        public List<PayrollSummaryVm> GetMonthlySummaries(int year, int month)
-        //        {
-        //            var employees = _context.Employees
-        //    .Select(e => e.EmployeeCode)
-        //    .ToList();
+        // ============================================================
+        // PAYROLL BY DATE RANGE (WORKING HOURS DRIVEN)
+        // ============================================================
+        public PayrollSummaryVm BuildPayrollByDateRange(
+     string empCode,
+     DateTime fromDate,
+     DateTime toDate)
+        {
+            var emp = _context.Employees
+                .FirstOrDefault(e => e.EmployeeCode == empCode);
 
-        //            List<PayrollSummaryVm> list = new();
+            if (emp == null)
+                return null;
 
-        //            foreach (var code in employees)
-        //            {
-        //                var vm = BuildMonthlySummary(code, year, month);
-        //                if (vm != null)
-        //                    list.Add(vm);
-        //            }
+            decimal baseSalary = emp.Salary ?? 0m;
 
-        //            return list.OrderBy(x => x.EmpName).ToList();
-        //        }
+            var attendance = _context.Attendances
+                .Where(a =>
+                    a.Emp_Code == empCode &&
+                    a.Date >= fromDate.Date &&
+                    a.Date <= toDate.Date)
+                .ToList();
 
+            if (!attendance.Any())
+                return null;
+
+            int fullDays = 0;
+            int halfDays = 0;
+            int absentDays = 0;
+            int weeklyOffDays = 0;
+
+            foreach (var a in attendance)
+            {
+                string status = (a.Status ?? "").Trim().ToUpper();
+                var day = a.Date.DayOfWeek;
+
+                // ✅ Sunday = Weekly Off (Paid)
+                if (day == DayOfWeek.Sunday)
+                {
+                    weeklyOffDays++;
+                    fullDays++;
+                    continue;
+                }
+
+                // ✅ Holiday = Paid
+                if (status == "H" || status == "HO")
+                {
+                    fullDays++;
+                    continue;
+                }
+
+                // ❌ Leave / Absent
+                if (status == "A" || status == "L")
+                {
+                    absentDays++;
+                    continue;
+                }
+
+                // ❌ Missing punch = Absent
+                if (!a.InTime.HasValue || !a.OutTime.HasValue)
+                {
+                    absentDays++;
+                    continue;
+                }
+
+                // ⏱️ Calculate working hours from punch time
+                double workedHours =
+                    (a.OutTime.Value - a.InTime.Value).TotalHours;
+
+                double fullDayHours =
+                    day == DayOfWeek.Saturday ? 7.0 : 8.5;
+
+                double halfDayHours =
+                    day == DayOfWeek.Saturday ? 3.5 : 4.0;
+
+                if (workedHours >= fullDayHours)
+                    fullDays++;
+                else if (workedHours >= halfDayHours)
+                    halfDays++;
+                else
+                    absentDays++;
+            }
+
+            // ✅ Paid days calculation
+            decimal paidDays = fullDays + (halfDays * 0.5m);
+
+            // ✅ Date-range working days
+            int totalDaysInRange =
+                (toDate.Date - fromDate.Date).Days + 1;
+
+            // ✅ Per-day salary ALWAYS based on full month
+            int daysInMonth =
+                DateTime.DaysInMonth(fromDate.Year, fromDate.Month);
+
+            decimal perDaySalary = baseSalary / daysInMonth;
+
+            // ✅ Gross salary ONLY for selected range
+            decimal grossSalary = paidDays * perDaySalary;
+
+            // ✅ Professional Tax (month-based rule)
+            decimal professionalTax =
+                CalculatePT(baseSalary, emp.Gender, fromDate.Month);
+
+            decimal netSalary = grossSalary - professionalTax;
+
+            return new PayrollSummaryVm
+            {
+                EmpCode = empCode,
+                EmpName = emp.Name,
+                Department = emp.Department,
+                Designation = emp.Position,
+
+                Year = fromDate.Year,
+                Month = fromDate.Month,
+
+                // 🔥 IMPORTANT FOR PDF / VIEW
+                FromDate = fromDate,
+                ToDate = toDate,
+
+                TotalDaysInMonth = totalDaysInRange,
+
+                PresentHalfDays = halfDays,
+                WeeklyOffDays = weeklyOffDays,
+                AbsentDays = absentDays,
+
+                PaidDays = paidDays,
+
+                MonthlySalary = baseSalary,
+                PerDaySalary = perDaySalary,
+                GrossSalary = grossSalary,
+
+                ProfessionalTax = professionalTax,
+                TotalDeductions = professionalTax,
+
+                NetSalary = netSalary,
+                TotalPay = netSalary
+            };
+        }
+
+
+        // ============================================================
+        // MONTHLY PAYROLL (FULL MONTH)
+        // ============================================================
+        public PayrollSummaryVm BuildMonthlySummary(string empCode, int year, int month)
+        {
+            DateTime start = new DateTime(year, month, 1);
+            DateTime end = start.AddMonths(1).AddDays(-1);
+
+            return BuildPayrollByDateRange(empCode, start, end);
+        }
+
+        // ============================================================
+        // MONTHLY PAYROLL – ALL EMPLOYEES
+        // ============================================================
+        public List<PayrollSummaryVm> GetMonthlySummaries(int year, int month)
+        {
+            DateTime start = new DateTime(year, month, 1);
+            DateTime end = start.AddMonths(1).AddDays(-1);
+
+            var empCodes = _context.Employees
+                .Select(e => e.EmployeeCode)
+                .ToList();
+
+            List<PayrollSummaryVm> result = new();
+
+            foreach (var code in empCodes)
+            {
+                var summary = BuildPayrollByDateRange(code, start, end);
+                if (summary != null)
+                    result.Add(summary);
+            }
+
+            return result.OrderBy(x => x.EmpName).ToList();
+        }
     }
 }
-
-
-
-//using HRMS.Data;
-//using HRMS.Models;
-//using HRMS.Models.ViewModels;
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-
-//namespace HRMS.Services
-//{
-//    public class PayrollService
-//    {
-//        private readonly ApplicationDbContext _context;
-
-//        public PayrollService(ApplicationDbContext context)
-//        {
-//            _context = context;
-//        }
-
-//        // ============================================================
-//        // PROFESSIONAL TAX (Maharashtra)
-//        // ============================================================
-//        public decimal CalculatePT(decimal grossSalary, string gender, int month)
-//        {
-//            gender = gender?.ToLower();
-
-//            if (month == 2)
-//                return 300m;
-
-//            if (gender == "female")
-//            {
-//                if (grossSalary <= 25000) return 0m;
-//                return 200m;
-//            }
-//            else
-//            {
-//                if (grossSalary <= 7500) return 0m;
-//                if (grossSalary <= 10000) return 175m;
-//                return 200m;
-//            }
-//        }
-
-//        // ============================================================
-//        // BUILD SUMMARY FOR ONE EMPLOYEE — MAIN FUNCTION
-//        // ============================================================
-//        //public PayrollSummaryVm BuildMonthlySummary(string empCode, int year, int month)
-//        //{
-//        //    var emp = _context.Employees.FirstOrDefault(x => x.EmployeeCode == empCode);
-//        //    if (emp == null) return null;
-
-//        //    string monthName = new DateTime(year, month, 1).ToString("MMMM").ToUpper();
-
-//        //    // Load payroll row IF EXISTS
-//        //    var payroll = _context.Payroll
-//        //        .FirstOrDefault(p => p.emp_code == empCode &&  p.month.ToUpper() == monthName);
-
-//        //    decimal baseSalary = payroll?.base_salary ?? emp.Salary ?? 0;
-
-//        //    // ============================================================
-//        //    // GET ATTENDANCE FOR THE MONTH
-//        //    // ============================================================
-//        //    var start = new DateTime(year, month, 1);
-//        //    var end = start.AddMonths(1).AddDays(-1);
-
-//        //    var att = _context.Attendances
-//        //        .Where(a => a.Emp_Code == empCode && a.Date >= start && a.Date <= end)
-//        //        .ToList();
-
-//        //    int totalDaysInMonth = DateTime.DaysInMonth(year, month);
-
-//        //    if (!att.Any())
-//        //        return null; // no attendance → no payroll
-
-//        //    // Normalize Status
-//        //    string clean(string s) => (s ?? "").Trim().ToUpper();
-
-//        //    // PRESENTS
-//        //    int presentFull = att.Count(a => clean(a.Status) == "P");
-//        //    int presentHalf = att.Count(a => clean(a.Status) == "½P" || clean(a.Status) == "P½");
-
-//        //    // WEEKLY OFF (PAID)
-//        //    int weekOff = att.Count(a => clean(a.Status) == "WO" || clean(a.Status) == "W/O");
-
-//        //    // SATURDAY (PAID)
-//        //    int saturdayPaid = att.Count(a => clean(a.Status) == "WOP");
-
-//        //    // LEAVES
-//        //    int paidLeave = att.Count(a => clean(a.Status) == "PL" || clean(a.Status) == "CL" || clean(a.Status) == "SL");
-//        //    int unpaidLeave = att.Count(a => clean(a.Status) == "L");
-//        //    int absent = att.Count(a => clean(a.Status) == "A");
-
-//        //    // ============================
-//        //    // LATE MARK DEDUCTIONS
-//        //    // ============================
-//        //    int totalLateMarks = payroll?.late_marks ?? 0;
-//        //    decimal lateDed = 0m;
-
-//        //    if (totalLateMarks > 3)
-//        //        lateDed = (totalLateMarks - 3) * 0.5m;
-
-//        //    // ============================
-//        //    // CALCULATE PAID DAYS
-//        //    // ============================
-//        //    decimal paidDays =
-//        //        presentFull +
-//        //        (presentHalf * 0.5m) +
-//        //        paidLeave +
-//        //        weekOff +
-//        //        saturdayPaid -
-//        //        lateDed;
-
-//        //    if (paidDays < 0) paidDays = 0;
-
-//        //    // ============================
-//        //    // SALARY CALCULATIONS
-//        //    // ============================
-//        //    decimal perDaySalary = baseSalary / totalDaysInMonth;
-//        //    decimal grossSalary = perDaySalary * paidDays;
-
-//        //    string gender = emp.Gender?.ToLower() ?? "male";
-//        //    decimal pt = CalculatePT(grossSalary, gender, month);
-
-//        //    decimal otherDeductions = payroll?.total_deduction ?? 0;
-//        //    decimal totalDeductions = pt + otherDeductions;
-//        //    decimal netSalary = grossSalary - totalDeductions;
-
-//        //    // ============================================================
-//        //    // RETURN MODEL
-//        //    // ============================================================
-//        //    return new PayrollSummaryVm
-//        //    {
-//        //        EmpCode = empCode,
-//        //        EmpName = emp.Name,
-//        //        Department = emp.Department,
-//        //        Designation = emp.Position,
-
-//        //        Year = year,
-//        //        Month = month,
-//        //        TotalDaysInMonth = totalDaysInMonth,
-
-//        //        PresentHalfDays = presentHalf,
-//        //        WeeklyOffDays = weekOff,
-//        //        TotalSaturdayPaid = saturdayPaid,
-//        //        AbsentDays = absent + unpaidLeave, // attendance based
-
-//        //        LateMarks = totalLateMarks,
-//        //        LateDeductionDays = lateDed,
-
-//        //        PaidDays = paidDays,
-
-//        //        MonthlySalary = baseSalary,
-//        //        PerDaySalary = perDaySalary,
-//        //        GrossSalary = grossSalary,
-
-//        //        PerformanceAllowance = payroll?.perf_allowance ?? 0,
-//        //        OtherAllowances = payroll?.other_allowance ?? 0,
-//        //        PetrolAllowance = payroll?.petrol_allowance ?? 0,
-//        //        Reimbursement = payroll?.reimbursement ?? 0,
-
-//        //        ProfessionalTax = pt,
-//        //        OtherDeductions = otherDeductions,
-//        //        TotalDeductions = totalDeductions,
-//        //        NetSalary = netSalary,
-//        //        TotalPay = netSalary,
-
-//        //        BankName = emp.BankName,
-//        //        AccountNumber = emp.AccountNumber,
-//        //        IFSCCode = emp.IFSC,
-//        //        BankBranch = emp.Branch
-//        //    };
-//        //}
-
-//        // ============================================================
-//        // MONTHLY SUMMARY LIST (USED BY CONTROLLER)
-//        // ============================================================
-
-//        public PayrollSummaryVm BuildMonthlySummary(string empCode, int year, int month)
-//        {
-//            var emp = _context.Employees.FirstOrDefault(x => x.EmployeeCode == empCode);
-//            if (emp == null) return null;
-
-//            // Correct month name for display only
-//            string monthName = new DateTime(year, month, 1).ToString("MMMM").ToUpper();
-
-//            // ============================================================
-//            // LOAD PAYROLL ROW USING NUMERIC MONTH + YEAR  🔥 FIXED HERE
-//            // ============================================================
-//            var payroll = _context.Payrolls
-//                .FirstOrDefault(p => p.emp_code == empCode &&
-//                                     p.month == month &&   // <-- FIXED (removed ToUpper)
-//                                     p.Year == year);      // <-- added year filter
-
-//            decimal baseSalary = payroll?.base_salary ?? emp.Salary ?? 0;
-
-//            // ============================================================
-//            // GET ATTENDANCE FOR THE MONTH
-//            // ============================================================
-//            var start = new DateTime(year, month, 1);
-//            var end = start.AddMonths(1).AddDays(-1);
-
-//            var att = _context.Attendances
-//                .Where(a => a.Emp_Code == empCode && a.Date >= start && a.Date <= end)
-//                .ToList();
-
-//            int totalDaysInMonth = DateTime.DaysInMonth(year, month);
-
-//            if (!att.Any())
-//                return null; // No attendance → no payroll
-
-//            // Normalize function
-//            string clean(string s) => (s ?? "").Trim().ToUpper();
-
-//            // PRESENTS
-//            int presentFull = att.Count(a => clean(a.Status) == "P");
-//            int presentHalf = att.Count(a => clean(a.Status) == "½P" || clean(a.Status) == "P½");
-
-//            // WEEKLY OFF (PAID)
-//            int weekOff = att.Count(a => clean(a.Status) == "WO" || clean(a.Status) == "W/O");
-
-//            // SATURDAY (PAID)
-//            int saturdayPaid = att.Count(a => clean(a.Status) == "WOP");
-
-//            // LEAVES
-//            int paidLeave = att.Count(a => clean(a.Status) == "PL" || clean(a.Status) == "CL" || clean(a.Status) == "SL");
-//            int unpaidLeave = att.Count(a => clean(a.Status) == "L");
-//            int absent = att.Count(a => clean(a.Status) == "A");
-
-//            // ============================
-//            // LATE MARK DEDUCTIONS
-//            // ============================
-//            int totalLateMarks = payroll?.late_marks ?? 0;
-//            decimal lateDed = 0m;
-
-//            if (totalLateMarks > 3)
-//                lateDed = (totalLateMarks - 3) * 0.5m;
-
-//            // ============================
-//            // CALCULATE PAID DAYS
-//            // ============================
-//            decimal paidDays =
-//                presentFull +
-//                (presentHalf * 0.5m) +
-//                paidLeave +
-//                weekOff +
-//                saturdayPaid -
-//                lateDed;
-
-//            if (paidDays < 0) paidDays = 0;
-
-//            // ============================
-//            // SALARY CALCULATIONS
-//            // ============================
-//            decimal perDaySalary = baseSalary / totalDaysInMonth;
-//            decimal grossSalary = perDaySalary * paidDays;
-
-//            string gender = emp.Gender?.ToLower() ?? "male";
-//            decimal pt = CalculatePT(grossSalary, gender, month);
-
-//            decimal otherDeductions = payroll?.total_deduction ?? 0;
-//            decimal totalDeductions = pt + otherDeductions;
-//            decimal netSalary = grossSalary - totalDeductions;
-
-//            // ============================================================
-//            // RETURN MODEL
-//            // ============================================================
-//            return new PayrollSummaryVm
-//            {
-//                EmpCode = empCode,
-//                EmpName = emp.Name,
-//                Department = emp.Department,
-//                Designation = emp.Position,
-
-//                Year = year,
-//                Month = month,
-//                TotalDaysInMonth = totalDaysInMonth,
-
-//                PresentHalfDays = presentHalf,
-//                WeeklyOffDays = weekOff,
-//                TotalSaturdayPaid = saturdayPaid,
-//                AbsentDays = absent + unpaidLeave,
-
-//                LateMarks = totalLateMarks,
-//                LateDeductionDays = lateDed,
-
-//                PaidDays = paidDays,
-
-//                MonthlySalary = baseSalary,
-//                PerDaySalary = perDaySalary,
-//                GrossSalary = grossSalary,
-
-//                PerformanceAllowance = payroll?.perf_allowance ?? 0,
-//                OtherAllowances = payroll?.other_allowance ?? 0,
-//                PetrolAllowance = payroll?.petrol_allowance ?? 0,
-//                Reimbursement = payroll?.reimbursement ?? 0,
-
-//                ProfessionalTax = pt,
-//                OtherDeductions = otherDeductions,
-//                TotalDeductions = totalDeductions,
-//                NetSalary = netSalary,
-//                TotalPay = netSalary,
-
-//                BankName = emp.BankName,
-//                AccountNumber = emp.AccountNumber,
-//                IFSCCode = emp.IFSC,
-//                BankBranch = emp.Branch
-//            };
-//        }
-
-//    }
-//}

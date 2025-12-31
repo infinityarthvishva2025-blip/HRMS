@@ -1590,6 +1590,7 @@ namespace HRMS.Controllers
 
             return RedirectToAction("CorrectionRequests");
         }
+
         private void TryAutoCompOff(Attendance att)
         {
             // Safety checks
@@ -1656,6 +1657,22 @@ namespace HRMS.Controllers
 
             _context.Attendances.Add(att);
             return att;
+        }
+
+
+        public IActionResult ViewCorrectionProof(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+                return NotFound();
+
+            var folderPath = @"C:\HRMSFiles\correction-proofs";
+            var fullPath = Path.Combine(folderPath, fileName);
+
+            if (!System.IO.File.Exists(fullPath))
+                return NotFound("Proof file not found");
+
+            var contentType = "image/jpeg"; // or detect dynamically
+            return PhysicalFile(fullPath, contentType);
         }
 
     }
