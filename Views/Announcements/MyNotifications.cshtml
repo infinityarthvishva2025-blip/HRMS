@@ -11,7 +11,7 @@
         return a.ReadByEmployees.Split(',').Contains(empId.ToString());
     };
 
-    // 🔥 FINAL FIX — FILTER ONLY UNREAD NOTIFICATIONS
+    // 🔥 SHOW ONLY UNREAD NOTIFICATIONS
     var unreadList = Model.Where(a => !isRead(a)).ToList();
 }
 
@@ -36,7 +36,14 @@
         box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         border-left: 6px solid #1e40af;
         transition: .25s ease;
+        position: relative;
     }
+
+        /* 🔴 URGENT STYLE */
+        .notif-card.urgent {
+            background: #fff1f2;
+            border-left-color: #dc2626;
+        }
 
         .notif-card.unread {
             background: #fff7e5;
@@ -63,6 +70,18 @@
         display: flex;
         align-items: center;
         gap: 6px;
+    }
+
+    .urgent-badge {
+        background: #dc2626;
+        color: white;
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-weight: 600;
+        position: absolute;
+        top: 16px;
+        right: 18px;
     }
 
     .mark-read-btn {
@@ -105,7 +124,15 @@
     {
         foreach (var a in unreadList)
         {
-            <div class="notif-card unread">
+            <div class="notif-card unread @(a.IsUrgent ? "Very Important!!!" : "")">
+
+                @* 🔴 URGENT LABEL *@
+                @if (a.IsUrgent)
+                {
+                    <span class="urgent-badge">
+                        🚨 Very Important!! 
+                    </span>
+                }
 
                 <div class="notif-title">@a.Title</div>
 
@@ -114,6 +141,7 @@
                 <div class="notif-date">
                     <i class="fa-regular fa-calendar"></i>
                     @a.CreatedOn.AddHours(5).AddMinutes(30).ToString("dd MMM yyyy, hh:mm tt")
+                    
                 </div>
 
                 <a href="/Announcements/Read/@a.Id" class="mark-read-btn">
