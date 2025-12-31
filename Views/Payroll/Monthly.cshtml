@@ -175,7 +175,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-        const rowsPerPage = 8;
+        const rowsPerPage = 10;
         const tableBody = document.getElementById("tableBody");
         const rows = Array.from(tableBody.querySelectorAll("tr"));
         const searchInput = document.getElementById("tableSearch");
@@ -240,3 +240,61 @@
         paginate();
     });
 </script>
+@* <tbody id="tableBody">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var p in Model)
+        {
+            var halfLoss = (p.PresentHalfDays * 0.5m) * p.PerDaySalary;
+            var absentLoss = p.AbsentDays * p.PerDaySalary;
+            var leaveLoss = halfLoss + absentLoss;
+            var token = UrlEncryptionHelper.GenerateToken(
+            new Dictionary<string, string>
+            {
+                ["type"] = "PAY",
+                ["empCode"] = p.EmpCode,
+                ["year"] = year.ToString(),
+                ["month"] = month.ToString()
+            },
+            30
+            );
+            <tr>
+                <td>@p.EmpCode</td>
+                <td class="text-start">@p.EmpName</td>
+                <td>@p.TotalDaysInMonth</td>
+                <td>@p.PresentHalfDays</td>
+                <td class="text-danger fw-bold">@p.AbsentDays.ToString("0.##")</td>
+                <td>@p.LateMarks</td>
+                <td class="text-warning fw-bold">@p.LateDeductionDays.ToString("0.0")</td>
+                <td class="fw-bold text-primary">@p.PaidDays.ToString("0.0")</td>
+                <td>@p.PerDaySalary.ToString("0.00")</td>
+                <td class="text-danger">@leaveLoss.ToString("0.00")</td>
+                <td class="fw-bold text-primary">@p.GrossSalary.ToString("0.00")</td>
+                <td class="text-danger">@p.TotalDeductions.ToString("0.00")</td>
+                <td class="fw-bold text-success">@p.NetSalary.ToString("0.00")</td>
+                <td>
+                    @* <a asp-action="Payslip"
+                                   asp-route-empCode="@p.EmpCode"
+                                   asp-route-year="@year"
+                                   asp-route-month="@month"
+                                   class="btn btn-success btn-sm">
+                                    Slip
+                                </a> 
+                    <a asp-action="Payslip"
+                       asp-route-token="@token"
+                       class="btn btn-success btn-sm">
+                        Slip
+                    </a>
+                </td>
+            </tr>
+        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="14" class="text-center text-muted py-3">
+                No payroll data found for the selected month.
+            </td>
+        </tr>
+    }
+</tbody> *@

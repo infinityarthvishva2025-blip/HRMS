@@ -1,234 +1,71 @@
-﻿@model HRMS.Models.ViewModels.PayrollSummaryVm
-
+﻿@model HRMS.Models.Payroll
 @{
-    ViewData["Title"] = "Salary Slip";
-    Layout = "~/Views/Shared/_HrLayout.cshtml";
-
-    var monthName = new DateTime(Model.Year, Model.Month, 1).ToString("MMMM");
-    var halfDayLoss = (Model.PresentHalfDays * 0.5m) * Model.PerDaySalary;
-    var absentLoss = Model.AbsentDays * Model.PerDaySalary;
-    var leaveLoss = halfDayLoss + absentLoss;
-    var totalOtherDeduction = (Model.TotalDeductions - Model.ProfessionalTax);
+    Layout = null;   // IMPORTANT for PDF
 }
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Payslip</title>
+    <style>
+        body {
+            font-family: Arial;
+            font-size: 13px;
+        }
 
-<div class="container py-4 salary-slip-container">
+        .header {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
 
-    <!-- HEADER -->
-    <div class="row align-items-center mb-4 salary-header">
-        <div class="col-4 d-flex justify-content-start">
-            <img src="~/images/infinity-logo.png" alt="Infinity Arthvishva Logo" class="company-logo" />
-        </div>
-        <div class="col-4 text-center">
-            <h2 class="fw-bold text-primary mb-0">Infinity Arthvishva</h2>
-            <div class="text-muted small mb-1">Empowering Finance & Innovation</div>
-            <!-- Added Month-Year Display -->
-            <div class="salary-month text-secondary fw-semibold">
-                Salary Slip for <span class="text-primary">@monthName @Model.Year</span>
-            </div>
-        </div>
-        <div class="col-4 d-flex justify-content-end">
-            <a asp-action="DownloadSalarySlip"
-               asp-route-empCode="@Model.EmpCode"
-               asp-route-month="@Model.Month"
-               asp-route-year="@Model.Year"
-               class="btn btn-primary px-4 py-2 shadow-sm d-flex align-items-center gap-2">
-                <i class="fa-solid fa-download"></i>
-                Download Slip
-            </a>
-        </div>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td {
+            padding: 6px;
+            border: 1px solid #444;
+        }
+
+        .no-border td {
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        INFINITY ARTHVISHVA<br />
+        PAYSLIP - @Model.month / @Model.year
     </div>
 
-    <!-- EMPLOYEE INFO -->
-    <div class="row g-4">
-        <div class="col-md-6">
-            <h5 class="section-heading">Employee Information</h5>
-            <table class="table table-sm table-striped border">
-                <tbody>
-                    <tr><th>Employee Code</th><td>@Model.EmpCode</td></tr>
-                    <tr><th>Name</th><td>@Model.EmpName</td></tr>
-                    <tr><th>Department</th><td>@Model.Department</td></tr>
-                    <tr><th>Designation</th><td>@Model.Designation</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="col-md-6">
-            <h5 class="section-heading">Bank Information</h5>
-            <table class="table table-sm table-striped border">
-                <tbody>
-                    <tr><th>Bank Name</th><td>@Model.BankName</td></tr>
-                    <tr><th>Account No.</th><td>@Model.AccountNumber</td></tr>
-                    <tr><th>IFSC Code</th><td>@Model.IFSCCode</td></tr>
-                    <tr><th>Branch</th><td>@Model.BankBranch</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ATTENDANCE SUMMARY -->
-    <h5 class="section-heading mt-4">Attendance Summary</h5>
-    <table class="table table-bordered text-center align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>Working Days</th>
-                <th>Half Days</th>
-                <th>Absent</th>
-                <th>Late Marks</th>
-                <th>Late Deduction (Days)</th>
-                <th title="Includes WO + WOP">Paid Days (WO + WOP Included)</th>
-                <th>Leave Loss (₹)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>@Model.TotalDaysInMonth</td>
-                <td>@Model.PresentHalfDays</td>
-                <td class="text-danger fw-bold">@Model.AbsentDays</td>
-                <td>@Model.LateMarks</td>
-                <td class="text-warning fw-bold">@Model.LateDeductionDays.ToString("0.0")</td>
-                <td class="fw-bold" title="Paid Days = Present + WO(@Model.WeeklyOffDays) + WOP(@Model.TotalSaturdayPaid)">
-                    @Model.PaidDays.ToString("0.##")
-                </td>
-                <td class="text-danger fw-bold">@leaveLoss.ToString("0.00")</td>
-            </tr>
-        </tbody>
+    <table class="no-border">
+        <tr>
+            <td><b>Employee Code:</b> @Model.emp_code</td>
+            <td><b>Name:</b> @Model.name</td>
+        </tr>
     </table>
 
-    <!-- EARNINGS + DEDUCTIONS -->
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <h5 class="section-heading">Earnings</h5>
-            <table class="table table-striped border">
-                <tbody>
-                    <tr><th>Base Salary</th><td class="text-end">@Model.MonthlySalary.ToString("0.00")</td></tr>
-                    @* <tr><th>Per Day Salary</th><td class="text-end">@Model.PerDaySalary.ToString("0.00")</td></tr> *@
-                    <tr><th>Performance Allowance</th><td class="text-end">@Model.PerformanceAllowance.ToString("0.00")</td></tr>
-                    <tr><th>Other Allowances</th><td class="text-end">@Model.OtherAllowances.ToString("0.00")</td></tr>
-                    <tr><th>Petrol Allowance</th><td class="text-end">@Model.PetrolAllowance.ToString("0.00")</td></tr>
-                    <tr><th>Reimbursement</th><td class="text-end">@Model.Reimbursement.ToString("0.00")</td></tr>
-                    <tr class="table-primary">
-                        <th>Gross Salary</th>
-                        <td class="text-end fw-bold">@Model.GrossSalary.ToString("0.00")</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <br />
 
-        <div class="col-md-6">
-            <h5 class="section-heading">Deductions</h5>
-            <table class="table table-striped border">
-                <tbody>
-                    <tr><th>Professional Tax</th><td class="text-end">@Model.ProfessionalTax.ToString("0.00")</td></tr>
-                    <tr><th>Leave Loss (Absents + Half-Days)</th><td class="text-end text-danger">@leaveLoss.ToString("0.00")</td></tr>
-                    <tr><th>Other Deductions (Misc.)</th><td class="text-end">@totalOtherDeduction.ToString("0.00")</td></tr>
-                    <tr class="table-danger">
-                        <th>Total Deductions</th>
-                        <td class="text-end fw-bold">@Model.TotalDeductions.ToString("0.00")</td>
-                    </tr>
-                    <tr class="table-success">
-                        <th>Net Salary</th>
-                        <td class="text-end fw-bold text-success">@Model.NetSalary.ToString("0.00")</td>
-                    </tr>
-                    <tr class="table-success">
-                        <th>Total Payable</th>
-                        <td class="text-end fw-bold text-success">@Model.TotalPay.ToString("0.00")</td>
-                    </tr>
-                </tbody>
-            </table>
+    <table>
+        <tr><td>Working Days</td><td>@Model.working_days</td></tr>
+        <tr><td>Paid Days</td><td>@Model.paid_days</td></tr>
+        <tr><td>Leaves</td><td>@Model.leaves_taken</td></tr>
+        <tr><td>Gross Salary</td><td>@Model.gross_salary</td></tr>
+        <tr><td>Deductions</td><td>@Model.total_deduction</td></tr>
+        <tr><td><b>Net Salary</b></td></tr>
+           <tr> <td><b>@Model.net_salary</b></td></tr>
+    </table>
 
-            <div class="small text-muted">
-                <b>Note:</b> <br />
-                • <b>Weekly Off (WO)</b> and <b>Saturday (WOP)</b> are <b>paid</b> days and included in Paid Days. <br />
-               @*  • From the 4th late mark onward, each late = <b>0.5-day deduction</b>. *@
-                • Leave loss = (Absents + Half Days ) × Per Day Salary.
-            </div>
-        </div>
-    </div>
+    <br />
 
-    <!-- FOOTER -->
-    <div class="mt-4 pt-3 border-top d-flex justify-content-between">
-        <div class="small text-muted">
-            *This is a system-generated salary slip and does not require a signature.
-        </div>
-        <div class="text-end">
-            <div class="signature-box"></div>
-            <div class="small text-muted">Authorized Signatory</div>
-        </div>
-    </div>
-</div>
+    <b>Authorized Signatory</b>
 
-<style>
-    body {
-        font-family: 'Poppins', sans-serif !important;
-    }
+</body>
+</html>
 
-    .salary-slip-container h2 {
-        color: #2F3D88;
-    }
-
-    .salary-month {
-        font-size: 1rem;
-        margin-top: 2px;
-        color: #0E8376;
-    }
-
-    .section-heading {
-        font-size: 1.05rem;
-        font-weight: 600;
-        color: #2F3D88;
-        margin-bottom: 8px;
-    }
-
-    .signature-box {
-        width: 180px;
-        height: 40px;
-        border-bottom: 1px solid #555;
-        margin-bottom: 3px;
-    }
-
-    .company-logo {
-        height: 80px;
-        width: auto;
-    }
-
-    .salary-header h2 {
-        font-size: 1.7rem;
-    }
-
-    .salary-header .btn {
-        border-radius: 8px;
-        font-weight: 500;
-    }
-
-    .text-warning {
-        color: #ff9800 !important;
-    }
-
-    @@media (max-width: 768px) {
-        .salary-header .col-4 {
-            text-align: center !important;
-            margin-bottom: 10px;
-        }
-
-        .salary-header {
-            text-align: center;
-        }
-
-        .company-logo {
-            height: 65px;
-        }
-    }
-
-    @@media print {
-        .salary-header, .btn, nav, .navbar, .sidebar {
-            display: none !important;
-        }
-
-        .card {
-            border: none !important;
-            box-shadow: none !important;
-        }
-    }
-</style>
