@@ -613,72 +613,136 @@ namespace HRMS.Controllers
 
             return Json(departments);
         }
-        public async Task<IActionResult> Dashboard()
+
+
+
+
+
+        public async Task<IActionResult> Dashboard(int? month, int? year)
         {
             var empId = HttpContext.Session.GetInt32("EmployeeId");
-
-            if (empId == null || empId == 0)
+            if (!empId.HasValue)
                 return RedirectToAction("Login", "Account");
 
-            var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == empId);
+            var employee = await _context.Employees
+                .FirstOrDefaultAsync(e => e.Id == empId.Value);
+
             if (employee == null)
                 return RedirectToAction("Login", "Account");
 
             string empCode = employee.EmployeeCode;
 
-            // Total attendance records
-            int totalAttendance = await _context.Attendances
-                .CountAsync(a => a.Emp_Code == empCode);
+            // --------------------------------------------------
+            // MONTH SELECTION (default = current month)
+            // --------------------------------------------------
+            int selectedMonth = month ?? DateTime.Today.Month;
+            int selectedYear = year ?? DateTime.Today.Year;
 
-            // Total leaves
-            int totalLeaves = await _context.Leaves
-                .CountAsync(l => l.EmployeeId == empId);
+            DateTime monthStart = new DateTime(selectedYear, selectedMonth, 1);
+            DateTime monthEnd = monthStart.AddMonths(1).AddDays(-1);
 
-            // Upcoming birthdays
-            var upcomingBirthdays = await _context.Employees
-                .Where(e =>
-                    e.DOB_Date.HasValue &&
-                    e.DOB_Date.Value.Month == DateTime.Today.Month &&
-                    e.DOB_Date.Value.Day >= DateTime.Today.Day)
-                .OrderBy(e => e.DOB_Date.Value.Day)
-                .Take(5)
-                .ToListAsync();
+            // --------------------------------------------------
+            // WORKING DAYS (exclude Sundays)
+            // --------------------------------------------------
+            int workingDays = Enumerable.Range(0, (monthEnd - monthStart).Days + 1)
+                .Select(d => monthStart.AddDays(d))
+                .Count(d => d.DayOfWeek != DayOfWeek.Sunday);
 
-            // ============================================================
-            // 🔥 UNREAD ANNOUNCEMENTS COUNT FOR NOTIFICATION BELL
-            // ============================================================
-            var allAnnouncements = await _context.Announcements.ToListAsync();
+            // --------------------------------------------------
+            // PRESENT DAYS
+            // --------------------------------------------------
+            int presentDays = await _context.Attendances
+                .CountAsync(a =>
+                    a.Emp_Code == empCode &&
+                    a.Date >= monthStart &&
+                    a.Date <= monthEnd &&
+                    a.InTime.HasValue);
 
-            int unread = allAnnouncements.Count(a =>
-                (
-                    a.IsGlobal ||
-                    (!string.IsNullOrEmpty(a.TargetDepartments) &&
-                        a.TargetDepartments.Split(',').Contains(employee.Department)) ||
-                    (!string.IsNullOrEmpty(a.TargetEmployees) &&
-                        a.TargetEmployees.Split(',').Contains(empId.ToString()))
-                )
-                &&
-                (string.IsNullOrEmpty(a.ReadByEmployees) ||
-                    !a.ReadByEmployees.Split(',').Contains(empId.ToString()))
+            // --------------------------------------------------
+            // LEAVE DAYS (Approved only, overlap-safe)
+            // --------------------------------------------------
+            int leaveDays = await _context.Leaves
+                .Where(l =>
+                    l.EmployeeId == empId.Value &&
+                    l.OverallStatus == "Approved" &&
+                    l.StartDate <= monthEnd &&
+                    (l.EndDate ?? l.StartDate) >= monthStart)
+                .SumAsync(l => (int)Math.Ceiling(l.TotalDays));
+
+            // --------------------------------------------------
+            // HOLIDAY DAYS
+            // --------------------------------------------------
+            int holidayDays = await _context.Holidays
+                .CountAsync(h =>
+                    h.HolidayDate >= monthStart &&
+                    h.HolidayDate <= monthEnd);
+
+            // --------------------------------------------------
+            // ABSENT DAYS
+            // --------------------------------------------------
+            int absentDays = Math.Max(
+                0,
+                workingDays - (presentDays + leaveDays + holidayDays)
             );
 
-            // SEND TO LAYOUT
-            ViewBag.UnreadCount = unread;             // Badge number
-            ViewBag.UnreadAnnouncements = unread;     // Controls bell animation
+            // --------------------------------------------------
+            // 🎂 BIRTHDAYS (same as HR Home page)
+            // --------------------------------------------------
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
 
-            // ============================================================
+            var activeEmployees = await _context.Employees
+                .Where(e => e.Status == "Active")
+                .AsNoTracking()
+                .ToListAsync();
 
+            var todaysBirthdays = activeEmployees
+                .Where(e =>
+                    e.DOB_Date.HasValue &&
+                    e.DOB_Date.Value.Month == today.Month &&
+                    e.DOB_Date.Value.Day == today.Day)
+                .ToList();
 
+            var tomorrowsBirthdays = activeEmployees
+                .Where(e =>
+                    e.DOB_Date.HasValue &&
+                    e.DOB_Date.Value.Month == tomorrow.Month &&
+                    e.DOB_Date.Value.Day == tomorrow.Day)
+                .ToList();
+
+            // --------------------------------------------------
+            // DASHBOARD VIEWMODEL (CREATE ONCE)
+            // --------------------------------------------------
             var vm = new EmployeeDashboardViewModel
             {
                 Employee = employee,
-                TotalAttendance = totalAttendance,
-                TotalLeave = totalLeaves,
-                UpcomingBirthdays = upcomingBirthdays
+
+                // Attendance graph data
+                PresentDays = presentDays,
+                LeaveDays = leaveDays,
+                HolidayDays = holidayDays,
+                AbsentDays = absentDays,
+                WorkingDays = workingDays,
+
+                // Month selector
+                SelectedMonth = selectedMonth,
+                SelectedYear = selectedYear,
+
+                // Birthdays
+                TodaysBirthdays = todaysBirthdays,
+                TomorrowsBirthdays = tomorrowsBirthdays
             };
+
+            // --------------------------------------------------
+            // MONTH SELECTOR SUPPORT
+            // --------------------------------------------------
+            ViewBag.MonthName = monthStart.ToString("MMMM yyyy");
+            ViewBag.PrevMonth = monthStart.AddMonths(-1);
+            ViewBag.NextMonth = monthStart.AddMonths(1);
 
             return View(vm);
         }
+
 
 
 

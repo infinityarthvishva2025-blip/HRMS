@@ -104,6 +104,101 @@
     </div>
 </div>
 
+<!-- ================= BIRTHDAY + ATTENDANCE ROW ================= -->
+   <!-- ================= BIRTHDAY + ATTENDANCE ================= -->
+    <div class="row g-4 mt-4">
+
+        <!-- 🎉 BIRTHDAYS -->
+        <div class="col-lg-6">
+            <div class="info-card p-4 h-100">
+                <h6 class="info-label mb-3">🎉 Celebrations</h6>
+
+                <div class="row">
+                    <div class="col-md-6 border-end">
+                        <strong>Today's Birthdays 🎂✨</strong>
+                        <hr />
+                        @if (Model.TodaysBirthdays.Any())
+                        {
+                            @foreach (var e in Model.TodaysBirthdays)
+                            {
+                                <div>🎂 <strong>@e.Name</strong><br /><small>@e.Department</small></div>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">No celebrations today</span>
+                        }
+                    </div>
+
+                    <div class="col-md-6 ps-md-3 mt-3 mt-md-0">
+                        <strong>Tomorrow's Birthdays 🎈🎊</strong>
+                        <hr />
+                        @if (Model.TomorrowsBirthdays.Any())
+                        {
+                            @foreach (var e in Model.TomorrowsBirthdays)
+                            {
+                                <div>🎉 <strong>@e.Name</strong><br /><small>@e.Department</small></div>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">No celebrations tomorrow</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📊 ATTENDANCE -->
+        <div class="col-lg-6">
+            <div class="info-card p-4 h-100">
+                <div class="d-flex justify-content-between mb-2">
+                    <h6 class="info-label">Monthly Attendance</h6>
+                    <span class="badge bg-secondary">@ViewBag.MonthName</span>
+                </div>
+
+                <div style="height:280px;">
+                    <canvas id="attendanceBarChart"></canvas>
+                </div>
+
+                <div class="row text-center mt-3 fw-semibold">
+                    <div class="col text-success">P: @Model.PresentDays</div>
+                    <div class="col text-warning">L: @Model.LeaveDays</div>
+                    <div class="col text-info">H: @Model.HolidayDays</div>
+                    <div class="col text-danger">A: @Model.AbsentDays</div>
+                </div>
+
+                <!-- MONTH SELECTOR -->
+                <div class="text-center mt-3">
+                    <select id="monthSelect" class="form-select form-select-sm d-inline w-auto">
+                        @for (int m = 1; m <= 12; m++)
+                        {
+                            <option value="@m" selected="@(m == Model.SelectedMonth)">
+                                @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)
+                            </option>
+                        }
+                    </select>
+
+                    <select id="yearSelect" class="form-select form-select-sm d-inline w-auto mx-1">
+                        @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year; y++)
+                        {
+                            <option value="@y" selected="@(y == Model.SelectedYear)">@y</option>
+                        }
+                    </select>
+
+                    <button id="loadAttendanceBtn" class="btn btn-sm btn-primary">View</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= HIDDEN VALUES (AJAX) ================= -->
+<input type="hidden" id="hiddenPresent" value="@Model.PresentDays" />
+<input type="hidden" id="hiddenLeave" value="@Model.LeaveDays" />
+<input type="hidden" id="hiddenHoliday" value="@Model.HolidayDays" />
+<input type="hidden" id="hiddenAbsent" value="@Model.AbsentDays" />
+
 <!-- =========================================================== -->
 <!--     SALARY SLIP MODAL (NO CHANGES NEEDED)                  -->
 <!-- =========================================================== -->
@@ -298,6 +393,13 @@
             font-size: 18px;
         }
     }
+
+    .pie-wrapper {
+        max-width: 320px;
+        height: 320px;
+        margin: 0 auto;
+    }
+
 </style>
 
 <!-- =========================================================== -->
@@ -327,3 +429,60 @@
 
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const ctx = document.getElementById('attendanceBarChart');
+    let chart;
+
+    function drawChart(p, l, h, a) {
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Present', 'Leave', 'Holiday', 'Absent'],
+                datasets: [{
+                    data: [p, l, h, a],
+                    backgroundColor: ['#28a745','#ffc107','#17a2b8','#dc3545'],
+                    borderRadius: 10,
+                    barThickness: 40
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+
+    drawChart(
+        @Model.PresentDays,
+        @Model.LeaveDays,
+        @Model.HolidayDays,
+        @Model.AbsentDays
+    );
+
+    document.getElementById("loadAttendanceBtn").onclick = function () {
+        const m = monthSelect.value;
+        const y = yearSelect.value;
+
+        fetch(`/Employees/Dashboard?month=${m}&year=${y}`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(r => r.text())
+        .then(html => {
+            const temp = document.createElement("div");
+            temp.innerHTML = html;
+
+            drawChart(
+                temp.querySelector("#hiddenPresent").value,
+                temp.querySelector("#hiddenLeave").value,
+                temp.querySelector("#hiddenHoliday").value,
+                temp.querySelector("#hiddenAbsent").value
+            );
+        });
+    };
+</script>

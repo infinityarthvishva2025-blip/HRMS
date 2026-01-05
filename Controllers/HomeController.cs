@@ -71,10 +71,13 @@ namespace HRMS.Controllers
 
             // PRESENT TODAY
             ViewBag.PresentToday = todaysAttendance
-                .Where(a => activeEmployees.Any(e => e.EmployeeCode == a.Emp_Code))
-                .Select(a => a.Emp_Code)
-                .Distinct()
-                .Count();
+     .Where(a =>
+         a.InTime != null &&                       // ✅ Checked In
+         activeEmployees.Any(e => e.EmployeeCode == a.Emp_Code))
+     .Select(a => a.Emp_Code)
+     .Distinct()
+     .Count();
+
 
             // ABSENT TODAY
             ViewBag.AbsentToday = activeEmployees.Count - ViewBag.PresentToday;

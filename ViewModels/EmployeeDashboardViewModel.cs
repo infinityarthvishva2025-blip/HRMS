@@ -24,5 +24,24 @@ namespace HRMS.Models.ViewModels
 
         // UPCOMING
         public List<Employee> UpcomingBirthdays { get; set; }
+
+        public int MonthWorkingDays { get; set; }
+        public int MonthPresentDays { get; set; }
+        public int MonthAttendancePercent { get; set; }
+
+        public int SelectedMonth { get; set; }
+        public int SelectedYear { get; set; }
+        public int WorkingDays { get; set; }
+
+
+        public int PresentDays { get; set; }
+        public int AbsentDays { get; set; }
+        public int LeaveDays { get; set; }
+        public int HolidayDays { get; set; }
+
+        public List<Employee> TodaysBirthdays { get; set; } = new();
+        public List<Employee> TomorrowsBirthdays { get; set; } = new();
+
+
     }
 }

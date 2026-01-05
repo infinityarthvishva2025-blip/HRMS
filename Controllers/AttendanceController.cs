@@ -46,7 +46,7 @@ namespace HRMS.Controllers
             // =========================
             const double officeLat = 18.534202;
             const double officeLng = 73.839556;
-            const double radiusMeters = 2500;
+            const double radiusMeters = 5000;
 
             double distance = GeoHelper.DistanceInMeters(
                 officeLat, officeLng,
@@ -143,7 +143,7 @@ namespace HRMS.Controllers
             // =========================
             const double officeLat = 18.534202;
             const double officeLng = 73.839556;
-            const double radiusMeters = 2500;
+            const double radiusMeters = 5000;
 
             double distance = GeoHelper.DistanceInMeters(
                 officeLat, officeLng,
@@ -721,7 +721,13 @@ namespace HRMS.Controllers
 
         public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status)
         {
-            var attendance = _context.Attendances.AsQueryable();
+            var attendance =
+    from a in _context.Attendances
+    join e in _context.Employees
+        on a.Emp_Code equals e.EmployeeCode
+    where e.Status == "Active"
+    select a;
+
 
             // ---------------------------------------------
             // 1️⃣ DEFAULT → SHOW ONLY TODAY
