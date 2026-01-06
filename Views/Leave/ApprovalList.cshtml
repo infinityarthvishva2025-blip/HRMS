@@ -1,4 +1,396 @@
-﻿
+﻿@model IEnumerable<HRMS.Models.Leave>
+
+@{
+    ViewData["Title"] = "Leave Approvals";
+    Layout = "~/Views/Shared/_HRLayout.cshtml";
+    var userRole = ViewBag.UserRole as string;
+}
+
+<h3>Leave Approval</h3>
+<hr />
+
+<style>
+    /* ===== TABLE LAYOUT ===== */
+    .approval-table table {
+        width: 100%;
+        table-layout: fixed;
+        font-size: 14px;
+    }
+
+    .approval-table th {
+        background: #f8f9fa;
+        font-weight: 500;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .approval-table td {
+        vertical-align: middle;
+        word-wrap: break-word;
+        white-space: normal;
+    }
+
+        /* ===== COLUMN WIDTHS ===== */
+        .approval-table th:nth-child(1),
+        .approval-table td:nth-child(1) {
+            width: 180px;
+        }
+
+        .approval-table th:nth-child(2),
+        .approval-table td:nth-child(2) {
+            width: 70px;
+        }
+
+        .approval-table th:nth-child(3),
+        .approval-table td:nth-child(3) {
+            width: 80px;
+        }
+
+        .approval-table th:nth-child(4),
+        .approval-table td:nth-child(4),
+        .approval-table th:nth-child(5),
+        .approval-table td:nth-child(5) {
+            width: 85px;
+        }
+
+        .approval-table th:nth-child(6),
+        .approval-table td:nth-child(6) {
+            width: 40px;
+            text-align: center;
+        }
+
+        /* REASON COLUMN */
+        .approval-table th:nth-child(7),
+        .approval-table td:nth-child(7) {
+            width: 250px;
+        }
+
+        /* STATUS */
+        .approval-table th:nth-child(8),
+        .approval-table td:nth-child(8) {
+            width: 110px;
+            font-size: 13px;
+        }
+
+        /* REMARK */
+        .approval-table th:nth-child(9),
+        .approval-table td:nth-child(9) {
+            width: 140px;
+        }
+
+        /* ACTIONS */
+        .approval-table th:nth-child(10),
+        .approval-table td:nth-child(10) {
+            width: 130px;
+            text-align: center;
+        }
+
+    /* ===== STATUS BOX ===== */
+    .status-box {
+        font-size: 13px;
+        line-height: 1.4;
+    }
+
+    /* ===== ACTION BUTTONS ===== */
+    .action-btns {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+        .action-btns a {
+            min-width: 70px;
+        }
+
+    /* ===== MOBILE ===== */
+    @@media (max-width: 768px) {
+        .approval-table table {
+            font-size: 13px;
+        }
+
+        .approval-table th:nth-child(7),
+        .approval-table td:nth-child(7) {
+            width: auto;
+        }
+    }
+</style>
+
+<div id="approval-table-container">
+
+    <!-- 🔢 COUNTER CARDS -->
+    <div class="row mt-4">
+        @if (userRole == "GM")
+        {
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm">
+                    <h6>Pending Approvals</h6>
+                    <h3 class="text-primary">@ViewBag.ManagerPending</h3>
+                </div>
+            </div>
+        }
+
+        @if (userRole == "HR")
+        {
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm">
+                    <h6>HR Pending</h6>
+                    <h3 class="text-warning">@ViewBag.HrPending</h3>
+                </div>
+            </div>
+        }
+
+        @if (userRole == "VP")
+        {
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm">
+                    <h6>VP Pending</h6>
+                    <h3 class="text-info">@ViewBag.VpPending</h3>
+                </div>
+            </div>
+        }
+
+        @if (userRole == "Director")
+        {
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm">
+                    <h6>Director Pending</h6>
+                    <h3 class="text-danger">@ViewBag.DirectorPending</h3>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- 🔍 SEARCH -->
+    <div class="d-flex justify-content-end mb-2">
+        <input type="text"
+               id="tableSearch"
+               class="form-control w-25"
+               placeholder="Search employee / reason..." />
+    </div>
+
+    <!-- 📋 TABLE -->
+    <div class="approval-table">
+        <table class="table table-bordered table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Category</th>
+                    <th>Leave Type</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Days</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Remark</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="tableBody">
+                @foreach (var l in Model)
+                {
+                    var empCode = l.Employee?.EmployeeCode ?? "-";
+                    var empName = l.Employee?.Name ?? "-";
+                    var empRole = l.Employee?.Role ?? "Employee";
+
+                    <tr>
+                        <td>@($"{empCode} - {empName}")</td>
+                        <td>@l.Category</td>
+                        <td>@l.LeaveType</td>
+                        <td>@l.StartDate.ToString("dd-MM-yyyy")</td>
+                        <td>@(l.EndDate?.ToString("dd-MM-yyyy") ?? "N/A")</td>
+                        <td>@l.TotalDays</td>
+                        <td>@l.Reason</td>
+
+                        <td>
+                            <div class="status-box">
+                                @if (empRole == "Employee")
+                                {
+                                    <strong>HR:</strong> 
+                                    @(l.HrStatus ?? "Pending")
+                            
+                                    <br />
+                                    <strong>GM:</strong>
+ 
+                                    @(l.ManagerStatus ?? "Pending")
+                            
+                                    <br />
+                                    <strong>VP:</strong>
+ 
+                                    @(l.VpStatus ?? "Pending")
+                                }
+                                else if (empRole == "HR")
+                                {
+                                    <strong>GM:</strong> 
+                                    @(l.ManagerStatus ?? "Pending")
+                            
+                                    <br />
+                                    <strong>VP:</strong>
+ 
+                                    @(l.VpStatus ?? "Pending")
+                            
+                                    <br />
+                                    <strong>Dir:</strong>
+ 
+                                    @(l.DirectorStatus ?? "Pending")
+                                }
+                                else if (empRole == "GM")
+                                {
+                                    <strong>VP:</strong> 
+                                    @(l.VpStatus ?? "Pending")
+                            
+                                    <br />
+                                    <strong>Dir:</strong>
+ 
+                                    @(l.DirectorStatus ?? "Pending")
+                                }
+                                else if (empRole == "VP")
+                                {
+                                    <strong>Dir:</strong> 
+                                    @(l.DirectorStatus ?? "Pending")
+                                }
+                                else
+                                {
+                                    <strong>HR:</strong> 
+                                    @(l.HrStatus ?? "Pending")
+                            
+                                    <br />
+                                    <strong>GM:</strong>
+ 
+                                    @(l.ManagerStatus ?? "Pending")
+                            
+                                    <br />
+                                    <strong>VP:</strong>
+ 
+                                    @(l.VpStatus ?? "Pending")
+                            
+                                    <br />
+                                    <strong>Dir:</strong>
+ 
+                                    @(l.DirectorStatus ?? "Pending")
+                                }
+                            </div>
+                        </td>
+
+                        <td>
+                            <input class="form-control" id="remark-@l.Id" />
+                        </td>
+
+                        <td>
+                            <div class="action-btns">
+                                <!-- APPROVE (NO CHANGE) -->
+                                <a href="/Leave/@ViewBag.ApproveAction?id=@l.Id&approve=true&remark="
+                                   class="btn btn-success btn-sm">Approve</a>
+
+                                <!-- REJECT (MANDATORY REMARK) -->
+                                <a href="javascript:void(0);"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="handleReject(@l.Id, '@ViewBag.ApproveAction')">
+                                    Reject
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- PAGINATION -->
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <span id="pageInfo" class="text-muted"></span>
+    <nav>
+        <ul class="pagination mb-0" id="pagination"></ul>
+    </nav>
+</div>
+
+<!-- 🔢 SEARCH + PAGINATION -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const rowsPerPage = 10;
+        const tableBody = document.getElementById("tableBody");
+        const searchInput = document.getElementById("tableSearch");
+        const pagination = document.getElementById("pagination");
+        const pageInfo = document.getElementById("pageInfo");
+
+        const allRows = Array.from(tableBody.querySelectorAll("tr"));
+        let filteredRows = [...allRows];
+        let currentPage = 1;
+
+        function filterRows() {
+            const q = searchInput.value.toLowerCase().trim();
+            filteredRows = q === ""
+                ? [...allRows]
+                : allRows.filter(r => r.innerText.toLowerCase().includes(q));
+            currentPage = 1;
+            paginate();
+        }
+
+        function paginate() {
+            const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+            allRows.forEach(r => r.style.display = "none");
+
+            filteredRows.forEach((r, i) => {
+                if (i >= (currentPage - 1) * rowsPerPage &&
+                    i < currentPage * rowsPerPage) {
+                    r.style.display = "";
+                }
+            });
+
+            pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            pagination.innerHTML = "";
+
+            const prev = document.createElement("li");
+            prev.className = "page-item " + (currentPage === 1 ? "disabled" : "");
+            prev.innerHTML = `<a class="page-link">&lsaquo;</a>`;
+            prev.onclick = () => { if (currentPage > 1) { currentPage--; paginate(); } };
+            pagination.appendChild(prev);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement("li");
+                li.className = "page-item " + (i === currentPage ? "active" : "");
+                li.innerHTML = `<a class="page-link">${i}</a>`;
+                li.onclick = () => { currentPage = i; paginate(); };
+                pagination.appendChild(li);
+            }
+
+            const next = document.createElement("li");
+            next.className = "page-item " + (currentPage === totalPages ? "disabled" : "");
+            next.innerHTML = `<a class="page-link">&rsaquo;</a>`;
+            next.onclick = () => { if (currentPage < totalPages) { currentPage++; paginate(); } };
+            pagination.appendChild(next);
+        }
+
+        searchInput.addEventListener("keyup", filterRows);
+        paginate();
+    });
+</script>
+
+<!-- ❌ REJECT VALIDATION -->
+<script>
+    function handleReject(leaveId, actionName) {
+        const remarkInput = document.getElementById("remark-" + leaveId);
+        const remark = remarkInput.value.trim();
+
+        if (remark === "") {
+            alert("Remark is mandatory for rejecting a leave request.");
+            remarkInput.focus();
+            return;
+        }
+
+        const encodedRemark = encodeURIComponent(remark);
+        window.location.href = `/Leave/${actionName}?id=${leaveId}&approve=false&remark=${encodedRemark}`;
+    }
+</script>
+
+@* 
 
 @model IEnumerable<HRMS.Models.Leave>
 @{
@@ -16,7 +408,7 @@
 
 <div class="row mt-4">
    
-    @if (userRole == "Manager")
+    @if (userRole == "GM")
     {
         <div class="col-md-3">
             <div class="card p-3 shadow-sm">
@@ -278,3 +670,4 @@
 
 
 
+ *@

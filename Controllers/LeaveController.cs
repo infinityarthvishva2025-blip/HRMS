@@ -147,6 +147,7 @@ namespace HRMS.Controllers
                 case "VP":
                     model.ManagerStatus = "Approved";
                     model.HrStatus = "Approved";
+                    model.VpStatus = "Approved";
                     model.CurrentApproverRole = "VP";
                     model.NextApproverRole = "Director";
                     break;
@@ -184,7 +185,7 @@ namespace HRMS.Controllers
             // Update status
             switch (role)
             {
-                case "Manager":
+                case "GM":
                     leave.ManagerStatus = approve ? "Approved" : "Rejected";
                     break;
                 case "HR":
@@ -286,7 +287,7 @@ namespace HRMS.Controllers
         // -------------------- APPROVAL ENDPOINTS --------------------
         public async Task<IActionResult> ManagerApprove(int id, bool approve, string remark)
         {
-            await ProcessApproval(id, "Manager", approve, remark);
+            await ProcessApproval(id, "GM", approve, remark);
             return RedirectToAction("ManagerApprovalList");
         }
 
@@ -383,7 +384,7 @@ namespace HRMS.Controllers
             int count = emp.Role switch
             {
                 "HR" => await _context.Leaves.CountAsync(l => l.HrStatus == "Pending" && l.CurrentApproverRole == emp.Role),
-                "Manager" => await _context.Leaves.CountAsync(l => l.ManagerStatus == "Pending" && l.HrStatus == "Approved"),
+                "GM" => await _context.Leaves.CountAsync(l => l.ManagerStatus == "Pending" && l.HrStatus == "Approved"),
                 "VP" => await _context.Leaves.CountAsync(l => l.ManagerStatus == "Approved" && l.HrStatus == "Approved" && l.VpStatus == "Pending"),
                 "Director" => await _context.Leaves.CountAsync(l =>
                                 l.ManagerStatus == "Approved" &&
@@ -430,7 +431,7 @@ namespace HRMS.Controllers
                 .OrderBy(l => l.CreatedOn)
                 .ToListAsync();
 
-            ViewData["ApproverRole"] = "Manager";
+            ViewData["ApproverRole"] = "GM";
             ViewData["ApproveAction"] = "ManagerApprove";
 
             return View("ApprovalList", pending);
@@ -524,7 +525,7 @@ namespace HRMS.Controllers
                     // show all for manager (you can restrict to team if you have ManagerId)
                     break;
 
-                case "Manager":
+                case "GM":
                     query = query.Where(l => l.ManagerStatus == "Approved");
                     break;
 
@@ -577,8 +578,11 @@ namespace HRMS.Controllers
 
             var pendingDirector = await _context.Leaves.CountAsync(l =>
                 l.HrStatus == "Approved" && l.ManagerStatus == "Approved" &&
-                l.DirectorStatus == "Pending");
+               l.VpStatus == "Approved" && l.DirectorStatus == "Pending");
 
+            var VPPending= await _context.Leaves.CountAsync(l =>
+                l.HrStatus == "Approved" && l.ManagerStatus == "Approved" &&
+                l.VpStatus == "Pending");
             var totalThisMonth = await _context.Leaves.CountAsync(l =>
                 l.StartDate >= startOfMonth && l.StartDate <= now);
 
@@ -588,10 +592,10 @@ namespace HRMS.Controllers
             ViewBag.TotalThisMonth = totalThisMonth;
 
             var leaves = await _context.Leaves
-                .Where(l =>
-                    l.HrStatus == "Pending" ||
-                    l.ManagerStatus == "Pending" ||
-                    l.DirectorStatus == "Pending")
+                //.Where(l =>
+                //    l.HrStatus == "Pending" ||
+                //    l.ManagerStatus == "Pending" ||
+                //    l.DirectorStatus == "Pending")
                 .Include(l => l.Employee)      // ⭐ REQUIRED
                 .OrderByDescending(l => l.CreatedOn)
                 .ToListAsync();
