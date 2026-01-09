@@ -11,33 +11,33 @@ namespace HRMS.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "BankAccountNumber",
-                table: "Payroll");
+            //migrationBuilder.DropColumn(
+            //    name: "BankAccountNumber",
+            //    table: "Payroll");
 
-            migrationBuilder.DropColumn(
-                name: "BankName",
-                table: "Payroll");
+            //migrationBuilder.DropColumn(
+            //    name: "BankName",
+            //    table: "Payroll");
 
             migrationBuilder.DropColumn(
                 name: "Base_Salary",
                 table: "Payroll");
 
-            migrationBuilder.DropColumn(
-                name: "DateOfJoining",
-                table: "Payroll");
+            //migrationBuilder.DropColumn(
+            //    name: "DateOfJoining",
+            //    table: "Payroll");
 
             migrationBuilder.DropColumn(
                 name: "Day_Presented",
                 table: "Payroll");
 
-            migrationBuilder.DropColumn(
-                name: "Days_Attended",
-                table: "Payroll");
+            //migrationBuilder.DropColumn(
+            //    name: "Days_Attended",
+            //    table: "Payroll");
 
-            migrationBuilder.DropColumn(
-                name: "Designation",
-                table: "Payroll");
+            //migrationBuilder.DropColumn(
+            //    name: "Designation",
+            //    table: "Payroll");
 
             migrationBuilder.DropColumn(
                 name: "Emp_Code",
@@ -59,9 +59,9 @@ namespace HRMS.Migrations
                 name: "Late_Marks",
                 table: "Payroll");
 
-            migrationBuilder.DropColumn(
-                name: "MonthYear",
-                table: "Payroll");
+            //migrationBuilder.DropColumn(
+            //    name: "MonthYear",
+            //    table: "Payroll");
 
             migrationBuilder.DropColumn(
                 name: "Name",
@@ -75,9 +75,9 @@ namespace HRMS.Migrations
                 name: "Other_Allowance",
                 table: "Payroll");
 
-            migrationBuilder.DropColumn(
-                name: "PAN",
-                table: "Payroll");
+            //migrationBuilder.DropColumn(
+            //    name: "PAN",
+            //    table: "Payroll");
 
             migrationBuilder.DropColumn(
                 name: "Paid_Days",
@@ -103,10 +103,10 @@ namespace HRMS.Migrations
                 name: "Total_Deduction",
                 table: "Payroll");
 
-            migrationBuilder.RenameColumn(
-                name: "Working_Days",
-                table: "Payroll",
-                newName: "Year");
+            //migrationBuilder.RenameColumn(
+            //    name: "Working_Days",
+            //    table: "Payroll",
+            //    newName: "Year");
 
             migrationBuilder.RenameColumn(
                 name: "Total_Pay",
@@ -174,11 +174,11 @@ namespace HRMS.Migrations
                 nullable: false,
                 defaultValue: 0m);
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "DateOfJoining",
-                table: "Payroll",
-                type: "datetime2",
-                nullable: true);
+            //migrationBuilder.AddColumn<DateTime>(
+            //    name: "DateOfJoining",
+            //    table: "Payroll",
+            //    type: "datetime2",
+            //    nullable: true);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "Day_Presented",

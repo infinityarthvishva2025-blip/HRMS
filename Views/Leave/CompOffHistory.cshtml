@@ -1,0 +1,43 @@
+﻿@model List<HRMS.Models.CompOffLedger>
+
+@{
+    ViewData["Title"] = "Comp-Off History";
+}
+
+<div class="container mt-3">
+    <h3>Comp-Off History</h3>
+    <p><b>Active Balance:</b> @ViewBag.CompOffBalance</p>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Earned Date</th>
+                <th>Expiry Date</th>
+                <th>Status</th>
+                <th>Used Date</th>
+                <th>Leave Id</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Count > 0)
+            {
+                foreach (var row in Model)
+                {
+                    <tr>
+                        <td>@row.EarnedDate.ToString("dd-MMM-yyyy")</td>
+                        <td>@row.ExpiryDate.ToString("dd-MMM-yyyy")</td>
+                        <td>@row.Status</td>
+                        <td>@(row.UsedDate.HasValue? row.UsedDate.Value.ToString("dd-MMM-yyyy") : "-")</td>
+                        <td>@(row.UsedLeaveId.HasValue? row.UsedLeaveId.Value.ToString() : "-")</td>
+                        <td>@row.Remarks</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="6" class="text-center">No Comp-Off history found.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>

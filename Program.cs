@@ -47,6 +47,8 @@ builder.Services.AddScoped<INotificationService, EmailNotificationService>();
 builder.Services.AddScoped<PayslipEmailService>();
 
 builder.Services.AddScoped<PayrollService>();
+builder.Services.AddScoped<ICompOffService, CompOffService>();
+builder.Services.AddHostedService<CompOffExpiryHostedService>();
 
 
 // SESSION

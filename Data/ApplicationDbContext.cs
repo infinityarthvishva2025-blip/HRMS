@@ -57,6 +57,7 @@ namespace HRMS.Data
         public DbSet<Hr> Hrs { get; set; }
         public DbSet<GeoTag> GeoTags => Set<GeoTag>();
         public DbSet<Leave> LeaveResults { get; set; }
+        public DbSet<CompOffLedger> CompOffLedgers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

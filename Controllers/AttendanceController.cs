@@ -20,12 +20,23 @@ namespace HRMS.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AttendanceController> _logger;
-
-        public AttendanceController(ApplicationDbContext context, ILogger<AttendanceController> logger)
+        private readonly ICompOffService _compOff;
+        //public AttendanceController(ApplicationDbContext context, ILogger<AttendanceController> logger)
+        //{
+        //    _context = context;
+        //    _logger = logger;   
+        //}
+        public AttendanceController(
+    ApplicationDbContext context,
+    ICompOffService compOff,
+     ILogger<AttendanceController> logger
+)
         {
             _context = context;
-            _logger = logger;   
+            _compOff = compOff;
+            _logger = logger;
         }
+
         [HttpPost]
         public IActionResult GeoCheckOut([FromBody] GeoAttendanceVm vm)
         {
@@ -101,7 +112,7 @@ namespace HRMS.Controllers
                 }
 
                 // 🔁 AUTO COMP-OFF (HO / WO)
-                TryAutoCompOff(att);
+               // TryAutoCompOff(att);
 
                 _context.SaveChanges();
                 return Ok(new { success = true });
@@ -117,16 +128,14 @@ namespace HRMS.Controllers
             HttpContext.Session.SetString("CheckoutLat", vm.Latitude.ToString());
             HttpContext.Session.SetString("CheckoutLng", vm.Longitude.ToString());
             // 🔁 AUTO COMP-OFF (HO / WO)
-            TryAutoCompOff(att);
+           // TryAutoCompOff(att);
+
             return Ok(new { redirect = "/DailyReport/Send" });
         }
 
 
-
-
-
         [HttpPost]
-        public IActionResult GeoCheckIn([FromBody] GeoAttendanceVm vm)
+        public async Task<IActionResult> GeoCheckIn([FromBody] GeoAttendanceVm vm)
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
             if (string.IsNullOrEmpty(empCode))
@@ -175,20 +184,92 @@ namespace HRMS.Controllers
             att.CheckInLatitude = vm.Latitude;
             att.CheckInLongitude = vm.Longitude;
 
-            // Optional safety defaults (if newly created)
-            //att.Status ??= "P";
-
             att.Status = "P";
             att.CorrectionRequested = false;
             att.CorrectionStatus ??= "None";
+
+            // =====================================================
+            // ✅ COMP-OFF CREDIT (SUNDAY / HOLIDAY)
+            // =====================================================
+            // ⚠️ DO NOT MOVE ABOVE Status = "P"
+            await _compOff.CreditCompOffIfApplicableAsync(
+     employee.Id,
+     today,
+     "Geo Check-in Present"
+ );
+            // =====================================================
 
             _context.SaveChanges();
 
             return Ok(new { success = true });
         }
 
-        
-        
+
+
+        //[HttpPost]
+        //public IActionResult GeoCheckIn([FromBody] GeoAttendanceVm vm)
+        //{
+        //    string empCode = HttpContext.Session.GetString("EmpCode");
+        //    if (string.IsNullOrEmpty(empCode))
+        //        return Unauthorized("Session expired");
+
+        //    var employee = _context.Employees
+        //        .FirstOrDefault(e => e.EmployeeCode == empCode);
+
+        //    if (employee == null)
+        //        return Unauthorized();
+
+        //    // =========================
+        //    // 📍 OFFICE GEOFENCE
+        //    // =========================
+        //    const double officeLat = 18.534202;
+        //    const double officeLng = 73.839556;
+        //    const double radiusMeters = 5000;
+
+        //    double distance = GeoHelper.DistanceInMeters(
+        //        officeLat, officeLng,
+        //        vm.Latitude, vm.Longitude
+        //    );
+
+        //    if (distance > radiusMeters)
+        //        return BadRequest(
+        //            $"You are outside office premises ({Math.Round(distance)} meters)");
+
+        //    DateTime today = DateTime.Today;
+
+        //    // =====================================================
+        //    // 🔹 GET OR CREATE ATTENDANCE (NO DUPLICATES)
+        //    // =====================================================
+        //    var att = GetOrCreateTodayAttendance(empCode, employee.Id, today);
+
+        //    // ❌ BLOCK DOUBLE CHECK-IN
+        //    if (att.InTime != null)
+        //        return BadRequest("Already checked in today");
+
+        //    // =====================================================
+        //    // ✅ UPDATE ATTENDANCE
+        //    // =====================================================
+        //    att.InTime = DateTime.Now.TimeOfDay;
+        //    att.Att_Date = DateTime.Now;
+        //    att.IsGeoAttendance = true;
+
+        //    att.CheckInLatitude = vm.Latitude;
+        //    att.CheckInLongitude = vm.Longitude;
+
+        //    // Optional safety defaults (if newly created)
+        //    //att.Status ??= "P";
+
+        //    att.Status = "P";
+        //    att.CorrectionRequested = false;
+        //    att.CorrectionStatus ??= "None";
+
+        //    _context.SaveChanges();
+
+        //    return Ok(new { success = true });
+        //}
+
+
+
 
         //[HttpPost]
         //public IActionResult GeoCheckIn([FromBody] GeoAttendanceVm vm)
@@ -1662,6 +1743,7 @@ namespace HRMS.Controllers
             };
 
             _context.Attendances.Add(att);
+
             return att;
         }
 
