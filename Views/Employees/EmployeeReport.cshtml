@@ -1,0 +1,245 @@
+﻿@model List<Employee>
+
+@{
+    ViewData["Title"] = "Employee Report";
+    Layout = "~/Views/Shared/_HrLayout.cshtml";
+}
+
+<div class="container py-4">
+
+    <h3 class="fw-bold text-primary mb-4">
+        <i class="fa-solid fa-file-lines me-2"></i>
+        Employee Report (View Only)
+    </h3>
+
+    <!-- Filters -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <input id="searchInput"
+                   class="form-control"
+                   placeholder="Search by name, code, email" />
+        </div>
+
+        <div class="col-md-3">
+            <select id="statusFilter" class="form-select">
+                <option value="All">All</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <button class="btn btn-secondary w-100" onclick="resetFilters()">
+                <i class="fa-solid fa-rotate-left me-1"></i> Reset
+            </button>
+        </div>
+
+        <div class="col-md-3 text-end">
+            <button class="btn btn-success w-100" onclick="exportToExcel()">
+                <i class="fa-solid fa-file-excel me-1"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle" id="employeeTable">
+            <thead class="table-dark text-nowrap">
+                <tr>
+                    <th>Employee Code</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Position</th>
+                    <th>Mobile</th>
+                    <th>Joining</th>
+                    <th>Pan No</th>
+                    <th>Aadhar No</th>
+                    <th>Alt Mobile</th>
+                    <th>Gender</th>
+                    <th>Address</th>
+                    <th>Reporting Manager</th>
+                    <th>Bank</th>
+                    <th>Account No</th>
+                    <th>IFSC</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Model)
+                {
+                    <tr>
+                        <td>@e.EmployeeCode</td>
+                        <td>@e.Name</td>
+                        <td>@e.Email</td>
+                        <td>@e.Department</td>
+                        <td>@e.Position</td>
+                        <td>@e.MobileNumber</td>
+                        <td>@e.JoiningDate?.ToString("dd-MM-yyyy")</td>
+                        <td>@e.PanNumber</td>
+                        <td>@e.AadhaarNumber</td>
+                        <td>@e.AlternateMobileNumber</td>
+                        <td>@e.Gender</td>
+                        <td>@e.Address</td>
+                        <td>@e.ReportingManager</td>
+                        <td>@e.BankName</td>
+                        <td>@e.AccountNumber</td>
+                        <td>@e.IFSC</td>
+                        <td>
+                            <span class="badge @(e.Status == "Active" ? "bg-success" : "bg-danger")">
+                                @e.Status
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
+        <div class="mb-2 mb-md-0 fw-semibold" id="pageInfo"></div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+        </nav>
+    </div>
+
+</div>
+
+<!-- JS Enhancements -->
+<script>
+    const rowsPerPage = 10;
+    let currentPage = 1;
+
+    const tableBody = document.querySelector("#employeeTable tbody");
+    const allRows = Array.from(tableBody.querySelectorAll("tr"));
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+    const pagination = document.getElementById("pagination");
+    const pageInfo = document.getElementById("pageInfo");
+
+    function getFilteredRows() {
+        const search = searchInput.value.toLowerCase();
+        const status = statusFilter.value;
+
+        return allRows.filter(row => {
+            const text = row.innerText.toLowerCase();
+            const rowStatus = row.querySelector(".badge").innerText.trim();
+
+            return text.includes(search) &&
+                (status === "All" || rowStatus === status);
+        });
+    }
+
+    function renderTable() {
+        const filtered = getFilteredRows();
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+
+        tableBody.innerHTML = "";
+        filtered.slice(start, end).forEach(r => tableBody.appendChild(r));
+
+        renderPagination(filtered.length);
+    }
+
+    function renderPagination(totalRows) {
+        pagination.innerHTML = "";
+        const totalPages = Math.ceil(totalRows / rowsPerPage) || 1;
+
+        pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+
+        for (let i = 1; i <= totalPages; i++) {
+            const li = document.createElement("li");
+            li.className = `page-item ${i === currentPage ? "active" : ""}`;
+
+            const a = document.createElement("a");
+            a.className = "page-link";
+            a.href = "#";
+            a.innerText = i;
+
+            a.onclick = e => {
+                e.preventDefault();
+                currentPage = i;
+                renderTable();
+            };
+
+            li.appendChild(a);
+            pagination.appendChild(li);
+        }
+    }
+
+    function resetFilters() {
+        searchInput.value = "";
+        statusFilter.value = "All";
+        currentPage = 1;
+        renderTable();
+    }
+
+           function exportToExcel() {
+
+        const filteredRows = getFilteredRows(); // all rows, no pagination
+        let csv = [];
+
+        // Header
+        const headers = [
+            "Employee Code","Name","Email","Department","Position","Mobile",
+            "Joining","Pan No","Aadhar No","Alt Mobile","Gender","Address",
+            "Reporting Manager","Bank","Account No","IFSC","Status"
+        ];
+        csv.push(headers.join(","));
+
+        filteredRows.forEach(row => {
+
+            const tds = row.querySelectorAll("td");
+
+            const clean = (text) =>
+                `"${text.replace(/\n/g, " ").replace(/"/g, '""').trim()}"`;
+
+            const statusText = row.querySelector(".badge")?.innerText.trim() || "";
+
+            const rowData = [
+                clean(tds[0]?.innerText || ""),
+                clean(tds[1]?.innerText || ""),
+                clean(tds[2]?.innerText || ""),
+                clean(tds[3]?.innerText || ""),
+                clean(tds[4]?.innerText || ""),
+                clean(tds[5]?.innerText || ""),
+                clean(tds[6]?.innerText || ""),
+                clean(tds[7]?.innerText || ""),
+                clean(tds[8]?.innerText || ""),
+                clean(tds[9]?.innerText || ""),
+                clean(tds[10]?.innerText || ""),
+                clean(tds[11]?.innerText || ""),
+                clean(tds[12]?.innerText || ""),
+                clean(tds[13]?.innerText || ""),
+                clean(tds[14]?.innerText || ""),
+                clean(tds[15]?.innerText || ""),
+                clean(statusText) // ✅ FORCE status at last column
+            ];
+
+            csv.push(rowData.join(","));
+        });
+
+        const blob = new Blob([csv.join("\n")], {
+            type: "text/csv;charset=utf-8;"
+        });
+
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "Employee_Report_All_Records.csv";
+        link.click();
+    }
+
+
+    searchInput.addEventListener("input", () => {
+        currentPage = 1;
+        renderTable();
+    });
+
+    statusFilter.addEventListener("change", () => {
+        currentPage = 1;
+        renderTable();
+    });
+
+    renderTable();
+</script>

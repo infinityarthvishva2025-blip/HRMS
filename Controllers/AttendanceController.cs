@@ -802,6 +802,16 @@ namespace HRMS.Controllers
 
         public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status)
         {
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            string userRole = "";
+
+            if (empId.HasValue)
+            {
+                var emp = _context.Employees.FirstOrDefault(e => e.Id == empId.Value);
+                userRole = emp?.Role ?? "";
+            }
+
+            ViewBag.UserRole = userRole;
             var attendance =
     from a in _context.Attendances
     join e in _context.Employees
@@ -908,8 +918,21 @@ namespace HRMS.Controllers
             ViewBag.Status = status;
 
             ViewBag.EmployeeList = _context.Employees.ToList();
-            ViewBag.PendingRequests = _context.Attendances
-                .Count(a => a.CorrectionRequested == true && a.CorrectionStatus == "Pending");
+
+            //ViewBag.PendingRequests = _context.Attendances
+            //    .Count(a => a.CorrectionRequested == true && a.CorrectionStatus == "Pending");
+            if (userRole == "HR" || userRole == "GM" || userRole == "VP" || userRole == "Director")
+            {
+                ViewBag.PendingRequests = _context.Attendances.Count(a =>
+                    a.CorrectionRequested == true &&
+                    a.CorrectionStatus == "Pending" &&
+                    a.PendingWithRole == userRole
+                );
+            }
+            else
+            {
+                ViewBag.PendingRequests = 0;
+            }
 
             return View(list);
         }
@@ -1041,16 +1064,13 @@ namespace HRMS.Controllers
         }
 
 
-
-
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RequestCorrection(
-    string token,
-    string CorrectionRemark,
-    int employeeId,
-    IFormFile ProofFile)
+            string token,
+            string CorrectionRemark,
+            int employeeId,
+            IFormFile ProofFile)
         {
             // -------------------------------
             // 1️⃣ Validate Token
@@ -1071,14 +1091,16 @@ namespace HRMS.Controllers
             // 2️⃣ Validate Session
             // -------------------------------
             var empId = HttpContext.Session.GetInt32("EmployeeId");
-            if (!empId.HasValue)
+            var userRole = HttpContext.Session.GetString("Role");
+
+            if (!empId.HasValue || string.IsNullOrEmpty(userRole))
                 return RedirectToAction("Login", "Account");
 
             // -------------------------------
             // 3️⃣ Get Attendance Record
             // -------------------------------
-            var att = _context.Attendances
-                .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == date);
+            var att = await _context.Attendances
+                .FirstOrDefaultAsync(a => a.Emp_Code == empCode && a.Date == date);
 
             if (att == null)
                 return RedirectToAction("EmployeeSummary", new { employeeId });
@@ -1097,7 +1119,6 @@ namespace HRMS.Controllers
             // -------------------------------
             if (ProofFile != null && ProofFile.Length > 0)
             {
-                // 🔥 Physical path (OUTSIDE wwwroot)
                 var uploadsFolder = @"C:\HRMSFiles\correction-proofs";
                 Directory.CreateDirectory(uploadsFolder);
 
@@ -1109,30 +1130,48 @@ namespace HRMS.Controllers
                     await ProofFile.CopyToAsync(stream);
                 }
 
-                // ✅ Store logical path in DB
                 att.CorrectionProofPath = $"correction-proofs/{fileName}";
             }
 
             // -------------------------------
-            // 6️⃣ Update Correction Fields
+            // 6️⃣ ROLE-BASED APPROVAL FLOW 🔥
+            // -------------------------------
+            string requestedByRole = userRole;
+            string? pendingWithRole = userRole switch
+            {
+                "Employee" => "HR",
+                "HR" => "GM",
+                "GM" => "VP",
+                "VP" => "Director",
+                _ => null
+            };
+
+            if (pendingWithRole == null)
+            {
+                TempData["Error"] = "You are not authorized to request correction.";
+                return RedirectToAction("EmployeeSummary", new { employeeId });
+            }
+
+            // -------------------------------
+            // 7️⃣ Update Correction Fields
             // -------------------------------
             att.CorrectionRequested = true;
             att.CorrectionRemark = CorrectionRemark;
             att.CorrectionStatus = "Pending";
             att.CorrectionRequestedOn = DateTime.Now;
 
+            att.RequestedByRole = requestedByRole;
+            att.PendingWithRole = pendingWithRole;
+
             // -------------------------------
-            // 7️⃣ Save Changes
+            // 8️⃣ Save Changes
             // -------------------------------
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Correction request submitted successfully.";
+            TempData["Success"] = $"Correction request submitted and sent to {pendingWithRole}.";
 
             return RedirectToAction("EmployeeSummary", new { employeeId });
         }
-
-
-
 
         [HttpGet]
         public async Task<IActionResult> CorrectionRequests()
@@ -1142,18 +1181,27 @@ namespace HRMS.Controllers
             if (!empId.HasValue)
                 return RedirectToAction("Login", "Account");
 
-            // 🔹 Await FindAsync (NOW VALID)
             var emp = await _context.Employees.FindAsync(empId.Value);
-
             if (emp == null)
                 return RedirectToAction("Login", "Account");
 
-            // 🔹 SAFE string cast
-            ViewBag.UserRole = emp.Role?.ToString();
+            string role = emp.Role ?? "";
 
-            // 🔹 Get pending correction requests
+            ViewBag.UserRole = role;
+
+            // 🔐 Allow only approval roles
+            if (role != "HR" && role != "GM" && role != "VP" && role != "Director")
+            {
+                return Unauthorized();
+            }
+
+            // ✅ ROLE-WISE FILTER (🔥 MAIN FIX)
             var pending = await _context.Attendances
-                .Where(a => a.CorrectionRequested == true)
+                .Where(a =>
+                    a.CorrectionRequested == true &&
+                    a.CorrectionStatus == "Pending" &&
+                    a.PendingWithRole == role
+                )
                 .OrderByDescending(a => a.Date)
                 .ToListAsync();
 

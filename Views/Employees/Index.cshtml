@@ -244,9 +244,9 @@
                     <select id="statusFilter" class="form-select"
                             onchange="filterStatus()">
 
-                        <option value="All">All Employees</option>
-                        <option value="Active">Active Employees</option>
-                        <option value="Inactive">Inactive Employees</option>
+                        <option value="All">All</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
                     </select>
                 </div>
 
@@ -255,7 +255,12 @@
                         <i class="fa-solid fa-user-plus me-1"></i> Add New Employee
                     </a>
 
-                    <a class="btn btn-info text-white" asp-action="ExportExcel">
+                    @* <a class="btn btn-info text-white" asp-action="ExportExcel">
+                        <i class="fa-solid fa-file-excel me-1"></i> Export to Excel
+                    </a> *@
+                    <a href="javascript:void(0)"
+                       class="btn btn-info text-white"
+                       onclick="exportExcel()">
                         <i class="fa-solid fa-file-excel me-1"></i> Export to Excel
                     </a>
                 </div>
@@ -281,6 +286,8 @@
                             <th>Email</th>
                             <th>Department</th>
                             <th>Position</th>
+                            <th>Mobile No</th>
+                            <th>Joining Date</th>
                             <th class="text-center" style="width:180px;">Actions</th>
                             <th>Status</th>
                         </tr>
@@ -304,7 +311,11 @@
                                 <td data-label="Email">@emp.Email</td>
                                 <td data-label="Department">@emp.Department</td>
                                 <td data-label="Position">@emp.Position</td>
-
+                                <td data-label="MobileNumber">@emp.MobileNumber</td>
+                                @* <td data-label="JoiningDate">@emp.JoiningDate</td> *@
+                                <td>
+                                    @(emp.JoiningDate?.ToString("dd-MM-yyyy") ?? "")
+                                </td>
                                 <td data-label="Actions" class="text-center">
                                     <a asp-action="Details"
                                        class="btn btn-sm btn-primary me-1"
@@ -582,7 +593,11 @@
                 document.getElementById("modalReason").value = "";
             }
         }
-
+        function exportExcel() {
+            debugger;
+             let selectedStatus = document.getElementById("statusFilter").value;
+            window.location.href = '/Employees/ExportExcel?status=' + selectedStatus;
+        }
     </script>
 
 }

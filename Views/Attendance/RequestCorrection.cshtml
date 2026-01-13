@@ -9,7 +9,7 @@
 
 <div class="container correction-container">
 
-    <div class="row justify-content-center align-items-center min-vh-100">
+    <div class="row justify-content-center align-items-center ">
         <div class="col-12 col-sm-10 col-md-8 col-lg-6">
 
             <div class="card correction-card shadow-sm border-0">
@@ -20,13 +20,13 @@
 
                 <div class="card-body">
 
-                  @*   <form method="post"
+                    @*   <form method="post"
                           asp-action="RequestCorrection"
                           asp-controller="Attendance"> *@
-<form method="post"
-      asp-action="RequestCorrection"
-      asp-controller="Attendance"
-      enctype="multipart/form-data">
+                    <form method="post"
+                          asp-action="RequestCorrection"
+                          asp-controller="Attendance"
+                          enctype="multipart/form-data">
 
                         @Html.AntiForgeryToken()
 
@@ -36,25 +36,25 @@
                         <!-- 🔁 Redirect helper -->
                         <input type="hidden" name="employeeId" value="@ViewBag.EmployeeId" />
 
-    <div class="mb-3">
-        <label class="fw-bold">Why do you want correction?</label>
-        <textarea name="CorrectionRemark" class="form-control" rows="4" required></textarea>
-    </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Why do you want correction?</label>
+                            <textarea name="CorrectionRemark" class="form-control" rows="4" required></textarea>
+                        </div>
 
-    <!-- ✅ NEW: PROOF UPLOAD -->
-    <div class="mb-3">
-        <label class="fw-bold">Upload Proof (optional)</label>
-        <input type="file"
-               name="ProofFile"
-               class="form-control"
-               accept=".jpg,.jpeg,.png,.pdf" />
-        <small class="text-muted">
-            Allowed: JPG, PNG, PDF
-        </small>
-    </div>
+                        <!-- ✅ NEW: PROOF UPLOAD -->
+                        <div class="mb-3">
+                            <label class="fw-bold">Upload Proof (optional)</label>
+                            <input type="file"
+                                   name="ProofFile"
+                                   class="form-control"
+                                   accept=".jpg,.jpeg,.png,.pdf" />
+                            <small class="text-muted">
+                                Allowed: JPG, PNG, PDF
+                            </small>
+                        </div>
 
-                        <div class="d-grid mt-3">
-                            <button type="submit" class="btn btn-primary btn-submit">
+                        <div class="col-md-12 mt-3 text-center">
+                            <button type="submit" class="btn btn-primary btn-submit col-md-4">
                                 <i class="fa-solid fa-paper-plane me-1"></i>
                                 Submit Request
                             </button>

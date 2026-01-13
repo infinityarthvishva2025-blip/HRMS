@@ -30,7 +30,8 @@ public class ResignationController : Controller
 
         var today = DateTime.Today;
 
-        bool confirmed = (today - emp.JoiningDate.Value).TotalDays >= 90;
+        // bool confirmed = (today - emp.JoiningDate.Value).TotalDays >= 90;
+        bool confirmed = (today - emp.JoiningDate.Value).TotalDays >= 0;
         int notice = confirmed ? 30 : 0;
 
         var vm = new ResignationApplyVM

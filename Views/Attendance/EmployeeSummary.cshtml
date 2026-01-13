@@ -15,6 +15,202 @@
         Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
     }
 
+    bool isHrUser = role == "HR" || role == "VP" || role == "GM" || role == "Director";
+}
+
+<div class="container py-4">
+    <h2 class="fw-bold text-primary mb-4">
+        Attendance Summary — @Model.Employee.Name (@Model.Employee.EmployeeCode)
+    </h2>
+
+    <!-- FILTER -->
+    <form method="get" asp-action="EmployeeSummary" class="row g-3 mb-4">
+        <input type="hidden" name="employeeId" value="@Model.Employee.Id" />
+
+        <div class="col-md-4">
+            <label class="form-label fw-bold">From Date</label>
+            <input type="date" name="from" class="form-control"
+                   value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label fw-bold">To Date</label>
+            <input type="date" name="to" class="form-control"
+                   value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+        </div>
+
+        <div class="col-md-4 d-flex align-items-end">
+            <button class="btn btn-primary w-100">
+                <i class="fa-solid fa-filter me-1"></i> Filter
+            </button>
+        </div>
+    </form>
+
+    <!-- TABLE -->
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Working Hours</th>
+                    <th>Status</th>
+                    <th>Correction</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var a in Model.AttendanceRecords)
+                {
+                    // =========================
+                    // ROLE FLOW
+                    // =========================
+                    string nextApprover = null;
+
+                    if (role == "Employee") nextApprover = "HR";
+                    else if (role == "HR") nextApprover = "GM";
+                    else if (role == "GM") nextApprover = "VP";
+                    else if (role == "VP") nextApprover = "Director";
+
+                    bool canRequest =
+                        role == "Employee" ||
+                        role == "HR" ||
+                        role == "GM" ||
+                        role == "VP";
+
+                    bool canResolve =
+                        (role == "HR" && a.CorrectionRequested && a.PendingWithRole == "HR") ||
+                        (role == "GM" && a.CorrectionRequested && a.PendingWithRole == "GM") ||
+                        (role == "VP" && a.CorrectionRequested && a.PendingWithRole == "VP") ||
+                        (role == "Director" && a.CorrectionRequested && a.PendingWithRole == "Director");
+
+                    string token = UrlEncryptionHelper.GenerateToken(
+                        a.Emp_Code,
+                        a.Date,
+                        expiryMinutes: 30
+                    );
+
+                    <tr>
+                        <td>@a.Date.ToString("dd-MM-yyyy")</td>
+                        <td>@(a.InTime?.ToString(@"hh\:mm") ?? "--")</td>
+                        <td>@(a.OutTime?.ToString(@"hh\:mm") ?? "--")</td>
+
+                        <td>
+                            @if (a.InTime.HasValue && a.OutTime.HasValue)
+                            {
+                                var diff = a.OutTime.Value - a.InTime.Value;
+                                @($"{diff.Hours}h {diff.Minutes}m")
+                            }
+                            else
+                            {
+                                <span>--</span>
+                            }
+                        </td>
+
+                        <!-- STATUS -->
+                        <td>
+                            @if (a.Status == "L")
+                            {
+                                <span class="badge bg-info">Leave</span>
+                            }
+                            else if (a.Status == "HO")
+                            {
+                                <span class="badge bg-info">Holiday</span>
+                            }
+                            else if (a.Date.DayOfWeek == DayOfWeek.Sunday)
+                            {
+                                <span class="badge bg-secondary">WO</span>
+                            }
+                            else if (a.InTime.HasValue && !a.OutTime.HasValue)
+                            {
+                                <span class="badge bg-warning text-dark">Not Checked Out</span>
+                            }
+                            else if (a.Status == "P" || a.Status == "WOP")
+                            {
+                                <span class="badge bg-success">Present</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Absent</span>
+                            }
+                        </td>
+
+                        <!-- CORRECTION -->
+                        <td>
+                            @if (a.CorrectionStatus == "Approved")
+                            {
+                                <span class="badge bg-success">Approved</span>
+                            }
+                            else if (a.CorrectionStatus == "Rejected")
+                            {
+                                <span class="badge bg-danger">Rejected</span>
+                            }
+                            else if (a.CorrectionStatus == "Pending")
+                            {
+                                <span class=" text-dark badge bg-info">
+                                    Pending 
+                                </span>
+                            }
+                            else if (canRequest)
+                            {
+                                <a asp-controller="Attendance"
+                                   asp-action="RequestCorrection"
+                                   asp-route-token="@token"
+                                   asp-route-employeeId="@Model.Employee.Id"
+                                   class="btn btn-warning btn-sm">
+                                    Request
+                                </a>
+                            }
+                            else if (canResolve)
+                            {
+                                <a asp-controller="Attendance"
+                                   asp-action="ResolveCorrection"
+                                   asp-route-token="@token"
+                                   class="btn btn-success btn-sm">
+                                    Resolve
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">N/A</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    table th, table td {
+        vertical-align: middle;
+    }
+
+    .badge {
+        font-size: 0.85rem;
+        padding: 6px 10px;
+    }
+</style>
+
+@* @model HRMS.Models.ViewModels.EmployeeAttendanceSummaryViewModel
+@using HRMS.Helpers
+
+@{
+    ViewData["Title"] = "Attendance Summary";
+
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+
     bool isHr = role == "HR" || role == "VP" || role == "GM" || role == "Director";
 }
 
@@ -122,7 +318,7 @@
 
                         <!-- CORRECTION LOGIC -->
                         <td>
-                            @* EMPLOYEE *@
+                            @* EMPLOYEE 
                             @if (!isHr)
                             {
                                 if (a.CorrectionStatus == "Approved")
@@ -156,7 +352,7 @@
                                 }
                             }
 
-                            @* HR *@
+                           
                             else if (canResolve)
                             {
                                 <a class="btn btn-success btn-sm"
@@ -194,3 +390,4 @@
         padding: 6px 10px;
     }
 </style>
+ *@

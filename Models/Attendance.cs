@@ -46,7 +46,9 @@ namespace HRMS.Models
         public double? CheckOutLatitude { get; set; }
         public double? CheckOutLongitude { get; set; }
         public bool IsCompOffCredited { get; set; } = false;
-
+        // ✅ ADD THESE TWO
+        public string? RequestedByRole { get; set; }
+        public string? PendingWithRole { get; set; }
     }
 
 }

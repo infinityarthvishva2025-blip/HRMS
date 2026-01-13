@@ -1,9 +1,11 @@
-﻿using HRMS.Data;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using HRMS.Data;
 using HRMS.Helpers;
 using HRMS.Models;
 using HRMS.Models.ViewModels;
 using HRMS.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -515,16 +517,53 @@ namespace HRMS.Controllers
         }
 
 
+        //public IActionResult ViewDocument(string empCode, string fileName)
+        //{
+        //    if (string.IsNullOrEmpty(empCode) || string.IsNullOrEmpty(fileName))
+        //        return NotFound();
+
+        //    string filePath = Path.Combine(FILE_ROOT, empCode, fileName);
+        //    if (!System.IO.File.Exists(filePath))
+        //        return NotFound();
+
+        //    return PhysicalFile(filePath, "application/octet-stream");
+        //}
+        [HttpGet]
         public IActionResult ViewDocument(string empCode, string fileName)
         {
             if (string.IsNullOrEmpty(empCode) || string.IsNullOrEmpty(fileName))
                 return NotFound();
 
-            string filePath = Path.Combine(FILE_ROOT, empCode, fileName);
+            var filePath = Path.Combine(FILE_ROOT, empCode, fileName);
+
             if (!System.IO.File.Exists(filePath))
                 return NotFound();
 
-            return PhysicalFile(filePath, "application/octet-stream");
+            var contentType = GetContentType(filePath);
+
+            // 🔥 KEY POINT: INLINE (VIEW IN BROWSER)
+            return PhysicalFile(filePath, contentType, enableRangeProcessing: true);
+        }
+
+        [HttpGet]
+        public IActionResult DownloadDocument(string empCode, string fileName)
+        {
+            if (string.IsNullOrEmpty(empCode) || string.IsNullOrEmpty(fileName))
+                return NotFound();
+
+            var filePath = Path.Combine(FILE_ROOT, empCode, fileName);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
+
+            var contentType = GetContentType(filePath);
+
+            // 🔥 KEY POINT: ATTACHMENT (FORCE DOWNLOAD)
+            return File(
+                System.IO.File.ReadAllBytes(filePath),
+                contentType,
+                fileName
+            );
         }
 
         [HttpPost, ActionName("Delete")]
@@ -779,27 +818,37 @@ namespace HRMS.Controllers
             return View(employee);   // You need Delete.cshtml view
         }
 
-       
-
-public IActionResult ExportExcel()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-
-        var employees = _context.Employees.ToList();
-
-        using (var package = new ExcelPackage())
+        public IActionResult ExportExcel(string status)
         {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            IQueryable<Employee> query = _context.Employees;
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                if (string.Equals(status, "Active", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(e => e.Status == "Active");
+                }
+                else if (string.Equals(status, "Inactive", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(e => e.Status == "Inactive");
+                }
+            }
+
+            var employees = query.ToList();
+
+            using var package = new ExcelPackage();
             var ws = package.Workbook.Worksheets.Add("Employees");
 
-            // HEADER
             ws.Cells[1, 1].Value = "Employee Code";
             ws.Cells[1, 2].Value = "Name";
             ws.Cells[1, 3].Value = "Email";
             ws.Cells[1, 4].Value = "Department";
             ws.Cells[1, 5].Value = "Position";
+            ws.Cells[1, 6].Value = "Status";
 
             int row = 2;
-
             foreach (var emp in employees)
             {
                 ws.Cells[row, 1].Value = emp.EmployeeCode;
@@ -807,16 +856,56 @@ public IActionResult ExportExcel()
                 ws.Cells[row, 3].Value = emp.Email;
                 ws.Cells[row, 4].Value = emp.Department;
                 ws.Cells[row, 5].Value = emp.Position;
-
+                ws.Cells[row, 6].Value = emp.Status;
                 row++;
             }
 
-            var fileBytes = package.GetAsByteArray();
-            return File(fileBytes,
+            ws.Cells[ws.Dimension.Address].AutoFitColumns();
+
+            return File(
+                package.GetAsByteArray(),
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "Employees.xlsx");
+                "Employees.xlsx"
+            );
         }
-    }
+
+
+        //public IActionResult ExportExcel()
+        //    {
+        //        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+        //        var employees = _context.Employees.ToList();
+
+        //        using (var package = new ExcelPackage())
+        //        {
+        //            var ws = package.Workbook.Worksheets.Add("Employees");
+
+        //            // HEADER
+        //            ws.Cells[1, 1].Value = "Employee Code";
+        //            ws.Cells[1, 2].Value = "Name";
+        //            ws.Cells[1, 3].Value = "Email";
+        //            ws.Cells[1, 4].Value = "Department";
+        //            ws.Cells[1, 5].Value = "Position";
+
+        //            int row = 2;
+
+        //            foreach (var emp in employees)
+        //            {
+        //                ws.Cells[row, 1].Value = emp.EmployeeCode;
+        //                ws.Cells[row, 2].Value = emp.Name;
+        //                ws.Cells[row, 3].Value = emp.Email;
+        //                ws.Cells[row, 4].Value = emp.Department;
+        //                ws.Cells[row, 5].Value = emp.Position;
+
+        //                row++;
+        //            }
+
+        //            var fileBytes = package.GetAsByteArray();
+        //            return File(fileBytes,
+        //                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        //                "Employees.xlsx");
+        //        }
+        //    }
 
         [Authorize]
         public IActionResult MySalarySlip()
@@ -878,7 +967,85 @@ public IActionResult ExportExcel()
             public string Reason { get; set; }
         }
 
+        private string GetContentType(string path)
+        {
+            var ext = Path.GetExtension(path).ToLowerInvariant();
 
+            return ext switch
+            {
+                ".pdf" => "application/pdf",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".doc" => "application/msword",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                _ => "application/octet-stream"
+            };
+        }
+        // ================================
+        // EMPLOYEE REPORT (VIEW ONLY)
+        // ================================
+        public async Task<IActionResult> EmployeeReport(string search, string status)
+        {
+            var empId = HttpContext.Session.GetInt32("EmployeeId");
+            if (!empId.HasValue)
+                return RedirectToAction("Login", "Account");
 
-    }    
+            var emp = await _context.Employees.FindAsync(empId.Value);
+            if (emp == null)
+                return RedirectToAction("Login", "Account");
+
+            ViewBag.UserRole = emp.Role;
+
+            // 🔹 Only management roles allowed
+            if (emp.Role != "HR" && emp.Role != "GM" && emp.Role != "VP" && emp.Role != "Director")
+                return Forbid();
+
+            var query = _context.Employees.AsQueryable();
+
+            // 🔍 Search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim();
+                query = query.Where(e =>
+                    e.EmployeeCode.Contains(search) ||
+                    e.Name.Contains(search) ||
+                    e.Email.Contains(search));
+            }
+
+            // 🔍 Status filter
+            if (!string.IsNullOrWhiteSpace(status) && status != "All")
+                query = query.Where(e => e.Status == status);
+
+            var list = await query
+                .OrderBy(e => e.EmployeeCode)
+                .Select(e => new Employee
+                {
+                    EmployeeCode = e.EmployeeCode,
+                    Name = e.Name,
+                    Email = e.Email,
+                    Department = e.Department,
+                    Position = e.Position,
+                    MobileNumber = e.MobileNumber,
+                    JoiningDate = e.JoiningDate,
+                    Status = e.Status,
+                    PanNumber = e.PanNumber,
+                    AadhaarNumber= e.AadhaarNumber ,
+                    AlternateMobileNumber=  e.AlternateMobileNumber ,
+                    Gender=e.Gender ,
+                    Address= e.Address ,
+                    ReportingManager=e.ReportingManager ,
+                    BankName= e.BankName ,
+                    AccountNumber= e.AccountNumber,
+                    IFSC=e.IFSC ,
+                })
+                .ToListAsync();
+
+            ViewBag.Search = search;
+            ViewBag.Status = status;
+
+            return View(list);
+        }
+
+    }
 }

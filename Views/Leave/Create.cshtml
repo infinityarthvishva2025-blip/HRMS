@@ -37,7 +37,18 @@
 <div class="container">
     <div class="leave-card">
 
-        <div class="leave-title">Apply for Leave</div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="leave-title">
+                Apply for Leave
+            </div>
+
+            <a asp-controller="Leave"
+               asp-action="CompOffHistory"
+               class="btn btn-primary btn-sm">
+                View Comp-Off Balance
+            </a>
+        </div>
+
         <hr />
 
         <!-- ✅ TEMP DATA ERROR MESSAGE -->

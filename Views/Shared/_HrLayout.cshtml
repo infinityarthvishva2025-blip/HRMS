@@ -399,10 +399,32 @@
             </div>
                 
           
-            <a asp-controller="Reports" asp-action="Index" class="menu-item">
+           @*  <a asp-controller="Reports" asp-action="Index" class="menu-item">
                 <i class="fa-solid fa-file-alt"></i><span>Reports</span>
-            </a>
+            </a> *@
 
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('Reportsmenu')">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>Reports</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="Reportsmenu" class="submenu">
+
+                @* Inbox only for Manager / GM / VP / Director *@
+                @if (role == "GM" || role == "HR" || role == "VP" || role == "Director")
+                {
+                    <a asp-controller="Reports" asp-action="Index" class="submenu-item">
+                        <i class="fa-solid fa-inbox"></i>Reports
+                    </a>
+
+                    <a asp-controller="Employees" asp-action="EmployeeReport" class="submenu-item">
+                        <i class="fa-solid fa-gauge"></i>Employee Management Report
+                    </a>
+                }
+               
+
+            </div>
             <div class="logout">
                 <a asp-controller="Account" asp-action="Logout" class="menu-item">
                     <i class="fa-solid fa-right-from-bracket"></i>
