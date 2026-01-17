@@ -47,29 +47,14 @@
                 <tr>
                     <td>@item.EmpCode</td>
                     <td class="text-start">@item.EmpName</td>
-
                     <td>@item.TotalDaysInMonth</td>
-
-                    <!-- HALF DAYS -->
-                    <td class="text-warning fw-bold">
-                        @item.PresentHalfDays
-                    </td>
-
-                    <!-- ABSENT DAYS -->
-                    <td class="text-danger fw-bold">
-                        @item.AbsentDays
-                    </td>
-
-                    <!-- PAID DAYS -->
-                    <td class="text-primary fw-bold">
-                        @item.PaidDays.ToString("0.0")
-                    </td>
-
+                    <td class="text-warning fw-bold">@item.PresentHalfDays</td>
+                    <td class="text-danger fw-bold">@item.AbsentDays</td>
+                    <td class="text-primary fw-bold">@item.PaidDays.ToString("0.0")</td>
                     <td>@item.MonthlySalary.ToString("0.00")</td>
                     <td class="fw-bold">@item.GrossSalary.ToString("0.00")</td>
                     <td class="text-danger">@item.TotalDeductions.ToString("0.00")</td>
                     <td class="fw-bold text-success">@item.NetSalary.ToString("0.00")</td>
-
                     <td>
                         <a asp-action="DownloadSalarySlip"
                            asp-controller="Payroll"
@@ -111,8 +96,7 @@
         const end = start + rowsPerPage;
 
         allRows.forEach((row, index) => {
-            row.style.display =
-                index >= start && index < end ? "" : "none";
+            row.style.display = (index >= start && index < end) ? "" : "none";
         });
 
         recordInfo.innerText =
@@ -159,26 +143,42 @@
     renderTable();
     setupPagination();
 
+    // ✅ FINAL FIXED EXCEL EXPORT (ALL ROWS)
     document.getElementById("exportExcelBtn").onclick = function () {
+
         const wb = XLSX.utils.book_new();
         const wsData = [];
 
         wsData.push([
-            "Emp Code","Name","Working Days",
-            "Half Days","Absent Days","Paid Days",
-            "Basic Salary","Gross Salary","Deduction","Net Salary"
+            "Emp Code", "Name", "Working Days",
+            "Half Days", "Absent Days", "Paid Days",
+            "Basic Salary", "Gross Salary", "Deduction", "Net Salary"
         ]);
 
-        allRows.forEach(r => {
-            const c = r.cells;
+        allRows.forEach(row => {
+            const c = row.cells;
             wsData.push([
-                c[0].innerText, c[1].innerText, c[2].innerText,
-                c[3].innerText, c[4].innerText, c[5].innerText,
-                c[6].innerText, c[7].innerText, c[8].innerText, c[9].innerText
+                c[0].innerText.trim(),
+                c[1].innerText.trim(),
+                c[2].innerText.trim(),
+                c[3].innerText.trim(),
+                c[4].innerText.trim(),
+                c[5].innerText.trim(),
+                c[6].innerText.trim(),
+                c[7].innerText.trim(),
+                c[8].innerText.trim(),
+                c[9].innerText.trim()
             ]);
         });
 
         const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        ws["!cols"] = [
+            { wch: 12 }, { wch: 22 }, { wch: 14 },
+            { wch: 12 }, { wch: 14 }, { wch: 10 },
+            { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 14 }
+        ];
+
         XLSX.utils.book_append_sheet(wb, ws, "Payroll");
         XLSX.writeFile(wb, "Payroll_All_Employees.xlsx");
     };

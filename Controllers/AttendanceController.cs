@@ -589,7 +589,6 @@ namespace HRMS.Controllers
             return RedirectToAction(nameof(EmployeeSummary), new { employeeId = employee.Id });
         }
 
-
         [HttpGet]
         public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
         {
@@ -602,44 +601,99 @@ namespace HRMS.Controllers
 
             ViewBag.UserRole = emp.Role;
 
-            // Default date range
+            // 📅 Date range
             DateTime start = from?.Date ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
             DateTime end = to?.Date ?? DateTime.Today;
 
-            // ✅ FETCH ONLY DB RECORDS
-            var attendance = _context.Attendances
-                .Where(a => a.Emp_Code == emp.EmployeeCode &&
-                            a.Date >= start && a.Date <= end)
-                .OrderByDescending(a => a.Date)
-                .Select(a => new AttendanceRecordVm
-                {
-                    Emp_Code = a.Emp_Code,
-                    Date = a.Date,
-                    InTime = a.InTime,
-                    OutTime = a.OutTime,
-                    CorrectionRequested = a.CorrectionRequested,
-                    CorrectionStatus = a.CorrectionStatus,
+            // 📦 Fetch DB attendance once
 
-                    Status =
-                        a.Status == "L" ? "L" :
-                        a.Status == "HO" ? "HO" :
-                        a.Date.DayOfWeek == DayOfWeek.Sunday ? "WO" :
-                        a.Date.DayOfWeek == DayOfWeek.Saturday ? "WOP" :
-                        (a.InTime.HasValue && a.OutTime.HasValue) ? "P" :
-                        (a.InTime.HasValue && !a.OutTime.HasValue) ? "AUTO" :
-                        "A"
-                })
+            var dbAttendance = _context.Attendances
+                .Where(a => a.Emp_Code == emp.EmployeeCode &&
+            a.Date.Date >= start.Date &&
+            a.Date.Date <= end.Date)
                 .ToList();
+
+            List<AttendanceRecordVm> finalList = new();
+
+            // 🔁 LOOP ALL DATES — THIS IS THE KEY
+            for (var date = start; date <= end; date = date.AddDays(1))
+            {
+                //var rec = dbAttendance.FirstOrDefault(a => a.Date == date);
+                var rec = dbAttendance.FirstOrDefault(a => a.Date.Date == date.Date);
+                // 🟥 LEAVE (highest priority)
+                if (rec != null && rec.Status == "L")
+                {
+                    finalList.Add(Map(rec, "L"));
+                    continue;
+                }
+
+                // 🟦 HOLIDAY
+                if (rec != null && rec.Status == "HO")
+                {
+                    finalList.Add(Map(rec, "HO"));
+                    continue;
+                }
+
+                // 🟨 SUNDAY → WO
+                if (date.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    finalList.Add(new AttendanceRecordVm
+                    {
+                        Emp_Code = emp.EmployeeCode,
+                        Date = date,
+                        Status = "WO"
+                    });
+                    continue;
+                }
+
+                // 🟨 SATURDAY → WOP
+                if (date.DayOfWeek == DayOfWeek.Saturday)
+                {
+                    if (rec != null)
+                        finalList.Add(Map(rec, "WOP"));
+                    else
+                        finalList.Add(new AttendanceRecordVm
+                        {
+                            Emp_Code = emp.EmployeeCode,
+                            Date = date,
+                            Status = "WOP"
+                        });
+                    continue;
+                }
+
+                // 🟩 PRESENT / AUTO
+                if (rec != null)
+                {
+                    string status =
+                        rec.InTime.HasValue && rec.OutTime.HasValue ? "P" :
+                        rec.InTime.HasValue && !rec.OutTime.HasValue ? "AUTO" :
+                        "A";
+
+                    finalList.Add(Map(rec, status));
+                }
+                else
+                {
+                    // ⬜ ABSENT (NO RECORD)
+                    finalList.Add(new AttendanceRecordVm
+                    {
+                        Emp_Code = emp.EmployeeCode,
+                        Date = date,
+                        Status = "A"
+                    });
+                }
+            }
 
             var summary = new EmployeeAttendanceSummaryViewModel
             {
                 Employee = emp,
-                AttendanceRecords = attendance,
+                AttendanceRecords = finalList
+                    .OrderByDescending(x => x.Date)
+                    .ToList(),
                 FromDate = start,
                 ToDate = end,
-                TotalDays = attendance.Count,
+                TotalDays = finalList.Count,
                 AverageWorkingHours =
-                    attendance
+                    finalList
                         .Where(a => a.InTime.HasValue && a.OutTime.HasValue)
                         .Select(a => (a.OutTime.Value - a.InTime.Value).TotalHours)
                         .DefaultIfEmpty(0)
@@ -649,6 +703,66 @@ namespace HRMS.Controllers
 
             return View(summary);
         }
+
+        //[HttpGet]
+        //public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
+        //{
+        //    if (employeeId <= 0)
+        //        return BadRequest("Invalid employee ID.");
+
+        //    var emp = _context.Employees.FirstOrDefault(e => e.Id == employeeId);
+        //    if (emp == null)
+        //        return NotFound("Employee not found.");
+
+        //    ViewBag.UserRole = emp.Role;
+
+        //    // Default date range
+        //    DateTime start = from?.Date ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        //    DateTime end = to?.Date ?? DateTime.Today;
+
+        //    // ✅ FETCH ONLY DB RECORDS
+        //    var attendance = _context.Attendances
+        //        .Where(a => a.Emp_Code == emp.EmployeeCode &&
+        //                    a.Date >= start && a.Date <= end)
+        //        .OrderByDescending(a => a.Date)
+        //        .Select(a => new AttendanceRecordVm
+        //        {
+        //            Emp_Code = a.Emp_Code,
+        //            Date = a.Date,
+        //            InTime = a.InTime,
+        //            OutTime = a.OutTime,
+        //            CorrectionRequested = a.CorrectionRequested,
+        //            CorrectionStatus = a.CorrectionStatus,
+
+        //            Status =
+        //                a.Status == "L" ? "L" :
+        //                a.Status == "HO" ? "HO" :
+        //                a.Date.DayOfWeek == DayOfWeek.Sunday ? "WO" :
+        //                a.Date.DayOfWeek == DayOfWeek.Saturday ? "WOP" :
+        //                (a.InTime.HasValue && a.OutTime.HasValue) ? "P" :
+        //                (a.InTime.HasValue && !a.OutTime.HasValue) ? "AUTO" :
+        //                "A"
+        //        })
+        //        .ToList();
+
+        //    var summary = new EmployeeAttendanceSummaryViewModel
+        //    {
+        //        Employee = emp,
+        //        AttendanceRecords = attendance,
+        //        FromDate = start,
+        //        ToDate = end,
+        //        TotalDays = attendance.Count,
+        //        AverageWorkingHours =
+        //            attendance
+        //                .Where(a => a.InTime.HasValue && a.OutTime.HasValue)
+        //                .Select(a => (a.OutTime.Value - a.InTime.Value).TotalHours)
+        //                .DefaultIfEmpty(0)
+        //                .Average()
+        //                .ToString("0.0") + " Hrs"
+        //    };
+
+        //    return View(summary);
+        //}
 
         // =========================================================
         // EMPLOYEE SUMMARY PAGE
@@ -921,7 +1035,7 @@ namespace HRMS.Controllers
 
             //ViewBag.PendingRequests = _context.Attendances
             //    .Count(a => a.CorrectionRequested == true && a.CorrectionStatus == "Pending");
-            if (userRole == "HR" || userRole == "GM" || userRole == "VP" || userRole == "Director")
+            if (userRole == "HR" || userRole == "Manager" || userRole == "GM" || userRole == "VP" || userRole == "Director")
             {
                 ViewBag.PendingRequests = _context.Attendances.Count(a =>
                     a.CorrectionRequested == true &&
@@ -1140,6 +1254,7 @@ namespace HRMS.Controllers
             string? pendingWithRole = userRole switch
             {
                 "Employee" => "HR",
+                "Manager" => "HR",
                 "HR" => "GM",
                 "GM" => "VP",
                 "VP" => "Director",
@@ -1190,7 +1305,7 @@ namespace HRMS.Controllers
             ViewBag.UserRole = role;
 
             // 🔐 Allow only approval roles
-            if (role != "HR" && role != "GM" && role != "VP" && role != "Director")
+            if (role != "HR" && role != "Intern" && role != "Manager" && role != "GM" && role != "VP" && role != "Director")
             {
                 return Unauthorized();
             }
@@ -1810,7 +1925,23 @@ namespace HRMS.Controllers
             var contentType = "image/jpeg"; // or detect dynamically
             return PhysicalFile(fullPath, contentType);
         }
+        // ----------------------------------
+        // 🔧 HELPER METHODS (ADD HERE)
+        // ----------------------------------
 
+        private AttendanceRecordVm Map(Attendance rec, string status)
+        {
+            return new AttendanceRecordVm
+            {
+                Emp_Code = rec.Emp_Code,
+                Date = rec.Date,
+                InTime = rec.InTime,
+                OutTime = rec.OutTime,
+                Status = status,
+                CorrectionRequested = rec.CorrectionRequested,
+                CorrectionStatus = rec.CorrectionStatus
+            };
+        }
     }
 }
 

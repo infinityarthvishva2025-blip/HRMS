@@ -1,4 +1,5 @@
-﻿using HRMS.Data;
+﻿using DocumentFormat.OpenXml.InkML;
+using HRMS.Data;
 using HRMS.Models;
 using HRMS.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -255,15 +256,35 @@ namespace HRMS.Controllers
                     leave.DirectorStatus = approve ? "Approved" : "Rejected";
                     break;
             }
-
-            // If rejected
-            if (!approve)
+            leave.OverallStatus = approve ? "Approved" : "Rejected";
+            leave.OverallStatus = "Rejected";
+            if (leave.OverallStatus == "Approved")
             {
-                leave.OverallStatus = "Rejected";
-                await DeleteLeaveFromAttendance(leave);
-                await _context.SaveChangesAsync();
-                return;
+                await RevertLeaveInAttendance(leave);
             }
+
+            await _context.SaveChangesAsync();
+            return;
+            //if (!approve)
+            //{
+            //    leave.OverallStatus = "Rejected";
+
+            //    // ✅ Update attendance instead of deleting
+            //   if (leave.OverallStatus= "Rejected")
+            //    { 
+            //    await RevertLeaveInAttendance(leave);
+            //    }
+            //    await _context.SaveChangesAsync();
+            //    return;
+            //}
+            // If rejected
+            //if (!approve)
+            //{
+            //    leave.OverallStatus = "Rejected";
+            //    await DeleteLeaveFromAttendance(leave);
+            //    await _context.SaveChangesAsync();
+            //    return;
+            //}
 
             // Move workflow
             leave.CurrentApproverRole = role;
@@ -356,16 +377,34 @@ namespace HRMS.Controllers
             }
         }
 
-        private async Task DeleteLeaveFromAttendance(Leave leave)
+        //private async Task DeleteLeaveFromAttendance(Leave leave)
+        //{
+        //    var emp = await _context.Employees.FindAsync(leave.EmployeeId);
+
+        //    var items = _context.Attendances
+        //        .Where(a => a.Emp_Code == emp.EmployeeCode &&
+        //                    a.Date >= leave.StartDate &&
+        //                    a.Date <= leave.EndDate);
+
+        //    _context.Attendances.RemoveRange(items);
+        //}
+        private async Task RevertLeaveInAttendance(Leave leave)
         {
             var emp = await _context.Employees.FindAsync(leave.EmployeeId);
 
-            var items = _context.Attendances
+            var items = await _context.Attendances
                 .Where(a => a.Emp_Code == emp.EmployeeCode &&
                             a.Date >= leave.StartDate &&
-                            a.Date <= leave.EndDate);
+                            a.Date <= leave.EndDate)
+                .ToListAsync();
 
-            _context.Attendances.RemoveRange(items);
+            foreach (var row in items)
+            {
+                // Revert back to Present (or your default status)
+                row.Status = "P";
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         // -------------------- APPROVAL ENDPOINTS --------------------
@@ -718,16 +757,26 @@ namespace HRMS.Controllers
             var manager = await _context.Leaves.CountAsync(l =>
                l.HrStatus == "Approved" &&
                 l.ManagerStatus == "Pending");
+            //var VP = await _context.Leaves.CountAsync(l =>
+            //  l.HrStatus == "Approved" &&
+            //  //l.ManagerStatus == "Approved" &&
+            // l.VpStatus == "Pending");
+            var VP = await _context.Leaves.CountAsync(l =>
+          l.HrStatus == "Approved" &&
+          l.ManagerStatus == "Approved" &&
+           l.VpStatus == "Pending");
 
-            var director = await _context.Leaves.CountAsync(l =>
+          var director = await _context.Leaves.CountAsync(l =>
             l.HrStatus == "Approved" &&
             l.ManagerStatus == "Approved" &&
+             l.VpStatus == "Approved" &&
                 l.DirectorStatus == "Pending");
 
             return Json(new
             {
                 managerPending = manager,
                 hrPending = hr,
+                vpPending = VP,
                 directorPending = director
             });
         }
@@ -747,6 +796,11 @@ namespace HRMS.Controllers
                 l.HrStatus == "Approved" &&
                 l.ManagerStatus == "Pending");
 
+            var VPpending = await _context.Leaves.CountAsync(l =>
+            l.HrStatus == "Approved" &&
+             l.ManagerStatus == "Approved" &&
+              l.VpStatus == "Pending");
+
             var director = await _context.Leaves.CountAsync(l =>
                 l.EmployeeId == empId.Value &&           // ⭐ ADDED
                 l.HrStatus == "Approved" &&
@@ -757,6 +811,7 @@ namespace HRMS.Controllers
             {
                 managerPending = manager,
                 hrPending = hr,
+                VPPending = VPpending,
                 directorPending = director
             });
         }

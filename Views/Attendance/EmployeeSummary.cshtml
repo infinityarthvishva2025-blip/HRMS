@@ -69,12 +69,16 @@
                     string nextApprover = null;
 
                     if (role == "Employee") nextApprover = "HR";
+                    else if (role == "Manager") nextApprover = "HR";
+                    else if (role == "Intern") nextApprover = "HR";
                     else if (role == "HR") nextApprover = "GM";
                     else if (role == "GM") nextApprover = "VP";
                     else if (role == "VP") nextApprover = "Director";
 
                     bool canRequest =
                         role == "Employee" ||
+                    role == "Manager" ||
+                    role == "Intern" ||
                         role == "HR" ||
                         role == "GM" ||
                         role == "VP";
