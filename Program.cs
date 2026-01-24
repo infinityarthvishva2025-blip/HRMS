@@ -92,7 +92,7 @@ builder.Services.AddQuartz(q =>
         .ForJob(jobKey)
         .WithIdentity("MonthlyAttendanceTrigger")
        // Runs EVERY MONTH on 25th at 02:00 AM
-        .WithCronSchedule("0 0 2 25 * ?")
+        .WithCronSchedule("0 0 2 21 * ?")
        //.WithCronSchedule("0 */1 * * * ?")
     );
 });

@@ -2,7 +2,17 @@
 
 @{
     ViewData["Title"] = "My Profile";
-    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    var role = ViewBag.UserRole as string;
+  if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+
+    bool isHrUser = role == "HR" || role == "VP" || role == "GM" || role == "Director";
 
     string DocUrl(string file) =>
         string.IsNullOrWhiteSpace(file)
@@ -42,6 +52,10 @@
         <h3 class="fw-bold">
             <i class="fa-solid fa-id-card me-2"></i> My Profile
         </h3>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm me-2">Edit</a>
+            <a asp-action="Dashboard" class="btn btn-secondary btn-sm">Back</a>
+        </div>
     </div>
 
     <!-- ===================== PROFILE ===================== -->

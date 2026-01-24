@@ -61,6 +61,7 @@
             <tr>
                 <td>Employee Name</td>
                 <th>Category</th>
+                <th>Leave Type</th>
                 <th>Start</th>
                 <th>End</th>
                 <th>Total Days</th>
@@ -77,6 +78,7 @@
                 <tr>
                     <td>@($"{empCode} - {empName}")</td>
                     <td>@item.Category</td>
+                    <td>@item.LeaveType</td>
                     <td>@(item.StartDate.ToString("dd-MM-yyyy") ?? "N/A")</td>
                     <td>@(item.EndDate?.ToString("dd-MM-yyyy") ?? "N/A")</td>
                     <td>@item.TotalDays</td>

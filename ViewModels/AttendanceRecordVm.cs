@@ -9,12 +9,16 @@
 
         public TimeSpan? InTime { get; set; }
         public TimeSpan? OutTime { get; set; }
+   
 
         public bool CorrectionRequested { get; set; }
         public string CorrectionStatus { get; set; }
+        public string PendingWithRole { get; set; }
+      
+       
         // ✅ ADD THESE TWO
         public string RequestedByRole { get; set; }
-        public string PendingWithRole { get; set; }
+       
         public string TotalHours { get; set; } = "--";
         public string DisplayCheckIn =>
             InTime.HasValue ? DateTime.Today.Add(InTime.Value).ToString("hh:mm tt") : "--";

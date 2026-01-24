@@ -278,6 +278,9 @@ namespace HRMS.Controllers
             if (emp == null)
                 return NotFound();
 
+
+            // 🔹 SAFE string cast
+            ViewBag.UserRole = emp.Role?.ToString();
             // =====================================================
             // 📋 ORIGINAL VIEWBAG LOAD (UNCHANGED)
             // =====================================================
@@ -803,7 +806,7 @@ namespace HRMS.Controllers
             {
                 return RedirectToAction("Login", "Account"); // Employee not found
             }
-
+            ViewBag.UserRole = employee.Role?.ToString();
             // 3️⃣ Return the profile view
             return View(employee);
         }

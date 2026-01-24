@@ -52,9 +52,7 @@ namespace HRMS.Services
      DateTime toDate)
         {
             var emp = _context.Employees
-                .Where(e => e.Status == "Active")
                 .FirstOrDefault(e => e.EmployeeCode == empCode);
-                 
 
             if (emp == null)
                 return null;

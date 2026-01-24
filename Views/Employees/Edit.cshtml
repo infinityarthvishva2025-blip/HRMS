@@ -1,7 +1,18 @@
 ﻿@model HRMS.ViewModels.EmployeeEditVm
 @{
     ViewData["Title"] = "Edit Employee";
-    Layout = "~/Views/Shared/_HrLayout.cshtml";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+
+    bool isHrUser = role == "HR" || role == "VP" || role == "GM" || role == "Director";
 }
 
 <div class="container py-4">
@@ -10,7 +21,7 @@
         <h3 class="fw-bold text-primary">
             <i class="fa-solid fa-user-pen me-2"></i> Edit Employee
         </h3>
-        <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-primary">
+        <a asp-controller="Employees" asp-action="MyProfile" class="btn btn-outline-primary">
             <i class="fa-solid fa-list me-1"></i> Back to List
         </a>
 
@@ -381,7 +392,7 @@
                 <!-- 12th -->
                 <div class="col-md-4">
                     <label asp-for="HSCPercent">12th %</label>
-                    <input asp-for="HSCPercent" class="form-control" type="number" />
+                    <input asp-for="HSCPercent" class="form-control"  />
                 </div>
 
                 <div class="col-md-6">
@@ -426,7 +437,8 @@
 
                 <div class="col-md-4">
                     <label asp-for="GraduationPercent">Graduation %</label>
-                    <input asp-for="GraduationPercent" type="number"  class="form-control" />
+                    <input asp-for="GraduationPercent"   class="form-control" />
+
                 </div>
 
                 <div class="col-md-4">
@@ -469,7 +481,7 @@
                 </div>
                 <div class="col-md-4">
                     <label asp-for="PostGraduationPercent">Post Graduation %</label>
-                    <input asp-for="PostGraduationPercent" type="number" class="form-control" />
+                    <input asp-for="PostGraduationPercent"  class="form-control" />
                 </div>
                 <div class="col-md-4">
                     <label>PG Marksheet</label>

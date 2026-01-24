@@ -9,7 +9,9 @@
 
 <div class="container correction-container">
 
-    <div class="row justify-content-center align-items-center ">
+   
+
+    <div class="row justify-content-center align-items-center">
         <div class="col-12 col-sm-10 col-md-8 col-lg-6">
 
             <div class="card correction-card shadow-sm border-0">
@@ -20,9 +22,6 @@
 
                 <div class="card-body">
 
-                    @*   <form method="post"
-                          asp-action="RequestCorrection"
-                          asp-controller="Attendance"> *@
                     <form method="post"
                           asp-action="RequestCorrection"
                           asp-controller="Attendance"
@@ -38,10 +37,13 @@
 
                         <div class="mb-3">
                             <label class="fw-bold">Why do you want correction?</label>
-                            <textarea name="CorrectionRemark" class="form-control" rows="4" required></textarea>
+                            <textarea name="CorrectionRemark"
+                                      class="form-control correction-textarea"
+                                      rows="4"
+                                      required></textarea>
                         </div>
 
-                        <!-- ✅ NEW: PROOF UPLOAD -->
+                        <!-- ✅ PROOF UPLOAD -->
                         <div class="mb-3">
                             <label class="fw-bold">Upload Proof (optional)</label>
                             <input type="file"
@@ -58,6 +60,15 @@
                                 <i class="fa-solid fa-paper-plane me-1"></i>
                                 Submit Request
                             </button>
+                            <!-- 🔙 BACK BUTTON -->
+                           
+                                <button type="button"
+                                        class="btn btn-secondary "
+                                        onclick="history.back()">
+                                    <i class="fa-solid fa-arrow-left me-1"></i>
+                                    Back
+                                </button>
+                           
                         </div>
 
                     </form>
@@ -102,18 +113,22 @@
         font-weight: 600;
     }
 
+    /* Mobile Back Button Full Width */
     @@media (max-width: 768px) {
-        /* Page spacing */
+        .btn-outline-secondary {
+            width: 100%;
+        }
+
         .container,
         .container-fluid,
         .page-content {
             padding-top: 8px !important;
         }
-        /* Header alignment */
+
         h4, h5, h6 {
             text-align: center;
         }
-        /* Hide table header */
+
         table thead {
             display: none;
         }
@@ -125,50 +140,50 @@
             display: block;
             width: 100%;
         }
-            /* Card style rows */
-            table tbody tr {
-                background: #fff;
-                border-radius: 14px;
-                margin-bottom: 14px;
-                padding: 14px;
-                box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-                border: 1px solid #e5e7eb;
-            }
 
-                table tbody tr td {
-                    display: flex;
-                    justify-content: space-between;
-                    padding: 6px 0;
-                    font-size: 14px;
-                    gap: 10px;
-                    text-align: right;
-                    word-break: break-word;
-                }
+        table tbody tr {
+            background: #fff;
+            border-radius: 14px;
+            margin-bottom: 14px;
+            padding: 14px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+        }
 
-                    table tbody tr td::before {
-                        content: attr(data-label);
-                        font-weight: 600;
-                        color: #6b7280;
-                        text-align: left;
-                        flex-shrink: 0;
-                    }
-        /* Status badge spacing */
+        table tbody tr td {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 14px;
+            gap: 10px;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        table tbody tr td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #6b7280;
+            text-align: left;
+            flex-shrink: 0;
+        }
+
         .badge {
             font-size: 12px;
             padding: 6px 10px;
         }
-        /* Actions buttons */
+
         .btn-sm {
             padding: 6px 12px;
             font-size: 13px;
         }
-        /* Empty state */
+
         .text-danger {
             text-align: center;
             font-weight: 600;
             margin-top: 12px;
         }
-        /* Pagination center */
+
         .pagination {
             justify-content: center !important;
             margin-top: 10px;
@@ -182,16 +197,14 @@
         }
     }
 
-    /* -------- SMALL PHONES -------- */
     @@media (max-width: 480px) {
-
         table tbody tr {
             padding: 12px;
         }
 
-            table tbody tr td {
-                font-size: 13px;
-            }
+        table tbody tr td {
+            font-size: 13px;
+        }
 
         .badge {
             font-size: 11px;

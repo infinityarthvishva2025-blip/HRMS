@@ -23,7 +23,6 @@
             Attendance Correction Requests
         </h2>
 
-        <!-- 🔍 TABLE SEARCH -->
         <input type="text"
                id="tableSearch"
                class="form-control w-25"
@@ -50,29 +49,57 @@
                     @if (Model == null || !Model.Any())
                     {
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-danger fw-bold">
+                            <td colspan="6" class="text-center py-4 text-danger fw-bold">
                                 No correction requests found.
                             </td>
                         </tr>
                     }
                     else
                     {
+                        var employees = ViewBag.Employees as List<HRMS.Models.Employee>;
+
                         foreach (var a in Model.OrderByDescending(x => x.Date))
                         {
-                            var employees = ViewBag.Employees as List<HRMS.Models.Employee>;
                             var emp = employees?.FirstOrDefault(e => e.EmployeeCode == a.Emp_Code);
+
                             bool isHr = role == "HR";
                             bool isGM = role == "GM";
-                            bool canResolve = a.CorrectionRequested && isHr;
+                            bool isVP = role == "VP";
+                            bool isDir = role == "Director";
+
+                            // ✅ FIX: initialize variable
+                            bool canResolve = false;
+
+                            if (emp != null)
+                            {
+                                if (emp.Role == "Employee" || emp.Role == "Intern" || emp.Role=="Manager")
+                                {
+                                    canResolve = a.CorrectionRequested && isHr;
+                                }
+                                else if (emp.Role == "HR")
+                                {
+                                    canResolve = a.CorrectionRequested && isGM;
+                                }
+                                else if (emp.Role == "GM")
+                                {
+                                    canResolve = a.CorrectionRequested && isVP;
+                                }
+                                else if (emp.Role == "VP")
+                                {
+                                    canResolve = a.CorrectionRequested && isDir;
+                                }
+                            }
+
                             string token = null;
                             if (canResolve)
                             {
                                 token = UrlEncryptionHelper.GenerateToken(
-                                a.Emp_Code,
-                                a.Date,
-                                expiryMinutes: 30
+                                    a.Emp_Code,
+                                    a.Date,
+                                    expiryMinutes: 30
                                 );
                             }
+
                             <tr>
                                 <td class="fw-semibold">
                                     @a.Emp_Code - @(emp?.Name ?? "Unknown")
@@ -95,12 +122,11 @@
                                     @if (!string.IsNullOrEmpty(a.CorrectionProofPath))
                                     {
                                         <a href="@Url.Action("ViewCorrectionProof", "Attendance",
-                                                    new { fileName = a.CorrectionProofPath })"
-                               target="_blank"
-                               class="btn btn-sm btn-outline-primary">
-                                View Proof
-                            </a>
-
+                                                new { fileName = a.CorrectionProofPath })"
+                                           target="_blank"
+                                           class="btn btn-sm btn-outline-primary">
+                                            View Proof
+                                        </a>
                                     }
                                     else
                                     {
@@ -108,14 +134,12 @@
                                     }
                                 </td>
 
-
                                 <td>
                                     @switch (a.CorrectionStatus)
                                     {
                                         case "Pending":
                                             <span class="badge bg-info">Pending</span>
                                             break;
-
                                         case "Approved":
                                             <span class="badge bg-success">Approved</span>
                                             break;
@@ -129,14 +153,17 @@
                                 </td>
 
                                 <td>
-                                    <a class="btn btn-success btn-sm"
-                                       href="@Url.Action("ResolveCorrection", "Attendance", new { token })">
-                                        Resolve
-                                    </a>
-                                   @*  <a href="/Attendance/ResolveCorrection?empCode=@a.Emp_Code&date=@a.Date.ToString("yyyy-MM-dd")"
-                                       class="btn btn-primary btn-sm">
-                                        Resolve
-                                    </a> *@
+                                    @if (canResolve)
+                                    {
+                                        <a class="btn btn-success btn-sm"
+                                           href="@Url.Action("ResolveCorrection", "Attendance", new { token })">
+                                            Resolve
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
                                 </td>
                             </tr>
                         }
@@ -147,7 +174,6 @@
         </div>
     </div>
 
-    <!-- 📄 PAGINATION -->
     <div class="d-flex justify-content-between align-items-center mt-3">
         <span id="pageInfo" class="text-muted"></span>
 
@@ -157,111 +183,3 @@
     </div>
 
 </div>
-
-<style>
-    table td, table th {
-        vertical-align: middle !important;
-    }
-
-    .badge {
-        padding: 6px 10px;
-        font-size: 0.85rem;
-    }
-
-    .pagination .page-item.active .page-link {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-        color: #fff;
-    }
-
-    .pagination .page-link {
-        cursor: pointer;
-    }
-</style>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-
-        const rowsPerPage = 10;
-        const tableBody = document.getElementById("tableBody");
-        let rows = Array.from(tableBody.querySelectorAll("tr"));
-
-        const pagination = document.getElementById("pagination");
-        const pageInfo = document.getElementById("pageInfo");
-        const searchInput = document.getElementById("tableSearch");
-
-        let currentPage = 1;
-
-        function filterRows() {
-            const query = searchInput.value.toLowerCase();
-
-            rows.forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(query)
-                    ? ""
-                    : "none";
-            });
-
-            rows = Array.from(tableBody.querySelectorAll("tr"))
-                .filter(r => r.style.display !== "none");
-
-            currentPage = 1;
-            paginate();
-        }
-
-        function paginate() {
-            const totalPages = Math.ceil(rows.length / rowsPerPage);
-
-            rows.forEach((row, index) => {
-                row.style.display =
-                    index >= (currentPage - 1) * rowsPerPage &&
-                    index < currentPage * rowsPerPage
-                        ? ""
-                        : "none";
-            });
-
-            pageInfo.innerText = `Page ${currentPage} of ${totalPages || 1}`;
-            renderPagination(totalPages);
-        }
-
-        function renderPagination(totalPages) {
-            pagination.innerHTML = "";
-
-            const prev = document.createElement("li");
-            prev.className = "page-item " + (currentPage === 1 ? "disabled" : "");
-            prev.innerHTML = `<a class="page-link">Previous</a>`;
-            prev.onclick = () => {
-                if (currentPage > 1) {
-                    currentPage--;
-                    paginate();
-                }
-            };
-            pagination.appendChild(prev);
-
-            for (let i = 1; i <= totalPages; i++) {
-                const li = document.createElement("li");
-                li.className = "page-item " + (i === currentPage ? "active" : "");
-                li.innerHTML = `<a class="page-link">${i}</a>`;
-                li.onclick = () => {
-                    currentPage = i;
-                    paginate();
-                };
-                pagination.appendChild(li);
-            }
-
-            const next = document.createElement("li");
-            next.className = "page-item " + (currentPage === totalPages ? "disabled" : "");
-            next.innerHTML = `<a class="page-link">Next</a>`;
-            next.onclick = () => {
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    paginate();
-                }
-            };
-            pagination.appendChild(next);
-        }
-
-        searchInput.addEventListener("keyup", filterRows);
-
-        paginate();
-    });
-</script>

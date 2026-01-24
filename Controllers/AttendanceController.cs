@@ -1,4 +1,5 @@
-﻿using HRMS.Data;
+﻿
+using HRMS.Data;
 using HRMS.Models;
 using HRMS.Models.ViewModels;
 using HRMS.Services;
@@ -21,11 +22,7 @@ namespace HRMS.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AttendanceController> _logger;
         private readonly ICompOffService _compOff;
-        //public AttendanceController(ApplicationDbContext context, ILogger<AttendanceController> logger)
-        //{
-        //    _context = context;
-        //    _logger = logger;   
-        //}
+
         public AttendanceController(
     ApplicationDbContext context,
     ICompOffService compOff,
@@ -112,7 +109,7 @@ namespace HRMS.Controllers
                 }
 
                 // 🔁 AUTO COMP-OFF (HO / WO)
-               // TryAutoCompOff(att);
+                // TryAutoCompOff(att);
 
                 _context.SaveChanges();
                 return Ok(new { success = true });
@@ -128,7 +125,7 @@ namespace HRMS.Controllers
             HttpContext.Session.SetString("CheckoutLat", vm.Latitude.ToString());
             HttpContext.Session.SetString("CheckoutLng", vm.Longitude.ToString());
             // 🔁 AUTO COMP-OFF (HO / WO)
-           // TryAutoCompOff(att);
+            // TryAutoCompOff(att);
 
             return Ok(new { redirect = "/DailyReport/Send" });
         }
@@ -205,221 +202,6 @@ namespace HRMS.Controllers
         }
 
 
-
-        //[HttpPost]
-        //public IActionResult GeoCheckIn([FromBody] GeoAttendanceVm vm)
-        //{
-        //    string empCode = HttpContext.Session.GetString("EmpCode");
-        //    if (string.IsNullOrEmpty(empCode))
-        //        return Unauthorized("Session expired");
-
-        //    var employee = _context.Employees
-        //        .FirstOrDefault(e => e.EmployeeCode == empCode);
-
-        //    if (employee == null)
-        //        return Unauthorized();
-
-        //    // =========================
-        //    // 📍 OFFICE GEOFENCE
-        //    // =========================
-        //    const double officeLat = 18.534202;
-        //    const double officeLng = 73.839556;
-        //    const double radiusMeters = 5000;
-
-        //    double distance = GeoHelper.DistanceInMeters(
-        //        officeLat, officeLng,
-        //        vm.Latitude, vm.Longitude
-        //    );
-
-        //    if (distance > radiusMeters)
-        //        return BadRequest(
-        //            $"You are outside office premises ({Math.Round(distance)} meters)");
-
-        //    DateTime today = DateTime.Today;
-
-        //    // =====================================================
-        //    // 🔹 GET OR CREATE ATTENDANCE (NO DUPLICATES)
-        //    // =====================================================
-        //    var att = GetOrCreateTodayAttendance(empCode, employee.Id, today);
-
-        //    // ❌ BLOCK DOUBLE CHECK-IN
-        //    if (att.InTime != null)
-        //        return BadRequest("Already checked in today");
-
-        //    // =====================================================
-        //    // ✅ UPDATE ATTENDANCE
-        //    // =====================================================
-        //    att.InTime = DateTime.Now.TimeOfDay;
-        //    att.Att_Date = DateTime.Now;
-        //    att.IsGeoAttendance = true;
-
-        //    att.CheckInLatitude = vm.Latitude;
-        //    att.CheckInLongitude = vm.Longitude;
-
-        //    // Optional safety defaults (if newly created)
-        //    //att.Status ??= "P";
-
-        //    att.Status = "P";
-        //    att.CorrectionRequested = false;
-        //    att.CorrectionStatus ??= "None";
-
-        //    _context.SaveChanges();
-
-        //    return Ok(new { success = true });
-        //}
-
-
-
-
-        //[HttpPost]
-        //public IActionResult GeoCheckIn([FromBody] GeoAttendanceVm vm)
-        //{
-        //    string empCode = HttpContext.Session.GetString("EmpCode");
-        //    if (string.IsNullOrEmpty(empCode))
-        //        return Unauthorized();
-
-        //    var employee = _context.Employees
-        //        .FirstOrDefault(e => e.EmployeeCode == empCode);
-
-        //    if (employee == null)
-        //        return Unauthorized();
-
-        //    const double officeLat = 18.534202;
-        //    const double officeLng = 73.839556;
-        //    const double radiusMeters = 2000;
-
-        //    double distance = GeoHelper.DistanceInMeters(
-        //        officeLat, officeLng,
-        //        vm.Latitude, vm.Longitude
-        //    );
-
-        //    if (distance > radiusMeters)
-        //        return BadRequest($"You are outside office premises ({Math.Round(distance)} meters)");
-
-        //    DateTime today = DateTime.Today;
-
-        //    var existing = _context.Attendances
-        //        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
-
-        //    if (existing != null)
-        //        return BadRequest("Already checked in today");
-
-        //    Attendance att = new Attendance
-        //    {
-        //        Id = employee.Id,
-        //        Emp_Code = empCode,
-        //        Date = today,
-        //        Status = "P",
-        //        InTime = DateTime.Now.TimeOfDay,
-        //        OutTime = null,
-        //        Att_Date = DateTime.Now,
-        //        Total_Hours = null,
-        //        IsLate = false,
-        //        LateMinutes = 0,
-        //        IsGeoAttendance = true,
-
-        //        CheckInLatitude = vm.Latitude,
-        //        CheckInLongitude = vm.Longitude,
-        //        CorrectionRequested = false,
-        //        CorrectionStatus = "None"
-        //    };
-
-        //    _context.Attendances.Add(att);
-        //    _context.SaveChanges();
-
-        //    return Ok(new { success = true });
-        //}
-        //[HttpPost]
-        //public IActionResult GeoCheckOut([FromBody] GeoAttendanceVm vm)
-        //{
-        //    string empCode = HttpContext.Session.GetString("EmpCode");
-        //    string role = HttpContext.Session.GetString("Role") ?? "Employee";
-
-        //    if (string.IsNullOrWhiteSpace(empCode))
-        //        return Unauthorized("Session expired");
-
-        //    // =========================
-        //    // 📍 OFFICE GEOFENCE
-        //    // =========================
-        //    const double officeLat = 18.534202;
-        //    const double officeLng = 73.839556;
-        //    const double radiusMeters = 2000;
-
-        //    double distance = GeoHelper.DistanceInMeters(
-        //        officeLat, officeLng,
-        //        vm.Latitude, vm.Longitude
-        //    );
-
-        //    if (distance > radiusMeters)
-        //        return BadRequest($"You are outside office premises ({Math.Round(distance)} meters)");
-
-        //    DateTime today = DateTime.Today;
-
-        //    var record = _context.Attendances
-        //        .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == today);
-
-        //    if (record == null)
-        //        return BadRequest("No active attendance found");
-
-        //    if (record.OutTime != null)
-        //        return BadRequest("Already checked out");
-
-        //    // =====================================================
-        //    // ✅ DIRECTOR → REAL CHECKOUT (UNCHANGED LOGIC)
-        //    // =====================================================
-        //    if (role.Equals("Director", StringComparison.OrdinalIgnoreCase))
-        //    {
-        //        record.OutTime = DateTime.Now.TimeOfDay;
-        //        record.Att_Date = DateTime.Now;
-        //        record.IsGeoAttendance = true;
-
-        //        // ✅ STORE LOCATION
-        //        record.CheckOutLatitude = vm.Latitude;
-        //        record.CheckOutLongitude = vm.Longitude;
-
-        //        if (record.InTime != null)
-        //        {
-        //            TimeSpan worked = record.OutTime.Value - record.InTime.Value;
-
-        //            TimeSpan shift = (today.DayOfWeek == DayOfWeek.Saturday)
-        //                ? TimeSpan.FromMinutes(420)   // 7 hrs
-        //                : TimeSpan.FromMinutes(510);  // 8.5 hrs
-
-        //            if (worked < shift)
-        //            {
-        //                TimeSpan remaining = shift - worked;
-        //                TempData["EarlyTime"] = $"{remaining.Hours}h {remaining.Minutes}m";
-        //                TempData["EarlyCheckout"] = "Remaining Time";
-        //            }
-        //            else
-        //            {
-        //                TimeSpan extra = worked - shift;
-        //                TempData["LateTime"] = $"{extra.Hours}h {extra.Minutes}m";
-        //                TempData["LateCheckout"] = "Overtime";
-        //            }
-        //        }
-        //        TryAutoCompOff(record);
-        //        _context.SaveChanges();
-        //        return Ok(new { success = true });
-        //    }
-
-        //    // =====================================================
-        //    // ✅ EMPLOYEE → TEMP STORE ONLY (NEW, SAFE LOGIC)
-        //    // =====================================================
-        //    // ❌ DO NOT SET OutTime
-        //    // ❌ DO NOT SAVE DB
-        //    // ✔ STORE CHECKOUT DATA TEMPORARILY
-        //    HttpContext.Session.SetString("CheckoutTime", DateTime.Now.TimeOfDay.ToString());
-        //    HttpContext.Session.SetString("CheckoutLat", vm.Latitude.ToString());
-        //    HttpContext.Session.SetString("CheckoutLng", vm.Longitude.ToString());
-
-        //    // ✔ REDIRECT TO DAILY REPORT
-        //    return Ok(new { redirect = "/DailyReport/Send" });
-        //}
-
-
-
-
         public async Task<IActionResult> EmployeePanel()
         {
             string empCode = HttpContext.Session.GetString("EmpCode");
@@ -491,14 +273,7 @@ namespace HRMS.Controllers
                 CorrectionRequested = false,
                 CorrectionStatus = "None"
             };
-    //        var attendance = await _context.Attendances.FirstOrDefaultAsync(a =>
-    //a.Emp_Code == empCode &&
-    //a.Date == attendanceDate);
 
-    //        if (attendance != null && attendance.Status == "HO")
-    //        {
-    //            attendance.Status = "P";   // Worked on holiday
-    //        }
 
             _context.Attendances.Add(att);
             _context.SaveChanges();
@@ -589,53 +364,44 @@ namespace HRMS.Controllers
             return RedirectToAction(nameof(EmployeeSummary), new { employeeId = employee.Id });
         }
 
+
+
         [HttpGet]
         public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
         {
-            if (employeeId <= 0)
-                return BadRequest("Invalid employee ID.");
-
             var emp = _context.Employees.FirstOrDefault(e => e.Id == employeeId);
-            if (emp == null)
-                return NotFound("Employee not found.");
+            if (emp == null) return NotFound();
 
             ViewBag.UserRole = emp.Role;
 
-            // 📅 Date range
-            DateTime start = from?.Date ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-            DateTime end = to?.Date ?? DateTime.Today;
-
-            // 📦 Fetch DB attendance once
+            DateTime start = from ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            DateTime end = to ?? DateTime.Today;
 
             var dbAttendance = _context.Attendances
                 .Where(a => a.Emp_Code == emp.EmployeeCode &&
-            a.Date.Date >= start.Date &&
-            a.Date.Date <= end.Date)
+                            a.Date >= start &&
+                            a.Date <= end)
                 .ToList();
 
             List<AttendanceRecordVm> finalList = new();
 
-            // 🔁 LOOP ALL DATES — THIS IS THE KEY
             for (var date = start; date <= end; date = date.AddDays(1))
             {
-                //var rec = dbAttendance.FirstOrDefault(a => a.Date == date);
                 var rec = dbAttendance.FirstOrDefault(a => a.Date.Date == date.Date);
-                // 🟥 LEAVE (highest priority)
+
+                if (rec != null && rec.Status == "Coff")
+                {
+                    finalList.Add(Map(rec, "Coff"));
+                    continue;
+                }
+
                 if (rec != null && rec.Status == "L")
                 {
                     finalList.Add(Map(rec, "L"));
                     continue;
                 }
 
-                // 🟦 HOLIDAY
-                if (rec != null && rec.Status == "HO")
-                {
-                    finalList.Add(Map(rec, "HO"));
-                    continue;
-                }
-
-                // 🟨 SUNDAY → WO
-                if (date.DayOfWeek == DayOfWeek.Sunday)
+                if (rec == null && date.DayOfWeek == DayOfWeek.Sunday)
                 {
                     finalList.Add(new AttendanceRecordVm
                     {
@@ -646,34 +412,17 @@ namespace HRMS.Controllers
                     continue;
                 }
 
-                // 🟨 SATURDAY → WOP
-                if (date.DayOfWeek == DayOfWeek.Saturday)
-                {
-                    if (rec != null)
-                        finalList.Add(Map(rec, "WOP"));
-                    else
-                        finalList.Add(new AttendanceRecordVm
-                        {
-                            Emp_Code = emp.EmployeeCode,
-                            Date = date,
-                            Status = "WOP"
-                        });
-                    continue;
-                }
-
-                // 🟩 PRESENT / AUTO
                 if (rec != null)
                 {
                     string status =
                         rec.InTime.HasValue && rec.OutTime.HasValue ? "P" :
-                        rec.InTime.HasValue && !rec.OutTime.HasValue ? "AUTO" :
-                        "A";
+                        rec.InTime.HasValue ? "AUTO" :
+                        rec.Status;
 
                     finalList.Add(Map(rec, status));
                 }
                 else
                 {
-                    // ⬜ ABSENT (NO RECORD)
                     finalList.Add(new AttendanceRecordVm
                     {
                         Emp_Code = emp.EmployeeCode,
@@ -683,236 +432,14 @@ namespace HRMS.Controllers
                 }
             }
 
-            var summary = new EmployeeAttendanceSummaryViewModel
+            return View(new EmployeeAttendanceSummaryViewModel
             {
                 Employee = emp,
-                AttendanceRecords = finalList
-                    .OrderByDescending(x => x.Date)
-                    .ToList(),
+                AttendanceRecords = finalList.OrderByDescending(x => x.Date).ToList(),
                 FromDate = start,
-                ToDate = end,
-                TotalDays = finalList.Count,
-                AverageWorkingHours =
-                    finalList
-                        .Where(a => a.InTime.HasValue && a.OutTime.HasValue)
-                        .Select(a => (a.OutTime.Value - a.InTime.Value).TotalHours)
-                        .DefaultIfEmpty(0)
-                        .Average()
-                        .ToString("0.0") + " Hrs"
-            };
-
-            return View(summary);
+                ToDate = end
+            });
         }
-
-        //[HttpGet]
-        //public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
-        //{
-        //    if (employeeId <= 0)
-        //        return BadRequest("Invalid employee ID.");
-
-        //    var emp = _context.Employees.FirstOrDefault(e => e.Id == employeeId);
-        //    if (emp == null)
-        //        return NotFound("Employee not found.");
-
-        //    ViewBag.UserRole = emp.Role;
-
-        //    // Default date range
-        //    DateTime start = from?.Date ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-        //    DateTime end = to?.Date ?? DateTime.Today;
-
-        //    // ✅ FETCH ONLY DB RECORDS
-        //    var attendance = _context.Attendances
-        //        .Where(a => a.Emp_Code == emp.EmployeeCode &&
-        //                    a.Date >= start && a.Date <= end)
-        //        .OrderByDescending(a => a.Date)
-        //        .Select(a => new AttendanceRecordVm
-        //        {
-        //            Emp_Code = a.Emp_Code,
-        //            Date = a.Date,
-        //            InTime = a.InTime,
-        //            OutTime = a.OutTime,
-        //            CorrectionRequested = a.CorrectionRequested,
-        //            CorrectionStatus = a.CorrectionStatus,
-
-        //            Status =
-        //                a.Status == "L" ? "L" :
-        //                a.Status == "HO" ? "HO" :
-        //                a.Date.DayOfWeek == DayOfWeek.Sunday ? "WO" :
-        //                a.Date.DayOfWeek == DayOfWeek.Saturday ? "WOP" :
-        //                (a.InTime.HasValue && a.OutTime.HasValue) ? "P" :
-        //                (a.InTime.HasValue && !a.OutTime.HasValue) ? "AUTO" :
-        //                "A"
-        //        })
-        //        .ToList();
-
-        //    var summary = new EmployeeAttendanceSummaryViewModel
-        //    {
-        //        Employee = emp,
-        //        AttendanceRecords = attendance,
-        //        FromDate = start,
-        //        ToDate = end,
-        //        TotalDays = attendance.Count,
-        //        AverageWorkingHours =
-        //            attendance
-        //                .Where(a => a.InTime.HasValue && a.OutTime.HasValue)
-        //                .Select(a => (a.OutTime.Value - a.InTime.Value).TotalHours)
-        //                .DefaultIfEmpty(0)
-        //                .Average()
-        //                .ToString("0.0") + " Hrs"
-        //    };
-
-        //    return View(summary);
-        //}
-
-        // =========================================================
-        // EMPLOYEE SUMMARY PAGE
-        // =========================================================
-        //[HttpGet]
-        //public IActionResult EmployeeSummary(int employeeId, DateTime? from = null, DateTime? to = null)
-        //{
-        //    if (employeeId <= 0)
-        //        return BadRequest("Invalid employee ID.");
-
-        //    var emp = _context.Employees.FirstOrDefault(e => e.Id == employeeId);
-        //    if (emp == null)
-        //        return NotFound("Employee not found.");
-
-        //    string empCode = emp.EmployeeCode;
-        //    // ✅ Await FindAsync
-
-
-        //    // ✅ SAFE string cast
-        //    ViewBag.UserRole = emp.Role?.ToString();
-        //    // Default date range
-        //    if (!from.HasValue)
-        //        from = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-
-        //    if (!to.HasValue)
-        //        to = DateTime.Now.Date;
-
-        //    DateTime start = from.Value.Date;
-        //    DateTime end = to.Value.Date;
-
-        //    // Fetch DB attendance
-        //    var dbAttendance = _context.Attendances
-        //        .Where(a => a.Emp_Code == empCode && a.Date >= start && a.Date <= end)
-        //        .ToList();
-
-        //    List<AttendanceRecordVm> finalList = new List<AttendanceRecordVm>();
-
-        //    // Loop through date range to fill missing days
-        //    for (var date = start; date <= end; date = date.AddDays(1))
-        //    {
-        //        var rec = dbAttendance.FirstOrDefault(a => a.Date == date);
-
-        //        // -------- WEEKLY OFF (Sunday = WO) ----------
-        //        if (date.DayOfWeek == DayOfWeek.Sunday)
-        //        {
-        //            finalList.Add(new AttendanceRecordVm
-        //            {
-        //                Emp_Code= empCode,
-        //                Date = date,
-        //                Status = "WO",          // Weekly Off
-        //                InTime = null,
-        //                OutTime = null,
-        //                CorrectionRequested = false
-        //            });
-        //            continue;
-        //        }
-
-
-        //        // -------- WEEKLY OFF (Saturday = WOP) ----------
-        //        if (date.DayOfWeek == DayOfWeek.Saturday)
-        //        {
-        //            if (rec != null) // Attendance exists on Saturday
-        //            {
-        //                finalList.Add(new AttendanceRecordVm
-        //                {
-        //                    Emp_Code = empCode,
-        //                    Date = rec.Date,
-        //                    Status = "WOP",
-        //                    InTime = rec.InTime,            // ✅ KEEP TIME
-        //                    OutTime = rec.OutTime,          // ✅ KEEP TIME
-        //                    CorrectionRequested = rec.CorrectionRequested,
-        //                    CorrectionStatus = rec.CorrectionStatus
-        //                });
-        //            }
-        //            else
-        //            {
-        //                finalList.Add(new AttendanceRecordVm
-        //                {
-        //                    Emp_Code = empCode,
-        //                    Date = date,
-        //                    Status = "WOP",
-        //                    InTime = null,
-        //                    OutTime = null,
-        //                    CorrectionRequested = false
-        //                });
-        //            }
-        //            continue;
-        //        }
-
-
-        //        // -------- ATTENDANCE EXISTS ----------
-        //        if (rec != null)
-        //        {
-        //            string finalStatus;
-
-        //            if (rec.Status == "L")
-        //                finalStatus = "L";              // Leave
-        //            else if (rec.InTime.HasValue && rec.OutTime.HasValue)
-        //                finalStatus = "P";              // Present
-        //            else if (rec.InTime.HasValue && !rec.OutTime.HasValue)
-        //                finalStatus = "AUTO";           // Auto checkout
-        //            else
-        //                finalStatus = "A";              // Absent
-
-        //            finalList.Add(new AttendanceRecordVm
-        //            {
-        //                Emp_Code = empCode,
-        //                Date = rec.Date,
-        //                Status = finalStatus,
-        //                InTime = rec.InTime,
-        //                OutTime = rec.OutTime,
-        //                CorrectionRequested = rec.CorrectionRequested,
-        //                CorrectionStatus = rec.CorrectionStatus
-        //            });
-        //        }
-        //        else
-        //        {
-        //            // -------- NO ATTENDANCE → Absent --------
-        //            finalList.Add(new AttendanceRecordVm
-        //            {
-        //                Emp_Code = empCode,
-        //                Date = date,
-        //                Status = "A",
-        //                InTime = null,
-        //                OutTime = null,
-        //                CorrectionRequested = false
-        //            });
-        //        }
-        //    }
-
-        //    // Calculate summary
-        //    var summary = new EmployeeAttendanceSummaryViewModel
-        //    {
-        //        Employee = emp,
-        //        AttendanceRecords = finalList.OrderByDescending(d => d.Date).ToList(),
-        //        FromDate = start,
-        //        ToDate = end,
-
-        //        TotalDays = finalList.Count,
-
-        //        AverageWorkingHours =
-        //finalList
-        //    .Where(a => a.InTime.HasValue && a.OutTime.HasValue)
-        //    .Select(a => (a.OutTime.Value - a.InTime.Value).TotalHours)
-        //    .DefaultIfEmpty(0)
-        //    .Average()
-        //    .ToString("0.0") + " Hrs"
-        //    };
-        //    return View(summary);
-        //}
 
         public IActionResult Index(string search, DateTime? fromDate, DateTime? toDate, string status)
         {
@@ -1012,16 +539,7 @@ namespace HRMS.Controllers
                 })
                 .ToList();
 
-            // ---------------------------------------------
-            // 6️⃣ ADD WEEKLY OFF LABELS (ONLY FOR EXISTING RECORDS)
-            // ---------------------------------------------
-            foreach (var item in list)
-            {
-                if (item.AttDate.DayOfWeek == DayOfWeek.Sunday)
-                    item.Status = "WO";      // Weekly Off (Sunday)
-                else if (item.AttDate.DayOfWeek == DayOfWeek.Saturday)
-                    item.Status = "WOP";     // Saturday Weekly Off
-            }
+
 
             // ---------------------------------------------
             // 7️⃣ ViewBag Setup
@@ -1254,6 +772,7 @@ namespace HRMS.Controllers
             string? pendingWithRole = userRole switch
             {
                 "Employee" => "HR",
+                "Intern" => "HR",
                 "Manager" => "HR",
                 "HR" => "GM",
                 "GM" => "VP",
@@ -1438,10 +957,10 @@ namespace HRMS.Controllers
                     .Select(a => new Attendance
                     {
                         Id = a.Id, // If primary key is different
-                        Emp_Code = a.Emp_Code , // Match with your column
+                        Emp_Code = a.Emp_Code, // Match with your column
                         Date = a.Date,
                         Status = a.Status, // If column is AttendanceStatus
-                                                     // Add other properties
+                                           // Add other properties
                         InTime = a.InTime,
                         OutTime = a.OutTime,
                         Total_Hours = a.Total_Hours
@@ -1584,80 +1103,80 @@ namespace HRMS.Controllers
             return RedirectToAction("HighDensityCalendar", new { token });
         }
 
-        
+
         [HttpGet]
-            public IActionResult ExportCalendar(
+        public IActionResult ExportCalendar(
                 int year,
                 int month,
                 string? search,
                 string? department = "All")
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            var empQuery = _context.Employees.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-
-                var empQuery = _context.Employees.AsQueryable();
-
-                if (!string.IsNullOrWhiteSpace(search))
-                {
-                    search = search.Trim();
-                    empQuery = empQuery.Where(e =>
-                        e.EmployeeCode.Contains(search) ||
-                        e.Name.Contains(search));
-                }
-
-                if (!string.IsNullOrWhiteSpace(department) && department != "All")
-                {
-                    empQuery = empQuery.Where(e => e.Department == department);
-                }
-
-                var employees = empQuery.OrderBy(e => e.Name).ToList();
-                var empCodes = employees.Select(e => e.EmployeeCode).ToList();
-
-                var attendance = _context.Attendances
-                    .Where(a => a.Date.Year == year &&
-                                a.Date.Month == month &&
-                                empCodes.Contains(a.Emp_Code))
-                    .OrderBy(a => a.Date)
-                    .ToList();
-
-                using var pkg = new ExcelPackage();
-                var ws = pkg.Workbook.Worksheets.Add("Calendar");
-
-                // header row
-                ws.Cells[1, 1].Value = "Employee Code";
-                ws.Cells[1, 2].Value = "Employee Name";
-                ws.Cells[1, 3].Value = "Date";
-                ws.Cells[1, 4].Value = "Status";
-                ws.Cells[1, 5].Value = "In Time";
-                ws.Cells[1, 6].Value = "Out Time";
-                ws.Cells[1, 7].Value = "Total Hours";
-
-                int row = 2;
-                foreach (var emp in employees)
-                {
-                    var empAtt = attendance
-                        .Where(a => a.Emp_Code == emp.EmployeeCode)
-                        .OrderBy(a => a.Date);
-
-                    foreach (var a in empAtt)
-                    {
-                        ws.Cells[row, 1].Value = emp.EmployeeCode;
-                        ws.Cells[row, 2].Value = emp.Name;
-                        ws.Cells[row, 3].Value = a.Date.ToString("yyyy-MM-dd");
-                        ws.Cells[row, 4].Value = a.Status;
-                        ws.Cells[row, 5].Value = a.InTime?.ToString(@"hh\:mm");
-                        ws.Cells[row, 6].Value = a.OutTime?.ToString(@"hh\:mm");
-                        ws.Cells[row, 7].Value = a.Total_Hours;
-                        row++;
-                    }
-                }
-
-                ws.Cells.AutoFitColumns();
-
-                var fileName = $"Calendar_{year}_{month}.xlsx";
-                return File(pkg.GetAsByteArray(),
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    fileName);
+                search = search.Trim();
+                empQuery = empQuery.Where(e =>
+                    e.EmployeeCode.Contains(search) ||
+                    e.Name.Contains(search));
             }
+
+            if (!string.IsNullOrWhiteSpace(department) && department != "All")
+            {
+                empQuery = empQuery.Where(e => e.Department == department);
+            }
+
+            var employees = empQuery.OrderBy(e => e.Name).ToList();
+            var empCodes = employees.Select(e => e.EmployeeCode).ToList();
+
+            var attendance = _context.Attendances
+                .Where(a => a.Date.Year == year &&
+                            a.Date.Month == month &&
+                            empCodes.Contains(a.Emp_Code))
+                .OrderBy(a => a.Date)
+                .ToList();
+
+            using var pkg = new ExcelPackage();
+            var ws = pkg.Workbook.Worksheets.Add("Calendar");
+
+            // header row
+            ws.Cells[1, 1].Value = "Employee Code";
+            ws.Cells[1, 2].Value = "Employee Name";
+            ws.Cells[1, 3].Value = "Date";
+            ws.Cells[1, 4].Value = "Status";
+            ws.Cells[1, 5].Value = "In Time";
+            ws.Cells[1, 6].Value = "Out Time";
+            ws.Cells[1, 7].Value = "Total Hours";
+
+            int row = 2;
+            foreach (var emp in employees)
+            {
+                var empAtt = attendance
+                    .Where(a => a.Emp_Code == emp.EmployeeCode)
+                    .OrderBy(a => a.Date);
+
+                foreach (var a in empAtt)
+                {
+                    ws.Cells[row, 1].Value = emp.EmployeeCode;
+                    ws.Cells[row, 2].Value = emp.Name;
+                    ws.Cells[row, 3].Value = a.Date.ToString("yyyy-MM-dd");
+                    ws.Cells[row, 4].Value = a.Status;
+                    ws.Cells[row, 5].Value = a.InTime?.ToString(@"hh\:mm");
+                    ws.Cells[row, 6].Value = a.OutTime?.ToString(@"hh\:mm");
+                    ws.Cells[row, 7].Value = a.Total_Hours;
+                    row++;
+                }
+            }
+
+            ws.Cells.AutoFitColumns();
+
+            var fileName = $"Calendar_{year}_{month}.xlsx";
+            return File(pkg.GetAsByteArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName);
+        }
 
 
 
@@ -1858,7 +1377,7 @@ namespace HRMS.Controllers
 
             bool isWeeklyOff =
                 att.Date.DayOfWeek == DayOfWeek.Sunday;
-                //att.Date.DayOfWeek == DayOfWeek.Saturday;
+            //att.Date.DayOfWeek == DayOfWeek.Saturday;
 
             bool isHoliday = att.Status == "HO";
 
@@ -1881,10 +1400,9 @@ namespace HRMS.Controllers
             _logger.LogInformation(
                 $"Comp-Off credited to {emp.EmployeeCode} for {att.Date:dd-MM-yyyy}");
         }
-        private Attendance GetOrCreateTodayAttendance(
-            string empCode,
-            int empId,
-            DateTime date)
+       
+
+        private Attendance GetOrCreateTodayAttendance(string empCode, int empId, DateTime date)
         {
             var att = _context.Attendances
                 .FirstOrDefault(a => a.Emp_Code == empCode && a.Date == date);
@@ -1892,10 +1410,8 @@ namespace HRMS.Controllers
             if (att != null)
                 return att;
 
-            // 🔹 CREATE ONLY IF MISSING
             att = new Attendance
             {
-                Id = empId,
                 Emp_Code = empCode,
                 Date = date,
                 Status = "P",
@@ -1906,11 +1422,8 @@ namespace HRMS.Controllers
             };
 
             _context.Attendances.Add(att);
-
             return att;
         }
-
-
         public IActionResult ViewCorrectionProof(string fileName)
         {
             if (string.IsNullOrEmpty(fileName))
@@ -1928,7 +1441,6 @@ namespace HRMS.Controllers
         // ----------------------------------
         // 🔧 HELPER METHODS (ADD HERE)
         // ----------------------------------
-
         private AttendanceRecordVm Map(Attendance rec, string status)
         {
             return new AttendanceRecordVm
@@ -1942,6 +1454,7 @@ namespace HRMS.Controllers
                 CorrectionStatus = rec.CorrectionStatus
             };
         }
+        
     }
 }
 

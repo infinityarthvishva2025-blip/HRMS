@@ -112,9 +112,8 @@ namespace HRMS.Controllers
             }
 
             var empCodes = _context.Employees
-     .Where(e => e.Status == "Active")
-     .Select(e => e.EmployeeCode)
-     .ToList();
+                .Select(e => e.EmployeeCode)
+                .ToList();
 
             var list = empCodes
                 .Select(code =>

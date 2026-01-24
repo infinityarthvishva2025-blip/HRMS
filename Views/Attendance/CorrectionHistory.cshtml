@@ -24,21 +24,16 @@
         Attendance Correction History
     </h2>
 
-    <!-- 🔍 FILTERS -->
+    <!-- 🔍 SERVER FILTERS (UNCHANGED) -->
     <form method="get" class="row g-3 mb-3">
 
         <div class="col-md-4">
-            <input type="text"
-                   name="search"
-                   value="@ViewBag.Search"
-                   class="form-control"
-                   placeholder="Employee name or code" />
+            <input type="text" name="search" value="@ViewBag.Search"
+                   class="form-control" placeholder="Employee name or code" />
         </div>
 
         <div class="col-md-3">
-            <input type="month"
-                   name="month"
-                   value="@ViewBag.Month"
+            <input type="month" name="month" value="@ViewBag.Month"
                    class="form-control" />
         </div>
 
@@ -47,7 +42,6 @@
                 <option value="All" selected="@(ViewBag.Status == "All")">All</option>
                 <option value="Approved" selected="@(ViewBag.Status == "Approved")">Approved</option>
                 <option value="Rejected" selected="@(ViewBag.Status == "Rejected")">Rejected</option>
-                 @* <option value="Pending" selected="@(ViewBag.Status == "Pending")">Pending</option>  *@
             </select>
         </div>
 
@@ -56,84 +50,168 @@
                 <i class="fa-solid fa-filter me-1"></i> Filter
             </button>
         </div>
-
     </form>
 
+    <!-- 🔎 CLIENT SEARCH + PAGE SIZE -->
+    <div class="d-flex justify-content-between mb-2">
+        <input type="text" id="clientSearch" class="form-control w-25"
+               placeholder="Search in table..." />
+
+        <select id="pageSize" class="form-select w-auto">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="9999">All</option>
+        </select>
+    </div>
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
 
-            <table class="table table-bordered table-striped mb-0 align-middle">
+            <table class="table table-bordered table-striped mb-0 align-middle" id="dataTable">
                 <thead class="table-dark">
                     <tr>
                         <th>Employee</th>
-                        <th>Date</th>
+                        <th class="sortable" data-col="1">Date ⬍</th>
                         <th>Requested At</th>
-                        <th>Status</th>
+                        <th class="sortable" data-col="3">Status ⬍</th>
                         <th>Reason</th>
-                        <th>Reviewed By</th> 
+                        <th>Reviewed By</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    @if (!Model.Any())
+                    @foreach (var a in Model)
                     {
+                        var emp = employees?.FirstOrDefault(e => e.EmployeeCode == a.Emp_Code);
                         <tr>
-                            <td colspan="6" class="text-center text-danger fw-bold py-4">
-                                No correction history found.
-                            </td>
+                            <td>@a.Emp_Code - @(emp?.Name ?? "Unknown")</td>
+                            <td>@a.Date.ToString("yyyy-MM-dd")</td>
+                            <td>@(a.CorrectionRequestedOn?.ToString("yyyy-MM-dd") ?? "--")</td>
+                            <td>@a.CorrectionStatus</td>
+                            <td>@(a.CorrectionRemark ?? "--")</td>
+                            <td>@(a.ReviewedBy ?? "--")</td>
                         </tr>
-                    }
-                    else
-                    {
-                        foreach (var a in Model)
-                        {
-                            var emp = employees?.FirstOrDefault(e => e.EmployeeCode == a.Emp_Code);
-
-                            <tr>
-                                <td>
-                                    @a.Emp_Code - @(emp?.Name ?? "Unknown")
-                                </td>
-
-                                <td>@a.Date.ToString("dd-MMM-yyyy")</td>
-
-                                <td>
-                                    @(a.CorrectionRequestedOn != null
-                                                                ? a.CorrectionRequestedOn.Value.ToString("dd-MMM-yyyy hh:mm tt")
-                                                                : "--")
-                                </td>
-
-                                <td>
-                                    @if (a.CorrectionStatus == "Approved")
-                                    {
-                                        <span class="badge bg-success">Approved</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-danger">Rejected</span>
-                                    }
-                                </td>
-
-                                <td>@(a.CorrectionRemark ?? "--")</td>
-
-                                <td>@(a.ReviewedBy ?? "--")</td>
-                            </tr>
-                        }
                     }
                 </tbody>
             </table>
 
         </div>
     </div>
+
+    <!-- PAGINATION -->
+    <nav class="mt-3">
+        <ul class="pagination justify-content-md-end" id="pagination"></ul>
+    </nav>
 </div>
 
 <style>
+    th.sortable {
+        cursor: pointer;
+    }
+
     table td, table th {
         vertical-align: middle !important;
     }
-
-    .badge {
-        font-size: 0.85rem;
-        padding: 6px 10px;
-    }
 </style>
+
+<script>
+    let currentPage = 1;
+    let pageSize = 10;
+    let sortCol = null;
+    let sortAsc = true;
+
+    const table = document.querySelector("#dataTable tbody");
+    const allRows = Array.from(table.querySelectorAll("tr"));
+    let filteredRows = [...allRows];
+
+    const pagination = document.getElementById("pagination");
+    const pageSizeSelect = document.getElementById("pageSize");
+    const searchInput = document.getElementById("clientSearch");
+
+    function render() {
+        let start = (currentPage - 1) * pageSize;
+        let end = start + pageSize;
+
+        allRows.forEach(r => r.style.display = "none");
+        filteredRows.slice(start, end).forEach(r => r.style.display = "");
+
+        renderPagination();
+    }
+
+    // ✅ COMPACT PAGINATION (< 1 2 >)
+    function renderPagination() {
+        pagination.innerHTML = "";
+        let totalPages = Math.ceil(filteredRows.length / pageSize);
+        if (totalPages <= 1) return;
+
+        // PREVIOUS
+        let prev = document.createElement("li");
+        prev.className = "page-item " + (currentPage === 1 ? "disabled" : "");
+        prev.innerHTML = `<a class="page-link" href="#">&lt;</a>`;
+        prev.onclick = e => {
+            e.preventDefault();
+            if (currentPage > 1) {
+                currentPage--;
+                render();
+            }
+        };
+        pagination.appendChild(prev);
+
+        // PAGE 1 & 2 ONLY
+        for (let i = 1; i <= Math.min(2, totalPages); i++) {
+            let li = document.createElement("li");
+            li.className = "page-item " + (i === currentPage ? "active" : "");
+            li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+            li.onclick = e => {
+                e.preventDefault();
+                currentPage = i;
+                render();
+            };
+            pagination.appendChild(li);
+        }
+
+        // NEXT
+        let next = document.createElement("li");
+        next.className = "page-item " + (currentPage === totalPages ? "disabled" : "");
+        next.innerHTML = `<a class="page-link" href="#">&gt;</a>`;
+        next.onclick = e => {
+            e.preventDefault();
+            if (currentPage < totalPages) {
+                currentPage++;
+                render();
+            }
+        };
+        pagination.appendChild(next);
+    }
+
+    pageSizeSelect.onchange = () => {
+        pageSize = +pageSizeSelect.value;
+        currentPage = 1;
+        render();
+    };
+
+    searchInput.onkeyup = () => {
+        let q = searchInput.value.toLowerCase();
+        filteredRows = allRows.filter(r => r.innerText.toLowerCase().includes(q));
+        currentPage = 1;
+        render();
+    };
+
+    document.querySelectorAll(".sortable").forEach(th => {
+        th.onclick = () => {
+            let col = th.dataset.col;
+            sortAsc = sortCol === col ? !sortAsc : true;
+            sortCol = col;
+
+            filteredRows.sort((a, b) => {
+                let x = a.children[col].innerText;
+                let y = b.children[col].innerText;
+                return sortAsc ? x.localeCompare(y) : y.localeCompare(x);
+            });
+            render();
+        };
+    });
+
+    render();
+</script>
