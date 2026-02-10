@@ -71,11 +71,20 @@
                     <td class="fw-bold text-success">@item.NetSalary.ToString("0.00")</td>
 
                     <td>
-                        <a asp-action="DownloadSalarySlip"
+                        @* <a asp-action="DownloadSalarySlipByDateRange"
                            asp-controller="Payroll"
                            asp-route-empCode="@item.EmpCode"
                            asp-route-year="@item.Year"
                            asp-route-month="@item.Month"
+                           class="btn btn-primary btn-sm"
+                           target="_blank">
+                            Slip
+                        </a> *@
+                        <a asp-action="DownloadSalarySlipByDateRange"
+                           asp-controller="Payroll"
+                           asp-route-empCode="@item.EmpCode"
+                           asp-route-fromDate="@item.FromDate.ToString("yyyy-MM-dd")"
+                           asp-route-toDate="@item.ToDate.ToString("yyyy-MM-dd")"
                            class="btn btn-primary btn-sm"
                            target="_blank">
                             Slip

@@ -90,7 +90,7 @@ namespace HRMS.Services
                 }
 
                 // ✅ Holiday = Paid
-                if (status == "H" || status == "HO")
+                if (status == "H" || status == "HO" || status== "Coff")
                 {
                     fullDays++;
                     continue;

@@ -299,31 +299,21 @@
                 <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
+
             <div class="modal-body p-4">
                 <form id="salarySlipForm">
+
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Month</label>
-                        <select id="month" class="form-select" required>
-                            <option value="">-- Select Month --</option>
-                            @for (int m = 1; m <= 12; m++)
-                            {
-                                <option value="@m">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)</option>
-                            }
-                        </select>
+                        <label class="form-label fw-bold">From Date</label>
+                        <input type="date" id="fromDate" class="form-control" required />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Year</label>
-                        <select id="year" class="form-select" required>
-                            <option value="">-- Select Year --</option>
-                            @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
-                            {
-                                <option value="@y">@y</option>
-                            }
-                        </select>
+                        <label class="form-label fw-bold">To Date</label>
+                        <input type="date" id="toDate" class="form-control" required />
                     </div>
 
-                    <div class="text-center">
+                    <div class="text-center mt-3">
                         <button type="submit" class="btn btn-primary px-4 rounded-pill">
                             <i class="fa-solid fa-search me-2"></i> Show Salary Slip
                         </button>
@@ -331,17 +321,28 @@
                 </form>
             </div>
 
-            <div class="modal-footer justify-content-center d-none" id="salarySlipResult">
-                <a id="downloadSlipBtn"
-                   class="btn btn-gradient-primary px-4 py-2 rounded-pill shadow-sm"
+            <div class="modal-footer justify-content-center gap-2 d-none" id="salarySlipResult">
+
+                <!-- VIEW SALARY SLIP (HTML) -->
+                <a id="viewSlipBtn"
+                   class="btn btn-outline-primary px-4 rounded-pill"
                    target="_blank">
-                    <i class="fa-solid fa-download me-2"></i> Download Salary Slip
+                    <i class="fa-solid fa-eye me-2"></i> View Salary Slip
                 </a>
+
+                <!-- DOWNLOAD SALARY SLIP (PDF) -->
+                <a id="downloadSlipBtn"
+                   class="btn btn-primary px-4 rounded-pill"
+                   target="_blank">
+                    <i class="fa-solid fa-download me-2"></i> Download PDF
+                </a>
+
             </div>
+
+
         </div>
     </div>
 </div>
-
 
 
 <!-- ======================= CHART JS ======================= -->
@@ -628,19 +629,20 @@
        document.getElementById("salarySlipForm").addEventListener("submit", function (e) {
         e.preventDefault();
 
-        const month = document.getElementById("month").value;
-        const year = document.getElementById("year").value;
+        const fromDate = document.getElementById("fromDate").value;
+        const toDate = document.getElementById("toDate").value;
+        const empCode = "@Model.Employee.EmployeeCode";
 
-        const empCode = "@Model.Employee.EmployeeCode";   // ADD THIS
-
-        if (!month || !year) {
-            return alert("Please select both month and year!");
+        if (!fromDate || !toDate) {
+            alert("Please select From Date and To Date");
+            return;
         }
 
-        const btn = document.getElementById("downloadSlipBtn");
+        document.getElementById("viewSlipBtn").href =
+            `/Payroll/PayslipByDateRange?empCode=${empCode}&fromDate=${fromDate}&toDate=${toDate}`;
 
-        // FIXED URL — now includes empCode
-        btn.href = `/Payroll/DownloadSalarySlip?empCode=${empCode}&month=${month}&year=${year}`;
+        document.getElementById("downloadSlipBtn").href =
+            `/Payroll/DownloadSalarySlipByDateRange?empCode=${empCode}&fromDate=${fromDate}&toDate=${toDate}`;
 
         document.getElementById("salarySlipResult").classList.remove("d-none");
     });
