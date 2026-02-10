@@ -100,5 +100,8 @@ namespace HRMS.ViewModels
         public IFormFile AadhaarFile { get; set; }
         public IFormFile PanFile { get; set; }
         public IFormFile PassbookFile { get; set; }
+        // 🔥 TEMP fields (NOT DB columns)
+        public string? NewDepartment { get; set; }
+        public string? NewPosition { get; set; }
     }   
 }

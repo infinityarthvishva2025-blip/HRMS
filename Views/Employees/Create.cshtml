@@ -253,14 +253,14 @@
                     <input asp-for="JoiningDate" type="date" class="form-control" required />
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label asp-for="Department">Department</label>
 
                     <div class="input-group">
                         <select asp-for="Department" id="Department" class="form-select">
                             <option value="">-- Select --</option>
                         </select>
-
+                        &nbsp;
                         <!-- PLUS BUTTON -->
                         <button type="button" class="btn btn-outline-primary" id="AddDeptBtn">
                             <i class="fa fa-plus"></i>
@@ -284,7 +284,7 @@
                         <select asp-for="Position" id="Position" class="form-select">
                             <option value="">-- Select Position --</option>
                         </select>
-
+                        &nbsp;
                         <!-- PLUS BUTTON -->
                         <button type="button" class="btn btn-outline-primary" id="AddPosBtn">
                             <i class="fa fa-plus"></i>

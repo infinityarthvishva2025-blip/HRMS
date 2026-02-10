@@ -336,7 +336,9 @@
             </div>
             <div class="row g-3">
                 <div class="col-md-4">
+                  
                     <label asp-for="Department">Department</label>
+                    <div class="input-group">
                     <select asp-for="Department" class="form-select" id="Department">
 
                         <option value="">-- Select --</option>
@@ -344,15 +346,42 @@
                         {
                             <option value="@d">@d</option>
                         }
-                    </select>
+                        </select>  &nbsp;
+                    <button type="button" class="btn btn-outline-primary" id="AddDeptBtn">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                    </div>
+                     <input type="text"
+                           name="NewDepartment"
+                           id="NewDepartment"
+                           class="form-control mt-2 d-none"
+                           placeholder="Enter new department" />
+
+                    <span asp-validation-for="Department" class="text-danger"></span>
+
                 </div>
 
 
                 <div class="col-md-4">
                     <label asp-for="Position">Position</label>
+                    <div class="input-group">
                     <select asp-for="Position" class="form-select" id="Position">
                         <option value="">-- Select Position --</option>
                     </select>
+                    &nbsp;
+                    <!-- PLUS BUTTON -->
+                        <button type="button" class="btn btn-outline-primary g-3" id="AddPosBtn">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                    </div>
+                    <!-- MANUAL TEXTBOX (HIDDEN BY DEFAULT) -->
+                    <input type="text"
+                           name="NewPosition"
+                           id="NewPosition"
+                           class="form-control mt-2 d-none"
+                           placeholder="Enter new position" />
+
+                    <span asp-validation-for="Position" class="text-danger"></span>
                 </div>
 
 
@@ -885,6 +914,62 @@
             }
         }
 
+    </script>
+    <script>
+        // PLUS BUTTON: MANUAL DEPARTMENT/POSITION
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const deptSelect = document.getElementById("Department");
+            const newDeptBox = document.getElementById("NewDepartment");
+            const addDeptBtn = document.getElementById("AddDeptBtn");
+
+            const posSelect = document.getElementById("Position");
+            const newPosBox = document.getElementById("NewPosition");
+            const addPosBtn = document.getElementById("AddPosBtn");
+
+
+            // Toggle NEW Department field
+            addDeptBtn.addEventListener("click", function () {
+                newDeptBox.classList.toggle("d-none");
+                if (!newDeptBox.classList.contains("d-none")) {
+                    newDeptBox.focus();
+                    deptSelect.value = "";
+                }
+            });
+
+            newDeptBox.addEventListener("input", function () {
+                if (this.value.trim() !== "") deptSelect.value = "";
+            });
+
+            deptSelect.addEventListener("change", function () {
+                if (this.value !== "") {
+                    newDeptBox.value = "";
+                    newDeptBox.classList.add("d-none");
+                }
+            });
+
+
+            // Toggle NEW Position field
+            addPosBtn.addEventListener("click", function () {
+                newPosBox.classList.toggle("d-none");
+                if (!newPosBox.classList.contains("d-none")) {
+                    newPosBox.focus();
+                    posSelect.value = "";
+                }
+            });
+
+            newPosBox.addEventListener("input", function () {
+                if (this.value.trim() !== "") posSelect.value = "";
+            });
+
+            posSelect.addEventListener("change", function () {
+                if (this.value !== "") {
+                    newPosBox.value = "";
+                    newPosBox.classList.add("d-none");
+                }
+            });
+
+        });
     </script>
 }
 

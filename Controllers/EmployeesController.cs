@@ -435,12 +435,41 @@ namespace HRMS.Controllers
             emp.DoctorContact = model.DoctorContact;
 
             // JOB
+            // ================================
+            // JOB (NO DB CHANGE REQUIRED)
+            // ================================
+
+            // Department logic
+            if (!string.IsNullOrWhiteSpace(model.NewDepartment))
+            {
+                emp.Department = model.NewDepartment.Trim().ToUpper();
+            }
+            else
+            {
+                emp.Department = model.Department;
+            }
+
+            // Position logic
+            if (!string.IsNullOrWhiteSpace(model.NewPosition))
+            {
+                emp.Position = model.NewPosition.Trim().ToUpper();
+            }
+            else
+            {
+                emp.Position = model.Position;
+            }
+
             emp.JoiningDate = model.JoiningDate;
-            emp.Department = model.Department;
-            emp.Position = model.Position;
             emp.Role = model.Role;
             emp.Salary = model.Salary;
             emp.ReportingManager = model.ReportingManager;
+
+            //emp.JoiningDate = model.JoiningDate;
+            //emp.Department = model.Department;
+            //emp.Position = model.Position;
+            //emp.Role = model.Role;
+            //emp.Salary = model.Salary;
+            //emp.ReportingManager = model.ReportingManager;
 
             // EDUCATION
             emp.HSCPercent = model.HSCPercent;
