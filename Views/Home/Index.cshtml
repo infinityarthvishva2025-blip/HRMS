@@ -1,0 +1,648 @@
+﻿@model HRMS.Models.CelebrationViewModel
+@using HRMS.Models.ViewModels
+@using System.Linq
+
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_HrLayout.cshtml";
+
+    var recentEmployees = ViewBag.RecentEmployees as List<RecentEmployeeViewModel>
+                          ?? new List<RecentEmployeeViewModel>();
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<h2 class="fw-bold mb-4 page-title">HR Dashboard</h2>
+
+<div class="dashboard-header text-center mb-5">
+    <h2 class="welcome-title mb-2">
+        <i class="fa-solid fa-hand-wave text-warning me-2"></i>
+        Welcome, @Model.Employee.Name
+    </h2>
+    <p class="lead text-white">Your personalized work summary & attendance panel</p>
+
+    <div class="mt-4 text-center">
+
+        <a href="/Attendance/EmployeePanel"
+           class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold">
+            <i class="fa-solid fa-calendar-check me-2"></i> Mark Attendance
+        </a>
+
+        <a asp-controller="Attendance" asp-action="EmployeeSummary"
+           asp-route-employeeId="@Model.Employee.Id"
+           class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold">
+            <i class="fa-solid fa-chart-line me-2"></i> Attendance Summary
+        </a>
+
+        <a asp-controller="Leave" asp-action="Create"
+           class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold">
+            <i class="fa-solid fa-paper-plane me-2"></i> Apply Leave
+        </a>
+        <button type="button"
+                class="btn btn-light shadow mx-2 px-4 py-2 rounded-pill fw-semibold"
+                data-bs-toggle="modal"
+                data-bs-target="#salarySlipModal">
+            <i class="fa-solid fa-file-invoice-dollar me-2"></i> View Salary Slip
+        </button>
+
+
+    </div>
+
+</div>
+<!-- ======================= SUMMARY CARDS ======================= -->
+<div class="row g-3">
+    @* Total Employees *@
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+        <div class="summary-card">
+            <i class="fa-solid fa-users icon primary"></i>
+            <h4>@Model.TotalEmployees</h4>
+            <span>Total Employees</span>
+        </div>
+    </div>
+
+    @* Active*@
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+        <div class="summary-card">
+            <i class="fa-solid fa-user icon primary "></i>
+            <h4>@Model.ActiveEmployees</h4>
+            <span>Total Active </span>
+        </div>
+    </div>
+
+
+    @* Present *@
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+        <div class="summary-card">
+            <i class="fa-solid fa-user-check icon secondary"></i>
+            <h4>@((int?)ViewBag.PresentToday ?? 0)</h4>
+            <span>Today's Present</span>
+        </div>
+    </div>
+
+    @* Absent *@
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+        <div class="summary-card">
+            <i class="fa-solid fa-user-xmark icon danger"></i>
+            <h4>@((int?)ViewBag.AbsentToday ?? 0)</h4>
+            <span>Today's Absent</span>
+        </div>
+    </div>
+
+
+</div>
+
+
+<!-- ======================= QUICK ACTIONS ======================= -->
+<div class="card custom-card mt-4">
+    <div class="card-header custom-header">
+        <i class="fa-solid fa-bolt me-2 text-accent"></i> Quick Actions
+    </div>
+
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-3 justify-content-start">
+            <a asp-controller="Employees" asp-action="Create" class="btn custom-btn-primary">
+                <i class="fa-solid fa-user-plus"></i> Add Employee
+            </a>
+
+            <a asp-controller="Employees" asp-action="Index" class="btn custom-btn-secondary">
+                <i class="fa-solid fa-list"></i> View Employees
+            </a>
+
+            <a asp-controller="Attendance" asp-action="Index" class="btn custom-btn-info">
+                <i class="fa-solid fa-calendar-check"></i> Attendance Report
+            </a>
+
+            <a asp-controller="Leave" asp-action="ManagerApprovalList" class="btn custom-btn-outline-primary">
+                <i class="fa-solid fa-plane-departure"></i> Manage Leaves
+            </a>
+
+            <a asp-controller="Reports" asp-action="Index" class="btn custom-btn-outline-primary">
+                <i class="fa-solid fa-chart-bar"></i> Reports
+            </a>
+        </div>
+    </div>
+</div>
+
+
+<!-- ======================= CELEBRATIONS + CHART ======================= -->
+<div class="row mt-4 g-4">
+
+    <!-- Celebrations -->
+    <div class="col-lg-6 col-md-12">
+        <div class="card custom-card h-100">
+            <div class="card-header custom-header">🎉 Celebrations</div>
+
+            <div class="card-body">
+                <div class="row">
+
+                    <!-- Today's -->
+                    <div class="col-md-6 border-end celebration-box">
+                        <h6 class="section-title primary-text">Today's Celebrations</h6>
+
+                        @if ((Model?.TodaysBirthdays?.Any() ?? false) || (Model?.TodaysAnniversaries?.Any() ?? false))
+                        {
+                            @foreach (var emp in Model.TodaysBirthdays.Take(3))
+                            {
+                                <div class="cele-item">
+                                    <div class="cele-icon bg-danger"><i class="fa-solid fa-cake-candles"></i></div>
+                                    <div>
+                                        <strong>@emp.Name</strong>
+                                        <div class="text-muted small">Birthday Today 🎂</div>
+                                    </div>
+                                </div>
+                            }
+
+                            @foreach (var emp in Model.TodaysAnniversaries.Take(3))
+                            {
+                                <div class="cele-item">
+                                    <div class="cele-icon bg-secondary"><i class="fa-solid fa-briefcase"></i></div>
+                                    <div>
+                                        <strong>@emp.Name</strong>
+                                        <div class="text-muted small">Joining Anniversary 🎉</div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-muted">No celebrations today 🎈</div>
+                        }
+                    </div>
+
+                    <!-- Tomorrow -->
+                    <div class="col-md-6 celebration-box">
+                        <h6 class="section-title secondary-text">Tomorrow's Celebrations</h6>
+
+                        @if ((Model?.TomorrowsBirthdays?.Any() ?? false) || (Model?.TomorrowsAnniversaries?.Any() ?? false))
+                        {
+                            @foreach (var emp in Model.TomorrowsBirthdays.Take(3))
+                            {
+                                <div class="cele-item">
+                                    <div class="cele-icon bg-danger"><i class="fa-solid fa-cake-candles"></i></div>
+                                    <div>
+                                        <strong>@emp.Name</strong>
+                                        <div class="text-muted small">Birthday Tomorrow 🎂</div>
+                                    </div>
+                                </div>
+                            }
+
+                            @foreach (var emp in Model.TomorrowsAnniversaries.Take(3))
+                            {
+                                <div class="cele-item">
+                                    <div class="cele-icon bg-secondary"><i class="fa-solid fa-briefcase"></i></div>
+                                    <div>
+                                        <strong>@emp.Name</strong>
+                                        <div class="text-muted small">Joining Anniversary 🎊</div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-muted">No celebrations tomorrow 🎉</div>
+                        }
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Department Chart -->
+    <div class="col-lg-6 col-md-12">
+        <div class="card custom-card h-100">
+            <div class="card-header custom-header">Employee Distribution by Department</div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <div class="w-100">
+                    <canvas id="deptChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- ======================= RECENT EMPLOYEES ======================= -->
+<div class="card custom-card mt-4">
+    <div class="card-header custom-header d-flex justify-content-between">
+        <span><i class="fa-solid fa-users me-2 text-primary"></i> Recent Employees</span>
+        <a asp-controller="Employees" asp-action="Index" class="btn btn-sm custom-btn-outline-primary">View All</a>
+    </div>
+
+    <div class="card-body p-0 table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Position</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (!recentEmployees.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-3 text-danger fw-bold">
+                            No recent employees found.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in recentEmployees)
+                    {
+                        var emp = item.Employee;
+                        var att = item.Attendance;
+
+                        <tr>
+                            <td data-label="Code">@emp.EmployeeCode</td>
+                            <td>
+                                @emp.Name
+
+                                @if (emp.JoiningDate.HasValue &&
+                                                        (DateTime.Today - emp.JoiningDate.Value).Days <= 7)
+                                {
+                                    <span class="badge bg-success ms-2">NEW JOINEE</span>
+                                }
+                            </td>
+
+                            <td data-label="Department">@emp.Department</td>
+                            <td data-label="Position">@emp.Position</td>
+                            <td data-label="Joining Date">
+                               @(emp.JoiningDate?.ToString("dd-MM-yyyy")??"-")
+                            </td>
+                        </tr>
+
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- =========================================================== -->
+<!--     SALARY SLIP MODAL (NO CHANGES NEEDED)                  -->
+<!-- =========================================================== -->
+
+<div class="modal fade" id="salarySlipModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-file-invoice-dollar me-2"></i> Select Month & Year
+                </h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <form id="salarySlipForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Month</label>
+                        <select id="month" class="form-select" required>
+                            <option value="">-- Select Month --</option>
+                            @for (int m = 1; m <= 12; m++)
+                            {
+                                <option value="@m">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Year</label>
+                        <select id="year" class="form-select" required>
+                            <option value="">-- Select Year --</option>
+                            @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
+                            {
+                                <option value="@y">@y</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary px-4 rounded-pill">
+                            <i class="fa-solid fa-search me-2"></i> Show Salary Slip
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer justify-content-center d-none" id="salarySlipResult">
+                <a id="downloadSlipBtn"
+                   class="btn btn-gradient-primary px-4 py-2 rounded-pill shadow-sm"
+                   target="_blank">
+                    <i class="fa-solid fa-download me-2"></i> Download Salary Slip
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- ======================= CHART JS ======================= -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('deptChart');
+    const departmentLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DepartmentLabels));
+    const departmentValues = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DepartmentValues));
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: departmentLabels,
+            datasets: [{
+                data: departmentValues,
+                backgroundColor: ['#2F3D88', '#0E8376', '#F9A826', '#4455AA', '#18A08D'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+            cutout: '65%'
+        }
+    });
+</script>
+
+
+<!-- ======================= CUSTOM STYLES ======================= -->
+<style>
+    /* =====================================================
+           GLOBAL
+        ===================================================== */
+    body {
+        font-family: 'Poppins', sans-serif !important;
+        background: #eef3fb;
+    }
+
+    .page-title {
+        color: #2F3D88;
+        letter-spacing: .5px;
+        font-size: 1.75rem;
+    }
+
+    /* =====================================================
+           DASHBOARD HEADER
+        ===================================================== */
+    .dashboard-header {
+        background: linear-gradient(135deg, #0d47a1, #00897b);
+        padding: 50px 30px;
+        border-radius: 20px;
+        color: white;
+        text-align: center;
+    }
+
+    /* =====================================================
+           SUMMARY CARDS
+        ===================================================== */
+    .summary-card {
+        padding: 20px;
+        text-align: center;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        transition: .3s;
+    }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        }
+
+        .summary-card .icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+    .icon.primary {
+        color: #2F3D88;
+    }
+
+    .icon.secondary {
+        color: #0E8376;
+    }
+
+    .icon.accent {
+        color: #F9A826;
+    }
+
+    .icon.danger {
+        color: #e63946;
+    }
+
+    /* =====================================================
+           CARDS
+        ===================================================== */
+    .custom-card {
+        border-radius: 12px;
+        border: 0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .custom-header {
+        background: #F8FAFC;
+        padding: 14px 18px;
+        font-weight: 600;
+        font-size: 1.05rem;
+    }
+
+    /* =====================================================
+           BUTTONS
+        ===================================================== */
+    .btn {
+        border-radius: 10px !important;
+        padding: 10px 20px;
+        font-weight: 500;
+    }
+
+    .custom-btn-primary {
+        background: #2F3D88;
+        color: #fff;
+    }
+
+    .custom-btn-secondary {
+        background: #0E8376;
+        color: #fff;
+    }
+
+    .custom-btn-info {
+        background: #18A08D;
+        color: #fff;
+    }
+
+    .custom-btn-outline-primary {
+        border: 1px solid #2F3D88;
+        color: #2F3D88;
+    }
+
+        .custom-btn-outline-primary:hover {
+            background: #2F3D88;
+            color: #fff;
+        }
+
+    /* =====================================================
+           TABLE
+        ===================================================== */
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .table td, .table th {
+        vertical-align: middle;
+    }
+
+    /* =====================================================
+           RESPONSIVE – TABLETS & MOBILE
+        ===================================================== */
+    @@media (max-width: 768px) {
+        /* Layout */
+        .container,
+        .container-fluid {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+        /* Header */
+        .dashboard-header {
+            padding: 30px 16px;
+        }
+
+            .dashboard-header .btn {
+                width: 100%;
+                margin: 6px 0;
+            }
+        /* Summary Cards */
+        .row.g-3 > div {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .summary-card {
+            padding: 16px;
+        }
+        /* Quick Actions */
+        .custom-card .card-body .d-flex {
+            flex-direction: column;
+        }
+
+        .custom-card .btn {
+            width: 100%;
+            text-align: center;
+        }
+        /* Chart */
+        canvas#deptChart {
+            height: 240px !important;
+        }
+        /* =================================================
+               RECENT EMPLOYEES – MOBILE CARD VIEW (FIXED)
+            ================================================= */
+        .custom-card table thead {
+            display: none;
+        }
+
+        .custom-card table,
+        .custom-card tbody,
+        .custom-card tr,
+        .custom-card td {
+            display: block;
+            width: 100%;
+        }
+
+            .custom-card tbody tr {
+                background: #fff;
+                border: 1px solid #dee2e6;
+                border-radius: 12px;
+                padding: 12px 14px;
+                margin-bottom: 12px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+                max-width: 420px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+                .custom-card tbody tr td {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 6px 0;
+                    font-size: 14px;
+                    gap: 12px;
+                    word-break: break-word;
+                    text-align: right;
+                }
+
+                    .custom-card tbody tr td::before {
+                        content: attr(data-label);
+                        font-weight: 600;
+                        color: #6c757d;
+                        flex-shrink: 0;
+                        text-align: left;
+                    }
+
+                    .custom-card tbody tr td[data-label="Status"] {
+                        justify-content: flex-end;
+                    }
+    }
+
+    /* =====================================================
+           SMALL MOBILE
+        ===================================================== */
+    @@media (max-width: 480px) {
+
+        .page-title {
+            font-size: 1.25rem;
+            text-align: center;
+        }
+
+        .summary-card h4 {
+            font-size: 1.2rem;
+        }
+
+        .btn {
+            font-size: 0.9rem;
+            padding: 8px 14px;
+        }
+
+        .custom-header {
+            text-align: center;
+        }
+    }
+
+    .badge-new {
+        background-color: #28a745;
+        color: #fff;
+        font-size: 11px;
+        padding: 4px 6px;
+        border-radius: 6px;
+    }
+
+</style>
+
+<script>
+       document.getElementById("salarySlipForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const month = document.getElementById("month").value;
+        const year = document.getElementById("year").value;
+
+        const empCode = "@Model.Employee.EmployeeCode";   // ADD THIS
+
+        if (!month || !year) {
+            return alert("Please select both month and year!");
+        }
+
+        const btn = document.getElementById("downloadSlipBtn");
+
+        // FIXED URL — now includes empCode
+        btn.href = `/Payroll/DownloadSalarySlip?empCode=${empCode}&month=${month}&year=${year}`;
+
+        document.getElementById("salarySlipResult").classList.remove("d-none");
+    });
+
+</script>

@@ -1,0 +1,575 @@
+:root {
+    --primary-color: #3a7bd5;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --info-color: #17a2b8;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+}
+
+body {
+    background-color: #f5f7fb;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, var(--primary-color), #00d2ff);
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.brand-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.dashboard-title {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.last-updated {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+    border: none;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+.card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-right: 15px;
+}
+
+.employees-icon {
+    background-color: rgba(58, 123, 213, 0.1);
+    color: var(--primary-color);
+}
+
+.present-icon {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.geotags-icon {
+    background-color: rgba(23, 162, 184, 0.1);
+    color: var(--info-color);
+}
+
+.leaves-icon {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: var(--warning-color);
+}
+
+.card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0;
+    color: var(--dark-color);
+}
+
+.card-title {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    margin-bottom: 0;
+    font-weight: 500;
+}
+
+.hr-system-section {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.progress {
+    height: 10px;
+    border-radius: 5px;
+    margin-top: 5px;
+}
+
+.progress-bar {
+    background: linear-gradient(to right, var(--primary-color), #00d2ff);
+}
+
+.footer {
+    background-color: var(--dark-color);
+    color: white;
+    padding: 1rem 0;
+    margin-top: 2rem;
+    font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .brand-name {
+        font-size: 1.4rem;
+    }
+
+    .dashboard-title {
+        font-size: 1rem;
+    }
+
+    .card-value {
+        font-size: 1.5rem;
+    }
+
+    .card-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-header {
+        padding: 0.8rem 0;
+    }
+
+    .brand-name {
+        font-size: 1.2rem;
+    }
+
+    .last-updated {
+        font-size: 0.8rem;
+    }
+
+    .hr-system-section {
+        padding: 1rem;
+    }
+}
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #b2b5d8, #edc7c7);
+}
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-left, .login-right {
+    padding: 40px;
+    width: 400px;
+}
+
+.login-left {
+    background: linear-gradient(135deg, #1e69d2, #1abc9c);
+    color: white;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+.login-right {
+    background: white;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.logo {
+    background-color: #1e69d2;
+    color: white;
+    border-radius: 50%;
+    padding: 5px 12px;
+    margin-right: 5px;
+}
+
+.input-group {
+    margin: 15px 0;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-login {
+    background: linear-gradient(135deg, #1e69d2, #1abc9c);
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#wrapper {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+}
+
+#sidebar-wrapper {
+    width: 250px;
+    height: 100vh;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: -250px;
+}
+
+#page-content-wrapper {
+    flex: 1;
+    overflow-x: hidden;
+}
+
+.list-group-item {
+    border: none;
+    font-size: 0.95rem;
+    padding: 12px 20px;
+}
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+
+.sidebar-heading {
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 1rem;
+}
+
+
+
+ Sidebar layout 
+#wrapper {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+}
+
+#sidebar-wrapper {
+    width: 250px;
+    height: 100vh;
+    transition: margin 0.3s ease-in-out;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: -250px;
+}
+
+#page-content-wrapper {
+    flex: 1;
+    overflow-x: hidden;
+}
+
+.list-group-item {
+    border: none;
+    font-size: 0.95rem;
+    padding: 12px 20px;
+}
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+
+.sidebar-heading {
+    font-weight: 600;
+    font-size: 1.1rem;
+    background-color: #f0f2f5;
+}
+
+ Make sidebar sticky 
+#sidebar-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+#page-content-wrapper {
+    margin-left: 250px;
+    transition: margin 0.3s ease-in-out;
+}
+
+#wrapper.toggled #page-content-wrapper {
+    margin-left: 0;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f7f9fb;
+    overflow: hidden;
+}
+
+/* Container Split */
+.login-container {
+    display: flex;
+    height: 100vh;
+}
+
+/* LEFT PANEL */
+.login-left {
+    flex: 1;
+    background: linear-gradient(135deg, #0077c2, #009688);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 50px;
+    position: relative;
+}
+
+.brand-logo img {
+    width: 250px;
+    height: auto;
+    margin-bottom: 25px;
+}
+
+.login-left h1 {
+    font-size: 26px;
+    margin-bottom: 10px;
+}
+
+.login-left p {
+    max-width: 80%;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #e0f7fa;
+}
+
+.login-left small {
+    position: absolute;
+    bottom: 30px;
+    font-size: 12px;
+    color: #cce7e8;
+}
+
+/* RIGHT PANEL */
+.login-right {
+    flex: 1.2;
+    background: linear-gradient(135deg, #f9f9ff, #f3e6f7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 40px 50px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 350px;
+}
+
+    .login-box h2 {
+        margin-bottom: 25px;
+        font-size: 22px;
+        color: #333;
+        font-weight: bold;
+    }
+
+.logo {
+    background: #0077c2;
+    color: white;
+    border-radius: 50%;
+    padding: 5px 12px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* Inputs */
+.input-group {
+    margin-bottom: 15px;
+}
+
+    .input-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        outline: none;
+        font-size: 14px;
+    }
+
+/* Options */
+.options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+/* Button */
+.btn-login {
+    width: 100%;
+    padding: 10px;
+    background: linear-gradient(to right, #0077c2, #009688);
+    color: #fff;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+    .btn-login:hover {
+        opacity: 0.9;
+    }
+
+/* Error */
+.text-danger {
+    color: #e53935;
+    font-size: 12px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .login-container {
+        flex-direction: column;
+    }
+
+    .login-left, .login-right {
+        flex: none;
+        width: 100%;
+        height: auto;
+    }
+
+    .login-left {
+        padding: 30px 20px;
+    }
+
+    .login-box {
+        width: 90%;
+        margin: 20px auto;
+    }
+}
+.celebration-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.bg-danger-subtle {
+    background-color: #ffe5e5 !important;
+}
+
+.bg-info-subtle {
+    background-color: #e0f7fa !important;
+}
+
+.text-danger {
+    color: #e53935 !important;
+}
+
+.text-info {
+    color: #00838f !important;
+}
+
+.card {
+    border-radius: 10px;
+}
+
+.card-header {
+    font-size: 1.1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+
+/* Rotate + Slide */
+.combo-box {
+    display: inline-block;
+    padding: 14px 24px;
+    background: #6f42c1;
+    color: white;
+    font-weight: bold;
+    border-radius: 12px;
+    animation: rotateSlide 1s ease-out;
+}
+
+@keyframes rotateSlide {
+    0% {
+        transform: translateX(-50px) rotate(-45deg);
+        opacity: 0;
+    }
+
+    60% {
+        transform: translateX(10px) rotate(20deg);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translateX(0) rotate(0deg);
+        opacity: 1;
+    }
+}

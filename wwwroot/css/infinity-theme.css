@@ -1,0 +1,139 @@
+﻿:root {
+    --primary-color: #2F3D88;
+    --secondary-color: #0E8376;
+    --accent-color: #F9A826;
+    --danger-color: #E63946;
+    --font-family: 'Poppins', 'Open Sans', 'Roboto', sans-serif;
+}
+
+/* ========= GLOBAL ========= */
+body {
+    background: #f3f4f7;
+    font-family: var(--font-family);
+    margin: 0;
+    color: #1f2937;
+}
+
+.page-title {
+    color: var(--primary-color);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* ========= CARDS ========= */
+.card {
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    background: #fff;
+}
+
+.card-header {
+    background: #f8fafc;
+    font-weight: 600;
+    font-size: 1.05rem;
+    padding: 14px 18px;
+}
+
+/* ========= BUTTONS ========= */
+.btn {
+    border-radius: 10px !important;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+/* Primary */
+.btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+    .btn-primary:hover {
+        background: #25306e;
+    }
+
+/* Secondary */
+.btn-secondary {
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: #fff;
+}
+
+/* Accent */
+.btn-accent {
+    background: var(--accent-color);
+    color: #fff;
+    border-color: var(--accent-color);
+}
+
+/* Danger */
+.btn-danger {
+    background: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+/* Outlined */
+.btn-outline-primary {
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+}
+
+    .btn-outline-primary:hover {
+        background: var(--primary-color);
+        color: #fff;
+    }
+
+/* ========= UTILITIES ========= */
+.shadow-soft {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.rounded-pill {
+    border-radius: 50rem !important;
+}
+
+/* ========= RESPONSIVE ========= */
+@media (max-width: 992px) {
+    .container, .container-fluid {
+        padding: 1rem !important;
+    }
+
+    .card {
+        margin-bottom: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .btn {
+        width: 100%;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .page-title {
+        font-size: 1.4rem;
+        text-align: center;
+    }
+
+    .d-flex.gap-4 {
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+    .card-body {
+        padding: 1.5rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn {
+        font-size: 0.85rem;
+        padding: 8px 14px;
+    }
+
+    .page-title {
+        font-size: 1.2rem;
+    }
+}

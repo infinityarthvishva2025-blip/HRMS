@@ -1,0 +1,141 @@
+﻿@model Holiday
+@{
+    ViewBag.Title = "Add Holiday";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+}
+
+<style>
+    .page-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 80vh;
+        padding: 20px;
+    }
+
+    .form-container {
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        width: 100%;
+        max-width: 700px;
+        text-align: center;
+    }
+
+    .form-header {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f1f5f9;
+        font-size: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+
+    .form-control-custom {
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 12px;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+    }
+
+    .btn-container {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 30px;
+    }
+
+    .btn-save {
+        background-color: #10b981;
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .btn-back {
+        background-color: #6b7280;
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 6px;
+        text-decoration: none;
+    }
+</style>
+
+<div class="page-container">
+    <div class="form-container">
+        <h4 class="form-header">Add Holiday</h4>
+
+        @using (Html.BeginForm("Create", "Holidays", FormMethod.Post, new { id = "holidayForm" }))
+        {
+            <div>
+                <label class="form-label">Holiday Date</label><br />
+                @Html.TextBoxFor(m => m.HolidayDate,
+                new { @class = "form-control-custom", type = "date", id = "HolidayDate" })
+        </div>
+
+        <br />
+
+        <div>
+            <label class="form-label">Holiday Name</label><br />
+            @Html.TextBoxFor(m => m.HolidayName,
+                        new { @class = "form-control-custom", id = "HolidayName" })
+        </div>
+
+        <br />
+
+        <div>
+            <label class="form-label">Description</label><br />
+            @Html.TextBoxFor(m => m.Description,
+                        new { @class = "form-control-custom", id = "Description" })
+        </div>
+
+        <div class="btn-container">
+            <button type="submit" class="btn-save">Save</button>
+            <a href="@Url.Action("Index", "Holidays")" class="btn-back">Back</a>
+        </div>
+                }
+    </div>
+</div>
+
+<script>
+    debugger;
+    document.addEventListener("DOMContentLoaded", function () {
+
+        var form = document.getElementById("holidayForm");
+
+        if (!form) return; // safety check
+
+        form.addEventListener("submit", function (e) {
+
+            var holidayDate = document.getElementById("HolidayDate").value;
+            var holidayName = document.getElementById("HolidayName").value;
+            var description = document.getElementById("Description").value;
+
+            if (holidayDate === "" || holidayName.trim() === "" || description.trim() === "") {
+                alert("⚠️ Please fill all fields before submitting.");
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+</script>

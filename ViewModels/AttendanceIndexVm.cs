@@ -1,0 +1,29 @@
+﻿namespace HRMS.ViewModels 
+{
+
+    public class AttendanceIndexVm
+    {
+        public string Emp_Code { get; set; }
+        public string EmpName { get; set; }
+        public DateTime AttDate { get; set; }
+        public string DayName => AttDate.ToString("ddd");
+        public string Status { get; set; }
+        public TimeSpan? InTime { get; set; }
+        public TimeSpan? OutTime { get; set; }
+        public string TotalHours { get; set; } = "--";
+        public bool IsLate { get; set; }      // calculated, not from DB
+
+        public string Date => AttDate.ToString("dd-mm-yyyy");
+
+        public bool CorrectionRequested { get; set; }
+        public string CorrectionStatus { get; set; }
+        public int Id { get; set; }
+
+        public double? CheckInLatitude { get; set; }
+        public double? CheckInLongitude { get; set; }
+        public double? CheckOutLatitude { get; set; }
+        public double? CheckOutLongitude { get; set; }
+
+    }
+}
+

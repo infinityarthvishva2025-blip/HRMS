@@ -1,0 +1,1406 @@
+﻿@model HRMS.ViewModels.EmployeeEditVm
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+@{
+    ViewData["Title"] = "Edit Employee";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+
+    bool isHrUser = role == "HR" || role == "VP" || role == "GM" || role == "Director";
+}
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary">
+            <i class="fa-solid fa-user-pen me-2"></i> Edit Employee
+        </h3>
+        <a asp-controller="Employees" asp-action="MyProfile" class="btn btn-outline-primary">
+            <i class="fa-solid fa-list me-1"></i> Back to List
+        </a>
+
+        @*    <a asp-controller="Employees" asp-action="Myprofile" class="btn btn-outline-primary">
+            <i class="fa-solid fa-list me-1"></i> Back to Profile
+        </a> *@
+    </div>
+
+    <!-- SUCCESS MESSAGE -->
+    @if (TempData["success"] != null)
+    {
+        <div class="alert alert-success">@TempData["success"]</div>
+    }
+
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.Id)
+        @Html.HiddenFor(m => m.EmployeeCode)
+
+        <div class="card shadow-sm border-0 p-4">
+
+            <!-- ============= BASIC DETAILS ============= -->
+            <h5 class="fw-bold text-secondary mb-3">Basic Details</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="EmployeeCode">Employee Code</label>
+                    <input asp-for="EmployeeCode" class="form-control" readonly />
+                    <input type="hidden" id="EmployeeId" value="@Model.Id" />
+                    <input type="hidden" id="referenceId" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Name">Full Name</label>
+                    <input asp-for="Name" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Email">Email</label>
+                    <input asp-for="Email" type="email" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="MobileNumber">Mobile Number</label>
+                    <input asp-for="MobileNumber" class="form-control"
+                           maxlength="10"
+                           pattern="^[6-9]\d{9}$"
+                           title="Enter valid 10-digit mobile number"
+                           required />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="AlternateMobileNumber">Alternate Mobile Number</label>
+                    <input asp-for="AlternateMobileNumber"
+                           class="form-control"
+                           maxlength="10"
+                           pattern="^[6-9]\d{9}$"
+                           title="Enter valid 10-digit mobile number" />
+
+                </div>
+
+                <div class="col-md-4">
+                    <label>New Password (optional)</label>
+                    <div class="input-group">
+                        <input asp-for="Password" type="password" class="form-control"
+                               placeholder="Leave blank to keep existing" />
+                        <button type="button" class="btn btn-outline-secondary"
+                                onclick="togglePassword('Password', this)">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label>Confirm Password </label>
+                    <div class="input-group">
+                        <input asp-for="ConfirmPassword" type="password" class="form-control"
+                               placeholder="Repeat new password"
+                               onkeyup="checkPasswordMatch()" />
+
+                        <button type="button" class="btn btn-outline-secondary"
+                                onclick="togglePassword('ConfirmPassword', this)">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <span id="passwordError" class="text-danger"></span>
+                </div>
+
+            </div>
+
+            <hr />
+
+            <!-- ============= PERSONAL DETAILS ============= -->
+            <h5 class="fw-bold text-secondary mb-3">Personal Details</h5>
+            <div class="row g-3">
+
+                <div class="col-md-3">
+                    <label asp-for="Gender"></label>
+                    <select asp-for="Gender" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="FatherName">Father Name</label>
+                    <input asp-for="FatherName" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="MotherName">Mother Name</label>
+                    <input asp-for="MotherName" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="DOB_Date">Date of Birth</label>
+                    <input asp-for="DOB_Date" type="date" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="MaritalStatus">Marital Status</label>
+                    <select asp-for="MaritalStatus" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option>Single</option>
+                        <option>Married</option>
+                        <option>Divorced</option>
+                        <option>Widowed</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="col-md-3">
+                        <label>Profile Photo</label>
+
+                        @{
+                            string profileUrl = "";
+                            if (!string.IsNullOrEmpty(Model.ProfileImagePath))
+                            {
+                                profileUrl = Url.Action("ViewDocument", "Employees",
+                                new { empCode = Model.EmployeeCode, fileName = Model.ProfileImagePath });
+                            }
+                        }
+
+                        <a id="ProfileLink" href="@profileUrl" target="_blank"
+                           style="@(string.IsNullOrEmpty(profileUrl) ? "display:none;" : "")">
+
+                            <img id="ProfilePreview" src="@profileUrl" class="img-thumbnail mb-2"
+                                 style="max-height:120px; @(string.IsNullOrEmpty(profileUrl) ? "display:none;" : "")" />
+                        </a>
+
+                        <input type="file" name="ProfilePhoto" class="form-control"
+                               accept="image/*"
+                               onchange="previewFile(this, 'ProfilePreview', 'ProfileLink')" />
+                    </div>
+
+                </div>
+
+                <div class="col-md-12">
+                    <label asp-for="Address">Current Address</label>
+                    <textarea asp-for="Address" id="CurrentAddress" class="form-control" rows="2"></textarea>
+                </div>
+
+                <div class="col-md-12 mt-2">
+                    <input type="checkbox" id="SameAddressCheckbox" />
+                    <label for="SameAddressCheckbox">Permanent address same as current</label>
+                </div>
+
+                <div class="col-md-12" id="PermanentAddressSection">
+                    <label asp-for="PermanentAddress">Permanent Address</label>
+                    <textarea asp-for="PermanentAddress" id="PermanentAddress" class="form-control" rows="2"></textarea>
+                </div>
+
+            </div>
+
+            <hr />
+
+            <!-- ============= EXPERIENCE ============= -->
+            <h5 class="fw-bold text-secondary mb-3">Experience Details</h5>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="ExperienceType"></label>
+                    <select asp-for="ExperienceType" id="ExperienceType" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option>Fresher</option>
+                        <option>Experienced</option>
+                    </select>
+                </div>
+
+                <div class="col-md-8">
+                    <label>Experience Certificates</label>
+
+                    @if (!string.IsNullOrEmpty(Model.ExperienceCertificateFilePath))
+                    {
+                        <div class="row g-2">
+                            @{
+                                var files = Model.ExperienceCertificateFilePath.Split(',');
+                                foreach (var f in files)
+                                {
+                                    var fUrl = Url.Content($"~/uploads/employees/{Model.EmployeeCode}/{f}");
+                                    var ext = System.IO.Path.GetExtension(f).ToLower();
+
+                                    <div class="col-md-3 text-center">
+                                        @if (ext.Contains("jpg") || ext.Contains("png") || ext.Contains("jpeg"))
+                                        {
+                                            <img src="@fUrl" class="img-thumbnail mb-1" style="max-height:120px;" />
+                                        }
+                                        <a href="@fUrl" class="btn btn-sm btn-outline-secondary w-100" target="_blank">View</a>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+
+                    <input type="file" name="ExperienceCertificateFiles" class="form-control mt-2" multiple />
+                </div>
+            </div>
+
+            <!-- Auto-show old experience block -->
+            <div id="experience-section"
+                 class="row g-3 mt-3 @(Model.ExperienceType == "Experienced" ? "" : "d-none")">
+
+                <div class="col-md-4">
+                    <label asp-for="TotalExperienceYears">Total Experience Years</label>
+                    <input asp-for="TotalExperienceYears" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="LastCompanyName">Last Company Name</label>
+                    <input asp-for="LastCompanyName" class="form-control" />
+                </div>
+            </div>
+
+            <hr />
+
+            <!-- ============= HEALTH ============= -->
+            <h5 class="fw-bold text-secondary mb-3">Health Information</h5>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="HasDisease">Any Pre-existing Disease?</label>
+                    <select asp-for="HasDisease" id="HasDisease" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option>No</option>
+                        <option>Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="DiseaseSection"
+                 class="row g-3 mt-3 @(Model.HasDisease == "Yes" ? "" : "d-none")">
+
+                <div class="col-md-4">
+                    <label asp-for="DiseaseName">Disease Name</label>
+                    <input asp-for="DiseaseName" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="DiseaseSince">Disease Since</label>
+                    <input asp-for="DiseaseSince" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="MedicinesRequired"> Medicines Required</label>
+                    <input asp-for="MedicinesRequired" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="DoctorName"> Doctor Name</label>
+                    <input asp-for="DoctorName" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="DoctorContact">Doctor Contact</label>
+                    <input asp-for="DoctorContact" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label>Medical Document</label>
+
+                    @{
+                        string medUrl = "";
+                        if (!string.IsNullOrEmpty(Model.MedicalDocumentFilePath))
+                        {
+                            medUrl = Url.Action("ViewDocument", "Employees",
+                            new { empCode = Model.EmployeeCode, fileName = Model.MedicalDocumentFilePath });
+                        }
+                    }
+
+                    <a id="MedicalLink" href="@medUrl" target="_blank"
+                       style="@(string.IsNullOrEmpty(medUrl) ? "display:none;" : "")">
+
+                        <img id="MedicalPreview" src="@medUrl" class="img-thumbnail mb-2"
+                             style="max-height:120px; @(string.IsNullOrEmpty(medUrl) ? "display:none;" : "")" />
+                    </a>
+
+                    <input type="file" name="MedicalDocumentFile" class="form-control"
+                           accept=".pdf,image/*"
+                           onchange="previewFile(this, 'MedicalPreview', 'MedicalLink')" />
+                </div>
+            </div>
+            <hr />
+
+            <!-- ============= JOB DETAILS ============= -->
+            <h5 class="fw-bold text-secondary mb-3">Job Details</h5>
+            <div class="row g-3">
+            <div class="col-md-4">
+                <label asp-for="JoiningDate">Joining Date</label>
+                <input asp-for="JoiningDate" type="date" class="form-control" />
+            </div>
+            <div >
+                    <label asp-for="Department">Department</label>
+                    <div class="input-group">
+                        <select asp-for="Department" class="form-select" id="Department">
+
+                            <option value="">-- Select --</option>
+                            @foreach (var d in (List<string>)ViewBag.Departments)
+                            {
+                                <option value="@d">@d</option>
+                            }
+                        </select>
+            </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+
+                    <label asp-for="Department">Department</label>
+                    <div class="input-group">
+                        <select asp-for="Department" class="form-select" id="Department">
+
+                            <option value="">-- Select --</option>
+                            @foreach (var d in (List<string>)ViewBag.Departments)
+                            {
+                                <option value="@d">@d</option>
+                            }
+                        </select>  &nbsp;
+                        <button type="button" class="btn btn-outline-primary" id="AddDeptBtn">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                    <input type="text"
+                           name="NewDepartment"
+                           id="NewDepartment"
+                           class="form-control mt-2 d-none"
+                           placeholder="Enter new department" />
+
+                    <span asp-validation-for="Department" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Position">Position</label>
+                    <div class="input-group">
+                        <select asp-for="Position" class="form-select" id="Position">
+                            <option value="">-- Select Position --</option>
+                        </select>
+                        &nbsp;
+                        <!-- PLUS BUTTON -->
+                        <button type="button" class="btn btn-outline-primary g-3" id="AddPosBtn">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                    <!-- MANUAL TEXTBOX (HIDDEN BY DEFAULT) -->
+                    <input type="text"
+                           name="NewPosition"
+                           id="NewPosition"
+                           class="form-control mt-2 d-none"
+                           placeholder="Enter new position" />
+
+                    <span asp-validation-for="Position" class="text-danger"></span>
+                </div>
+
+
+                <div class="col-md-4">
+                    <label asp-for="Role"></label>
+                    <select asp-for="Role" class="form-select">
+                        <option value="">-- Select Role --</option>
+                        <option>Intern</option>
+                        <option>Employee</option>
+                        <option>HR</option>
+                        <option>Manager</option>
+                        <option>GM</option>
+                        <option>VP</option>
+                        <option>Director</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="ReportingManager">Reporting Manager</label>
+                    <input asp-for="ReportingManager" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Salary">Salary</label>
+                    <input asp-for="Salary" type="number" class="form-control" />
+                </div>
+            </div>
+
+            <hr />
+            <hr class="my-4" />
+
+            <!-- EDUCATION -->
+            <h5 class="fw-bold text-secondary mb-3">Education</h5>
+            <div class="row g-3">
+                <!-- 10th -->
+                <!-- 12th -->
+                <div class="col-md-4">
+                    <label asp-for="HSCPercent">12th %</label>
+                    <input asp-for="HSCPercent" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label>12th Marksheet</label>
+                    @{
+                        string hscUrl = "";
+                        if (!string.IsNullOrEmpty(Model.TwelfthMarksheetFilePath))
+                        {
+                            hscUrl = Url.Action("ViewDocument", "Employees",
+                            new { empCode = Model.EmployeeCode, fileName = Model.TwelfthMarksheetFilePath });
+                        }
+                    }
+                    <a id="HSCLink" href="@hscUrl" target="_blank" style="@(string.IsNullOrEmpty(hscUrl) ? "display:none;" : "")">
+                        <img id="HSCPreview" src="@hscUrl" class="img-thumbnail mb-2"
+                             style="max-height:120px; @(string.IsNullOrEmpty(hscUrl) ? "display:none;" : "")" />
+                    </a>
+
+                    <input type="file" name="TwelfthMarksheetFile" class="form-control"
+                           accept=".pdf,image/*"
+                           onchange="previewFile(this, 'HSCPreview', 'HSCLink')" />
+                </div>
+
+                <!-- Graduation -->
+                <div class="col-md-4">
+                    <label asp-for="GraduationCourse">Graduation</label>
+                    <select asp-for="GraduationCourse" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option>BCA</option>
+                        <option>BCS</option>
+                        <option>BBA</option>
+                        <option>B.Com</option>
+                        <option>BA</option>
+                        <option>B.Sc</option>
+                        <option>BE</option>
+                        <option>B.Tech</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="GraduationPercent">Graduation %</label>
+                    <input asp-for="GraduationPercent" class="form-control" />
+
+                </div>
+
+                <div class="col-md-4">
+                    <label>Graduation Marksheet</label>
+
+                    @{
+                        string gradUrl = "";
+                        if (!string.IsNullOrEmpty(Model.GraduationMarksheetFilePath))
+                        {
+                            gradUrl = Url.Action("ViewDocument", "Employees",
+                            new { empCode = Model.EmployeeCode, fileName = Model.GraduationMarksheetFilePath });
+                        }
+                    }
+
+                    <a id="GradLink" href="@gradUrl" target="_blank" style="@(string.IsNullOrEmpty(gradUrl) ? "display:none;" : "")">
+                        <img id="GradPreview" src="@gradUrl" class="img-thumbnail mb-2"
+                             style="max-height:120px; @(string.IsNullOrEmpty(gradUrl) ? "display:none;" : "")" />
+                    </a>
+
+                    <input type="file" name="GraduationMarksheetFile" class="form-control"
+                           accept=".pdf,image/*"
+                           onchange="previewFile(this, 'GradPreview', 'GradLink')" />
+
+                </div>
+
+                <!-- Post Graduation -->
+                <div class="col-md-4">
+                    <label asp-for="PostGraduationCourse">Post Graduation</label>
+                    <select asp-for="PostGraduationCourse" class="form-select">
+                        <option value="">-- Select PG --</option>
+                        <option>MCA</option>
+                        <option>MBA</option>
+                        <option>M.Com</option>
+                        <option>M.Sc</option>
+                        <option>ME</option>
+                        <option>M.Tech</option>
+                        <option>None</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="PostGraduationPercent">Post Graduation %</label>
+                    <input asp-for="PostGraduationPercent" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label>PG Marksheet</label>
+
+                    @{
+                        string pgUrl = "";
+                        if (!string.IsNullOrEmpty(Model.PostGraduationMarksheetFilePath))
+                        {
+                            pgUrl = Url.Action("ViewDocument", "Employees",
+                            new { empCode = Model.EmployeeCode, fileName = Model.PostGraduationMarksheetFilePath });
+                        }
+                    }
+
+                    <a id="PGLink" href="@pgUrl" target="_blank" style="@(string.IsNullOrEmpty(pgUrl) ? "display:none;" : "")">
+                        <img id="PGPreview" src="@pgUrl" class="img-thumbnail mb-2"
+                             style="max-height:120px; @(string.IsNullOrEmpty(pgUrl) ? "display:none;" : "")" />
+                    </a>
+
+                    <input type="file" name="PostGraduationMarksheetFile" class="form-control"
+                           accept=".pdf,image/*"
+                           onchange="previewFile(this, 'PGPreview', 'PGLink')" />
+                </div>
+            </div>
+
+             <!-- ============= ID PROOFS ============= -->
+             <!-- ============= ID PROOFS ============= -->
+<h5 class="fw-bold text-secondary mb-3">ID Proofs</h5>
+<div class="row g-3">
+<div class="row mb-3">
+
+<!-- Aadhaar Section -->
+<div class="col-md-6">
+
+<label class="form-label">Aadhaar Number</label>
+
+<div id="aadhaarSection">
+
+@if (Model.AadhaarVerified)
+{
+    <div class="input-group mb-2">
+        <input type="text"
+               class="form-control"
+               value="@Model.AadhaarNumber"
+               readonly />
+                                    &nbsp;
+                                    <span class="input-group-text bg-success text-white" id="aadhaarStatus">
+            ✔ Verified
+        </span>
+
+    </div>
+}
+else
+{
+    <div class="input-group mb-2">
+
+        <input asp-for="AadhaarNumber"
+               class="form-control"
+               maxlength="12"
+               id="aadhaarNumber"
+               placeholder="Enter Aadhaar Number" />
+&nbsp;
+        <button type="button"
+                class="btn btn-primary"
+                id="verifyAadhaarBtn"
+                onclick="sendOtp()">
+            Verify
+        </button>
+
+    </div>
+
+    <!-- OTP SECTION -->
+    <div id="otpSection" style="display:none;">
+
+        <input type="text"
+               id="otp"
+               class="form-control mb-2"
+               placeholder="Enter OTP" />
+
+        <button class="btn btn-success"
+                onclick="verifyOtp()">
+            Submit OTP
+        </button>
+
+    </div>
+}
+
+</div>
+
+<!-- Aadhaar File Upload -->
+<div class="mt-2">
+<label class="form-label">Aadhaar Card Upload</label>
+
+<input type="file"
+       name="AadhaarFile"
+       class="form-control"
+       accept=".pdf,image/*" />
+
+</div>
+
+</div>
+
+
+
+<!-- PAN Section -->
+<div class="col-md-6">
+
+<label class="form-label">PAN Number</label>
+
+@if (Model.PanVerified)
+{
+    <div class="input-group mb-2">
+        <input type="text"
+               class="form-control"
+               value="@Model.PanNumber"
+               readonly />
+                                &nbsp;
+        <span class="input-group-text bg-success text-white">
+            ✔ Verified
+        </span>
+    </div>
+}
+else
+{
+    <div class="input-group mb-2">
+
+        <input asp-for="PanNumber"
+               class="form-control"
+               id="PanNumber"
+               style="text-transform: uppercase;"
+               placeholder="Enter PAN Number" />
+                                &nbsp;
+        <button type="button"
+                class="btn btn-primary"
+                onclick="verifyPan()">
+            Verify
+        </button>
+
+    </div>
+}
+
+<!-- PAN File Upload -->
+<div class="mt-2">
+<label class="form-label">PAN Card Upload</label>
+
+<input type="file"
+       name="PanFile"
+       class="form-control"
+       accept=".pdf,image/*" />
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+<hr />
+
+<input type="hidden" id="EmployeeId" value="@Model.Id"/>
+<input type="hidden" id="referenceId"/>
+            @* <h5 class="fw-bold text-secondary mb-3">ID Proofs</h5>
+            <div class="row g-3">
+                <div class="row mb-3">
+                    <!-- Aadhaar Section -->
+                    <div class="col-md-6">
+                        <label class="form-label">Aadhaar Number</label>
+
+                        @if (Model.AadhaarVerified)
+                        {
+                            <div class="input-group mb-2">
+                                <input type="text"
+                                       class="form-control"
+                                       value="@Model.AadhaarNumber"
+                                       readonly />
+
+                                <span class="input-group-text bg-success text-white">
+                                    ✔ Verified
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="input-group mb-2">
+
+                                <input asp-for="AadhaarNumber"
+                                       class="form-control"
+                                       maxlength="12" id="aadhaarNumber"
+                                       placeholder="Enter Aadhaar Number" />
+
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        onclick="sendOtp()">
+                                    Verify
+                                </button>
+
+                            </div>
+
+                            <div id="otpSection" style="display:none;">
+
+                                <input type="text"
+                                       id="otp"
+                                       class="form-control mb-2"
+                                       placeholder="Enter OTP" />
+
+                                <button class="btn btn-success"
+                                        onclick="verifyOtp()">
+                                    Submit OTP
+                                </button>
+
+                            </div>
+                        }
+
+                        <!-- Aadhaar File Upload -->
+                        <div class="mt-2">
+                            <label class="form-label">Aadhaar Card Upload</label>
+
+                            <input type="file"
+                                   name="AadhaarFile"
+                                   class="form-control"
+                                   accept=".pdf,image/*" />
+                        </div>
+
+                    </div>
+
+
+                    <!-- PAN Section -->
+                    <div class="col-md-6">
+
+                        <label class="form-label">PAN Number</label>
+
+                        @if (Model.PanVerified)
+                        {
+                            <div class="input-group mb-2">
+                                <input type="text"
+                                       class="form-control"
+                                       value="@Model.PanNumber"
+                                       readonly />
+
+                                <span class="input-group-text bg-success text-white">
+                                    ✔ Verified
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="input-group mb-2">
+
+                                <input asp-for="PanNumber"
+                                       class="form-control" id="PanNumber"
+                                       style="text-transform: uppercase;"
+                                       placeholder="Enter PAN Number" />
+
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        onclick="verifyPan()">
+                                    Verify
+                                </button>
+
+                            </div>
+                        }
+
+                        <!-- PAN File Upload -->
+                        <div class="mt-2">
+                            <label class="form-label">PAN Card Upload</label>
+
+                            <input type="file"
+                                   name="PanFile"
+                                   class="form-control"
+                                   accept=".pdf,image/*" />
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <hr /> *@
+
+            <!-- ============= BANK DETAILS ============= -->
+            <h5 class="fw-bold text-secondary mb-3">Bank Details</h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label asp-for="AccountHolderName">Account Holder Name</label>
+                    <input asp-for="AccountHolderName" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="BankName">Bank Name</label>
+                    <input asp-for="BankName" class="form-control" />
+                </div>
+               
+
+               
+
+                    <div class="col-md-6">
+
+                        <label class="form-label">Account Number</label>
+
+                        @if (Model.BankVerified)
+                        {
+                            <div class="input-group">
+                                <input type="text" class="form-control"
+                                       value="@Model.AccountNumber" readonly />
+
+                                <span class="input-group-text bg-success text-white">
+                                    ✔ Verified
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="input-group">
+
+                                <input asp-for="AccountNumber"
+                                       class="form-control"
+                                       id="accountNumber"
+                                       placeholder="Enter Account Number" />
+                            </div>
+                        }
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label class="form-label">IFSC Code</label>
+
+                        <input asp-for="IFSC"
+                               class="form-control mb-2"
+                               id="ifscCode"
+                               placeholder="Enter IFSC Code" />
+                               &nbsp;
+  <button class="btn btn-primary"
+                                        type="button" id="verifyBankBtn"
+                                        onclick="verifyBank()">
+                                    Verify
+                                </button>
+                    </div>
+
+             
+               @*  <div class="col-md-6">
+                    <label asp-for="AccountNumber">Account Number</label>
+                    <input asp-for="AccountNumber" class="form-control"
+                           maxlength="18"
+                           pattern="^\d{6,18}$"
+                           title="Account number must be 6 to 18 digits"
+                           required />
+
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="IFSC">IFSC Code</label>
+                    <input asp-for="IFSC" class="form-control"
+                           maxlength="11"
+                           pattern="^[A-Z]{4}0[A-Z0-9]{6}$"
+                           title="Enter valid IFSC code (e.g., SBIN0001234)"
+                           style="text-transform:uppercase;"
+                           required />
+
+                </div> *@
+
+                <div class="col-md-6">
+                    <label asp-for="Branch">Branch Name</label>
+                    <input asp-for="Branch" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label>Passbook</label>
+
+                    @{
+                        string passUrl = "";
+                        if (!string.IsNullOrEmpty(Model.PassbookFilePath))
+                        {
+                            passUrl = Url.Action("ViewDocument", "Employees",
+                            new { empCode = Model.EmployeeCode, fileName = Model.PassbookFilePath });
+                        }
+                    }
+
+                    <a id="PassLink" href="@passUrl" target="_blank"
+                       style="@(string.IsNullOrEmpty(passUrl) ? "display:none;" : "")">
+
+                        <img id="PassPreview" src="@passUrl" class="img-thumbnail mb-2"
+                             style="max-height:120px; @(string.IsNullOrEmpty(passUrl) ? "display:none;" : "")" />
+                    </a>
+
+                    <input type="file" name="PassbookFile" class="form-control"
+                           accept=".pdf,image/*"
+                           onchange="previewFile(this, 'PassPreview', 'PassLink')" />
+
+                </div>
+            </div>
+            <hr />
+            <!-- ============= EMERGENCY CONTACT ============= -->
+            <h5 class="fw-bold text-secondary mb-3">Emergency Contact Details</h5>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="EmergencyContactName">Contact Name</label>
+                    <input asp-for="EmergencyContactName" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="EmergencyContactRelationship">Relationship</label>
+                    <input asp-for="EmergencyContactRelationship" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="EmergencyContactMobile"></label>
+                    <input asp-for="EmergencyContactMobile" class="form-control" />
+                </div>
+
+                <div class="col-md-12">
+                    <label asp-for="EmergencyContactAddress">Adress</label>
+                    <textarea asp-for="EmergencyContactAddress" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-success px-5">
+                    Save Changes
+                </button>
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        //debugger;
+                    document.addEventListener("DOMContentLoaded", function () {
+
+                    const dept = document.getElementById("Department");
+                    const pos = document.getElementById("Position");
+
+                    // If employee already has a position, load positions automatically
+                    let currentPosition = "@Model.Position";
+
+                    if (dept.value && currentPosition) {
+                        fetch(`/Employees/GetPositions?department=${dept.value}`)
+                            .then(r => r.json())
+                            .then(list => {
+                                pos.innerHTML = '<option value="">-- Select Position --</option>';
+
+                                list.forEach(item => {
+                                    if (item === currentPosition) {
+                                        pos.innerHTML += `<option value="${item}" selected>${item}</option>`;
+                                    } else {
+                                        pos.innerHTML += `<option value="${item}">${item}</option>`;
+                                    }
+                                });
+                            });
+                    }
+                });
+
+                // Password match
+                function validatePasswordMatch() {
+                    const pwd = document.getElementById("Password");
+                    const conf = document.getElementById("ConfirmPassword");
+                    const err = document.getElementById("passwordError");
+
+                    err.textContent = (pwd.value !== conf.value)
+                        ? "Passwords do not match."
+                        : "";
+                }
+
+                    // Experience show/hide
+                    const expType = document.getElementById("ExperienceType");
+                    const expSection = document.getElementById("experience-section");
+
+                    expType.addEventListener("change", () => {
+                        if (expType.value === "Experienced") {
+                            expSection.classList.remove("d-none");
+                        } else {
+                            expSection.classList.add("d-none");
+                        }
+                    });
+
+                // Show/hide disease section based on dropdown
+                const diseaseDropdown = document.getElementById("HasDisease");
+                const diseaseSection = document.getElementById("DiseaseSection");
+
+                diseaseDropdown.addEventListener("change", function () {
+                    if (this.value === "Yes") {
+                        diseaseSection.classList.remove("d-none");
+                    } else {
+                        diseaseSection.classList.add("d-none");
+                    }
+                });
+
+                // Position loading
+                             document.addEventListener("DOMContentLoaded", function () {
+
+                    const dept = document.getElementById("Department");
+                    const pos = document.getElementById("Position");
+                    let selectedPosition = "@Model.Position";
+
+                    function loadPositions() {
+                        if (!dept.value) {
+                            pos.innerHTML = '<option value="">-- Select Position --</option>';
+                            return;
+                        }
+
+                        const url = `/Employees/GetPositions?department=${encodeURIComponent(dept.value)}`;
+
+                        fetch(url)
+                            .then(r => r.json())
+                            .then(list => {
+                                pos.innerHTML = '<option value="">-- Select Position --</option>';
+
+                                list.forEach(item => {
+                                    let isSelected = (item === selectedPosition) ? "selected" : "";
+                                    pos.innerHTML += `<option value="${item}" ${isSelected}>${item}</option>`;
+                                });
+                            })
+                            .catch(err => console.error("Error loading positions:", err));
+                    }
+
+                    // Load the positions when page loads (Edit mode)
+                    loadPositions();
+
+                    // Load positions when department changes
+                    dept.addEventListener("change", function () {
+                        selectedPosition = "";
+                        loadPositions();
+                    });
+
+                });
+
+                // Password toggle
+                function togglePassword(fieldId, btn) {
+                    const input = document.getElementById(fieldId);
+                    const icon = btn.querySelector("i");
+
+                    if (input.type === "password") {
+                        input.type = "text";
+                        icon.classList.replace("fa-eye", "fa-eye-s  lash");
+                    } else {
+                        input.type = "password";
+                        icon.classList.replace("fa-eye-slash", "fa-eye");
+                    }
+                }
+
+                // Current / Permanent address sync
+                const sameAddressCheckbox = document.getElementById("SameAddressCheckbox");
+                const currentAddress = document.getElementById("CurrentAddress");
+                const permanentAddress = document.getElementById("PermanentAddress");
+                const permanentSection = document.getElementById("PermanentAddressSection");
+
+                // default: show permanent address
+                permanentSection.classList.remove("d-none");
+
+                sameAddressCheckbox.addEventListener("change", function () {
+                    if (this.checked) {
+                        permanentAddress.value = currentAddress.value;
+                        permanentSection.classList.add("d-none");
+                    } else {
+                        permanentSection.classList.remove("d-none");
+                        permanentAddress.value = "";
+                    }
+                });
+
+                // Auto-update if user edits Current Address while checkbox checked
+                currentAddress.addEventListener("input", function () {
+                    if (sameAddressCheckbox.checked) {
+                        permanentAddress.value = currentAddress.value;
+                    }
+                });
+
+
+                       // AUTO-CAPITAL for INPUT and TEXTAREA
+                document.addEventListener("input", function (e) {
+                    if (
+                        (e.target.tagName === "INPUT" && e.target.type === "text") ||
+                        (e.target.tagName === "TEXTAREA")
+                    ) {
+                        e.target.value = e.target.value.toUpperCase();
+                    }
+                });
+
+                //FIle Preview
+                        function previewFile(input, previewId, linkId) {
+                    if (input.files && input.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            document.getElementById(previewId).src = e.target.result;
+                            document.getElementById(previewId).style.display = "block";
+
+                            // update link for full preview
+                            document.getElementById(linkId).href = e.target.result;
+                            document.getElementById(linkId).style.display = "block";
+                        };
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                }
+
+        //confirm password
+
+                function checkPasswordMatch() {
+                    const pwd = document.getElementById("Password").value;
+                    const conf = document.getElementById("ConfirmPassword").value;
+                    const err = document.getElementById("passwordError");
+
+                    if (pwd !== conf) {
+                        err.textContent = "Passwords do not match";
+                    } else {
+                        err.textContent = "";
+                    }
+                }
+
+    </script>
+    <script>
+        // PLUS BUTTON: MANUAL DEPARTMENT/POSITION
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const deptSelect = document.getElementById("Department");
+            const newDeptBox = document.getElementById("NewDepartment");
+            const addDeptBtn = document.getElementById("AddDeptBtn");
+
+            const posSelect = document.getElementById("Position");
+            const newPosBox = document.getElementById("NewPosition");
+            const addPosBtn = document.getElementById("AddPosBtn");
+
+            //
+            // Toggle NEW Department field
+            addDeptBtn.addEventListener("click", function () {
+                newDeptBox.classList.toggle("d-none");
+                if (!newDeptBox.classList.contains("d-none")) {
+                    newDeptBox.focus();
+                    deptSelect.value = "";
+                }
+            });
+
+            newDeptBox.addEventListener("input", function () {
+                if (this.value.trim() !== "") deptSelect.value = "";
+            });
+
+            deptSelect.addEventListener("change", function () {
+                if (this.value !== "") {
+                    newDeptBox.value = "";
+                    newDeptBox.classList.add("d-none");
+                }
+            });
+
+
+            // Toggle NEW Position field
+            addPosBtn.addEventListener("click", function () {
+                newPosBox.classList.toggle("d-none");
+                if (!newPosBox.classList.contains("d-none")) {
+                    newPosBox.focus();
+                    posSelect.value = "";
+                }
+            });
+
+            newPosBox.addEventListener("input", function () {
+                if (this.value.trim() !== "") posSelect.value = "";
+            });
+
+            posSelect.addEventListener("change", function () {
+                if (this.value !== "") {
+                    newPosBox.value = "";
+                    newPosBox.classList.add("d-none");
+                }
+            });
+
+        });
+                       function verifyPan() {
+                         //  debugger
+            var pan = document.getElementById("PanNumber").value;
+            var name = document.getElementById("Name").value;
+            var dob = document.getElementById("DOB_Date").value;
+
+            fetch('/Aadhaar/VerifyPan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    PanNumber: pan,
+                    Name: name,
+                    DOB_Date: dob
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+
+                if (data.success) {
+                    document.getElementById("panStatus").innerHTML =
+                        "PAN Verified Successfully ✅";
+                }
+                else {
+                    document.getElementById("panStatus").innerHTML =
+                        "PAN Verification Failed ❌";
+                }
+
+            });
+
+        }
+        // function sendOtp() {
+
+        //     var aadhaar = document.getElementById("aadhaarNumber").value;
+        //     var employeeId = document.getElementById("EmployeeId").value;
+
+        //     fetch('/Aadhaar/SendOtp', {
+        //         method: 'POST',
+        //         headers: { 'Content-Type': 'application/json' },
+        //         body: JSON.stringify({
+        //             AadhaarNumber: aadhaar,
+        //             Id: employeeId
+        //         })
+        //     })
+        //     .then(res => res.json())
+        //     .then(data => {
+
+        //         if (data.success) {
+
+        //             document.getElementById("otpSection").style.display = "block";
+        //             document.getElementById("referenceId").value = data.referenceId;
+
+        //         }
+
+        //     });
+
+        // }
+
+        //                function verifyOtp() {
+
+        //     var referenceId = document.getElementById("referenceId").value;
+        //     var otp = document.getElementById("otp").value;
+        //     var aadhaar = document.getElementById("aadhaarNumber").value;
+        //     var employeeId = document.getElementById("EmployeeId").value;
+
+        //     fetch('/Aadhaar/VerifyOtp', {
+        //         method: 'POST',
+        //         headers: { 'Content-Type': 'application/json' },
+        //         body: JSON.stringify({
+        //             ReferenceId: referenceId,
+        //             Otp: otp,
+        //             AadhaarNumber: aadhaar,
+        //             Id: employeeId
+        //         })
+        //     })
+        //     .then(res => res.json())
+        //     .then(data => {
+
+        //         if(data.success)
+        //         {
+        //             alert("Aadhaar Verified Successfully");
+
+        //             location.reload(); // reload page
+        //         }
+
+        //     });
+
+        // }
+        function sendOtp() {
+
+    var aadhaar = document.getElementById("aadhaarNumber").value;
+    var employeeId = document.getElementById("EmployeeId").value;
+
+    fetch('/Aadhaar/SendOtp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            AadhaarNumber: aadhaar,
+            Id: employeeId
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if(data.success)
+        {
+            document.getElementById("referenceId").value = data.referenceId;
+            document.getElementById("otpSection").style.display = "block";
+        }
+
+    });
+
+}
+
+
+        function verifyOtp() {
+
+            var referenceId = document.getElementById("referenceId")?.value;
+            var otp = document.getElementById("otp")?.value;
+            var aadhaar = document.getElementById("aadhaarNumber")?.value;
+            var employeeId = document.getElementById("EmployeeId")?.value;
+
+            if (!otp) {
+                alert("Please enter OTP");
+                return;
+            }
+
+            fetch('/Aadhaar/VerifyOtp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ReferenceId: referenceId,
+                    Otp: otp,
+                    AadhaarNumber: aadhaar,
+                    Id: parseInt(employeeId)
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Server error: " + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+
+                if (data.success) {
+
+                    // Hide OTP section
+                    const otpSection = document.getElementById("otpSection");
+                    if (otpSection) otpSection.style.display = "none";
+
+                    // Hide Verify button
+                    const verifyBtn = document.getElementById("verifyAadhaarBtn");
+                    if (verifyBtn) verifyBtn.style.display = "none";
+
+                    // Show Verified status
+                    const status = document.getElementById("aadhaarStatus");
+                    if (status) {
+                        status.innerHTML = '<span class="badge bg-success">✔ Verified</span>';
+                    }
+
+                }
+                else {
+                    alert(data.message || "OTP Verification Failed");
+                }
+
+            })
+            .catch(error => {
+                console.error("Verify OTP Error:", error);
+                alert("Something went wrong while verifying OTP");
+            });
+        }
+                function verifyBank() {
+
+            var accountNumber = document.getElementById("accountNumber").value;
+                    var ifsc = document.getElementById("ifscCode").value;
+            var employeeId = document.getElementById("EmployeeId").value;
+
+                    fetch('/Aadhaar/VerifyBank', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    AccountNumber: accountNumber,
+                    IFSC: ifsc,
+                    Id: employeeId
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+
+                if (data.success) {
+
+                    document.getElementById("bankStatus").innerHTML =
+                        '<span class="badge bg-success">✔ Verified</span>';
+
+                    document.getElementById("verifyBankBtn").style.display = "none";
+                }
+                else {
+                    alert(data.message);
+                }
+
+            })
+            .catch(err => console.log(err));
+        }
+    </script>
+}
+
+@*   //////// Responsive Page ///////    *@

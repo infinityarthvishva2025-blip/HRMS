@@ -1,0 +1,720 @@
+﻿@model List<HRMS.Models.ViewModels.PayrollSummaryVm>
+
+@{
+    ViewData["Title"] = "Payroll List";
+    Layout = "~/Views/Shared/_HrLayout.cshtml";
+
+    decimal totalNetSalary = Model.Sum(x => x.NetSalary);
+}
+
+<style>
+    .payroll-total-row {
+        background: #111827;
+        color: #ffffff;
+        font-size: 18px;
+    }
+
+        .payroll-total-row td {
+            border-top: 3px solid #16a34a;
+        }
+
+    .total-net-salary {
+        color: #22c55e;
+        font-size: 20px;
+        font-weight: 700;
+    }
+</style>
+
+<h2 class="mb-3">Payroll List</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+
+    <button id="exportExcelBtn" class="btn btn-success">
+        📥 Export Excel (All Employees)
+    </button>
+
+    <select id="pageSize" class="form-select w-auto">
+        <option value="5">5 rows</option>
+        <option value="10" selected>10 rows</option>
+        <option value="20">20 rows</option>
+        <option value="50">50 rows</option>
+        <option value="100">100 rows</option>
+    </select>
+
+</div>
+
+<div class="table-responsive">
+
+    <table id="payrollTable" class="table table-bordered table-striped text-center align-middle">
+
+        <thead class="table-dark">
+            <tr>
+                <th>Emp Code</th>
+                <th>Name</th>
+                <th>Working Days</th>
+                <th>Half Days</th>
+                <th>Absent Days</th>
+                <th>Paid Days</th>
+                <th>Basic Salary</th>
+                <th>Gross Salary</th>
+                <th>Deduction</th>
+                <th>Net Salary</th>
+                <th>Payslip</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @foreach (var item in Model)
+            {
+                <tr data-bank="@item.BankName"
+                    data-account="@item.AccountNumber"
+                    data-ifsc="@item.IFSCCode">
+
+                    <td>@item.EmpCode</td>
+                    <td class="text-start">@item.EmpName</td>
+
+                    <td>@item.TotalDaysInMonth</td>
+
+                    <td class="text-warning fw-bold">
+                        <a href="#"
+                           class="halfday-link"
+                           data-emp="@item.EmpCode"
+                           data-from="@item.FromDate.ToString("yyyy-MM-dd")"
+                           data-to="@item.ToDate.ToString("yyyy-MM-dd")">
+                            @item.PresentHalfDays
+                        </a>
+                    </td>
+
+                    <td class="text-danger fw-bold">
+                        <a href="#"
+                           class="absent-link"
+                           data-emp="@item.EmpCode"
+                           data-from="@item.FromDate.ToString("yyyy-MM-dd")"
+                           data-to="@item.ToDate.ToString("yyyy-MM-dd")">
+                            @item.AbsentDays
+                        </a>
+                    </td>
+
+                    <td class="text-primary fw-bold">
+                        @item.PaidDays.ToString("0.0")
+                    </td>
+
+                    <td>@item.MonthlySalary.ToString("0.00")</td>
+                    <td class="fw-bold">@item.GrossSalary.ToString("0.00")</td>
+                    <td class="text-danger">@item.TotalDeductions.ToString("0.00")</td>
+                    <td class="fw-bold text-success">@item.NetSalary.ToString("0.00")</td>
+
+                    <td>
+                        <a asp-action="DownloadSalarySlipByDateRange"
+                           asp-controller="Payroll"
+                           asp-route-empCode="@item.EmpCode"
+                           asp-route-fromDate="@item.FromDate.ToString("yyyy-MM-dd")"
+                           asp-route-toDate="@item.ToDate.ToString("yyyy-MM-dd")"
+                           class="btn btn-primary btn-sm"
+                           target="_blank">
+                            Slip
+                        </a>
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+        <tfoot>
+            <tr class="payroll-total-row">
+                <td colspan="9" class="text-end fw-bold">
+                    Total Net Salary :
+                </td>
+
+                <td class="fw-bold total-net-salary">
+                    @totalNetSalary.ToString("0.00")
+                </td>
+
+                <td></td>
+            </tr>
+        </tfoot>
+
+    </table>
+
+</div>
+
+<!-- PAGINATION -->
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <div id="recordInfo" class="text-muted"></div>
+    <ul id="pagination" class="pagination mb-0"></ul>
+</div>
+
+<!-- MODAL -->
+
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <table class="table table-bordered">
+
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="historyTableBody"></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+
+    let currentPage=1;
+    let rowsPerPage=10;
+
+    const tbody=document.querySelector("#payrollTable tbody");
+    const allRows=Array.from(tbody.rows);
+
+    const pagination=document.getElementById("pagination");
+    const pageSizeSelect=document.getElementById("pageSize");
+    const recordInfo=document.getElementById("recordInfo");
+
+    function renderTable(){
+
+    const start=(currentPage-1)*rowsPerPage;
+    const end=start+rowsPerPage;
+
+    allRows.forEach((row,index)=>{
+
+    row.style.display=index>=start && index<end ? "" : "none";
+
+    });
+
+    recordInfo.innerText=
+    `Showing ${start+1}-${Math.min(end,allRows.length)} of ${allRows.length} records`;
+
+    }
+
+    function setupPagination(){
+
+    pagination.innerHTML="";
+
+    const pageCount=Math.ceil(allRows.length/rowsPerPage);
+
+    pagination.innerHTML+=`
+    <li class="page-item ${currentPage===1?"disabled":""}">
+    <a class="page-link" href="#" onclick="changePage(${currentPage-1})">&lt;</a>
+    </li>`;
+
+    for(let i=1;i<=pageCount;i++){
+
+    pagination.innerHTML+=`
+    <li class="page-item ${i===currentPage?"active":""}">
+    <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+    </li>`;
+    }
+
+    pagination.innerHTML+=`
+    <li class="page-item ${currentPage===pageCount?"disabled":""}">
+    <a class="page-link" href="#" onclick="changePage(${currentPage+1})">&gt;</a>
+    </li>`;
+
+    }
+
+    function changePage(page){
+
+    const pageCount=Math.ceil(allRows.length/rowsPerPage);
+
+    if(page<1||page>pageCount) return;
+
+    currentPage=page;
+
+    renderTable();
+    setupPagination();
+
+    }
+
+    pageSizeSelect.addEventListener("change",()=>{
+
+    rowsPerPage=parseInt(pageSizeSelect.value);
+    currentPage=1;
+
+    renderTable();
+    setupPagination();
+
+    });
+
+    renderTable();
+    setupPagination();
+
+    /* ABSENT HISTORY */
+
+    document.querySelectorAll(".absent-link").forEach(link=>{
+
+    link.addEventListener("click",function(e){
+
+    e.preventDefault();
+
+    document.getElementById("modalTitle").innerText="Absent Days";
+
+    const emp=this.dataset.emp;
+    const from=this.dataset.from;
+    const to=this.dataset.to;
+
+    fetch(`/Payroll/GetAbsentDays?empCode=${emp}&fromDate=${from}&toDate=${to}`)
+    .then(res=>res.json())
+    .then(data=>{
+
+    let html="";
+
+    data.forEach(d=>{
+
+    html+=`
+    <tr>
+    <td>${d.date}</td>
+    <td class="text-danger">${d.status}</td>
+    </tr>`;
+
+    });
+
+    document.getElementById("historyTableBody").innerHTML=html;
+
+    new bootstrap.Modal(document.getElementById('historyModal')).show();
+
+    });
+
+    });
+
+    });
+
+    /* HALF DAY HISTORY */
+
+    document.querySelectorAll(".halfday-link").forEach(link=>{
+
+    link.addEventListener("click",function(e){
+
+    e.preventDefault();
+
+    document.getElementById("modalTitle").innerText="Half Days";
+
+    const emp=this.dataset.emp;
+    const from=this.dataset.from;
+    const to=this.dataset.to;
+
+    fetch(`/Payroll/GetHalfDays?empCode=${emp}&fromDate=${from}&toDate=${to}`)
+    .then(res=>res.json())
+    .then(data=>{
+
+    let html="";
+
+    data.forEach(d=>{
+
+    html+=`
+    <tr>
+    <td>${d.date}</td>
+    <td class="text-warning">${d.status}</td>
+    </tr>`;
+
+    });
+
+    document.getElementById("historyTableBody").innerHTML=html;
+
+    new bootstrap.Modal(document.getElementById('historyModal')).show();
+
+    });
+
+    });
+
+    });
+
+</script>
+@* @model List<HRMS.Models.ViewModels.PayrollSummaryVm>
+
+@{
+    ViewData["Title"] = "Payroll List";
+    Layout = "~/Views/Shared/_HrLayout.cshtml";
+
+    decimal totalNetSalary = Model.Sum(x => x.NetSalary);
+}
+<style>
+    .payroll-total-row {
+        background: #111827;
+        color: #ffffff;
+        font-size: 18px;
+    }
+
+        .payroll-total-row td {
+            border-top: 3px solid #16a34a;
+        }
+
+    .total-net-salary {
+        color: #22c55e;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+</style>
+
+<h2 class="mb-3">Payroll List</h2>
+
+<!-- ACTION BAR -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <button id="exportExcelBtn" class="btn btn-success">
+        📥 Export Excel (All Employees)
+    </button>
+
+    <select id="pageSize" class="form-select w-auto">
+        <option value="5">5 rows</option>
+        <option value="10" selected>10 rows</option>
+        <option value="20">20 rows</option>
+        <option value="50">50 rows</option>
+        <option value="100">100 rows</option>
+        <option value="500">500 rows</option>
+    </select>
+</div>
+
+<!-- TABLE -->
+<div class="table-responsive">
+    <table id="payrollTable" class="table table-bordered table-striped text-center align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Emp Code</th>
+                <th>Name</th>
+                <th>Working Days</th>
+                <th>Half Days</th>
+                <th>Absent Days</th>
+                <th>Paid Days</th>
+                <th>Basic Salary</th>
+                <th>Gross Salary</th>
+                <th>Deduction</th>
+                <th>Net Salary</th>
+                <th>Payslip</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr data-bank="@item.BankName"
+                    data-account="@item.AccountNumber"
+                    data-ifsc="@item.IFSCCode">
+                    <td>@item.EmpCode</td>
+                    <td class="text-start">@item.EmpName</td>
+
+                    <td>@item.TotalDaysInMonth</td>
+
+                    <td class="text-warning fw-bold">
+                        @item.PresentHalfDays
+                    </td>
+
+                
+                    <td class="text-danger fw-bold">
+                        <a href="#"
+                           class="absent-link"
+                           data-emp="@item.EmpCode"
+                           data-from="@item.FromDate.ToString("yyyy-MM-dd")"
+                           data-to="@item.ToDate.ToString("yyyy-MM-dd")">
+                            @item.AbsentDays
+                        </a>
+                    </td>
+                    <td class="text-primary fw-bold">
+                        @item.PaidDays.ToString("0.0")
+                    </td>
+
+                    <td>@item.MonthlySalary.ToString("0.00")</td>
+                    <td class="fw-bold">@item.GrossSalary.ToString("0.00")</td>
+                    <td class="text-danger">@item.TotalDeductions.ToString("0.00")</td>
+                    <td class="fw-bold text-success">@item.NetSalary.ToString("0.00")</td>
+
+                    <td>
+                        <a asp-action="DownloadSalarySlipByDateRange"
+                           asp-controller="Payroll"
+                           asp-route-empCode="@item.EmpCode"
+                           asp-route-fromDate="@item.FromDate.ToString("yyyy-MM-dd")"
+                           asp-route-toDate="@item.ToDate.ToString("yyyy-MM-dd")"
+                           class="btn btn-primary btn-sm"
+                           target="_blank">
+                            Slip
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+
+        <!-- FOOTER TOTAL -->
+        <tfoot>
+            <tr class="payroll-total-row">
+                <td colspan="9" class="text-end fw-bold">
+                    Total Net Salary :
+                </td>
+
+                <td class="fw-bold total-net-salary">
+                    @totalNetSalary.ToString("0.00")
+                </td>
+
+                <td></td>
+            </tr>
+        </tfoot>
+
+    </table>
+</div>
+
+<!-- INFO + PAGINATION -->
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <div id="recordInfo" class="text-muted"></div>
+    <ul id="pagination" class="pagination mb-0"></ul>
+</div>
+<div class="modal fade" id="absentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Absent Days</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="absentTableBody"></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- XLSX -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+
+    let currentPage = 1;
+    let rowsPerPage = 10;
+
+    const tbody = document.querySelector("#payrollTable tbody");
+    const allRows = Array.from(tbody.rows);
+    const pagination = document.getElementById("pagination");
+    const pageSizeSelect = document.getElementById("pageSize");
+    const recordInfo = document.getElementById("recordInfo");
+
+    function renderTable() {
+
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+
+        allRows.forEach((row, index) => {
+            row.style.display =
+                index >= start && index < end ? "" : "none";
+        });
+
+        recordInfo.innerText =
+            `Showing ${start + 1}-${Math.min(end, allRows.length)} of ${allRows.length} records`;
+    }
+
+    function setupPagination() {
+
+        pagination.innerHTML = "";
+
+        const pageCount = Math.ceil(allRows.length / rowsPerPage);
+
+        pagination.innerHTML += `
+            <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">&lt;</a>
+            </li>`;
+
+        for (let i = 1; i <= pageCount; i++) {
+
+            pagination.innerHTML += `
+                <li class="page-item ${i === currentPage ? "active" : ""}">
+                    <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                </li>`;
+        }
+
+        pagination.innerHTML += `
+            <li class="page-item ${currentPage === pageCount ? "disabled" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">&gt;</a>
+            </li>`;
+    }
+
+    function changePage(page) {
+
+        const pageCount = Math.ceil(allRows.length / rowsPerPage);
+
+        if (page < 1 || page > pageCount) return;
+
+        currentPage = page;
+
+        renderTable();
+        setupPagination();
+    }
+        document.querySelectorAll(".absent-link").forEach(link => {
+
+        link.addEventListener("click", function(e) {
+
+            e.preventDefault();
+
+            const empCode = this.dataset.emp;
+            const fromDate = this.dataset.from;
+            const toDate = this.dataset.to;
+
+            fetch(`/Payroll/GetAbsentDays?empCode=${empCode}&fromDate=${fromDate}&toDate=${toDate}`)
+                .then(res => res.json())
+                .then(data => {
+
+                    let html = "";
+
+                    data.forEach(d => {
+
+                        html += `
+                            <tr>
+                                <td>${d.date}</td>
+                                <td class="text-danger">${d.status}</td>
+                            </tr>
+                        `;
+
+                    });
+
+                    document.getElementById("absentTableBody").innerHTML = html;
+
+                    const modal = new bootstrap.Modal(document.getElementById('absentModal'));
+                    modal.show();
+
+                });
+
+        });
+
+    });
+    pageSizeSelect.addEventListener("change", () => {
+
+        rowsPerPage = parseInt(pageSizeSelect.value);
+
+        currentPage = 1;
+
+        renderTable();
+        setupPagination();
+    });
+
+    renderTable();
+    setupPagination();
+             document.getElementById("exportExcelBtn").onclick = function () {
+
+        const wb = XLSX.utils.book_new();
+        const wsData = [];
+
+        let totalEmployees = 0;
+        let totalGrossSalary = 0;
+        let totalDeduction = 0;
+        let totalNetSalary = 0;
+
+        // HEADER
+        wsData.push([
+            "Emp Code",
+            "Name",
+            "Working Days",
+            "Half Days",
+            "Absent Days",
+            "Paid Days",
+            "Basic Salary",
+            "Gross Salary",
+            "Deduction",
+            "Net Salary",
+            "Bank Name",
+            "Account No",
+            "IFSC Code"
+        ]);
+
+        // DATA
+        allRows.forEach(r => {
+
+            const c = r.cells;
+
+            let workingDays = parseFloat(c[2].innerText) || 0;
+            let halfDays = parseFloat(c[3].innerText) || 0;
+            let absentDays = parseFloat(c[4].innerText) || 0;
+            let paidDays = parseFloat(c[5].innerText) || 0;
+
+            let basicSalary = parseFloat(c[6].innerText.replace(/[^0-9.-]+/g,"")) || 0;
+            let grossSalary = parseFloat(c[7].innerText.replace(/[^0-9.-]+/g,"")) || 0;
+            let deduction = parseFloat(c[8].innerText.replace(/[^0-9.-]+/g,"")) || 0;
+            let netSalary = parseFloat(c[9].innerText.replace(/[^0-9.-]+/g,"")) || 0;
+
+            // Bank details (stored as data attributes)
+            let bankName = r.dataset.bank || "";
+            let accountNo = r.dataset.account || "";
+            let ifsc = r.dataset.ifsc || "";
+
+            totalEmployees++;
+            totalGrossSalary += grossSalary;
+            totalDeduction += deduction;
+            totalNetSalary += netSalary;
+
+            wsData.push([
+                c[0].innerText,
+                c[1].innerText,
+                workingDays,
+                halfDays,
+                absentDays,
+                paidDays,
+                basicSalary,
+                grossSalary,
+                deduction,
+                netSalary,
+                bankName,
+                accountNo,
+                ifsc
+            ]);
+        });
+
+        wsData.push([]);
+
+        wsData.push([
+            "", "", "", "", "", "", "", "", "Total Net Salary", totalNetSalary, "", "", ""
+        ]);
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        ws['!cols'] = [
+            { wch: 12 },
+            { wch: 28 },
+            { wch: 12 },
+            { wch: 10 },
+            { wch: 12 },
+            { wch: 10 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 12 },
+            { wch: 15 },
+            { wch: 20 },
+            { wch: 20 },
+            { wch: 18 }
+        ];
+
+        XLSX.utils.book_append_sheet(wb, ws, "Payroll");
+
+        XLSX.writeFile(wb, "Payroll_Report.xlsx");
+    };
+   
+
+</script>
+ *@

@@ -1,0 +1,234 @@
+﻿@{
+    ViewData["Title"] = "Reports Dashboard";
+    Layout = "_HrLayout";
+}
+
+<style>
+    /* Page Title */
+    h2 {
+        font-weight: 700;
+        color: #1a237e;
+    }
+
+    /* Card responsiveness */
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        font-weight: 600;
+        font-size: 16px;
+    }
+
+    /* Ensure charts resize cleanly */
+    .chart-wrapper {
+        position: relative;
+        width: 100%;
+        height: 350px; /* desktop size */
+    }
+
+    /* Improve spacing on mobile */
+    @@media (max-width: 768px) {
+        .chart-wrapper {
+            height: 280px !important; /* mobile size */
+        }
+
+        h2 {
+            font-size: 22px;
+            text-align: center;
+        }
+
+        .col-md-6 {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .chart-wrapper {
+            height: 240px !important; /* small display */
+        }
+    }
+</style>
+
+
+<div class="container-fluid mt-3">
+
+    <h2 class="mb-4 text-center text-md-start">HR Reports Dashboard</h2>
+
+    <div class="row gy-4">
+        <!-- Employee Report -->
+        <div class="col-12 col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">Employees by Department</div>
+                <div class="card-body">
+                    <div class="chart-wrapper">
+                        <canvas id="deptChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Report -->
+        <div class="col-12 col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">Leave Requests by Status</div>
+                <div class="card-body">
+                    <div class="chart-wrapper">
+                        <canvas id="leaveChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payroll Report -->
+        <div class="col-12 col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">Payroll Summary by Month</div>
+                <div class="card-body">
+                    <div class="chart-wrapper">
+                        <canvas id="payrollChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Report -->
+        <div class="col-12 col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">Attendance Overview</div>
+                <div class="card-body">
+                    <div class="chart-wrapper">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Line Chart (Monthly Attendance)
+        const ctx1 = document.getElementById('attendanceChart');
+        const attendanceChart = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                datasets: [{
+                    label: 'Average Attendance %',
+                    data: [92, 94, 90, 89, 94, 93, 95, 94, 91, 90, 92, 94],
+                    fill: true,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 85,
+                        max: 100
+                    }
+                }
+            }
+        });
+    </script>
+
+    <script>
+        const ctx = document.getElementById('deptChart');
+        const departmentLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DepartmentLabels));
+        const departmentValues = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DepartmentValues));
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: departmentLabels,
+                datasets: [{
+                    label: 'Employees',
+                    data: departmentValues,
+                    backgroundColor: [
+                        '#1976d2', '#009688', '#9c27b0', '#f44336',
+                        '#ff9800', '#00bfa5', '#795548'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 20, padding: 15 } }
+                },
+                cutout: '65%',
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+
+            // === LEAVE REPORT ===
+            const leaveRes = await fetch('/Reports/GetLeaveReport');
+            const leaveData = await leaveRes.json();
+
+            new Chart(document.getElementById('leaveChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: leaveData.map(x => x.status),
+                    datasets: [{
+                        data: leaveData.map(x => x.count),
+                        backgroundColor: ['#36A2EB', '#FFCE56', '#FF6384'],
+                        borderColor: '#fff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    plugins: { legend: { position: 'bottom' } },
+                    cutout: '65%',
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+        //     // === PAYROLL REPORT ===
+        //     const payRes = await fetch('/Reports/GetPayrollReport');
+        //     const payData = await payRes.json();
+
+        //     new Chart(document.getElementById('payrollChart'), {
+        //         type: 'doughnut',
+        //         data: {
+        //             labels: payData.map(x => x.month),
+        //             datasets: [{
+        //                 data: payData.map(x => x.total),
+        //                 backgroundColor: ['#1976d2','#009688','#9c27b0','#f44336','#ff9800','#4caf50'],
+        //                 borderColor: '#fff',
+        //                 hoverOffset: 6
+        //             }]
+        //         },
+        //         options: {
+        //             plugins: { legend: { position: 'bottom' } },
+        //             cutout: '65%',
+        //             responsive: true,
+        //             maintainAspectRatio: false
+        //         }
+        //     });
+
+         });
+    </script>
+
+}
+@* ////////   Responsive page   //////// *@

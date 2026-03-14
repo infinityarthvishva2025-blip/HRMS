@@ -1,0 +1,680 @@
+﻿@using Microsoft.AspNetCore.Http
+@using System.Linq
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    Layout = null;
+
+    // ROLE (DECLARE ONCE)
+    string role = HttpContextAccessor.HttpContext?.Session.GetString("Role") ?? "Employee";
+    role = string.IsNullOrWhiteSpace(role) ? "Employee" : role;
+
+    // EMPLOYEE ID
+    int empId = HttpContextAccessor.HttpContext?.Session.GetInt32("EmployeeId") ?? 0;
+
+    // Disable cache
+    Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+    Context.Response.Headers["Pragma"] = "no-cache";
+    Context.Response.Headers["Expires"] = "-1";
+
+    // UNREAD ANNOUNCEMENT COUNT
+    int loggedEmpId = empId;
+    int unreadCount = 0;
+
+    var db = (HRMS.Data.ApplicationDbContext)
+        Context.RequestServices.GetService(typeof(HRMS.Data.ApplicationDbContext));
+
+    if (db != null && loggedEmpId > 0)
+    {
+        var emp = db.Employees.FirstOrDefault(e => e.Id == loggedEmpId);
+        if (emp != null)
+        {
+            var allAnnouncements = db.Announcements.ToList();
+
+            var filtered = allAnnouncements
+                .Where(a =>
+                    a.IsGlobal ||
+
+                    (!string.IsNullOrEmpty(a.TargetDepartments) &&
+                     a.TargetDepartments
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .Contains(emp.Department)) ||
+
+                    (!string.IsNullOrEmpty(a.TargetEmployees) &&
+                     a.TargetEmployees
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .Contains(loggedEmpId.ToString()))
+                )
+                .ToList();
+
+            unreadCount = filtered.Count(a =>
+                string.IsNullOrEmpty(a.ReadByEmployees) ||
+                !a.ReadByEmployees
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Trim())
+                    .Contains(loggedEmpId.ToString())
+            );
+        }
+    }
+
+    ViewBag.UnreadCount = unreadCount;
+}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Employee Panel</title>
+
+    <!-- Bootstrap + Fonts -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Poppins", sans-serif;
+            background: #f3f4f7;
+        }
+
+        /* ======================= SIDEBAR ======================= */
+
+        /* ======================= SIDEBAR ======================= */
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background: #fff;
+            border-right: 1px solid #e5e7eb;
+            padding: 20px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: 0.35s ease;
+            z-index: 1200;
+            box-shadow: 4px 0 16px rgba(0,0,0,0.07);
+        }
+
+            /* ===== COLLAPSED ===== */
+            .sidebar.collapsed {
+                width: 82px;
+                padding: 20px 0;
+            }
+
+        /* Header */
+        .sidebar-header {
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sidebar.collapsed .sidebar-header {
+            padding-bottom: 10px;
+        }
+
+        .sidebar-logo {
+            width: 120px;
+            transition: .3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-logo {
+            width: 42px;
+        }
+
+        .sidebar-header h4 {
+            margin-top: 8px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .sidebar.collapsed .sidebar-header h4 {
+            display: none;
+        }
+
+        /* MENU */
+        .menu-item {
+            margin: 12px 15px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            color: #111827;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background .25s, border .25s;
+        }
+
+            .menu-item i {
+                margin-right: 12px;
+                font-size: 18px;
+                color: #2F3D88;
+            }
+
+        /* Hover (expanded only) */
+        .sidebar:not(.collapsed) .menu-item:hover {
+            background: #eef2ff;
+            border-color: #cdd5ff;
+            transform: translateX(6px);
+        }
+
+        /* COLLAPSED MENU ITEM */
+        .sidebar.collapsed .menu-item {
+            justify-content: center;
+            padding: 14px 0;
+            margin: 10px auto;
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+        }
+
+            .sidebar.collapsed .menu-item i {
+                margin: 0;
+                font-size: 20px;
+            }
+
+            .sidebar.collapsed .menu-item span,
+            .sidebar.collapsed .toggle-icon {
+                display: none !important;
+            }
+
+
+        /* ===== SCROLLABLE SIDEBAR MENU ===== */
+        .sidebar-menu {
+            max-height: calc(100vh - 170px); /* header + padding space */
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 20px;
+        }
+
+            /* Smooth scrollbar (optional, professional look) */
+            .sidebar-menu::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .sidebar-menu::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .sidebar-menu::-webkit-scrollbar-thumb {
+                background: #c7cbe3;
+                border-radius: 10px;
+            }
+
+                .sidebar-menu::-webkit-scrollbar-thumb:hover {
+                    background: #9fa6d8;
+                }
+
+        /* Firefox */
+        .sidebar-menu {
+            scrollbar-width: thin;
+            scrollbar-color: #c7cbe3 transparent;
+        }
+        /* ACTIVE */
+        .active-menu {
+            background: #2F3D88 !important;
+            color: #fff !important;
+            border-color: #2F3D88 !important;
+        }
+
+            .active-menu i {
+                color: #fff !important;
+            }
+
+        /* SUBMENU */
+        .submenu {
+            display: none;
+            flex-direction: column;
+            margin: 0 15px 10px 35px;
+        }
+
+        .sidebar.collapsed .submenu {
+            display: none !important;
+        }
+
+        .submenu-item {
+            padding: 9px 16px;
+            margin: 4px 0;
+            background: #eef2ff;
+            border: 1px solid #d6dafc;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #2F3D88;
+            display: flex;
+            align-items: center;
+        }
+
+            .submenu-item i {
+                margin-right: 8px;
+                font-size: 14px;
+            }
+
+        .submenu-open .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .active-submenu {
+            background: #2F3D88 !important;
+            color: #fff !important;
+        }
+
+        /* LOGOUT */
+        .logout .menu-item {
+            background: #fee2e2 !important;
+            color: #b91c1c !important;
+            border-color: #fecaca !important;
+        }
+
+            .logout .menu-item i {
+                color: #b91c1c !important;
+            }
+
+        /* PAGE CONTENT */
+        #page-content {
+            margin-left: 250px;
+            transition: margin-left .35s ease;
+        }
+
+        .sidebar.collapsed ~ #page-content {
+            margin-left: 82px !important;
+        }
+
+
+        .navbar {
+            background: #fff;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* Bell animation */
+        .bell-icon {
+            font-size: 28px;
+            transition: 0.3s ease;
+        }
+
+        .blink {
+            animation: shake 0.8s infinite;
+        }
+
+        @@keyframes shake {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            20% {
+                transform: rotate(-15deg);
+            }
+
+            40% {
+                transform: rotate(15deg);
+            }
+
+            60% {
+                transform: rotate(-10deg);
+            }
+
+            80% {
+                transform: rotate(10deg);
+            }
+
+            100% {
+                transform: rotate(0deg);
+            }
+        }
+
+        /* ======================= MOBILE ======================= */
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1100;
+            display: none;
+        }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+        @@media (max-width: 992px) {
+            .sidebar {
+                left: -250px;
+            }
+
+                .sidebar.active {
+                    left: 0;
+                }
+
+            #page-content {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- MOBILE OVERLAY -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- =============== SIDEBAR =============== -->
+    <div id="sidebar-wrapper" class="sidebar">
+
+        <div class="sidebar-header">
+            <img src="~/images/infinity-logo.png" class="sidebar-logo" />
+            <h4>Employee Panel</h4>
+        </div>
+
+        <div class="sidebar-menu">
+
+            <a asp-controller="Employees" asp-action="Dashboard" class="menu-item">
+                <i class="fa-solid fa-gauge"></i><span>Dashboard</span>
+            </a>
+            <a asp-controller="Employees" asp-action="MyProfile" class="menu-item">
+                <i class="fa-solid fa-id-card"></i><span>Profile Details</span>
+            </a>
+           
+            <!-- Attendance -->
+           @*  <div class="menu-item submenu-toggle" onclick="toggleSubmenu('profileMenu')">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>My Profile</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="profileMenu" class="submenu">
+                <a asp-controller="Employees" asp-action="MyProfile" class="submenu-item">
+                    <i class="fa-solid fa-id-card"></i><span>Profile Details</span>
+                </a>
+
+                <a asp-controller="Aadhaar" asp-action="verify"  class="submenu-item">
+                    <i class="fa-solid fa-chart-line"></i>Verification
+                </a>
+            </div> *@
+            <!-- Attendance -->
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('attendanceMenu')">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>My Attendance</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="attendanceMenu" class="submenu">
+                <a asp-controller="Attendance" asp-action="EmployeePanel" class="submenu-item">
+                    <i class="fa-solid fa-check-circle"></i>Mark Attendance
+                </a>
+
+                <a asp-controller="Attendance" asp-action="EmployeeSummary" asp-route-employeeId="@empId" class="submenu-item">
+                    <i class="fa-solid fa-chart-line"></i>Attendance Summary
+                </a>
+            </div>
+
+            <!-- Leaves -->
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('leaveMenu')">
+                <i class="fa-solid fa-plane"></i>
+                <span>Leaves</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="leaveMenu" class="submenu">
+                <a asp-controller="Leave" asp-action="Create" class="submenu-item">
+                    <i class="fa-solid fa-paper-plane"></i>Apply Leave
+                </a>
+
+                <a asp-controller="Leave" asp-action="LeaveReport" class="submenu-item">
+                    <i class="fa-solid fa-list-check"></i>My Leaves
+                </a>
+                <a asp-controller="Holidays" asp-action="Index" class="submenu-item">
+                    <i class="fa-solid fa-list-check"></i>Holidays
+                </a>
+            </div>
+
+            <!-- Gurukul -->
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('gurukulMenu')">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>Gurukul</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="gurukulMenu" class="submenu">
+                <a asp-controller="Gurukul" asp-action="Index" class="submenu-item">
+                    <i class="fa-solid fa-book-open"></i>Gurukul Home
+                </a>
+            </div>
+
+            <!-- Announcements -->
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('announcementMenu')">
+                <i class="fa-solid fa-bullhorn"></i>
+                <span>Announcements</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="announcementMenu" class="submenu">
+                <a asp-controller="Announcements" asp-action="MyNotifications" class="submenu-item">
+                    <i class="fa-solid fa-bell"></i>My Notifications
+                </a>
+            </div>
+
+            <!-- Daily Reports -->
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('dailyReportMenu')">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>Daily Reports</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="dailyReportMenu" class="submenu">
+
+                @* Inbox only for Manager / GM / VP / Director *@
+                @if (role == "Manager" || role == "GM" || role == "VP" || role == "Director" )
+                {
+                    <a asp-controller="DailyReport" asp-action="Inbox" class="submenu-item">
+                        <i class="fa-solid fa-inbox"></i>Daily Report Inbox
+                    </a>
+                }
+
+                <a asp-controller="DailyReport" asp-action="MySentReports" class="submenu-item">
+                    <i class="fa-solid fa-paper-plane"></i>My Daily Reports
+                </a>
+
+            </div>
+
+            
+
+            <!-- Resignation -->
+            @if (role == "Manager" || role == "Employee")
+            {
+                <div class="menu-item submenu-toggle" onclick="toggleSubmenu('ResignationMenu')">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span>Resignation</span>
+                    <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                </div>
+
+                <div id="ResignationMenu" class="submenu">
+
+                    @* Inbox only for Manager / GM / VP / Director *@
+                    @if (role == "Manager" || role == "Employee")
+                    {
+                    <a asp-controller="Resignation" asp-action="Apply" class="submenu-item">
+                        <i class="fa-solid fa-inbox"></i>Apply
+                    </a>
+
+                    <a asp-controller="Resignation" asp-action="Track" class="submenu-item">
+                        <i class="fa-solid fa-gauge"></i>ResignationTrack
+                    </a>
+                }
+                @if (role == "Manager")
+                {
+                    <a asp-controller="Resignation" asp-action="PendingApprovals" class="submenu-item">
+                        <i class="fa-solid fa-inbox"></i>Resignation Approvals
+                    </a>
+                }
+
+            </div>
+            }
+
+          @*   <a asp-controller="Resignation" asp-action="Apply" class="menu-item">
+                <i class="fa-solid fa-gauge"></i><span>Resignation</span>
+            </a>
+              
+            @if (role == "Manager" || role == "GM" || role == "VP" || role == "Director" || role == "Employee")
+            {
+
+                <a asp-controller="Resignation" asp-action="PendingApprovals" class="menu-item">
+                    <i class="fa-solid fa-file-lines"></i><span> Resignation Approvals</span>
+                </a>
+
+            }
+
+            <a asp-controller="Resignation" asp-action="Track" class="menu-item">
+                <i class="fa-solid fa-gauge"></i><span>ResignationTrack</span>
+            </a>
+             *@
+
+
+            <!-- Logout -->
+            <div class="logout">
+                <a asp-controller="Account" asp-action="Logout" class="menu-item">
+                    <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- =============== PAGE CONTENT =============== -->
+    <div id="page-content">
+        <nav class="navbar px-4 py-3 d-flex align-items-center">
+            <button id="sidebarToggle">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <span class="ms-auto fw-semibold">Infinity Arthvishva</span>&nbsp;&nbsp;&nbsp;
+
+            @* /////bell notification////// *@
+            <div>
+                <a href="/Announcements/MyNotifications"
+                   class="btn btn-white position-relative bell-icon @(ViewBag.UnreadCount > 0 ? "blink" : "")">
+
+                    <i class="fa-solid fa-bell text-warning"></i>
+
+                    @if (ViewBag.UnreadCount > 0)
+                    {
+                        <span class="badge bg-danger rounded-circle position-absolute top-0 end-0"
+                              style="font-size: 11px; padding: 5px 7px;">
+                            @ViewBag.UnreadCount
+                        </span>
+                    }
+                </a>
+            </div>
+        </nav>
+
+        @* NOTE: unread-count logic has been moved to the top @{ } block so it runs before this bell *@
+
+        <div class="container-fluid p-4">
+            @RenderBody()
+        </div>
+
+    </div>
+
+    <!-- JS ======================== -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ================= SUBMENU TOGGLE (ACCORDION) ================= */
+
+        function toggleSubmenu(id) {
+            const sidebar = document.getElementById("sidebar-wrapper");
+            const targetMenu = document.getElementById(id);
+
+            // ✅ If sidebar is collapsed → expand first
+            if (sidebar.classList.contains("collapsed")) {
+                sidebar.classList.remove("collapsed");
+
+                setTimeout(() => {
+                    openMenuExclusive(targetMenu);
+                }, 300);
+
+                return;
+            }
+
+            const isOpen = targetMenu.style.display === "flex";
+
+            // Close all submenus first
+            closeAllSubmenus();
+
+            // Open only if it was closed
+            if (!isOpen) {
+                targetMenu.style.display = "flex";
+                targetMenu.previousElementSibling.classList.add("submenu-open");
+            }
+        }
+
+        function closeAllSubmenus() {
+            document.querySelectorAll(".submenu").forEach(menu => {
+                menu.style.display = "none";
+                menu.previousElementSibling?.classList.remove("submenu-open");
+            });
+        }
+
+        function openMenuExclusive(menu) {
+            closeAllSubmenus();
+            menu.style.display = "flex";
+            menu.previousElementSibling.classList.add("submenu-open");
+        }
+
+        /* ================= ACTIVE MENU HIGHLIGHT ================= */
+
+        (function () {
+            const url = window.location.href;
+
+            document.querySelectorAll("a.menu-item").forEach(a => {
+                if (a.href === url) a.classList.add("active-menu");
+            });
+
+            document.querySelectorAll(".submenu-item").forEach(a => {
+                if (a.href === url) {
+                    a.classList.add("active-submenu");
+                    const submenu = a.closest(".submenu");
+                    openMenuExclusive(submenu);
+                }
+            });
+        })();
+
+        /* ================= SIDEBAR COLLAPSE ================= */
+
+        const sidebar = document.getElementById("sidebar-wrapper");
+        const toggle = document.getElementById("sidebarToggle");
+        const overlay = document.getElementById("sidebar-overlay");
+
+        toggle.addEventListener("click", () => {
+            if (window.innerWidth <= 992) {
+                sidebar.classList.toggle("active");
+                overlay.classList.toggle("active");
+            } else {
+                sidebar.classList.toggle("collapsed");
+                closeAllSubmenus(); // optional: close submenus on collapse
+            }
+        });
+
+        overlay.addEventListener("click", () => {
+            sidebar.classList.remove("active");
+            overlay.classList.remove("active");
+        });
+
+        window.addEventListener("resize", () => {
+            if (window.innerWidth > 992) {
+                sidebar.classList.remove("active");
+                overlay.classList.remove("active");
+            }
+        });
+    </script>
+
+
+
+    @RenderSection("Scripts", required: false)
+
+</body>
+</html>

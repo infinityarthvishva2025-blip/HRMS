@@ -1,0 +1,194 @@
+﻿@model HRMS.Models.ViewModels.PayrollSummaryVm
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Salary Slip</title>
+
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 13px;
+            color: #222;
+            margin: 30px;
+        }
+
+        /* ===== HEADER ===== */
+        .header-table {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .logo-cell {
+            width: 220px;
+            height: 90px;
+            border: 1px solid #000;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+            .logo-cell img {
+                width: 150px; /* PROFESSIONAL SIZE */
+            }
+
+        /* ===== SLIP TITLE ===== */
+        .slip-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 0 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        th, td {
+            border: 1px solid #444;
+            padding: 8px;
+        }
+
+        th {
+            background: #f2f4f8;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .no-border td {
+            border: none;
+            padding: 4px 8px;
+        }
+
+        .section-title {
+            background: #2f5597;
+            color: white;
+            font-weight: bold;
+            padding: 6px;
+            margin-top: 20px;
+            margin-bottom: 5px;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .net-salary {
+            background: #e8f5e9;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .footer-table {
+            width: 100%;
+            margin-top: 40px;
+        }
+
+        .note {
+            font-size: 11px;
+            color: #555;
+        }
+
+        .signature {
+            text-align: right;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+ 
+  
+    <div style="text-align:center;">
+        <img src="@($"{Context.Request.Scheme}://{Context.Request.Host}/images/infinity-logo.png")"
+             style="width:150px;" />
+    </div>
+    <!-- ================= PAYSLIP TITLE ================= -->
+    <div class="slip-title">
+      EMPLOYEE SALARY SLIP -
+        @Model.FromDate.ToString("dd MMM yyyy")
+        to
+        @Model.ToDate.ToString("dd MMM yyyy")
+    </div>
+    &nbsp;
+    <!-- ================= EMPLOYEE DETAILS ================= -->
+    <table class="no-border">
+        <tr>
+            <td><b>Employee Code:</b> @Model.EmpCode</td>
+            <td><b>Employee Name:</b> @Model.EmpName</td>
+        </tr>
+        <tr>
+            <td><b>Department:</b> @Model.Department</td>
+            <td><b>Designation:</b> @Model.Designation</td>
+        </tr>
+    </table>
+
+    <!-- ================= ATTENDANCE SUMMARY ================= -->
+    <div class="section-title">Attendance Summary</div>
+    <table>
+        <tr>
+            <th>Working Days</th>
+            <th>Half Days</th>
+            <th>Absent Days</th>
+            <th>Weekly Off (Sun)</th>
+            <th>Paid Days</th>
+        </tr>
+        <tr>
+            <td class="right">@Model.TotalDaysInMonth</td>
+            <td class="right">@Model.PresentHalfDays</td>
+            <td class="right">@Model.AbsentDays</td>
+            <td class="right">@Model.WeeklyOffDays</td>
+            <td class="right">@Model.PaidDays.ToString("0.0")</td>
+        </tr>
+    </table>
+
+    <!-- ================= SALARY DETAILS ================= -->
+    <div class="section-title">Salary Details</div>
+    <table>
+        <tr>
+            <th>Description</th>
+            <th class="right">Amount (₹)</th>
+        </tr>
+        <tr>
+            <td>Basic Salary</td>
+            <td class="right">@Model.MonthlySalary.ToString("0.00")</td>
+        </tr>
+        <tr>
+            <td>Per Day Salary</td>
+            <td class="right">@Model.PerDaySalary.ToString("0.00")</td>
+        </tr>
+        <tr>
+            <td>Gross Salary</td>
+            <td class="right">@Model.GrossSalary.ToString("0.00")</td>
+        </tr>
+        <tr>
+            <td>Professional Tax</td>
+            <td class="right">@Model.ProfessionalTax.ToString("0.00")</td>
+        </tr>
+        <tr class="net-salary">
+            <td>Net Salary Payable</td>
+            <td class="right">@Model.NetSalary.ToString("0.00")</td>
+        </tr>
+    </table>
+
+    <!-- ================= FOOTER ================= -->
+    <table class="footer-table">
+        <tr>
+            <td class="note">
+                * This is a system-generated salary slip.
+            </td>
+            <td class="signature">
+                <b>Authorized Signatory</b><br />
+                Infinity Arthvishva
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

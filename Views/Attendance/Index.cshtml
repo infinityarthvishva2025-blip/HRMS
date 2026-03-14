@@ -1,0 +1,626 @@
+﻿@model IEnumerable<HRMS.ViewModels.AttendanceIndexVm>
+@using HRMS.Helpers
+
+@{
+    var token = UrlEncryptionHelper.GenerateToken(
+        new Dictionary<string, string>
+        {
+            ["type"] = "CAL",
+            ["year"] = DateTime.Now.Year.ToString(),
+            ["month"] = DateTime.Now.Month.ToString(),
+            ["department"] = "All"
+        },
+        expiryMinutes: 30
+    );
+}
+@{
+    ViewData["Title"] = "Attendance Records";
+    Layout = "~/Views/Shared/_HrLayout.cshtml";
+
+    List<HRMS.Models.Employee> employees =
+        ViewBag.EmployeeList as List<HRMS.Models.Employee>
+        ?? new List<HRMS.Models.Employee>();
+}
+
+<div class="container py-4">
+
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <h2 class="fw-bold page-title m-0">
+            <i class="fa-solid fa-filter me-2"></i> Attendance Filters
+        </h2>
+        <small class="text-muted">Total: @((Model?.Count()) ?? 0)</small>
+    </div>
+
+    <!-- FILTER FORM -->
+    <form method="get" class="row g-3 shadow-sm bg-white p-4 rounded mb-4">
+
+        <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label fw-semibold">Search</label>
+            <input type="text" name="search" class="form-control"
+                   value="@ViewBag.Search" placeholder="Employee name or code" />
+        </div>
+
+        <div class="col-6 col-lg-2">
+            <label class="form-label fw-semibold">From Date</label>
+            <input type="date" name="fromDate" class="form-control"
+                   value="@ViewBag.FromDate" />
+        </div>
+
+        <div class="col-6 col-lg-2">
+            <label class="form-label fw-semibold">To Date</label>
+            <input type="date" name="toDate" class="form-control"
+                   value="@ViewBag.ToDate" />
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-4 d-flex align-items-end gap-2">
+
+            <div class="flex-grow-1">
+                <label class="form-label fw-semibold">Status</label>
+                <select name="status" class="form-select">
+                    <option value="All" selected="@(ViewBag.Status == "All")">All</option>
+                    <option value="Completed" selected="@(ViewBag.Status == "Completed")">Completed</option>
+                    <option value="NotCheckedOut" selected="@(ViewBag.Status == "NotCheckedOut")">Not Checked Out</option>
+                    <option value="Active" selected="@(ViewBag.Status == "Active")">Active</option>
+                    <option value="Inactive" selected="@(ViewBag.Status == "Inactive")">Inactive</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary mt-auto">
+                <i class="fa-solid fa-search me-1"></i> Apply
+            </button>
+
+            <button formaction="/Attendance/ExportFiltered" formmethod="get"
+                    class="btn btn-success mt-auto">
+                <i class="fa-solid fa-file-excel me-1"></i> Export
+            </button>
+        </div>
+
+        <div class="col-12 d-flex flex-wrap gap-2 align-items-end mt-3">
+
+            <a href="@Url.Action("HighDensityCalendar", "Attendance", new { token })"
+               class="btn btn-info">
+                View in Calendar
+            </a>
+            <a href="/Attendance/ManualAttendance" class="btn btn-success">
+                <i class="fa-solid fa-user-check me-1"></i> Manual Attendance
+            </a>
+
+            <a href="/Attendance/CorrectionRequests"
+               class="btn btn-warning position-relative">
+                <i class="fa-solid fa-list-check me-1"></i> View Requests
+                @if (ViewBag.PendingRequests > 0)
+                {
+                    <span class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">
+                        @ViewBag.PendingRequests
+                    </span>
+                }
+            </a>
+
+            <a href="/Attendance/CorrectionHistory"
+               class="btn btn-info">
+                <i class="fa-solid fa-clock-rotate-left me-1"></i> Correction History
+            </a>
+
+            <!-- 🔴 New Holidays Button -->
+            <a href="@Url.Action("Index", "Holidays")"
+               class="btn btn-primary">
+                <i class="fa fa-umbrella-beach"></i> Holidays
+            </a>
+
+
+        </div>
+    </form>
+
+    <!-- TABLE -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped mb-0 align-middle">
+                    <thead class="table-dark sticky-top">
+                        <tr>
+                            <th>Employee Code</th>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th>Total Hours</th>
+                            <th>Status</th>
+                            <th>Ticket</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+
+                    <!-- ✅ FIXED HERE -->
+                    <tbody id="tableBody">
+                        @if (Model == null || !Model.Any())
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-danger fw-bold">
+                                    No records found...
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var a in Model)
+                            {
+                                var emp = employees.FirstOrDefault(e => e.EmployeeCode == a.Emp_Code);
+
+                                <tr>
+                                    <td>@a.Emp_Code</td>
+                                    <td>@(emp?.Name ?? "--")</td>
+                                    <td>@a.AttDate.ToString("dd-MM-yyyy")</td>
+                                    <td>@(a.InTime?.ToString(@"hh\:mm") ?? "--")</td>
+                                    <td>@(a.OutTime?.ToString(@"hh\:mm") ?? "--")</td>
+                                    <td>@a.TotalHours</td>
+
+                                    <td>
+                                        @if (a.Status == "L")
+                                        {
+                                            <span class="badge bg-info">Leave</span>
+                                        }
+                                        else if (a.Status == "HO")
+                                        {
+
+                                            <span class="badge bg-info">Holiday</span>
+                                        }
+                                        
+                                        else if (a.AttDate.DayOfWeek == DayOfWeek.Sunday)
+                                        {
+
+                                            <span class="badge bg-secondary">WO</span>
+                                        }
+                                        else if (a.Status == "Coff")
+                                        {
+                                            <span class="badge bg-info">Comp-Off</span>
+                                        }
+                                       @*  else if (a.AttDate.DayOfWeek == DayOfWeek.Saturday)
+                                        {
+
+                                            <span class="badge bg-success">Present</span>
+                                        } *@
+                                        else if (!a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "A")
+                                        {
+
+                                            <span class="badge bg-danger">Absent</span>
+                                        }
+                                        else if (a.InTime.HasValue && !a.OutTime.HasValue && a.Status == "P")
+                                        {
+
+                                            <span class="badge bg-warning text-dark">Not Checked Out</span>
+                                        }
+                                        else if (a.Status == "P")
+                                        {
+
+                                            <span class="badge bg-success">Present</span>
+                                        }
+
+                                        else if (a.Status == "A")
+                                        {
+
+                                            <span class="badge bg-danger">Absent</span>
+
+                                        }
+                                        else
+                                        {
+
+                                            <span class="badge bg-danger">Absent</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (a.CorrectionRequested)
+                                        {
+                                            <span class="badge bg-info">@a.CorrectionStatus</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">No Ticket</span>
+                                        }
+                                    </td>
+
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-info"
+                                                onclick="viewLocation(
+                                '@a.CheckInLatitude',
+                                '@a.CheckInLongitude',
+                                '@a.CheckOutLatitude',
+                                '@a.CheckOutLongitude'
+                            )">
+                                            <i class="fa-solid fa-location-dot"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOCATION MODAL -->
+    <div class="modal fade" id="locationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fa-solid fa-map-location-dot me-2"></i>
+                        Attendance Location
+                    </h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <h6 class="fw-bold">📍 Check-In Location</h6>
+                        <iframe id="checkInMap"
+                                width="100%"
+                                height="220"
+                                style="border:0;"
+                                loading="lazy"></iframe>
+                    </div>
+
+                    <div>
+                        <h6 class="fw-bold">📍 Check-Out Location</h6>
+                        <iframe id="checkOutMap"
+                                width="100%"
+                                height="220"
+                                style="border:0;"
+                                loading="lazy"></iframe>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <span id="pageInfo" class="text-muted"></span>
+        <nav>
+            <ul class="pagination mb-0" id="pagination"></ul>
+        </nav>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const rowsPerPage = 10;
+        const tableBody = document.getElementById("tableBody");
+        if (!tableBody) return;
+
+        const rows = Array.from(tableBody.querySelectorAll("tr"));
+        const pagination = document.getElementById("pagination");
+        const pageInfo = document.getElementById("pageInfo");
+
+        let currentPage = 1;
+        const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+        function showPage(page) {
+            currentPage = page;
+
+            rows.forEach((row, index) => {
+                row.style.display =
+                    index >= (page - 1) * rowsPerPage &&
+                    index < page * rowsPerPage
+                        ? ""
+                        : "none";
+            });
+
+            pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+            renderPagination();
+        }
+
+        function renderPagination() {
+            pagination.innerHTML = "";
+
+            // ◀ PREVIOUS
+            const prev = document.createElement("li");
+            prev.className = "page-item " + (currentPage === 1 ? "disabled" : "");
+            prev.innerHTML = `<a class="page-link">&lsaquo;</a>`;
+            prev.onclick = () => {
+                if (currentPage > 1) showPage(currentPage - 1);
+            };
+            pagination.appendChild(prev);
+
+            // PAGE NUMBERS
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement("li");
+                li.className = "page-item " + (i === currentPage ? "active" : "");
+                li.innerHTML = `<a class="page-link">${i}</a>`;
+                li.onclick = () => showPage(i);
+                pagination.appendChild(li);
+            }
+
+            // ▶ NEXT
+            const next = document.createElement("li");
+            next.className = "page-item " + (currentPage === totalPages ? "disabled" : "");
+            next.innerHTML = `<a class="page-link">&rsaquo;</a>`;
+            next.onclick = () => {
+                if (currentPage < totalPages) showPage(currentPage + 1);
+            };
+            pagination.appendChild(next);
+        }
+
+        if (rows.length > 0) showPage(1);
+    });
+</script>
+
+<script>
+    function viewLocation(inLat, inLng, outLat, outLng) {
+
+        const inMap = document.getElementById("checkInMap");
+        const outMap = document.getElementById("checkOutMap");
+
+        const inContainer = inMap.closest("div");
+        const outContainer = outMap.closest("div");
+
+        // RESET VISIBILITY
+        inMap.style.display = "block";
+        outMap.style.display = "block";
+
+        // -----------------------
+        // CHECK-IN MAP
+        // -----------------------
+        if (inLat && inLng && inLat !== "NULL") {
+            inMap.src = `https://www.google.com/maps?q=${inLat},${inLng}&output=embed`;
+        } else {
+            inMap.src = "";
+            inMap.style.display = "none";
+
+            if (!inContainer.querySelector(".no-location")) {
+                inContainer.insertAdjacentHTML(
+                    "beforeend",
+                    "<p class='text-muted no-location'>No Check-In location available</p>"
+                );
+            }
+        }
+
+        // -----------------------
+        // CHECK-OUT MAP
+        // -----------------------
+        if (outLat && outLng && outLat !== "NULL") {
+            outMap.src = `https://www.google.com/maps?q=${outLat},${outLng}&output=embed`;
+        } else {
+            outMap.src = "";
+            outMap.style.display = "none";
+
+            if (!outContainer.querySelector(".no-location")) {
+                outContainer.insertAdjacentHTML(
+                    "beforeend",
+                    "<p class='text-muted no-location'>No Check-Out location available</p>"
+                );
+            }
+        }
+
+        new bootstrap.Modal(
+            document.getElementById("locationModal")
+        ).show();
+    }
+</script>
+
+
+<style>
+    /* =====================================================
+       ATTENDANCE PAGE – FINAL MOBILE POLISH (NO LOGIC CHANGE)
+    ===================================================== */
+
+    /* -----------------------------
+       MOBILE TABLE → CARD VIEW
+    ----------------------------- */
+    @@media (max-width: 768px) {
+        /* Hide table header */
+        table thead {
+            display: none;
+        }
+
+        table,
+        tbody,
+        tr,
+        td {
+            display: block;
+            width: 100%;
+        }
+        /* Card */
+        #tableBody tr {
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 14px;
+            margin-bottom: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+            max-width: 420px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #tableBody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 14px;
+            gap: 12px;
+            text-align: right;
+            word-break: break-word;
+        }
+            /* Auto labels */
+            #tableBody td::before {
+                font-weight: 600;
+                color: #6c757d;
+                text-align: left;
+                flex-shrink: 0;
+            }
+
+            #tableBody td:nth-child(1)::before {
+                content: "Employee Code";
+            }
+
+            #tableBody td:nth-child(2)::before {
+                content: "Name";
+            }
+
+            #tableBody td:nth-child(3)::before {
+                content: "Date";
+            }
+
+            #tableBody td:nth-child(4)::before {
+                content: "Check In";
+            }
+
+            #tableBody td:nth-child(5)::before {
+                content: "Check Out";
+            }
+
+            #tableBody td:nth-child(6)::before {
+                content: "Total Hours";
+            }
+
+            #tableBody td:nth-child(7)::before {
+                content: "Status";
+            }
+
+            #tableBody td:nth-child(8)::before {
+                content: "Ticket";
+            }
+
+            #tableBody td:nth-child(9)::before {
+                content: "Location";
+            }
+            /* Status alignment */
+            #tableBody td:nth-child(7) {
+                justify-content: flex-end;
+            }
+            /* Location button */
+            #tableBody td:nth-child(9) {
+                justify-content: flex-start;
+                padding-top: 10px;
+            }
+        /* -----------------------------
+           FILTER FORM – CLEAN FLOW
+        ----------------------------- */
+        form.row.g-3 {
+            padding: 14px !important;
+            margin-top: 8px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 14px;
+            height: 42px;
+        }
+        /* STATUS + APPLY + EXPORT */
+        .col-12.col-md-6.col-lg-4 {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: stretch !important;
+        }
+
+            .col-12.col-md-6.col-lg-4 .btn {
+                width: 100%;
+            }
+        /* Action buttons */
+        .col-12.d-flex.flex-wrap.gap-2 {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+            .col-12.d-flex.flex-wrap.gap-2 .btn {
+                width: 100%;
+                text-align: center;
+            }
+        /* -----------------------------
+           PAGINATION (VISIBLE & CENTERED)
+        ----------------------------- */
+        .pagination {
+            display: flex !important;
+            justify-content: center !important;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+            .pagination .page-item {
+                display: inline-block;
+            }
+
+        #pageInfo {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        /* Prevent navbar overlap */
+        .page-content,
+        .container,
+        .container-fluid {
+            padding-top: 72px !important;
+        }
+    }
+
+    /* -----------------------------
+       SMALL MOBILE
+    ----------------------------- */
+    @@media (max-width: 480px) {
+
+        #tableBody td {
+            font-size: 13px;
+        }
+
+        #tableBody tr {
+            padding: 12px;
+        }
+
+        .btn {
+            font-size: 13px;
+            padding: 8px 12px;
+        }
+    }
+
+    /* Desktop safeguard */
+    .pagination {
+        display: flex;
+    }
+
+    @@media (max-width: 768px) {
+        /* Remove extra top spacing from layout wrappers */
+        body {
+            padding-top: 0 !important;
+        }
+
+        .page-content,
+        .container,
+        .container-fluid {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }
+        /* Header row containing "Attendance Filters" */
+        .d-flex.align-items-center.justify-content-between.flex-wrap.gap-2.mb-3 {
+            margin-top: 0 !important;
+            padding-top: 6px !important;
+        }
+        /* Remove any accidental spacer divs */
+        .container > :first-child {
+            margin-top: 0 !important;
+        }
+    }
+
+    /* Small phones */
+    @@media (max-width: 480px) {
+        .d-flex.align-items-center.justify-content-between.flex-wrap.gap-2.mb-3 {
+            padding-top: 4px !important;
+        }
+    }
+</style>
+
+

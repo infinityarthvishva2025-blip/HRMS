@@ -1,0 +1,15 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+}
+
+<h3>Daily report submitted successfully.</h3>
+
+<a asp-controller="DailyReport"
+   asp-action="MySentReports"
+   class="btn btn-success">
+    View My Daily Reports
+</a>
+

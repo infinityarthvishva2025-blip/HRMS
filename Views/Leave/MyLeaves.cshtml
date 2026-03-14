@@ -1,0 +1,33 @@
+﻿@model IEnumerable<HRMS.Models.Leave>
+@{
+    ViewData["Title"] = "Apply for Leave";
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+}
+<h3>My Leaves</h3>
+<hr />
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Category</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Days</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var l in Model)
+        {
+            <tr>
+                <td>@l.Category</td>
+                <td>@(l.StartDate.ToString("dd-MM-yyyy") ?? "N/A")</td>
+                <td>@(l.EndDate?.ToString("dd-MM-yyyy") ?? "N/A")</td>
+                <td>@l.TotalDays</td>
+                <td>@l.OverallStatus</td>
+            </tr>
+        }
+    </tbody>
+</table>
+

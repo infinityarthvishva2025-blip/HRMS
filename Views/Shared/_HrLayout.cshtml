@@ -1,0 +1,516 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    Layout = null;
+
+    // ROLE (defined ONCE)
+    string role = HttpContextAccessor.HttpContext?.Session.GetString("Role") ?? "Employee";
+    role = string.IsNullOrWhiteSpace(role) ? "Employee" : role;
+
+    // Employee Id
+    int loggedEmpId = Context.Session.GetInt32("EmployeeId") ?? 0;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Infinity HRMS</title>
+
+    <!-- Bootstrap + Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        /* ---------- GLOBAL ---------- */
+        body {
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: #f3f4f7;
+        }
+
+        /* ---------- SIDEBAR ---------- */
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
+            padding: 25px 0;
+            border-radius:0;
+            transition: 0.35s ease;
+            z-index: 1050;
+        }
+
+            .sidebar.collapsed {
+                width: 82px;
+            }
+
+        .sidebar-header {
+
+            text-align: center;
+            padding: 0 10px 25px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .sidebar-logo {
+            width: 150px;
+            transition: 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-logo {
+            width: 50px;
+        }
+
+        .sidebar-header h4 {
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: 700;
+            color: #1f2937;
+            transition: .3s;
+        }
+
+        .sidebar.collapsed .sidebar-header h4 {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* ===== SCROLLABLE SIDEBAR MENU ===== */
+        .sidebar-menu {
+            max-height: calc(100vh - 170px); /* header + padding space */
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 20px;
+        }
+
+            /* Smooth scrollbar (optional, professional look) */
+            .sidebar-menu::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .sidebar-menu::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .sidebar-menu::-webkit-scrollbar-thumb {
+                background: #c7cbe3;
+                border-radius: 10px;
+            }
+
+                .sidebar-menu::-webkit-scrollbar-thumb:hover {
+                    background: #9fa6d8;
+                }
+
+        /* Firefox */
+        .sidebar-menu {
+            scrollbar-width: thin;
+            scrollbar-color: #c7cbe3 transparent;
+        }
+
+
+        .menu-item {
+            margin: 10px 15px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #374151;
+            font-size: 15px;
+            font-weight: 600;
+            transition: 0.25s ease-in-out;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+        }
+
+            .menu-item:hover {
+                background: #eef2ff;
+                color: #3730a3;
+                border-color: #c7d2fe;
+                transform: translateX(6px);
+            }
+
+            .menu-item i {
+                font-size: 20px;
+                margin-right: 14px;
+            }
+
+            .menu-item.active {
+                background: #4f46e5;
+                color: white;
+            }
+
+                .menu-item.active i {
+                    color: white;
+                }
+
+        .sidebar.collapsed .menu-item {
+            justify-content: center;
+            padding: 0;
+        }
+
+            .sidebar.collapsed .menu-item span {
+                display: none;
+            }
+
+            .sidebar.collapsed .menu-item i {
+                margin: 0;
+            }
+
+        .logout .menu-item {
+            background: #fee2e2;
+            color: #b91c1c;
+            border-color: #fecaca;
+        }
+
+        /* ---------- SUBMENU ---------- */
+        .submenu {
+            display: none; /* IMPORTANT */
+            flex-direction: column;
+            margin: 0 15px 10px 15px;
+            padding-left: 52px;
+        }
+
+        .submenu-item {
+            display: flex;
+            align-items: center;
+            height: 42px;
+            padding: 0 14px;
+            margin: 6px 0;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #4b5563;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.2s ease-in-out;
+        }
+
+            .submenu-item i {
+                margin-right: 10px;
+                font-size: 14px;
+            }
+
+            .submenu-item:hover {
+                background: #eef2ff;
+                color: #3730a3;
+            }
+
+        /* active submenu */
+        .active-submenu {
+            background: #4f46e5;
+            color: white !important;
+        }
+
+
+        /* ---------- PAGE CONTENT ---------- */
+        #page-content {
+            margin-left: 250px;
+            transition: 0.35s;
+        }
+
+        .sidebar.collapsed ~ #page-content {
+            margin-left: 82px;
+        }
+
+        .navbar {
+            background: #ffffff;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+            .navbar button {
+                background: none;
+                border: none;
+                font-size: 22px;
+                cursor: pointer;
+                color: #374151;
+            }
+
+            .navbar span {
+                font-size: 16px;
+                color: #1f2937;
+            }
+
+        /* ---------- MOBILE SIDEBAR ---------- */
+        @@media (max-width: 992px) {
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                top: 0;
+                height: 100%;
+                z-index: 2000;
+                border-radius: 0;
+                box-shadow: 6px 0 18px rgba(0, 0, 0, 0.15);
+            }
+
+                .sidebar.active {
+                    left: 0;
+                }
+
+            #page-content {
+                margin-left: 0 !important;
+            }
+
+            .navbar button {
+                font-size: 24px;
+            }
+
+            .sidebar.collapsed {
+                width: 250px;
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1500;
+                display: none;
+            }
+
+                .sidebar-overlay.active {
+                    display: block;
+                }
+        }
+
+        /* ---------- SMALL DEVICES ---------- */
+        @@media (max-width: 576px) {
+            .sidebar-header h4 {
+                font-size: 16px;
+            }
+
+            .menu-item {
+                font-size: 14px;
+                height: 44px;
+            }
+
+                .menu-item i {
+                    font-size: 18px;
+                    margin-right: 10px;
+                }
+
+            .navbar span {
+                font-size: 14px;
+            }
+
+            .container-fluid {
+                padding: 1rem !important;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar Overlay for Mobile -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- HR SIDEBAR -->
+    <div id="sidebar-wrapper" class="sidebar">
+
+        <div class="sidebar-header">
+            <img src="~/images/infinity-logo.png" class="sidebar-logo" />
+            <h4>HRMS Portal</h4>
+        </div>
+
+        <div class="sidebar-menu">
+            <a asp-controller="Home" asp-action="Index" class="menu-item">
+                <i class="fa-solid fa-gauge"></i><span>Dashboard</span>
+            </a>
+            <a asp-controller="Employees" asp-action="Index" class="menu-item">
+                <i class="fa-solid fa-user-tie"></i><span>Employee Management</span>
+            </a>
+            <a asp-controller="Attendance" asp-action="Index" class="menu-item">
+                <i class="fa-solid fa-calendar-check"></i><span>Attendance</span>
+            </a>
+            <a asp-controller="Leave" asp-action="OverallLeaveReport" class="menu-item">
+                <i class="fa-solid fa-plane-departure"></i><span>Leave Management</span>
+            </a>
+            <a asp-controller="Leave" asp-action="ApprovalDashboard" class="menu-item">
+                <i class="fa-solid fa-check-to-slot"></i><span>Leave Approvals</span>
+            </a>
+           @*  <a asp-controller="Payroll" asp-action="Generate" class="menu-item">
+                <i class="fa-solid fa-wallet"></i><span>Payroll</span>
+            </a> *@
+            <a asp-controller="Payroll"
+               asp-action="Generate"
+               class="menu-item">
+                <i class="fa-solid fa-wallet"></i>
+                <span>Payroll</span>
+            </a>
+           @*  <a asp-controller="Expenses" asp-action="HRList" class="menu-item">
+                <i class="fa-solid fa-laptop"></i><span>Expenses</span>
+            </a> *@
+            <a asp-controller="Gurukul" asp-action="HRList" class="menu-item">
+                <i class="fa-solid fa-graduation-cap"></i><span>Gurukul (Admin)</span>
+            </a>
+
+            <a asp-controller="Announcements" asp-action="Create" class="menu-item">
+                <i class="fa-solid fa-notification">📢</i><span>Announcements</span>
+            </a>
+
+            <!-- DailyReport -->
+            
+
+            @if (role == "Manager" || role == "GM" || role == "VP" || role == "Director")
+            {
+
+                    <a asp-controller="DailyReport" asp-action="Inbox" class="menu-item">
+                    <i class="fa-solid fa-file-lines"></i><span> Daily Report Inbox</span>
+                    </a>
+
+            }
+           
+              @*/////  Resignation  /////*@
+
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('ResignationMenu')">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>Resignation</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="ResignationMenu" class="submenu">
+
+                @* Inbox only for Manager / GM / VP / Director *@
+                @if (role == "GM" || role == "HR" || role == "VP" )
+                {
+                    <a asp-controller="Resignation" asp-action="Apply" class="submenu-item">
+                        <i class="fa-solid fa-inbox"></i>Apply
+                    </a>
+
+                    <a asp-controller="Resignation" asp-action="Track" class="submenu-item">
+                        <i class="fa-solid fa-gauge"></i>ResignationTrack
+                    </a>
+                }
+                @if (role == "GM" || role == "HR" || role == "VP" || role == "Director")
+                {
+                    <a asp-controller="Resignation" asp-action="PendingApprovals" class="submenu-item">
+                        <i class="fa-solid fa-inbox"></i>Resignation Approvals
+                    </a>
+                }
+
+            </div>
+                
+          
+           @*  <a asp-controller="Reports" asp-action="Index" class="menu-item">
+                <i class="fa-solid fa-file-alt"></i><span>Reports</span>
+            </a> *@
+
+            <div class="menu-item submenu-toggle" onclick="toggleSubmenu('Reportsmenu')">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>Reports</span>
+                <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <div id="Reportsmenu" class="submenu">
+
+                @* Inbox only for Manager / GM / VP / Director *@
+                @if (role == "GM" || role == "HR" || role == "VP" || role == "Director")
+                {
+                    <a asp-controller="Reports" asp-action="Index" class="submenu-item">
+                        <i class="fa-solid fa-inbox"></i>Reports
+                    </a>
+
+                    <a asp-controller="Employees" asp-action="EmployeeReport" class="submenu-item">
+                        <i class="fa-solid fa-gauge"></i>Employee Management Report
+                    </a>
+
+                    <a asp-controller="AdminLetter" asp-action="Index" class="submenu-item">
+                        <i class="fa-solid"></i>Employee documents Report
+                    </a>
+                }
+               
+
+            </div>
+            <div class="logout">
+                <a asp-controller="Account" asp-action="Logout" class="menu-item">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+       
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="page-content">
+        <nav class="navbar px-4 py-3 d-flex align-items-center">
+            <button id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+            <span class="ms-auto fw-semibold">Infinity Arthvishva</span>
+        </nav>
+
+        <div class="container-fluid p-4">
+            @RenderBody()
+        </div>
+    </div>
+
+    <script>
+        const sidebar = document.getElementById("sidebar-wrapper");
+        const toggle = document.getElementById("sidebarToggle");
+        const overlay = document.getElementById("sidebar-overlay");
+
+        toggle.addEventListener("click", () => {
+            if (window.innerWidth <= 992) {
+                sidebar.classList.toggle("active");
+                overlay.classList.toggle("active");
+            } else {
+                sidebar.classList.toggle("collapsed");
+                closeAllSubmenus();
+            }
+        });
+
+        overlay.addEventListener("click", () => {
+            sidebar.classList.remove("active");
+            overlay.classList.remove("active");
+        });
+
+        window.addEventListener("resize", () => {
+            if (window.innerWidth > 992) {
+                sidebar.classList.remove("active");
+                overlay.classList.remove("active");
+            }
+        });
+
+        /* ---------- SUBMENU TOGGLE ---------- */
+        function toggleSubmenu(id) {
+            const targetMenu = document.getElementById(id);
+
+            if (sidebar.classList.contains("collapsed")) {
+                sidebar.classList.remove("collapsed");
+                setTimeout(() => openMenuExclusive(targetMenu), 300);
+                return;
+            }
+
+            const isOpen = targetMenu.style.display === "flex";
+            closeAllSubmenus();
+
+            if (!isOpen) {
+                targetMenu.style.display = "flex";
+                targetMenu.previousElementSibling.classList.add("submenu-open");
+            }
+        }
+
+        function closeAllSubmenus() {
+            document.querySelectorAll(".submenu").forEach(menu => {
+                menu.style.display = "none";
+                menu.previousElementSibling?.classList.remove("submenu-open");
+            });
+        }
+
+        function openMenuExclusive(menu) {
+            closeAllSubmenus();
+            menu.style.display = "flex";
+            menu.previousElementSibling.classList.add("submenu-open");
+        }
+    </script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

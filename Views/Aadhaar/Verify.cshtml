@@ -1,0 +1,218 @@
+﻿@{
+    ViewData["Title"] = "KYC Verification";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+
+    bool isHrUser = role == "HR" || role == "VP" || role == "GM" || role == "Director";
+}
+
+<div class="container mt-4">
+
+    <h3 class="mb-4">KYC Verification</h3>
+
+    <div class="row">
+
+        <!-- Aadhaar Verification -->
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4">
+
+                <h5 class="mb-3">Aadhaar Verification</h5>
+
+                <form asp-action="SendOtp" method="post">
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Aadhaar Number</label>
+                        <input type="text"
+                               name="aadhaarNumber"
+                               class="form-control"
+                               maxlength="12"
+                               placeholder="Enter 12 digit Aadhaar"
+                               required />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        Verify Aadhaar
+                    </button>
+
+                </form>
+
+                <hr />
+
+                @if (ViewBag.ReferenceId != null)
+                {
+                    <form asp-action="VerifyOtp" method="post">
+
+                        <input type="hidden" name="referenceId" value="@ViewBag.ReferenceId" />
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Enter OTP</label>
+                            <input type="text"
+                                   name="otp"
+                                   class="form-control"
+                                   maxlength="6"
+                                   placeholder="Enter OTP"
+                                   required />
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            Verify OTP
+                        </button>
+
+                    </form>
+                }
+
+                @if (ViewBag.AadhaarStatus != null)
+                {
+                    <div class="alert alert-success mt-3">
+                        Aadhaar : @ViewBag.AadhaarNumber <br />
+                        Status : <strong>Verified</strong>
+                    </div>
+                }
+
+            </div>
+        </div>
+
+
+        <div class="card shadow-sm p-4 mt-4" style="max-width:450px;">
+
+            <h5 class="mb-3">PAN Verification</h5>
+
+            <form asp-action="VerifyPan" method="post">
+
+                <div class="form-group mb-3">
+                    <label class="form-label">PAN Number</label>
+                    <input type="text"
+                           name="panNumber"
+                           class="form-control"
+                           maxlength="10"
+                           placeholder="Enter PAN"
+                           required />
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Name as per PAN</label>
+                    <input type="text"
+                           name="name"
+                           class="form-control"
+                           placeholder="Enter PAN Name"
+                           required />
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date"
+                           name="dob"
+                           class="form-control"
+                           placeholder="DD/MM/YYYY"
+                           required />
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Verify PAN
+                </button>
+
+            </form>
+
+            @if (ViewBag.PanStatus != null)
+            {
+                <div class="alert alert-success mt-3">
+
+                    PAN : @ViewBag.PanNumber <br>
+                    Status : <b>@ViewBag.PanStatus</b>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+</div>
+@* 
+@{
+    ViewData["Title"] = "Aadhaar Verification";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+
+    bool isHrUser = role == "HR" || role == "VP" || role == "GM" || role == "Director";
+}
+
+
+<div class="container mt-4">
+
+    <h3 class="mb-4">Aadhaar Verification</h3>
+
+    <div class="card shadow-sm p-4" style="max-width:450px;">
+
+        <!-- Aadhaar Form -->
+        <form asp-action="SendOtp" method="post">
+
+            <div class="form-group mb-3">
+                <label class="form-label">Aadhaar Number</label>
+                <input type="text"
+                       name="aadhaarNumber"
+                       class="form-control"
+                       maxlength="12"
+                       placeholder="Enter 12 digit Aadhaar"
+                       required />
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Send OTP
+            </button>
+
+        </form>
+
+        <hr />
+
+        <!-- OTP Section -->
+        @if (ViewBag.ReferenceId != null)
+        {
+            <form asp-action="VerifyOtp" method="post">
+
+                <input type="hidden" name="referenceId" value="@ViewBag.ReferenceId" />
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Enter OTP</label>
+                    <input type="text"
+                           name="otp"
+                           class="form-control"
+                           maxlength="6"
+                           placeholder="Enter OTP"
+                           required />
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    Verify OTP
+                </button>
+
+            </form>
+        }
+
+        <!-- Result -->
+        @if (ViewBag.Result != null)
+        {
+            <div class="alert alert-info mt-3">
+                @ViewBag.Result
+            </div>
+        }
+
+    </div>
+
+</div> *@

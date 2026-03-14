@@ -1,0 +1,185 @@
+﻿@model IEnumerable<HRMS.Models.Attendance>
+@using HRMS.Helpers
+
+@{
+    ViewData["Title"] = "Attendance Correction Requests";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+}
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold m-0">
+            <i class="fa-solid fa-pen-to-square me-2 text-primary"></i>
+            Attendance Correction Requests
+        </h2>
+
+        <input type="text"
+               id="tableSearch"
+               class="form-control w-25"
+               placeholder="Search employee / reason..." />
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+
+            <table class="table table-bordered table-striped mb-0 align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Employee</th>
+                        <th>Date</th>
+                        <th>Reason</th>
+                        <th>Proof</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="tableBody">
+
+                    @if (Model == null || !Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-danger fw-bold">
+                                No correction requests found.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        var employees = ViewBag.Employees as List<HRMS.Models.Employee>;
+
+                        foreach (var a in Model.OrderByDescending(x => x.Date))
+                        {
+                            var emp = employees?.FirstOrDefault(e => e.EmployeeCode == a.Emp_Code);
+
+                            bool isHr = role == "HR";
+                            bool isGM = role == "GM";
+                            bool isVP = role == "VP";
+                            bool isDir = role == "Director";
+
+                            // ✅ FIX: initialize variable
+                            bool canResolve = false;
+
+                            if (emp != null)
+                            {
+                                if (emp.Role == "Employee" || emp.Role == "Intern" || emp.Role=="Manager")
+                                {
+                                    canResolve = a.CorrectionRequested && isHr;
+                                }
+                                else if (emp.Role == "HR")
+                                {
+                                    canResolve = a.CorrectionRequested && isGM;
+                                }
+                                else if (emp.Role == "GM")
+                                {
+                                    canResolve = a.CorrectionRequested && isVP;
+                                }
+                                else if (emp.Role == "VP")
+                                {
+                                    canResolve = a.CorrectionRequested && isDir;
+                                }
+                            }
+
+                            string token = null;
+                            if (canResolve)
+                            {
+                                token = UrlEncryptionHelper.GenerateToken(
+                                    a.Emp_Code,
+                                    a.Date,
+                                    expiryMinutes: 30
+                                );
+                            }
+
+                            <tr>
+                                <td class="fw-semibold">
+                                    @a.Emp_Code - @(emp?.Name ?? "Unknown")
+                                </td>
+
+                                <td>@a.Date.ToString("dd-MMM-yyyy")</td>
+
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(a.CorrectionRemark))
+                                    {
+                                        @a.CorrectionRemark
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No reason provided</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (!string.IsNullOrEmpty(a.CorrectionProofPath))
+                                    {
+                                        <a href="@Url.Action("ViewCorrectionProof", "Attendance",
+                                                new { fileName = a.CorrectionProofPath })"
+                                           target="_blank"
+                                           class="btn btn-sm btn-outline-primary">
+                                            View Proof
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">--</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @switch (a.CorrectionStatus)
+                                    {
+                                        case "Pending":
+                                            <span class="badge bg-info">Pending</span>
+                                            break;
+                                        case "Approved":
+                                            <span class="badge bg-success">Approved</span>
+                                            break;
+                                        case "Rejected":
+                                            <span class="badge bg-danger">Rejected</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">Unknown</span>
+                                            break;
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (canResolve)
+                                    {
+                                        <a class="btn btn-success btn-sm"
+                                           href="@Url.Action("ResolveCorrection", "Attendance", new { token })">
+                                            Resolve
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <span id="pageInfo" class="text-muted"></span>
+
+        <nav>
+            <ul class="pagination mb-0" id="pagination"></ul>
+        </nav>
+    </div>
+
+</div>

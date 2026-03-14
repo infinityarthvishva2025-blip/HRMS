@@ -1,0 +1,258 @@
+﻿@model HRMS.Models.GurukulVideo
+
+@{
+    ViewData["Title"] = "Play Video";
+    Layout = "_EmployeeLayout";
+
+    var prog = (HRMS.Models.GurukulProgress?)ViewBag.Progress;
+    var backUrl = Url.Action("Index", "Gurukul");
+    var videoList = ViewBag.VideoList as List<HRMS.Models.GurukulVideo>;
+}
+
+<style>
+    .page-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #1a237e;
+        margin-bottom: 25px;
+    }
+
+    .video-card {
+        background: #fff;
+        padding: 25px;
+        border-radius: 16px;
+        border: 1px solid #e5e7f3;
+        box-shadow: 0 6px 22px rgba(0,0,0,0.06);
+    }
+
+    .description-box {
+        padding: 15px;
+        background: #f7f9ff;
+        border-radius: 12px;
+        border: 1px solid #e3e6fb;
+        margin-bottom: 20px;
+    }
+
+    .custom-select {
+        border-radius: 10px;
+        padding: 10px 14px;
+        border: 1px solid #cfd3ef;
+        background: #f8f9ff;
+    }
+
+    .video-wrapper {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 8px 22px rgba(0,0,0,0.1);
+    }
+
+    .controls-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #1a237e;
+        padding: 10px 15px;
+        border-bottom-left-radius: 16px;
+        border-bottom-right-radius: 16px;
+    }
+
+    .btn-control {
+        background: green;
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .btn-closevideo {
+        background: red;
+        color: white;
+        border-radius: 8px;
+        padding: 8px 16px;
+        border: none;
+        font-weight: bold;
+    }
+
+    video {
+        pointer-events: auto !important;
+    }
+</style>
+
+
+<div class="container mt-3">
+    <div class="video-card">
+
+        <h2 class="page-title">@Model.Title</h2>
+
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <div class="description-box">@Model.Description</div>
+        }
+
+        <!-- Video Selector -->
+        <label class="fw-semibold">Select Video</label>
+        <select class="form-control custom-select mb-3"
+                onchange="location.href='/Gurukul/Details/' + this.value;">
+            @foreach (var v in videoList)
+            {
+                <option value="@v.Id" selected="@(v.Id == Model.Id)"> @v.Title </option>
+            }
+        </select>
+
+        <!-- Video Player -->
+        <div class="video-wrapper">
+
+            @if (!Model.IsExternal)
+            {
+                <video id="gurukulPlayer"
+                       width="100%"
+                       height="420"
+                       playsinline
+                       controlsList="nodownload noremoteplayback">
+
+                    <source src="@Model.VideoPath" type="video/mp4" />
+                </video>
+            }
+            else
+            {
+                <iframe id="gurukulIframe"
+                        src="@Model.VideoPath"
+                        width="100%" height="420"
+                        style="border:0;"></iframe>
+            }
+
+            <div class="controls-bar">
+                <button class="btn-control" id="playPauseBtn">Play</button>
+                <span id="timeLabel" style="color:white;font-weight:bold;">00:00 / 00:00</span>
+
+                <button class="btn-control" id="fullscreenBtn">Fullscreen</button>
+
+                <button class="btn-control" id="nextBtn">Next ▶</button>
+
+                <button class="btn-closevideo" id="closeBtn">Close</button>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <span id="statusBadge">
+                @if (prog?.IsCompleted == true)
+                {
+                    <span class="badge bg-success px-3 py-2">Completed</span>
+                }
+                else
+                {
+                    <span class="badge bg-warning text-dark px-3 py-2">Pending</span>
+                }
+            </span>
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+
+    const closeBtn = document.getElementById("closeBtn");
+    const playBtn = document.getElementById("playPauseBtn");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const timeLabel = document.getElementById("timeLabel");
+
+    const video = document.getElementById("gurukulPlayer");
+    const iframe = document.getElementById("gurukulIframe");
+
+    const completed = @((prog != null && prog.IsCompleted).ToString().ToLower());
+
+
+    /* ----------------------- NEXT BUTTON LOGIC ----------------------- */
+    const videoList = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                videoList.Select((v, idx) => new { v.Id, Index = idx })
+        ));
+
+    let currentVideo = videoList.find(x => x.Id === @Model.Id);
+
+    nextBtn.onclick = function () {
+        if (!currentVideo) return;
+
+        let nextIndex = currentVideo.Index + 1;
+
+        if (nextIndex < videoList.length) {
+            window.location.href = "/Gurukul/Details/" + videoList[nextIndex].Id;
+        }
+    };
+
+
+    /* ----------------------- MARK COMPLETE ----------------------- */
+    function markComplete() {
+        fetch('@Url.Action("MarkComplete", "Gurukul")', {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "videoId=@Model.Id"
+        })
+        .then(r => r.json())
+        .then(j => {
+            if (j.success) {
+                document.getElementById("statusBadge").innerHTML =
+                    '<span class="badge bg-success px-3 py-2">Completed</span>';
+            }
+        });
+    }
+
+
+    /* ---------------- CUSTOM VIDEO PLAYER (INTERNAL MP4) ---------------- */
+    if (video) {
+
+        video.controls = false;
+        let lastTime = 0;
+
+        playBtn.onclick = () => {
+            if (video.paused) {
+                video.play();
+                playBtn.innerText = "Pause";
+            } else {
+                video.pause();
+                playBtn.innerText = "Play";
+            }
+        };
+
+        video.addEventListener("timeupdate", function () {
+            timeLabel.innerText =
+                format(video.currentTime) + " / " + format(video.duration);
+
+            // Prevent forward skipping
+            if (video.currentTime - lastTime > 1.3) {
+                video.currentTime = lastTime;
+            }
+
+            lastTime = video.currentTime;
+        });
+
+        video.onended = markComplete;
+    }
+
+
+    /* ---------------- FULLSCREEN BUTTON ---------------- */
+    fullscreenBtn.onclick = () => {
+        if (video) video.requestFullscreen();
+        if (iframe) iframe.requestFullscreen();
+    };
+
+
+    /* ---------------- TIME FORMAT ---------------- */
+    function format(t) {
+        let m = Math.floor(t / 60);
+        let s = Math.floor(t % 60);
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+
+    /* ---------------- CLOSE BUTTON (NO COMPLETE) ---------------- */
+    closeBtn.onclick = function () {
+        if (video) video.pause();
+        if (iframe) iframe.src = "";
+        window.location.href = '@backUrl';
+    };
+
+</script>

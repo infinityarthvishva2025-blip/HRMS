@@ -1,0 +1,193 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@model IEnumerable<HRMS.Models.DailyReportRecipient>
+
+@{
+    var role = HttpContextAccessor.HttpContext.Session.GetString("Role") ?? "Employee";
+    role = string.IsNullOrWhiteSpace(role) || role == "-" ? "Employee" : role;
+
+    Layout = (role == "HR" || role == "GM" || role == "VP" || role == "Director")
+        ? "~/Views/Shared/_HrLayout.cshtml"
+        : "~/Views/Shared/_EmployeeLayout.cshtml";
+}
+
+<div class="container-fluid">
+
+    <!-- ================= HEADER ================= -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fa-solid fa-inbox me-2"></i>
+                Daily Report Inbox
+            </h5>
+
+            <form method="get" id="filterForm" class="d-flex gap-2">
+
+                <input type="text"
+                       name="search"
+                       value="@ViewBag.Search"
+                       class="form-control form-control-sm"
+                       placeholder="Search employee..." />
+
+                <input type="date"
+                       name="selectedDate"
+                       value="@ViewBag.SelectedDate"
+                       class="form-control form-control-sm"
+                       onchange="document.getElementById('filterForm').submit();" />
+
+            </form>
+
+
+        </div>
+
+        <!-- ================= DESKTOP TABLE ================= -->
+        <div class="table-responsive d-none d-md-block">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>From</th>
+                        <th>Role</th>
+                        <th>Date</th>
+                        <th>Report</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr class="@(item.IsRead ? "" : "table-info")">
+                            <td><strong>@item.Report.Sender.Name</strong></td>
+
+                            <td>
+                                <span class="badge bg-secondary">
+                                    @item.Report.Sender.Role
+                                </span>
+                            </td>
+
+                            <td>
+                                <strong>@item.Report.CreatedDate.ToString("dd MMM yyyy")</strong><br />
+                                <small class="text-muted">@item.Report.CreatedDate.ToString("hh:mm tt")</small>
+                            </td>
+
+                            <!-- ✅ VIEW BUTTON INSTEAD OF LONG TEXT -->
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#reportModal-@item.Id">
+                                    <i class="fa-solid fa-eye me-1"></i> View Report
+                                </button>
+                            </td>
+
+                            <!-- ✅ STATUS -->
+                            <td class="text-center">
+                                <input type="checkbox"
+                                       onchange="markAsRead(@item.Id, this)"
+                                       @(item.IsRead ? "checked" : "") />
+
+                                <div class="mt-1">
+                                    <span class="badge status-badge @(item.IsRead ? "bg-success" : "bg-warning text-dark")">
+                                        @(item.IsRead ? "Read" : "Unread")
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- ================= MODAL ================= -->
+                        <div class="modal fade" id="reportModal-@item.Id" tabindex="-1">
+                            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            Daily Report — @item.Report.Sender.Name
+                                        </h5>
+                                        <button class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <p><strong>Today's Work</strong></p>
+                                        <p>@item.Report.TodaysWork</p>
+
+                                        <hr />
+
+                                        <p><strong>Pending Work</strong></p>
+                                        <p>@item.Report.PendingWork</p>
+
+                                        <hr />
+
+                                        <p><strong>Issues</strong></p>
+                                        <p>@item.Report.Issues</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ================= MOBILE VIEW ================= -->
+        <div class="d-block d-md-none p-3">
+            @foreach (var item in Model)
+            {
+                <div class="card mb-3 shadow-sm @(item.IsRead ? "" : "border-primary")">
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>@item.Report.Sender.Name</strong>
+
+                            <span class="badge status-badge @(item.IsRead ? "bg-success" : "bg-warning text-dark")">
+                                @(item.IsRead ? "Read" : "Unread")
+                            </span>
+                        </div>
+
+                        <small class="text-muted d-block mb-2">
+                            @item.Report.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                        </small>
+
+                        <!-- ✅ VIEW BUTTON -->
+                        <button class="btn btn-sm btn-outline-primary w-100 mb-2"
+                                data-bs-toggle="modal"
+                                data-bs-target="#reportModal-@item.Id">
+                            <i class="fa-solid fa-eye me-1"></i> View Report
+                        </button>
+
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <label class="d-flex align-items-center gap-2">
+                                <input type="checkbox"
+                                       onchange="markAsRead(@item.Id, this)"
+                                       @(item.IsRead ? "checked" : "") />
+                                Mark Read
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+     <script>
+            function markAsRead(id, checkbox) {
+        if (!checkbox.checked) return;
+
+        $.post('@Url.Action("MarkAsRead", "DailyReport")',
+            { id: id },
+            function (res) {
+                if (res && res.success) {
+                    const row = $(checkbox).closest('tr');
+
+                    // remove unread background
+                    row.removeClass('table-info');
+
+                    // update badge instantly
+                    row.find('.status-badge')
+                        .removeClass('bg-warning text-dark')
+                        .addClass('bg-success')
+                        .text('Read');
+                }
+            });
+    }
+    </script>
+}
+

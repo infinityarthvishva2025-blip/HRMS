@@ -1,0 +1,300 @@
+﻿@model IEnumerable<HRMS.Models.ViewModels.PayrollSummaryVm>
+
+@using HRMS.Helpers
+@{
+    decimal totalNetPay = Model?.Sum(x => x.NetSalary) ?? 0;
+    ViewData["Title"] = "Monthly Payroll";
+   Layout = "~/Views/Shared/_HrLayout.cshtml";
+    var role = ViewBag.UserRole as string;
+
+    if (role == "HR" || role == "VP" || role == "GM" || role == "Director")
+    {
+        Layout = "~/Views/Shared/_HrLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+
+    int year = ViewBag.Year;
+    int month = ViewBag.Month;
+}
+
+<div class="container py-4">
+    <h2 class="fw-bold text-primary mb-4">Monthly Payroll - @month/@year</h2>
+
+    <!-- FILTER -->
+    <form method="get" class="row g-3 bg-white shadow-sm p-3 rounded mb-4">
+        <div class="col-md-2">
+            <label class="fw-bold">Year</label>
+            <input type="number" name="year" class="form-control" value="@year" min="2000" />
+        </div>
+
+        <div class="col-md-2">
+            <label class="fw-bold">Month</label>
+            <input type="number" name="month" class="form-control" value="@month" min="1" max="12" />
+        </div>
+
+        <div class="col-md-3">
+            <label class="fw-bold">Search Employee</label>
+            <input type="text" name="search" class="form-control"
+                   placeholder="Employee Code or Name"
+                   value="@ViewBag.Search" />
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-primary w-100">Search</button>
+        </div>
+    </form>
+
+    <!-- 🔍 SEARCH INSIDE TABLE -->
+    <div class="d-flex justify-content-end mb-2">
+        <input type="text" id="tableSearch"
+               class="form-control w-25"
+               placeholder="Search in table..." />
+    </div>
+
+    <!-- PAYROLL TABLE -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped shadow-sm align-middle text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Emp Code</th>
+                    <th>Name</th>
+                    <th>Working Days</th>
+                    <th>Half Days</th>
+                    <th>Absent</th>
+                    <th>Late Marks</th>
+                    <th>Late Ded (Days)</th>
+                    <th>Paid Days</th>
+                    <th>Per Day</th>
+                    <th>Leave Loss (₹)</th>
+                    <th>Gross (₹)</th>
+                    <th>Deductions (₹)</th>
+                    <th>Net Pay (₹)</th>
+                    <th>Payslip</th>
+                </tr>
+            </thead>
+
+            <!-- ✅ REQUIRED FOR PAGINATION -->
+            <tbody id="tableBody">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var p in Model)
+                    {
+                        var halfLoss = (p.PresentHalfDays * 0.5m) * p.PerDaySalary;
+                        var absentLoss = p.AbsentDays * p.PerDaySalary;
+                        var leaveLoss = halfLoss + absentLoss;
+                        var token = UrlEncryptionHelper.GenerateToken(
+                        new Dictionary<string, string>
+                        {
+                            ["type"] = "PAY",
+                            ["empCode"] = p.EmpCode,
+                            ["year"] = year.ToString(),
+                            ["month"] = month.ToString()
+                        },
+                        30
+                        );
+                        <tr>
+                            <td>@p.EmpCode</td>
+                            <td class="text-start">@p.EmpName</td>
+                            <td>@p.TotalDaysInMonth</td>
+                            <td>@p.PresentHalfDays</td>
+                            <td class="text-danger fw-bold">@p.AbsentDays.ToString("0.##")</td>
+                            <td>@p.LateMarks</td>
+                            <td class="text-warning fw-bold">@p.LateDeductionDays.ToString("0.0")</td>
+                            <td class="fw-bold text-primary">@p.PaidDays.ToString("0.0")</td>
+                            <td>@p.PerDaySalary.ToString("0.00")</td>
+                            <td class="text-danger">@leaveLoss.ToString("0.00")</td>
+                            <td class="fw-bold text-primary">@p.GrossSalary.ToString("0.00")</td>
+                            <td class="text-danger">@p.TotalDeductions.ToString("0.00")</td>
+                            <td class="fw-bold text-success">@p.NetSalary.ToString("0.00")</td>
+                            <td>
+                                @* <a asp-action="Payslip"
+                                   asp-route-empCode="@p.EmpCode"
+                                   asp-route-year="@year"
+                                   asp-route-month="@month"
+                                   class="btn btn-success btn-sm">
+                                    Slip
+                                </a> *@
+                                <a asp-action="Payslip"
+                                   asp-route-token="@token"
+                                   class="btn btn-success btn-sm">
+                                    Slip
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="14" class="text-center text-muted py-3">
+                            No payroll data found for the selected month.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 📄 PAGINATION -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <span id="pageInfo" class="text-muted"></span>
+        <nav>
+            <ul class="pagination mb-0" id="pagination"></ul>
+        </nav>
+    </div>
+
+    <div class="alert alert-info fw-bold mt-3">
+        Total Net Pay of All Employees: ₹ @totalNetPay.ToString("0.00")
+    </div>
+    <div class="mt-3 small text-muted">
+        <b>Note:</b> Absent days are <span class="text-info fw-bold">auto-synced from daily attendance</span>.
+        WO (Sunday) and WOP (Saturday) are <span class="text-success fw-bold">paid</span> and included silently in Paid Days.
+    </div>
+</div>
+
+<style>
+    .table td, .table th {
+        vertical-align: middle !important;
+        font-size: 0.9rem;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+    }
+
+    .pagination .page-link {
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const rowsPerPage = 10;
+        const tableBody = document.getElementById("tableBody");
+        const rows = Array.from(tableBody.querySelectorAll("tr"));
+        const searchInput = document.getElementById("tableSearch");
+        const pagination = document.getElementById("pagination");
+        const pageInfo = document.getElementById("pageInfo");
+
+        let filteredRows = [...rows];
+        let currentPage = 1;
+
+        function filterRows() {
+            const q = searchInput.value.toLowerCase().trim();
+
+            filteredRows = q === ""
+                ? [...rows]
+                : rows.filter(r => r.innerText.toLowerCase().includes(q));
+
+            currentPage = 1;
+            paginate();
+        }
+
+        function paginate() {
+            const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+
+            rows.forEach(r => r.style.display = "none");
+
+            filteredRows.forEach((row, i) => {
+                if (i >= (currentPage - 1) * rowsPerPage &&
+                    i < currentPage * rowsPerPage) {
+                    row.style.display = "";
+                }
+            });
+
+            pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            pagination.innerHTML = "";
+
+            const prev = document.createElement("li");
+            prev.className = "page-item " + (currentPage === 1 ? "disabled" : "");
+            prev.innerHTML = `<a class="page-link">&lsaquo;</a>`;
+            prev.onclick = () => { if (currentPage > 1) { currentPage--; paginate(); } };
+            pagination.appendChild(prev);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement("li");
+                li.className = "page-item " + (i === currentPage ? "active" : "");
+                li.innerHTML = `<a class="page-link">${i}</a>`;
+                li.onclick = () => { currentPage = i; paginate(); };
+                pagination.appendChild(li);
+            }
+
+            const next = document.createElement("li");
+            next.className = "page-item " + (currentPage === totalPages ? "disabled" : "");
+            next.innerHTML = `<a class="page-link">&rsaquo;</a>`;
+            next.onclick = () => { if (currentPage < totalPages) { currentPage++; paginate(); } };
+            pagination.appendChild(next);
+        }
+
+        searchInput.addEventListener("keyup", filterRows);
+        paginate();
+    });
+</script>
+@* <tbody id="tableBody">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var p in Model)
+        {
+            var halfLoss = (p.PresentHalfDays * 0.5m) * p.PerDaySalary;
+            var absentLoss = p.AbsentDays * p.PerDaySalary;
+            var leaveLoss = halfLoss + absentLoss;
+            var token = UrlEncryptionHelper.GenerateToken(
+            new Dictionary<string, string>
+            {
+                ["type"] = "PAY",
+                ["empCode"] = p.EmpCode,
+                ["year"] = year.ToString(),
+                ["month"] = month.ToString()
+            },
+            30
+            );
+            <tr>
+                <td>@p.EmpCode</td>
+                <td class="text-start">@p.EmpName</td>
+                <td>@p.TotalDaysInMonth</td>
+                <td>@p.PresentHalfDays</td>
+                <td class="text-danger fw-bold">@p.AbsentDays.ToString("0.##")</td>
+                <td>@p.LateMarks</td>
+                <td class="text-warning fw-bold">@p.LateDeductionDays.ToString("0.0")</td>
+                <td class="fw-bold text-primary">@p.PaidDays.ToString("0.0")</td>
+                <td>@p.PerDaySalary.ToString("0.00")</td>
+                <td class="text-danger">@leaveLoss.ToString("0.00")</td>
+                <td class="fw-bold text-primary">@p.GrossSalary.ToString("0.00")</td>
+                <td class="text-danger">@p.TotalDeductions.ToString("0.00")</td>
+                <td class="fw-bold text-success">@p.NetSalary.ToString("0.00")</td>
+                <td>
+                    @* <a asp-action="Payslip"
+                                   asp-route-empCode="@p.EmpCode"
+                                   asp-route-year="@year"
+                                   asp-route-month="@month"
+                                   class="btn btn-success btn-sm">
+                                    Slip
+                                </a> 
+                    <a asp-action="Payslip"
+                       asp-route-token="@token"
+                       class="btn btn-success btn-sm">
+                        Slip
+                    </a>
+                </td>
+            </tr>
+        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="14" class="text-center text-muted py-3">
+                No payroll data found for the selected month.
+            </td>
+        </tr>
+    }
+</tbody> *@
