@@ -149,8 +149,8 @@ app.UseHangfireDashboard("/hangfire");
 RecurringJob.AddOrUpdate<RelievingLetterHangfireJob>(
     "relieving-letter-job",
     job => job.ExecuteAsync(),
-    "0 9 * * *" // Every day 9 AM
-   // "*/1 * * * *"//Every 1 min
+   "0 9 * * *" // Every day 9 AM
+    //"*/1 * * * *"//Every 1 min
 );
 
 // ROUTING

@@ -27,7 +27,7 @@ namespace HRMS.Jobs
         }
 
         public async Task ExecuteAsync()
-        {
+         {
             var today = DateTime.Today;
 
             Console.WriteLine($"Relieving Letter Job Started: {today}");
@@ -66,7 +66,7 @@ namespace HRMS.Jobs
                     var relievingBytes = _pdfService.GenerateRelievingLetterPdf(employee);
 
                     // Generate Experience Letter
-                   // var experienceBytes = _experiencePdfService.GenerateExperienceLetter(employee);
+                    var experienceBytes = _experiencePdfService.GenerateExperienceLetter(employee);
 
                     var folder = Path.Combine(_env.WebRootPath, "letters");
 
@@ -74,10 +74,10 @@ namespace HRMS.Jobs
                         Directory.CreateDirectory(folder);
 
                     var relievingPath = Path.Combine(folder, $"relieving_{employee.Id}.pdf");
-                   // var experiencePath = Path.Combine(folder, $"experience_{employee.Id}.pdf");
+                    var experiencePath = Path.Combine(folder, $"experience_{employee.Id}.pdf");
 
                     await File.WriteAllBytesAsync(relievingPath, relievingBytes);
-                   // await File.WriteAllBytesAsync(experiencePath, experienceBytes);
+                    await File.WriteAllBytesAsync(experiencePath, experienceBytes);
 
                     // Send Email with Both Attachments
                     await _emailService.SendRelievingAndExperienceEmail(

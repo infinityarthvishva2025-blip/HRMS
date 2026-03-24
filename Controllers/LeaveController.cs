@@ -80,6 +80,8 @@ namespace HRMS.Controllers
         }
 
         // ===================== CREATE LEAVE =====================
+
+        // ===================== CREATE LEAVE =====================
         [HttpPost]
         public async Task<IActionResult> Create(Leave model)
         {
@@ -90,10 +92,52 @@ namespace HRMS.Controllers
 
             model.StartDate = model.StartDate.Date;
             model.EndDate ??= model.StartDate;
-            model.TotalDays =
-                (model.EndDate.Value - model.StartDate).Days + 1;
 
-            // COMPOFF PRE-CHECK
+            // ================= VALIDATION =================
+
+            // 🔴 Prevent Full + Half conflict
+            var existingLeave = _context.Leaves.Any(l =>
+                l.EmployeeId == empId &&
+                l.StartDate == model.StartDate &&
+                l.OverallStatus != "Rejected");
+
+            if (existingLeave)
+            {
+                TempData["Error"] = "❌ Leave already applied for this date.";
+                return View(model);
+            }
+
+            // 🔴 Prevent duplicate half-day
+            if (model.Category == LeaveCategory.HalfDay)
+            {
+                var halfExists = _context.Leaves.Any(l =>
+                    l.EmployeeId == empId &&
+                    l.StartDate == model.StartDate &&
+                   l.Category == LeaveCategory.HalfDay &&
+                    l.HalfDaySession == model.HalfDaySession &&
+                    l.OverallStatus != "Rejected");
+
+                if (halfExists)
+                {
+                    TempData["Error"] = $"❌ {model.HalfDaySession} leave already applied.";
+                    return View(model);
+                }
+            }
+
+            // ================= CALCULATION =================
+
+            if (model.Category == LeaveCategory.HalfDay)
+            {
+                model.TotalDays = (double)0.5m;
+            }
+            else
+            {
+                model.TotalDays =
+                    (model.EndDate.Value - model.StartDate).Days + 1;
+            }
+
+            // ================= COMPOFF =================
+
             if (model.LeaveType == "coff")
             {
                 if (!await ValidateCompOffAsync(emp.Id, model.TotalDays))
@@ -105,22 +149,123 @@ namespace HRMS.Controllers
                 }
             }
 
+            // ================= SAVE LEAVE =================
+
             model.EmployeeId = empId.Value;
             model.CreatedOn = DateTime.Now;
+
             model.ManagerStatus = "Pending";
             model.HrStatus = "Pending";
             model.VpStatus = "Pending";
             model.DirectorStatus =
                 emp.Role is "Employee" or "Intern" ? "-" : "Pending";
+
             model.OverallStatus = "Pending";
 
             SetApprovalFlow(emp, model);
 
             _context.Leaves.Add(model);
+
+            // ================= AUTO ATTENDANCE =================
+
+            if (model.Category == LeaveCategory.HalfDay)
+            {
+                var attendance = _context.Attendances
+                    .FirstOrDefault(a =>
+                        a.Emp_Code == emp.EmployeeCode &&
+                        a.Date == model.StartDate);
+
+                if (attendance == null)
+                {
+                    attendance = new Attendance
+                    {
+                        Emp_Code = emp.EmployeeCode,
+                        Date = model.StartDate,
+                        Status = "½P"
+                    };
+                    _context.Attendances.Add(attendance);
+                }
+                else
+                {
+                    attendance.Status = "½P";
+                }
+            }
+            else
+            {
+                // Full day leave → mark absent
+                var dates = Enumerable.Range(0,
+                    (model.EndDate.Value - model.StartDate).Days + 1)
+                    .Select(d => model.StartDate.AddDays(d));
+
+                foreach (var date in dates)
+                {
+                    var attendance = _context.Attendances
+                        .FirstOrDefault(a =>
+                            a.Emp_Code == emp.EmployeeCode &&
+                            a.Date == date);
+
+                    if (attendance == null)
+                    {
+                        attendance = new Attendance
+                        {
+                            Emp_Code = emp.EmployeeCode,
+                            Date = date,
+                            Status = "L" // Leave
+                        };
+                        _context.Attendances.Add(attendance);
+                    }
+                    else
+                    {
+                        attendance.Status = "L";
+                    }
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             return RedirectToAction("MyLeaves");
         }
+        //[HttpPost]
+        //public async Task<IActionResult> Create(Leave model)
+        //{
+        //    var empId = GetCurrentEmployeeId();
+        //    if (empId == null) return RedirectToAction("Login", "Account");
+
+        //    var emp = await _context.Employees.FindAsync(empId);
+
+        //    model.StartDate = model.StartDate.Date;
+        //    model.EndDate ??= model.StartDate;
+        //    model.TotalDays =
+        //        (model.EndDate.Value - model.StartDate).Days + 1;
+
+        //    // COMPOFF PRE-CHECK
+        //    if (model.LeaveType == "coff")
+        //    {
+        //        if (!await ValidateCompOffAsync(emp.Id, model.TotalDays))
+        //        {
+        //            TempData["Error"] = "❌ Insufficient or expired Comp-Off balance.";
+        //            ViewBag.CompOffBalance =
+        //                await _compOff.GetActiveBalanceAsync(emp.Id);
+        //            return View(model);
+        //        }
+        //    }
+
+        //    model.EmployeeId = empId.Value;
+        //    model.CreatedOn = DateTime.Now;
+        //    model.ManagerStatus = "Pending";
+        //    model.HrStatus = "Pending";
+        //    model.VpStatus = "Pending";
+        //    model.DirectorStatus =
+        //        emp.Role is "Employee" or "Intern" ? "-" : "Pending";
+        //    model.OverallStatus = "Pending";
+
+        //    SetApprovalFlow(emp, model);
+
+        //    _context.Leaves.Add(model);
+        //    await _context.SaveChangesAsync();
+
+        //    return RedirectToAction("MyLeaves");
+        //}
 
         // ===================== APPROVAL FLOW =====================
         private void SetApprovalFlow(Employee emp, Leave model)

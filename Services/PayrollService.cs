@@ -45,10 +45,14 @@ namespace HRMS.Services
         // ============================================================
         // PAYROLL BY DATE RANGE
         // ============================================================
+
+        // ============================================================
+        // PAYROLL BY DATE RANGE (FINAL MERGED)
+        // ============================================================
         public PayrollSummaryVm BuildPayrollByDateRange(
-    string empCode,
-    DateTime fromDate,
-    DateTime toDate)
+            string empCode,
+            DateTime fromDate,
+            DateTime toDate)
         {
             var emp = _context.Employees
                 .FirstOrDefault(e =>
@@ -62,7 +66,7 @@ namespace HRMS.Services
 
             decimal baseSalary = emp.Salary ?? 0m;
 
-            // 🔥 FIX: Adjust end date based on Last Working Date
+            // 🔥 Last Working Date Fix
             DateTime effectiveToDate = toDate;
 
             if (emp.LastWorkingDate.HasValue &&
@@ -76,6 +80,7 @@ namespace HRMS.Services
                     a.Emp_Code == empCode &&
                     a.Date.Date >= fromDate.Date &&
                     a.Date.Date <= effectiveToDate.Date)
+                .OrderBy(a => a.Date)
                 .ToList();
 
             if (!attendance.Any())
@@ -86,16 +91,56 @@ namespace HRMS.Services
             int absentDays = 0;
             int weeklyOffDays = 0;
 
-            foreach (var a in attendance)
+            // ============================================================
+            // PROCESS ATTENDANCE (WITH SANDWICH + HOURS LOGIC)
+            // ============================================================
+            // ============================================================
+            // PROCESS ATTENDANCE (FINAL COUNT LOGIC ONLY)
+            // ============================================================
+
+            for (int i = 0; i < attendance.Count; i++)
             {
+                var a = attendance[i];
+
                 string status = (a.Status ?? "").Trim().ToUpper();
                 var day = a.Date.DayOfWeek;
 
-                if (day == DayOfWeek.Sunday || status == "WO")
+                bool isAbsent = false;
+                bool isHalfDay = false;
+
+                // ================= WORKING HOURS =================
+                if (a.InTime.HasValue && a.OutTime.HasValue)
                 {
-                    weeklyOffDays++;
-                    fullDays++;
-                    continue;
+                    double workedHours =
+                        (a.OutTime.Value - a.InTime.Value).TotalHours;
+
+                    double fullDayHours =
+                        day == DayOfWeek.Saturday ? 7.0 : 8.5;
+
+                    if (workedHours >= fullDayHours)
+                    {
+                        fullDays++;
+                        continue;
+                    }
+                    else if (workedHours >= 4.0)
+                    {
+                        isHalfDay = true;
+                    }
+                    else
+                    {
+                        isAbsent = true;
+                    }
+                }
+                else
+                {
+                    // Missing punch → Absent
+                    isAbsent = true;
+                }
+
+                // ================= STATUS BASE =================
+                if (status == "A" || status == "L")
+                {
+                    isAbsent = true;
                 }
 
                 if (status == "H" || status == "HO" || status == "COFF")
@@ -104,39 +149,61 @@ namespace HRMS.Services
                     continue;
                 }
 
-                if (status == "A" || status == "L")
+                // ================= SUNDAY / WO =================
+                if (day == DayOfWeek.Sunday || status == "WO")
+                {
+                    bool isSandwich = false;
+
+                    if (i > 0 && i < attendance.Count - 1)
+                    {
+                        var prev = attendance[i - 1];
+                        var next = attendance[i + 1];
+
+                        string prevStatus = (prev.Status ?? "").ToUpper();
+                        string nextStatus = (next.Status ?? "").ToUpper();
+
+                        bool prevAbsent = prevStatus == "A" || prevStatus == "L";
+                        bool nextAbsent = nextStatus == "A" || nextStatus == "L";
+
+                        if (prevAbsent && nextAbsent)
+                        {
+                            isSandwich = true;
+                        }
+                    }
+
+                    if (isSandwich)
+                    {
+                        isAbsent = true; // 🔥 convert Sunday to Absent
+                    }
+                    else
+                    {
+                        weeklyOffDays++;
+                        fullDays++;
+                        continue;
+                    }
+                }
+
+                // ================= FINAL COUNT =================
+                if (isAbsent)
                 {
                     absentDays++;
-                    continue;
                 }
-
-                if (!a.InTime.HasValue || !a.OutTime.HasValue)
+                else if (isHalfDay)
                 {
                     halfDays++;
-                    continue;
                 }
-
-                double workedHours =
-                    (a.OutTime.Value - a.InTime.Value).TotalHours;
-
-                double fullDayHours =
-                    day == DayOfWeek.Saturday ? 7.0 : 8.5;
-
-                double halfDayHours =
-                    day == DayOfWeek.Saturday ? 3.5 : 4.0;
-
-                if (workedHours >= fullDayHours)
-                    fullDays++;
-                else if (workedHours >= halfDayHours)
-                    halfDays++;
             }
+           
+
+            // ============================================================
+            // CALCULATION
+            // ============================================================
 
             if ((fullDays - weeklyOffDays) == 0 && halfDays == 0)
                 return null;
 
             decimal paidDays = fullDays + (halfDays * 0.5m);
 
-            // 🔥 FIX: Total days should be till last working date
             int totalDaysInRange =
                 (effectiveToDate.Date - fromDate.Date).Days + 1;
 
@@ -152,6 +219,9 @@ namespace HRMS.Services
 
             decimal netSalary = grossSalary - professionalTax;
 
+            // ============================================================
+            // FINAL RETURN
+            // ============================================================
             return new PayrollSummaryVm
             {
                 EmpCode = empCode,
@@ -163,7 +233,7 @@ namespace HRMS.Services
                 Month = fromDate.Month,
 
                 FromDate = fromDate,
-                ToDate = effectiveToDate, // 🔥 updated
+                ToDate = effectiveToDate,
 
                 TotalDaysInMonth = totalDaysInRange,
 
@@ -189,6 +259,7 @@ namespace HRMS.Services
             };
         }
         
+
         public PayrollSummaryVm BuildMonthlySummary(string empCode, int year, int month)
         {
             DateTime start = new DateTime(year, month, 1);
