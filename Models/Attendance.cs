@@ -49,6 +49,8 @@ namespace HRMS.Models
         // ✅ ADD THESE TWO
         public string? RequestedByRole { get; set; }
         public string? PendingWithRole { get; set; }
+        public double? GeoLatitude { get; set; }
+        public double? GeoLongitude { get; set; }
     }
 
 }

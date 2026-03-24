@@ -56,5 +56,7 @@ namespace HRMS.Models.ViewModels
 
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
+        public int CoffPending { get;  set; }
+        public decimal CoffPaymentDays { get; set; }
     }
 }

@@ -1,0 +1,21 @@
+﻿<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<canvas id="chart"></canvas>
+
+<script>
+
+    new Chart(document.getElementById("chart"),{
+
+    type:'bar',
+
+    data:{
+    labels:["Present","Absent","Late"],
+    datasets:[{
+    label:"Attendance",
+    data:[120,15,20]
+    }]
+    }
+
+    });
+
+</script>
